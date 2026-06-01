@@ -1277,14 +1277,20 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
 }
 
 
-function AuthScreen(){
-  const [mode,setMode]=useState("login");
+function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }={}){
+  const [mode,setMode]=useState(initialMode);
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [newPassword,setNewPassword]=useState("");
   const [loading,setLoading]=useState(false);
   const [msg,setMsg]=useState("");
-  const [err,setErr]=useState("");
+  const [err,setErr]=useState(initialError || "");
+
+  useEffect(()=>{
+    setMode(initialMode || "login");
+    setErr(initialError || "");
+    setMsg("");
+  },[initialMode, initialError]);
 
   useEffect(()=>{
     if(!supabase) return;
@@ -1329,7 +1335,7 @@ function AuthScreen(){
     if(!email) return setErr("Escribí tu email para recuperar la contraseña.");
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {
-      redirectTo: window.location.origin
+      redirectTo: `${window.location.origin}/?auth=recovery`
     });
     setLoading(false);
     if(error) return setErr(error.message);
@@ -1343,8 +1349,10 @@ function AuthScreen(){
     const { error } = await supabase.auth.updateUser({ password:newPassword });
     setLoading(false);
     if(error) return setErr(error.message);
-    setMsg("Contraseña actualizada. Ya podés entrar a tu cuenta.");
+    setMsg("Contraseña actualizada. Ya podés iniciar sesión con tu nueva contraseña.");
+    try { await supabase.auth.signOut(); } catch(e) {}
     setMode("login");
+    if(onPasswordUpdated) onPasswordUpdated();
   };
 
   const title = mode==="signup" ? "Crear mi cuenta" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Entrar a mi producto";
@@ -1401,6 +1409,8 @@ export default function App(){
   const [resultToken,setResultToken]=useState(null);
   const [user,setUser]=useState(null);
   const [authLoading,setAuthLoading]=useState(true);
+  const [recoveryMode,setRecoveryMode]=useState(false);
+  const [authNotice,setAuthNotice]=useState("");
 
   useEffect(()=>{
     const s=document.createElement("style");s.id="wsa-css";s.textContent=CSS;
@@ -1412,12 +1422,48 @@ export default function App(){
   useEffect(()=>{
     if(!supabase){ setAuthLoading(false); return; }
 
+    const readAuthUrl = () => {
+      const hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+      const query = new URLSearchParams(window.location.search || "");
+
+      const hasAuthError = hash.get("error") || query.get("error");
+      const errorCode = hash.get("error_code") || query.get("error_code");
+      const errorDescription = hash.get("error_description") || query.get("error_description");
+
+      if(hasAuthError){
+        const expired = errorCode === "otp_expired" || String(errorDescription || "").toLowerCase().includes("expired");
+        setAuthNotice(expired
+          ? "El link de recuperación venció o ya fue usado. Pedí un nuevo email desde Olvidé mi contraseña."
+          : "El link de acceso no es válido. Pedí uno nuevo desde Olvidé mi contraseña."
+        );
+        setRecoveryMode(false);
+        setView("auth");
+        try { supabase.auth.signOut(); } catch(e) {}
+        window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+        return;
+      }
+
+      const isRecovery = query.get("auth") === "recovery" || hash.get("type") === "recovery";
+      if(isRecovery){
+        setRecoveryMode(true);
+        setAuthNotice("");
+        setView("auth");
+      }
+    };
+
+    readAuthUrl();
+
     supabase.auth.getSession().then(({ data })=>{
       setUser(data.session?.user || null);
       setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session)=>{
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session)=>{
+      if(event === "PASSWORD_RECOVERY"){
+        setRecoveryMode(true);
+        setAuthNotice("");
+        setView("auth");
+      }
       setUser(session?.user || null);
       setAuthLoading(false);
     });
@@ -1429,6 +1475,10 @@ export default function App(){
   useEffect(()=>{
     const loadUserSession = async()=>{
       if(authLoading) return;
+      if(recoveryMode){
+        setView("auth");
+        return;
+      }
       if(!user){
         setView("auth");
         return;
@@ -1482,7 +1532,7 @@ export default function App(){
       }
     };
     loadUserSession();
-  },[user,authLoading]);
+  },[user,authLoading,recoveryMode]);
 
   // ─── Guardar cuando hay resultados ────────────────────────────────────────
   useEffect(()=>{
@@ -1615,7 +1665,14 @@ export default function App(){
   };
 
   if(authLoading) return <div style={{minHeight:"100vh",background:"#0C1721",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Cormorant Garamond',serif"}}>Cargando acceso...</div>;
-  if(!user || view==="auth") return <AuthScreen/>;
+  if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onPasswordUpdated={()=>{
+    setRecoveryMode(false);
+    setAuthNotice("");
+    setUser(null);
+    setView("auth");
+    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+  }}/>;
+  if(!user || view==="auth") return <AuthScreen initialMode="login" initialError={authNotice}/>;
   if(view==="landing") return <Landing onStart={()=>setView("guia")}/>;
   if(view==="guia") return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("landing")}/>;
   if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error}/>;
