@@ -68,22 +68,39 @@ const guardarSesion = async ({
 }) => {
   try {
     if (!email || !user_id) return null;
-    return await sbFetch('sesiones?on_conflict=user_id', {
+
+    const payload = {
+      user_id,
+      email: email.toLowerCase().trim(),
+      nombre1,
+      nombre2,
+      fecha_boda: fechaBoda,
+      ciudad,
+      form,
+      results,
+      arquetipo,
+      checked,
+      result_token,
+      updated_at: new Date().toISOString()
+    };
+
+    // Importante: no usamos upsert con on_conflict=user_id porque requiere
+    // una constraint UNIQUE en Supabase. En producción es más robusto:
+    // 1) buscar si ya existe una sesión del usuario;
+    // 2) actualizarla;
+    // 3) si no existe, crearla.
+    const existing = await cargarSesionPorUsuario(user_id);
+
+    if (existing?.id) {
+      return await sbFetch(`sesiones?id=eq.${encodeURIComponent(existing.id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      });
+    }
+
+    return await sbFetch('sesiones', {
       method: 'POST',
-      upsert: true,
-      body: JSON.stringify({
-        user_id,
-        email: email.toLowerCase().trim(),
-        nombre1,
-        nombre2,
-        fecha_boda: fechaBoda,
-        ciudad,
-        form,
-        results,
-        arquetipo,
-        checked,
-        result_token
-      })
+      body: JSON.stringify(payload)
     });
   } catch(e) {
     console.error('Error guardando sesión:', e);
