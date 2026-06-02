@@ -93,21 +93,22 @@ const guardarSesion = async ({
 
 const cargarSesion = async (email) => {
   try {
-    return await sbFetch(`sesiones?email=eq.${encodeURIComponent(email.toLowerCase().trim())}&limit=1`);
+    if (!email) return null;
+    return await sbFetch(`sesiones?select=*&email=eq.${encodeURIComponent(email.toLowerCase().trim())}&order=updated_at.desc&limit=1`);
   } catch(e) { return null; }
 };
 
 const cargarSesionPorUsuario = async (userId) => {
   try {
     if (!userId) return null;
-    return await sbFetch(`sesiones?user_id=eq.${encodeURIComponent(userId)}&limit=1`);
+    return await sbFetch(`sesiones?select=*&user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc&limit=1`);
   } catch(e) { return null; }
 };
 
 const cargarSesionPorToken = async (token) => {
   try {
     if (!token) return null;
-    return await sbFetch(`sesiones?result_token=eq.${encodeURIComponent(token)}&limit=1`);
+    return await sbFetch(`sesiones?select=*&result_token=eq.${encodeURIComponent(token)}&order=updated_at.desc&limit=1`);
   } catch(e) { return null; }
 };
 
@@ -192,6 +193,9 @@ input[type=date]{color-scheme:dark}
 .moment-card.sel{border-color:#D9B873;background:rgba(201,160,85,.05)}
 .info-box{background:rgba(201,160,85,.05);border:1px solid rgba(201,160,85,.15);border-radius:10px;padding:14px 16px;margin-top:10px}
 .arch-badge{display:inline-flex;align-items:center;gap:9px;background:rgba(201,160,85,.09);border:1px solid rgba(201,160,85,.25);border-radius:100px;padding:8px 18px;margin-bottom:14px}
+@media(max-width:680px){
+  .generating-notes{grid-template-columns:1fr!important}
+}
 @media(max-width:480px){
   .pbtn{width:100%;justify-content:center;display:flex;align-items:center}
   .tag{font-size:.92rem;padding:8px 13px}
@@ -902,24 +906,71 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
 }
 
 const PHASE_MSGS=[
-  ["Descubriendo su arquetipo musical…","Analizando quiénes son como pareja…"],
-  ["Eligiendo canciones para cada momento…","Aplicando criterio de más de 200 bodas…"],
-  ["Armando checklist para todos los proveedores…","Finalizando tu guion musical…"]
+  [
+    "Estamos leyendo sus respuestas con calma…",
+    "No cerrés esta ventana. Tu guion se está creando ahora.",
+    "Ceci está entendiendo el estilo de su boda antes de elegir canciones.",
+    "Este paso puede tardar un poco porque el resultado no es genérico."
+  ],
+  [
+    "Estamos buscando canciones que tengan sentido para cada momento…",
+    "La entrada, los votos y la salida necesitan energías distintas.",
+    "Estamos cuidando que la música acompañe la emoción, no que la tape.",
+    "Ya casi está la parte más importante: el guion musical."
+  ],
+  [
+    "Estamos ordenando todo para que sea fácil de compartir con tus proveedores…",
+    "Ahora armamos el checklist para DJ, planner y músicos.",
+    "Un momento más. Estamos dejando tu resultado claro y listo para usar.",
+    "Gracias por esperar. Este último paso suele tardar unos segundos más."
+  ]
+];
+const PHASE_TITLES=[
+  "Entendiendo su estilo",
+  "Diseñando el guion musical",
+  "Preparando el resultado final"
+];
+const CALMING_NOTES=[
+  "No hace falta volver atrás ni recargar la página.",
+  "Si tarda, es porque estamos creando un resultado personalizado.",
+  "Tu información ya fue tomada. Solo estamos terminando el guion."
 ];
 function Generating({names,phase}){
   const [i,setI]=useState(0);
+  const [seconds,setSeconds]=useState(0);
   const pool=PHASE_MSGS[phase]||PHASE_MSGS[0];
-  useEffect(()=>{const t=setInterval(()=>setI(x=>(x+1)%pool.length),2200);return()=>clearInterval(t);},[phase]);
-  return <div style={{minHeight:"100vh",background:"#0C1721",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,textAlign:"center"}}>
-    <div style={{position:"relative",width:72,height:72,marginBottom:32}}>
-      <div style={{position:"absolute",inset:0,border:"1px solid rgba(201,160,85,.07)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:G,borderRadius:"50%",animation:"spin 1.4s linear infinite"}}/>
-      <div style={{position:"absolute",inset:10,border:"1px solid rgba(201,160,85,.1)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:G,fontSize:"1.25rem"}}>♪</div>
+  useEffect(()=>{setI(0);},[phase]);
+  useEffect(()=>{const t=setInterval(()=>setI(x=>(x+1)%pool.length),2600);return()=>clearInterval(t);},[pool.length]);
+  useEffect(()=>{const t=setInterval(()=>setSeconds(x=>x+1),1000);return()=>clearInterval(t);},[]);
+  const progress=Math.min(92,18+(phase*27)+(i*6));
+  return <div style={{minHeight:"100vh",background:"#0C1721",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
+    <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,rgba(17,28,39,.92),rgba(12,23,33,.96))",border:"1px solid rgba(201,160,85,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".24em",textTransform:"uppercase",color:G,marginBottom:20}}>El Violín de Ceci</div>
+      <div style={{position:"relative",width:92,height:92,margin:"0 auto 28px"}}>
+        <div style={{position:"absolute",inset:0,border:"1px solid rgba(201,160,85,.08)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:G,borderRightColor:"rgba(201,160,85,.32)",borderRadius:"50%",animation:"spin 1.5s linear infinite"}}/>
+        <div style={{position:"absolute",inset:13,border:"1px solid rgba(201,160,85,.14)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:G,fontSize:"1.6rem"}}>♪</div>
+      </div>
+      <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.7rem)",fontWeight:400,color:C,margin:"0 0 8px",lineHeight:1.15}}>Creando la banda sonora de {names}</h2>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.05rem,2.2vw,1.25rem)",color:"rgba(247,242,234,.62)",fontStyle:"italic",margin:"0 0 28px",lineHeight:1.55}}>Respirá tranquila. Este proceso puede tardar un poco porque estamos creando un guion único, no una respuesta automática.</p>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:10}}>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{PHASE_TITLES[phase]||PHASE_TITLES[0]}</span>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(247,242,234,.34)"}}>Paso {phase+1} de 3 · {seconds}s</span>
+      </div>
+      <div style={{height:6,background:"rgba(201,160,85,.12)",borderRadius:999,overflow:"hidden",marginBottom:24}}>
+        <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(90deg,#C9A055,#E7C875)",borderRadius:999,transition:"width .55s ease"}}/>
+      </div>
+      <div style={{background:"rgba(201,160,85,.06)",border:"1px solid rgba(201,160,85,.14)",borderRadius:18,padding:"18px 20px",marginBottom:18,minHeight:96,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.15rem,2.3vw,1.38rem)",color:C,animation:"pulse 2.4s ease infinite",fontStyle:"italic",margin:0,lineHeight:1.55}}>{pool[i]}</p>
+      </div>
+      <div className="generating-notes" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:10}}>
+        {CALMING_NOTES.map((note,idx)=><div key={idx} style={{background:"rgba(247,242,234,.035)",border:"1px solid rgba(247,242,234,.08)",borderRadius:14,padding:"12px 10px",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.52)",lineHeight:1.45}}>
+          {note}
+        </div>)}
+      </div>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.28)",margin:"22px 0 0",lineHeight:1.5}}>Dejá esta pestaña abierta hasta que aparezca tu resultado.</p>
     </div>
-    <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.35rem",fontWeight:400,color:C,margin:"0 0 10px"}}>Creando la banda sonora de {names}</h2>
-    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,animation:"pulse 2.2s ease infinite",fontStyle:"italic",margin:"0 0 8px"}}>{pool[i]}</p>
-    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(247,242,234,.18)"}}>Paso {phase+1} de 3</p>
   </div>;
 }
 
@@ -1388,6 +1439,48 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
   </div>;
 }
 
+
+function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout }){
+  const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
+  const link = resultToken && typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?r=${resultToken}` : "";
+  const copyLink = async()=>{
+    if(!link) return;
+    try{ await navigator.clipboard.writeText(link); }catch(e){}
+  };
+
+  return <div style={{minHeight:"100vh",background:"radial-gradient(circle at 50% 0%, rgba(217,184,115,.10), transparent 42%), #0C1721",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
+    <div className="auth-card" style={{maxWidth:760,textAlign:"center"}}>
+      <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
+      <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.2rem)",margin:"0 0 10px"}}>
+        {hasResults ? "Tu guion musical está guardado" : "Bienvenida a tu producto"}
+      </h1>
+      <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.25rem)",margin:"0 auto 22px",maxWidth:560}}>
+        {hasResults
+          ? "Cada vez que entres con tu cuenta vas a volver directo a tu resultado. No hace falta completar el test de nuevo."
+          : "Tu acceso ya está activo. Empezá el test para crear tu guion musical personalizado."}
+      </p>
+
+      <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(217,184,115,.16)",borderRadius:18,padding:"20px",margin:"22px 0",textAlign:"left"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".86rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(217,184,115,.65)",marginBottom:8}}>Cuenta activa</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.25rem",color:C,wordBreak:"break-word"}}>{user?.email}</div>
+        {hasResults&&pareja&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",color:DIM,marginTop:6}}>Resultado de {pareja}</div>}
+      </div>
+
+      {hasResults&&link&&<div style={{background:"rgba(201,160,85,.07)",border:"1px solid rgba(201,160,85,.18)",borderRadius:16,padding:"16px",marginBottom:22,textAlign:"left"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".13em",textTransform:"uppercase",color:G,marginBottom:6}}>Link privado</div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.62)",lineHeight:1.5,wordBreak:"break-all"}}>{link}</div>
+        <button className="lbtn" onClick={copyLink} style={{marginTop:12}}>Copiar link</button>
+      </div>}
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginTop:10}}>
+        {hasResults&&<button className="pbtn" onClick={onViewResults}>Ver mi resultado →</button>}
+        <button className={hasResults ? "gbtn" : "pbtn"} onClick={onStartNew}>{hasResults ? "Volver a hacer el test" : "Crear mi guion musical →"}</button>
+        <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
+      </div>
+    </div>
+  </div>;
+}
+
 const EMPTY_FORM={
   nombre1:"",nombre2:"",fechaBoda:"",ciudad:"",invitados:"",
   tipoCeremonia:[],lugarCeremonia:"",duracion:"",restriccionIglesia:"",
@@ -1472,6 +1565,32 @@ export default function App(){
   },[]);
 
   // ─── Cargar resultado del usuario cuando inicia sesión ────────────────────
+  const hydrateFromSession = (remote, email, tokenFromUrl=null) => {
+    const safeForm = {...EMPTY_FORM, ...(remote.form || {}), email: remote.email || email || remote.form?.email || ""};
+    setResults(remote.results);
+    setForm(safeForm);
+    setArquetipo(remote.arquetipo || null);
+    setChecked(remote.checked || {});
+    setResultToken(remote.result_token || tokenFromUrl || null);
+    setView("results");
+
+    try{
+      localStorage.setItem("bsb_session", JSON.stringify({
+        results: remote.results,
+        form: safeForm,
+        arquetipo: remote.arquetipo,
+        checked: remote.checked || {},
+        result_token: remote.result_token || tokenFromUrl || null,
+        user_id: user?.id
+      }));
+    }catch(e){}
+
+    if(remote.result_token){
+      const newUrl = `${window.location.origin}${window.location.pathname}?r=${remote.result_token}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+  };
+
   useEffect(()=>{
     const loadUserSession = async()=>{
       if(authLoading) return;
@@ -1492,43 +1611,51 @@ export default function App(){
         const token = params.get("r");
         let remote = null;
 
+        // 1) Si el link trae result_token, intentamos cargar ese resultado.
         if(token){
           remote = await cargarSesionPorToken(token);
         }
 
+        // 2) Si no hay token o no encontró nada, cargamos el último resultado del usuario.
         if(!remote){
           remote = await cargarSesionPorUsuario(user.id);
         }
 
-        if(remote?.results){
-          setResults(remote.results);
-          setForm(f=>({...f,...remote.form,email:remote.email || email}));
-          setArquetipo(remote.arquetipo||null);
-          setChecked(remote.checked||{});
-          setResultToken(remote.result_token||token||null);
-          setView("results");
-
-          try{
-            localStorage.setItem("bsb_session", JSON.stringify({
-              results: remote.results,
-              form: {...remote.form,email:remote.email || email},
-              arquetipo: remote.arquetipo,
-              checked: remote.checked||{},
-              result_token: remote.result_token||token||null,
-              user_id: user.id
-            }));
-          }catch(e){}
-
-          if(remote.result_token){
-            const newUrl = `${window.location.origin}${window.location.pathname}?r=${remote.result_token}`;
-            window.history.replaceState({}, "", newUrl);
-          }
-        } else {
-          setView("guia");
+        // 3) Fallback por email: útil si quedó una fila vieja o migrada.
+        if(!remote && email){
+          remote = await cargarSesion(email);
         }
+
+        if(remote?.results){
+          hydrateFromSession(remote, email, token);
+          return;
+        }
+
+        // 4) Fallback local. Solo se usa si pertenece al mismo usuario o mismo email.
+        try{
+          const saved = localStorage.getItem("bsb_session");
+          if(saved){
+            const s = JSON.parse(saved);
+            const sameUser = s.user_id && s.user_id === user.id;
+            const sameEmail = s.form?.email && email && s.form.email.toLowerCase() === email.toLowerCase();
+            if(s.results && (sameUser || sameEmail)){
+              setResults(s.results);
+              setForm({...EMPTY_FORM, ...s.form, email});
+              setArquetipo(s.arquetipo || null);
+              setChecked(s.checked || {});
+              setResultToken(s.result_token || null);
+              setView("results");
+              return;
+            }
+          }
+        }catch(e){}
+
+        // Si no existe resultado, no mandamos directo al cuestionario: mostramos un tablero claro.
+        setResults(null);
+        setView("home");
       }catch(e){
         console.error("Error cargando sesión del usuario:", e);
-        setView("guia");
+        setView("home");
       }
     };
     loadUserSession();
@@ -1673,8 +1800,27 @@ export default function App(){
     window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
   }}/>;
   if(!user || view==="auth") return <AuthScreen initialMode="login" initialError={authNotice}/>;
+  if(view==="home") return <HomeScreen
+    user={user}
+    hasResults={!!results}
+    form={form}
+    resultToken={resultToken}
+    onViewResults={()=>setView("results")}
+    onStartNew={()=>{
+      try{localStorage.removeItem("bsb_session");}catch(e){}
+      window.history.replaceState({}, "", window.location.pathname);
+      setStep(1);
+      setResults(null);
+      setChecked({});
+      setForm({...EMPTY_FORM,email:user.email||""});
+      setArquetipo(null);
+      setResultToken(null);
+      setView("guia");
+    }}
+    onLogout={logout}
+  />;
   if(view==="landing") return <Landing onStart={()=>setView("guia")}/>;
-  if(view==="guia") return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("landing")}/>;
+  if(view==="guia") return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>;
   if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error}/>;
   if(view==="generating") return <Generating names={`${form.nombre1} & ${form.nombre2}`} phase={phase}/>;
   if(view==="results") return <Results results={results} form={form} checked={checked} setChecked={(fn)=>{ const next=typeof fn==='function'?fn(checked):fn; setChecked(next); syncChecked(next); }} arquetipo={arquetipo} resultToken={resultToken} onLogout={logout} onRestart={()=>{
@@ -1683,5 +1829,5 @@ export default function App(){
     setView("guia");setStep(1);setResults(null);setChecked({});setForm({...EMPTY_FORM,email:user.email||""});setArquetipo(null);setResultToken(null);
   }}/>;
 
-  return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("landing")}/>;
+  return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
