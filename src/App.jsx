@@ -472,7 +472,14 @@ const CHECKLIST_BASE={
 };
 
 const CLAUDE_MODEL = "claude-sonnet-4-6";
-const LOCAL_API_URL = "http://127.0.0.1:3001/api/generate";
+const LOCAL_API_URL = (() => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const isLocal = host === "localhost" || host === "127.0.0.1";
+    return isLocal ? "http://127.0.0.1:3001/api/generate" : "/api/generate";
+  }
+  return "/api/generate";
+})();
 const VIDEO_URL = "https://www.youtube.com/embed/dQw4w9WgXcQ";
 
 const extractJsonObject = (value) => {
