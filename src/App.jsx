@@ -148,12 +148,12 @@ const actualizarChecked = async ({ user_id, email, checked }) => {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&display=swap');
 *,*::before,*::after{box-sizing:border-box}
-html{font-size:clamp(16px,1.1vw,19px);scroll-behavior:smooth}
-body{margin:0;background:#07111B;color:#F8F2E6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+html{font-size:clamp(17px,1.15vw,20px);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:#07111B;color:#F8F2E6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden;font-size:18px}
 button,input,textarea{font:inherit}
 button{-webkit-tap-highlight-color:transparent}
 #root{min-height:100vh;background:#07111B}
-@media(max-width:480px){html{font-size:16px} body{min-width:320px}}
+@media(max-width:480px){html{font-size:17px} body{min-width:320px}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
@@ -543,15 +543,15 @@ const callClaudeRaw = async (prompt, maxTokens = 2000) => {
   const raw = await r.text();
 
   if (!raw) {
-    throw new Error("La API local no devolvió respuesta. Verificá que node server.cjs esté corriendo.");
+    throw new Error("No pudimos conectar con el servidor. Intentá de nuevo.");
   }
 
   let d;
   try {
     d = JSON.parse(raw);
   } catch (err) {
-    console.error("Respuesta no JSON de la API local:", raw);
-    throw new Error("La API local devolvió una respuesta inválida.");
+    console.error("Respuesta no válida del servidor:", raw);
+    throw new Error("Hubo un problema al generar el guion. Tocá \"Crear mi guion\" de nuevo.");
   }
 
   if (!r.ok) {
@@ -619,7 +619,7 @@ ${txt}
       return parseJsonStrict(repaired);
     } catch (secondError) {
       console.error("JSON reparado inválido:", repaired);
-      throw new Error("Claude devolvió JSON mal formado. Intentá de nuevo.");
+      throw new Error("El resultado no llegó completo. Tocá \"Crear mi guion\" de nuevo.");
     }
   }
 };
@@ -1634,14 +1634,22 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
 
       </> : <>
         <h1 className="brand-title" style={{fontSize:"clamp(2.2rem,6vw,3.2rem)",margin:"0 0 12px"}}>
-          Bienvenida a tu producto
+          Bienvenidos a su producto
         </h1>
         <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.18rem)",margin:"0 auto 10px",maxWidth:520,lineHeight:1.75}}>
-          Tu acceso ya está activo. Ahora podés crear tu guion musical personalizado.
+          Su acceso ya está activo. Ahora pueden crear su guion musical personalizado.
         </p>
-        <p className="brand-copy" style={{fontSize:"clamp(.95rem,1.8vw,1.05rem)",margin:"0 auto 28px",maxWidth:480,lineHeight:1.7,opacity:.7}}>
-          Vas a responder algunas preguntas sobre su boda, su estilo y los momentos que querés musicalizar. Al final recibís un guion musical personalizado — con canciones para cada momento, checklist y mensajes listos para tus proveedores.
+        <p className="brand-copy" style={{fontSize:"clamp(.95rem,1.8vw,1.05rem)",margin:"0 auto 16px",maxWidth:480,lineHeight:1.7,opacity:.7}}>
+          Van a responder algunas preguntas sobre su boda y su estilo musical. Al final van a recibir:
         </p>
+        <div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.12)",borderRadius:14,padding:"16px 18px",marginBottom:24,textAlign:"left",maxWidth:480,margin:"0 auto 24px"}}>
+          {["🎼 Guion musical personalizado con canciones para cada momento","✅ Checklist musical para coordinar con sus proveedores","📋 Plantilla para cargar sus canciones","📤 Mensajes listos para enviar a DJ, músico y planner"].map((item,i)=>(
+            <div key={i} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(.95rem,1.6vw,1.05rem)",color:C,lineHeight:1.65,padding:"5px 0",borderBottom:i<3?"1px solid rgba(217,184,111,.08)":"none"}}>{item}</div>
+          ))}
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(217,184,111,.6)",marginTop:10,fontStyle:"italic",lineHeight:1.6}}>
+            💡 Si tienen dudas sobre cómo usar algún recurso, no olviden ver el video explicativo en el área de miembros de Hotmart.
+          </div>
+        </div>
 
         <div style={{background:BG2,border:`1px solid ${BORDER}`,borderRadius:16,padding:"16px 20px",marginBottom:24,textAlign:"left"}}>
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(217,184,111,.55)",marginBottom:6}}>Cuenta activa</div>
@@ -1666,9 +1674,13 @@ const EMPTY_FORM={
 
 export default function App(){
   const [view,setView]=useState("auth");
-  const [step,setStep]=useState(1);
+  const [step,setStep]=useState(()=>{
+    try{ const s=localStorage.getItem("bsb_step"); return s?parseInt(s):1; }catch(e){ return 1; }
+  });
   const [phase,setPhase]=useState(0);
-  const [form,setForm]=useState({...EMPTY_FORM});
+  const [form,setForm]=useState(()=>{
+    try{ const s=localStorage.getItem("bsb_form"); return s?{...EMPTY_FORM,...JSON.parse(s)}:{...EMPTY_FORM}; }catch(e){ return {...EMPTY_FORM}; }
+  });
   const [results,setResults]=useState(null);
   const [checked,setChecked]=useState({});
   const [error,setError]=useState(null);
@@ -1678,6 +1690,14 @@ export default function App(){
   const [authLoading,setAuthLoading]=useState(true);
   const [recoveryMode,setRecoveryMode]=useState(false);
   const [authNotice,setAuthNotice]=useState("");
+
+  // Persist form and step in localStorage so tab switches don't reset progress
+  useEffect(()=>{
+    try{ localStorage.setItem("bsb_form", JSON.stringify(form)); }catch(e){}
+  },[form]);
+  useEffect(()=>{
+    try{ localStorage.setItem("bsb_step", String(step)); }catch(e){}
+  },[step]);
 
   useEffect(()=>{
     const s=document.createElement("style");s.id="wsa-css";s.textContent=CSS;
@@ -1910,7 +1930,7 @@ export default function App(){
     try{
       setPhase(0);
       const p1 = CECI_VOICE + "\nBODA: " + ctx + "\nSOLO JSON COMPACTO EN UNA LINEA sin saltos de linea. Strings sin comillas internas:\n{\"nota\":\"2 oraciones calidas de Ceci para esta pareja mencionando su arquetipo\",\"perfil\":{\"cluster\":\"estilo 3 palabras\",\"desc\":\"2 oraciones sobre universo musical\",\"concepto\":\"1 oracion sobre arco emocional\"}}";
-      const r1 = await callAI(p1, 1200);
+      const r1 = await callAIWithRetry(p1, 1200);
 
       setPhase(1);
       const momentosListado = formWithEmail.momentosSeleccionados.map(id => {
@@ -1919,11 +1939,11 @@ export default function App(){
       }).filter(Boolean).join(", ");
 
       const p2 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ". Estilo: " + (r1.perfil?.cluster||"romantico") + ".\nMomentos: " + momentosListado + ".\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings cortos sin comillas internas:\n{\"guion\":[{\"momento\":\"nombre\",\"icono\":\"emoji\",\"cancion\":\"titulo\",\"artista\":\"artista\",\"version\":\"version\",\"duracion\":\"2:30\",\"razon\":\"razon corta sin comillas\",\"alt\":\"titulo - artista\"}]}\nPara momentos liturgicos usa musica sacra. Incluye TODOS los momentos listados.";
-      const r2 = await callAI(p2, 3000);
+      const r2 = await callAIWithRetry(p2, 3000);
 
       setPhase(2);
       const p3 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ".\nSOLO JSON COMPACTO EN UNA LINEA sin saltos de linea. Strings cortos sin comillas internas:\n{\"coctel\":[{\"c\":\"cancion\",\"a\":\"artista\",\"d\":\"3:30\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"cena\":[{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"checklist\":{\"dj\":[\"item1\",\"item2\",\"item3\"],\"musicos\":[\"item1\",\"item2\"],\"planner\":[\"item1\",\"item2\"],\"pareja\":[\"consejo1\",\"consejo2\",\"consejo3\"]},\"errores\":[\"error1 con solucion\",\"error2\",\"error3\"]}";
-      const r3 = await callAI(p3, 2500);
+      const r3 = await callAIWithRetry(p3, 2500);
 
       const finalResults = {nota:r1.nota,perfil:r1.perfil,...r2,...r3};
       const token = resultToken || generarToken();
@@ -1960,7 +1980,7 @@ export default function App(){
       setView("results");
     }catch(e){
       console.error(e);
-      setError(`Hubo un problema: ${e.message}. Intentá de nuevo.`);
+      setError(`${e.message}`);
       setView("form");setStep(6);
     }
   };
