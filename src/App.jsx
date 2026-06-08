@@ -256,6 +256,9 @@ input[type=date]{color-scheme:dark}
   .guide-sec{padding:18px 16px}
 }
 
+.tag-desktop{display:none}
+@media(min-width:640px){.tag-desktop{display:inline-block!important}}
+.accordion-open{border-color:rgba(217,184,115,.28)!important}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   html,body{background:#fff!important;color:#1a1a1a!important;font-size:13px!important}
@@ -497,7 +500,7 @@ const LOCAL_API_URL = (() => {
   }
   return "/api/generate";
 })();
-const VIDEO_URL = "https://www.youtube.com/embed/dQw4w9WgXcQ";
+
 
 const extractJsonObject = (value) => {
   const txt = String(value || "")
@@ -896,26 +899,69 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     </div>
   </>);
 
+  // Auto-pre-selección de momentos esenciales al llegar al paso 5
+  useEffect(()=>{
+    if(step===5 && form.momentosSeleccionados.length===0){
+      const esenciales = isCatolica
+        ? ["llegada","novio","novia","aleluya","salida"]
+        : ["llegada","novio","novia","salida"];
+      setForm(f=>({...f,momentosSeleccionados:esenciales}));
+    }
+  },[step]);
+
   if(step===5) return wrap(<>
-    <SL n={5} l="Los momentos de tu ceremonia" sub="Tocá cada momento para ver qué emoción debe tener. Seleccioná los que quieren cubrir."/>
+    <SL n={5} l="Los momentos de tu ceremonia"/>
+    <div style={{background:"rgba(217,184,115,.06)",border:"1px solid rgba(217,184,115,.14)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,margin:"0 0 6px",lineHeight:1.6}}>
+        No necesitás saber qué se musicaliza en una boda — te guiamos momento a momento.
+      </p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:DIM,margin:0,lineHeight:1.55}}>
+        Ya pre-seleccionamos los momentos esenciales. Podés agregar o quitar según tu ceremonia.
+      </p>
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(201,160,85,.12)",color:G,border:"1px solid rgba(201,160,85,.25)"}}>★ Esencial</span>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(247,242,234,.05)",color:DIM,border:"1px solid rgba(247,242,234,.12)"}}>○ Opcional</span>
+      {isCatolica&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(217,184,115,.08)",color:G,border:"1px solid rgba(201,160,85,.2)"}}>⛪ Litúrgico</span>}
+    </div>
     <div style={{marginTop:4}}>
       {momentosDisponibles.map((m,i)=>{
         const sel=form.momentosSeleccionados.includes(m.id);
-        return <div key={m.id} className={`moment-card${sel?" sel":""}`} onClick={()=>tog("momentosSeleccionados",m.id)}>
+        const esEsencial = isCatolica
+          ? ["llegada","novio","novia","aleluya","salida"].includes(m.id)
+          : ["llegada","novio","novia","salida"].includes(m.id);
+        return <div key={m.id} className={`moment-card${sel?" sel":""}`} onClick={()=>!m.obligatorio&&tog("momentosSeleccionados",m.id)} style={{cursor:m.obligatorio?"default":"pointer"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:sel?G:C}}>{m.icono} {m.nombre}</div>
-            {m.obligatorio&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",color:"rgba(201,160,85,.6)",border:"1px solid rgba(201,160,85,.25)",borderRadius:100,padding:"2px 8px",flexShrink:0,marginLeft:8}}>obligatorio</span>}
-            {!m.obligatorio&&<div style={{width:20,height:20,borderRadius:3,border:`1px solid ${sel?G:"rgba(201,160,85,.3)"}`,background:sel?"rgba(201,160,85,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginLeft:8}}>
-              {sel&&<span style={{color:G,fontSize:".62rem",fontWeight:700}}>✓</span>}
-            </div>}
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:"1.2rem"}}>{m.icono}</span>
+              <div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:sel?G:C,lineHeight:1.2}}>{m.nombre}</div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:esEsencial?G:DIM,marginTop:2}}>
+                  {m.obligatorio?"⛪ Litúrgico obligatorio":esEsencial?"★ Esencial":"○ Opcional"}
+                </div>
+              </div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0,marginLeft:8}}>
+              {m.obligatorio
+                ? <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(201,160,85,.6)",border:"1px solid rgba(201,160,85,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
+                : <div style={{width:22,height:22,borderRadius:4,border:`1px solid ${sel?G:"rgba(201,160,85,.3)"}`,background:sel?"rgba(201,160,85,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
+                    {sel&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
+                  </div>
+              }
+            </div>
           </div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:G,marginBottom:5,fontStyle:"italic"}}>{m.emocion} · {m.duracion}</div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.52)",lineHeight:1.58}}>{m.desc}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(217,184,115,.6)",marginBottom:5,fontStyle:"italic"}}>{m.emocion} · {m.duracion}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:"rgba(247,242,234,.52)",lineHeight:1.58}}>{m.desc}</div>
         </div>;
       })}
     </div>
-    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(247,242,234,.3)",marginTop:10,fontStyle:"italic"}}>
-      Seleccioná al menos un momento para continuar.
+    {isCatolica&&<div style={{marginTop:12,background:"rgba(201,160,85,.05)",border:"1px solid rgba(201,160,85,.14)",borderRadius:10,padding:"12px 14px"}}>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:DIM,margin:0,lineHeight:1.6}}>
+        ⚠️ Los momentos litúrgicos deben tener música aprobada por la iglesia. Consultá con el sacerdote antes de confirmar el repertorio.
+      </p>
+    </div>}
+    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(247,242,234,.28)",marginTop:12,fontStyle:"italic",lineHeight:1.5}}>
+      No hay respuesta correcta única. La idea es construir una banda sonora que se sienta como ustedes.
     </p>
   </>);
 
@@ -998,75 +1044,77 @@ function Generating({names,phase}){
   </div>;
 }
 
-
-// ─── JERARQUÍA VISUAL: 3 niveles ──────────────────────────────────────────
-// NIVEL 1 — Portada: nombre, fecha, arquetipo (impacto máximo)
-// NIVEL 2 — Secciones: separadores con título dorado
-// NIVEL 3 — Contenido: cards con peso variable según importancia
+// ─── ACORDEÓN ─────────────────────────────────────────────────────────────────
+function AccordionBlock({id,icon,title,subtitle,isOpen,onToggle,children,defaultTag}){
+  return <div style={{marginBottom:12,border:`1px solid ${isOpen?"rgba(217,184,115,.28)":"rgba(217,184,115,.1)"}`,borderRadius:18,overflow:"hidden",transition:"border-color .25s"}}>
+    <button onClick={onToggle} style={{width:"100%",background:isOpen?"linear-gradient(135deg,rgba(21,34,48,.96),rgba(12,23,33,.98))":"rgba(17,28,39,.72)",border:"none",cursor:"pointer",padding:"18px 22px",display:"flex",alignItems:"center",gap:14,textAlign:"left",transition:"background .25s"}}>
+      <span style={{fontSize:"1.3rem",flexShrink:0}}>{icon}</span>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.05rem,2vw,1.2rem)",fontWeight:600,color:isOpen?G:C,lineHeight:1.2,transition:"color .25s"}}>{title}</div>
+        {subtitle&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:DIM,marginTop:3,lineHeight:1.4}}>{subtitle}</div>}
+      </div>
+      {defaultTag&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",padding:"3px 10px",borderRadius:20,background:"rgba(201,160,85,.1)",color:G,border:"1px solid rgba(201,160,85,.2)",flexShrink:0,display:"none"}} className="tag-desktop">{defaultTag}</span>}
+      <span style={{color:G,fontSize:"1.1rem",flexShrink:0,transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform .25s"}}>▾</span>
+    </button>
+    {isOpen&&<div style={{padding:"4px 22px 22px",background:"rgba(12,23,33,.6)"}}>{children}</div>}
+  </div>;
+}
 
 function SecLabel({children}){
-  return <div style={{display:"flex",alignItems:"center",gap:12,margin:"36px 0 18px"}}>
-    <div style={{height:"1px",width:20,background:`linear-gradient(to right,transparent,rgba(201,160,85,.3))`}}/>
-    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,160,85,.5)",whiteSpace:"nowrap"}}>{children}</div>
+  return <div style={{display:"flex",alignItems:"center",gap:12,margin:"24px 0 14px"}}>
+    <div style={{height:"1px",width:16,background:`linear-gradient(to right,transparent,rgba(201,160,85,.3))`}}/>
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,160,85,.5)",whiteSpace:"nowrap"}}>{children}</div>
     <div style={{height:"1px",flex:1,background:`linear-gradient(to right,rgba(201,160,85,.3),transparent)`}}/>
   </div>;
 }
 
-// Canción ESTRELLA (entrada de la novia) — máximo peso visual
 function SongCardStar({item}){
   const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
-  return <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(201,160,85,.28)",borderRadius:16,padding:"24px 22px",marginBottom:12,position:"relative",overflow:"hidden"}}>
-    <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(201,160,85,.07) 0%,transparent 70%)",pointerEvents:"none"}}/>
+  return <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,115,.3)",borderRadius:14,padding:"20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
+    <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,115,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <span style={{fontSize:"1.4rem"}}>{item.icono}</span>
-        <div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{item.momento}</div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:"rgba(201,160,85,.4)",fontStyle:"italic"}}>El momento más recordado</div>
-        </div>
+      <div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{item.momento}</div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",color:"rgba(217,184,115,.4)",fontStyle:"italic"}}>El momento más recordado</div>
       </div>
-      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(247,242,234,.3)",flexShrink:0,marginLeft:8}}>{item.duracion}</span>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.3)",flexShrink:0,marginLeft:8}}>{item.duracion}</span>
     </div>
-    <div style={{borderTop:"1px solid rgba(201,160,85,.1)",paddingTop:12,marginBottom:12}}>
-      <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.45rem",color:C,marginBottom:4,lineHeight:1.2}}>{item.cancion}</div>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",color:DIM}}>{item.artista}{item.version&&<em style={{color:"rgba(247,242,234,.3)",fontStyle:"italic"}}> · {item.version}</em>}</div>
-    </div>
-    {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.02rem",color:"rgba(247,242,234,.62)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:"2px solid rgba(201,160,85,.25)",paddingLeft:12}}>{item.razon}</p>}
+    <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.3rem,3vw,1.55rem)",color:C,marginBottom:3,lineHeight:1.2}}>{item.cancion}</div>
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,marginBottom:item.razon?12:0}}>{item.artista}{item.version&&<em style={{color:"rgba(247,242,234,.3)",fontStyle:"italic"}}> · {item.version}</em>}</div>
+    {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:"rgba(247,242,234,.62)",lineHeight:1.65,margin:"0 0 12px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,115,.25)",paddingLeft:12}}>{item.razon}</p>}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-      {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(247,242,234,.28)"}}>Alternativa: {item.alt}</span>}
+      {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.28)"}}>Alt: {item.alt}</span>}
       <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer">▶ Escuchar</a>
     </div>
   </div>;
 }
 
-// Canción normal — peso medio
 function SongCard({item,idx}){
   const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
   const isNovia=item.momento?.toLowerCase().includes("novia");
   if(isNovia) return <SongCardStar item={item}/>;
-  return <div style={{background:"#111C27",border:"1px solid rgba(201,160,85,.09)",borderRadius:13,padding:"16px 18px",marginBottom:10,display:"flex",gap:14,alignItems:"flex-start"}}>
+  return <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
     <div style={{flexShrink:0,marginTop:2,textAlign:"center"}}>
-      <div style={{fontSize:"1.3rem",marginBottom:2}}>{item.icono}</div>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(201,160,85,.4)",letterSpacing:".04em"}}>{String(idx+1).padStart(2,"0")}</div>
+      <div style={{fontSize:"1.2rem"}}>{item.icono}</div>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(217,184,115,.4)"}}>{String(idx+1).padStart(2,"0")}</div>
     </div>
     <div style={{flex:1,minWidth:0}}>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,160,85,.5)",marginBottom:4}}>{item.momento}</div>
-      <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.12rem",color:C,marginBottom:2,lineHeight:1.2}}>{item.cancion}</div>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:DIM,marginBottom:item.razon?8:0}}>{item.artista}{item.version&&<em style={{color:"rgba(247,242,234,.28)",fontStyle:"italic"}}> · {item.version}</em>}{item.duracion&&<span style={{color:"rgba(247,242,234,.22)",marginLeft:8}}>{item.duracion}</span>}</div>
-      {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:"rgba(247,242,234,.5)",lineHeight:1.58,margin:"0 0 8px",fontStyle:"italic"}}>{item.razon}</p>}
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.5)",marginBottom:3}}>{item.momento}</div>
+      <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:C,marginBottom:2,lineHeight:1.2}}>{item.cancion}</div>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,marginBottom:item.razon?6:0}}>{item.artista}{item.version&&<em style={{color:"rgba(247,242,234,.28)",fontStyle:"italic"}}> · {item.version}</em>}{item.duracion&&<span style={{color:"rgba(247,242,234,.22)",marginLeft:8}}>{item.duracion}</span>}</div>
+      {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(247,242,234,.5)",lineHeight:1.55,margin:"0 0 8px",fontStyle:"italic"}}>{item.razon}</p>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
         {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(247,242,234,.24)"}}>Alt: {item.alt}</span>}
-        <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem"}}>▶</a>
+        <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 12px"}}>▶</a>
       </div>
     </div>
   </div>;
 }
 
-// Playlist — peso ligero, compacto
 function PlaylistRow({item,num}){
   const q=encodeURIComponent(`${item.c||""} ${item.a||""}`);
-  return <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto auto",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(201,160,85,.05)"}}>
-    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(201,160,85,.3)",textAlign:"center"}}>{num}</div>
+  return <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto auto",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(217,184,115,.05)"}}>
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(217,184,115,.3)",textAlign:"center"}}>{num}</div>
     <div>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{item.c}</div>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:DIM}}>{item.a}</div>
@@ -1076,18 +1124,20 @@ function PlaylistRow({item,num}){
   </div>;
 }
 
-// Checklist item con peso variable
 function CheckItem({label,done,onToggle,important}){
   return <div className="ci" onClick={onToggle}>
-    <div className={`cb${done?" ck":""}`} style={{borderColor:important&&!done?"rgba(201,160,85,.45)":undefined,background:done?"rgba(201,160,85,.16)":important?"rgba(201,160,85,.05)":undefined}}>
+    <div className={`cb${done?" ck":""}`} style={{borderColor:important&&!done?"rgba(217,184,115,.45)":undefined}}>
       {done&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
     </div>
-    <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:done?"rgba(247,242,234,.22)":important?C:C,textDecoration:done?"line-through":"none",lineHeight:1.55,transition:"all .2s",fontWeight:important&&!done?"500":"normal"}}>{label}</span>
+    <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:done?"rgba(247,242,234,.22)":C,textDecoration:done?"line-through":"none",lineHeight:1.55,transition:"all .2s"}}>{label}</span>
   </div>;
 }
 
 function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestart,onLogout}){
   const tog=k=>setChecked(c=>({...c,[k]:!c[k]}));
+  const [open,setOpen]=useState({resumen:true,arquetipo:false,guion:true,playlists:false,checklist:false,compartir:false,exportar:false});
+  const toggle=k=>setOpen(o=>({...o,[k]:!o[k]}));
+
   if(!results) return null;
 
   const fecha=form.fechaBoda?new Date(form.fechaBoda+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}):"";
@@ -1103,254 +1153,214 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
     pareja:[...CHECKLIST_BASE.pareja,...(results.checklist?.pareja||[])],
   };
 
-  // Contar items completados
   const totalItems=Object.values(checklistFull).flat().length;
   const doneItems=Object.entries(checklistFull).flatMap(([k,items])=>items.map((_,i)=>checked[`${k}_${i}`])).filter(Boolean).length;
   const pct=totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{maxWidth:1120,margin:"0 auto",background:"#0C1721",minHeight:"100vh"}}>
+  return <div style={{maxWidth:840,margin:"0 auto",background:"#0C1721",minHeight:"100vh",padding:"0 0 80px"}}>
 
-    {/* ══ PORTADA — Nivel 1, máximo impacto ══ */}
-    <div className="pdf-cover" style={{padding:"52px 24px 40px",textAlign:"center",borderBottom:"1px solid rgba(201,160,85,.08)",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 0%,rgba(201,160,85,.06) 0%,transparent 100%)",pointerEvents:"none"}}/>
-      <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:"1px",height:60,background:"linear-gradient(to bottom,transparent,rgba(201,160,85,.3),transparent)"}}/>
-      {/* Eyebrow */}
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".22em",textTransform:"uppercase",color:"rgba(201,160,85,.5)",marginBottom:20}}>El Violín de Ceci · Tu Banda Sonora de Boda</div>
-      {/* Nombres — el elemento más grande y prominente */}
-      <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,6vw,2.8rem)",fontWeight:400,color:C,margin:"0 0 6px",lineHeight:1.1}}>{form.nombre1} <span style={{color:"rgba(201,160,85,.4)",fontWeight:300}}>&</span> {form.nombre2}</h1>
+    {/* ══ PORTADA ══ */}
+    <div className="pdf-cover" style={{padding:"clamp(36px,6vw,64px) clamp(20px,4vw,48px)",textAlign:"center",borderBottom:"1px solid rgba(217,184,115,.08)",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 0%,rgba(217,184,115,.06) 0%,transparent 100%)",pointerEvents:"none"}}/>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.72rem,.9vw,.86rem)",letterSpacing:".22em",textTransform:"uppercase",color:"rgba(217,184,115,.5)",marginBottom:18}}>El Violín de Ceci · Tu Banda Sonora de Boda</div>
+      <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,5vw,2.8rem)",fontWeight:600,color:C,margin:"0 0 6px",lineHeight:1.1}}>
+        {form.nombre1} <span style={{color:"rgba(217,184,115,.4)",fontWeight:300}}>&</span> {form.nombre2}
+      </h1>
       {(fecha||form.ciudad)&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:"rgba(247,242,234,.38)",margin:"0 0 18px",letterSpacing:".04em"}}>{fecha}{fecha&&form.ciudad?" · ":""}{form.ciudad}</p>}
-      {/* Arquetipo badge — segundo elemento de jerarquía */}
-      {arch&&<div style={{display:"inline-flex",alignItems:"center",gap:10,background:"rgba(201,160,85,.08)",border:"1px solid rgba(201,160,85,.22)",borderRadius:100,padding:"9px 20px",marginBottom:6}}>
+      {arch&&<div style={{display:"inline-flex",alignItems:"center",gap:10,background:"rgba(217,184,115,.08)",border:"1px solid rgba(217,184,115,.22)",borderRadius:100,padding:"9px 20px",marginBottom:16}}>
         <span style={{fontSize:"1.2rem"}}>{arch.e}</span>
         <div style={{textAlign:"left"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:G,fontStyle:"italic"}}>{arch.n}</div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:"rgba(201,160,85,.5)"}}>{arch.m}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",color:"rgba(217,184,115,.5)"}}>{arch.m}</div>
         </div>
       </div>}
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.28)",margin:0,lineHeight:1.6}}>
+        No necesitás leer todo de una vez. Abrí cada sección cuando la necesites.
+      </p>
     </div>
 
-    <div style={{padding:"0 20px 80px"}}>
+    <div style={{padding:"24px 20px 0"}}>
 
-      {/* ══ VIDEO DE CECI ══ */}
-      <SecLabel>📹 Antes de leer — un mensaje de Ceci</SecLabel>
-      <div style={{background:"#111C27",border:"1px solid rgba(201,160,85,.12)",borderRadius:14,padding:"20px",textAlign:"center"}}>
-        <div style={{fontSize:"2.2rem",marginBottom:8}}>🎻</div>
-        <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:C,margin:"0 0 6px"}}>El video de Ceci está en camino</p>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:DIM,lineHeight:1.62,margin:"0 0 10px"}}>Ceci te explica cómo leer este guion, cómo coordinarlo con tus proveedores y los 3 errores más comunes.</p>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(201,160,85,.5)",fontStyle:"italic",margin:0}}>📧 Llegará a {form.email||"tu email"} en los próximos minutos.</p>
-      </div>
-
-      {resultToken&&<div className="no-print" style={{background:"rgba(201,160,85,.05)",border:"1px solid rgba(201,160,85,.16)",borderRadius:14,padding:"16px 18px",marginTop:14}}>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:G,marginBottom:6}}>Link privado de acceso</div>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:DIM,lineHeight:1.55,margin:"0 0 10px"}}>Guardá este enlace. La pareja puede volver directo a su guion desde cualquier dispositivo.</p>
-        <input readOnly value={`${window.location.origin}${window.location.pathname}?r=${resultToken}`} onFocus={e=>e.target.select()} style={{fontSize:".82rem",color:C,marginBottom:10}} />
-        <button className="gbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`); alert('Link copiado');}catch(e){}}} style={{width:"100%"}}>Copiar link privado</button>
+      {/* Link privado */}
+      {resultToken&&<div className="no-print" style={{background:"rgba(217,184,115,.05)",border:"1px solid rgba(217,184,115,.16)",borderRadius:14,padding:"14px 18px",marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:3}}>Tu link privado de acceso</div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:DIM,lineHeight:1.4}}>Guardalo para volver a tu guion desde cualquier dispositivo.</div>
+          </div>
+          <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);alert("Link copiado ✓");}catch(e){}}}>Copiar link</button>
+        </div>
       </div>}
 
-      {/* ══ NOTA DE CECI — carta personal ══ */}
-      {results.nota&&<>
-        <SecLabel>✦ Una nota de Ceci</SecLabel>
-        <div style={{position:"relative",padding:"24px 24px 20px",borderRadius:14,background:"#101923",border:"1px solid rgba(201,160,85,.16)"}}>
-          <div style={{position:"absolute",top:16,left:20,fontFamily:"'Playfair Display',serif",fontSize:"3.5rem",color:"rgba(201,160,85,.08)",lineHeight:1,userSelect:"none"}}>"</div>
-          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.08rem",fontStyle:"italic",color:C,lineHeight:1.8,margin:"0 0 14px",paddingTop:8}}>{results.nota}</p>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{height:"1px",width:24,background:G,opacity:.4}}/>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:G}}>Ceci · El Violín de Ceci</div>
-          </div>
-        </div>
-      </>}
-
-      {/* ══ ARQUETIPO — perfil completo ══ */}
-      {arch&&results.perfil&&<>
-        <SecLabel>♪ Su perfil musical</SecLabel>
-        <div style={{borderRadius:14,overflow:"hidden",border:"1px solid rgba(201,160,85,.1)"}}>
-          {/* Header del arquetipo con color de fondo */}
-          <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",padding:"18px 20px",borderBottom:"1px solid rgba(201,160,85,.1)"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:"1.8rem"}}>{arch.e}</span>
-              <div>
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontStyle:"italic",color:G}}>{arch.n}</div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(201,160,85,.5)",marginTop:2}}>{arch.m}</div>
-              </div>
+      {/* ══ 1. RESUMEN GENERAL ══ */}
+      <AccordionBlock id="resumen" icon="✦" title="Resumen de su boda" subtitle={`${form.nombre1} & ${form.nombre2}${arch?` · ${arch.n}`:""}`} isOpen={open.resumen} onToggle={()=>toggle("resumen")}>
+        <div style={{paddingTop:16}}>
+          {results.nota&&<div style={{position:"relative",padding:"20px 20px 16px",borderRadius:12,background:"rgba(12,23,33,.8)",border:"1px solid rgba(217,184,115,.14)",marginBottom:16}}>
+            <div style={{position:"absolute",top:12,left:16,fontFamily:"'Playfair Display',serif",fontSize:"3rem",color:"rgba(217,184,115,.07)",lineHeight:1,userSelect:"none"}}>"</div>
+            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",fontStyle:"italic",color:C,lineHeight:1.78,margin:"0 0 12px",paddingTop:6}}>{results.nota}</p>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{height:"1px",width:20,background:G,opacity:.4}}/>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:G}}>Ceci · El Violín de Ceci</div>
             </div>
+          </div>}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:16}}>
+            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"rgba(17,28,39,.7)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(217,184,115,.08)"}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.45)",marginBottom:4}}>{it.l}</div>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{it.v}</div>
+            </div>)}
           </div>
-          {/* Descripción */}
-          <div style={{background:"#111C27",padding:"16px 20px"}}>
-            {results.perfil.cluster&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(201,160,85,.4)",marginBottom:8}}>{results.perfil.cluster}</div>}
-            {results.perfil.desc&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.68,margin:"0 0 8px"}}>{results.perfil.desc}</p>}
-            {results.perfil.concepto&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.4)",lineHeight:1.62,fontStyle:"italic",margin:0,borderTop:"1px solid rgba(201,160,85,.06)",paddingTop:10}}>{results.perfil.concepto}</p>}
-          </div>
+          <button className="pbtn" onClick={()=>setOpen(o=>({...o,guion:true,resumen:false}))} style={{width:"100%"}}>Empezar por mi guion musical →</button>
         </div>
-      </>}
+      </AccordionBlock>
 
-      {/* ══ GUION — corazón del producto ══ */}
-      {results.guion?.length>0&&<>
-        <SecLabel>♩ Guion musical de la ceremonia</SecLabel>
-        {isCatolica&&<div style={{background:"rgba(201,160,85,.05)",border:"1px solid rgba(201,160,85,.14)",borderRadius:10,padding:"12px 15px",marginBottom:14}}>
-          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:DIM,margin:0,lineHeight:1.6}}>⚠️ Los momentos litúrgicos obligatorios (Aleluya, Comunión, Ofertorio) requieren música aprobada por la iglesia. Confirmá con el sacerdote.</p>
-        </div>}
-        {results.guion.map((item,i)=><SongCard key={i} item={item} idx={i}/>)}
-      </>}
-
-      {/* ══ PLAYLISTS — peso secundario ══ */}
-      {(results.coctel?.length>0||results.cena?.length>0)&&<>
-        <SecLabel>◈ Playlists</SecLabel>
-        {results.coctel?.length>0&&<div style={{marginBottom:16}}>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,160,85,.45)",marginBottom:6,paddingLeft:2}}>Cóctel</div>
-          <div style={{background:"#111C27",border:"1px solid rgba(201,160,85,.07)",borderRadius:13,padding:"4px 16px"}}>
-            {results.coctel.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
-          </div>
-        </div>}
-        {results.cena?.length>0&&<div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,160,85,.45)",marginBottom:6,paddingLeft:2}}>Cena</div>
-          <div style={{background:"#111C27",border:"1px solid rgba(201,160,85,.07)",borderRadius:13,padding:"4px 16px"}}>
-            {results.cena.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
-          </div>
-        </div>}
-      </>}
-
-      {/* ══ ENVIAR A PROVEEDORES ══ */}
-      <SecLabel>📤 Compartir con tus proveedores</SecLabel>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.62,marginBottom:12}}>Cada mensaje está adaptado para lo que necesita ese proveedor — no es el mismo texto para todos.</p>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-        <a className="wbtn" href={`https://wa.me/?text=${generarMsgDJ(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{justifyContent:"center"}}>🎧 DJ</a>
-        <a className="wbtn" href={`https://wa.me/?text=${generarMsgPlanner(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{justifyContent:"center"}}>📋 Planner</a>
-      </div>
-      {tieneMusico&&<a className="wbtn" href={`https://wa.me/?text=${generarMsgMusico(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{width:"100%",justifyContent:"center",display:"flex"}}>🎻 Músico en vivo</a>}
-
-      {/* ══ CHECKLIST con progreso ══ */}
-      <SecLabel>✓ Checklist de coordinación</SecLabel>
-      {/* Barra de progreso */}
-      <div style={{background:"#111C27",border:"1px solid rgba(201,160,85,.1)",borderRadius:12,padding:"14px 18px",marginBottom:16}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:C}}>{doneItems} de {totalItems} completados</div>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:pct===100?G:DIM}}>{pct}%</div>
-        </div>
-        <div style={{height:4,background:"rgba(201,160,85,.1)",borderRadius:2,overflow:"hidden"}}>
-          <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(to right,${G},#ddb968)`,borderRadius:2,transition:"width .4s ease"}}/>
-        </div>
-        {pct===100&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:G,fontStyle:"italic",margin:"8px 0 0",textAlign:"center"}}>¡Todo listo para el gran día! ✨</p>}
-      </div>
-      {/* Categorías del checklist */}
-      {[
-        {k:"planner",l:"Wedding Planner",e:"📋",important:[0,1,2]},
-        {k:"dj",l:"DJ",e:"🎧",important:[0,1,2]},
-        {k:"musicos",l:"Músicos en vivo",e:"🎻",important:[0,1]},
-        {k:"iglesia",l:"Iglesia",e:"⛪",important:[0,1,2]},
-        {k:"pareja",l:"Para la pareja",e:"💍",important:[0,1,5]},
-      ].filter(c=>checklistFull[c.k]?.length>0).map(cat=>(
-        <div key={cat.k} style={{marginBottom:14}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-            <span style={{fontSize:"1rem"}}>{cat.e}</span>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".1em",textTransform:"uppercase",color:G}}>{cat.l}</div>
-            <div style={{flex:1,height:"1px",background:"rgba(201,160,85,.08)"}}/>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:"rgba(201,160,85,.35)"}}>
-              {checklistFull[cat.k].filter((_,i)=>checked[`${cat.k}_${i}`]).length}/{checklistFull[cat.k].length}
-            </div>
-          </div>
-          <div style={{background:"#111C27",border:"1px solid rgba(201,160,85,.07)",borderRadius:12,padding:"2px 14px"}}>
-            {checklistFull[cat.k].map((item,i)=><CheckItem key={i} label={item} done={!!checked[`${cat.k}_${i}`]} onToggle={()=>tog(`${cat.k}_${i}`)} important={cat.important.includes(i)}/>)}
-          </div>
-        </div>
-      ))}
-
-      {/* ══ ERRORES — peso visual de alerta ══ */}
-      {results.errores?.length>0&&<>
-        <SecLabel>⚠ Errores frecuentes para esta boda</SecLabel>
-        {results.errores.map((e,i)=>(
-          <div key={i} style={{display:"flex",gap:12,padding:"12px 0",borderBottom:i<results.errores.length-1?"1px solid rgba(201,160,85,.06)":"none"}}>
-            <div style={{width:24,height:24,minWidth:24,borderRadius:"50%",background:"rgba(201,160,85,.08)",border:"1px solid rgba(201,160,85,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>!</div>
-            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.62,margin:0}}>{e}</p>
-          </div>
-        ))}
-      </>}
-
-      {/* ══ EXPORT PDF ══ */}
-      <SecLabel>📄 Exportar a PDF</SecLabel>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.62,marginBottom:14}}>
-        Guardá tu guion como PDF para compartirlo con el DJ, el planner y tus músicos.
-      </p>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        <button onClick={()=>{
-          document.getElementById('pdf-guia-block').style.display='none';
-          setTimeout(()=>{ window.print(); setTimeout(()=>{ document.getElementById('pdf-guia-block').style.display='block'; },500); },100);
-        }} style={{background:"#111D28",border:"1px solid rgba(201,160,85,.18)",borderRadius:12,padding:"14px 18px",fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:"1.2rem"}}>🎼</span>
-          <div>
-            <div style={{marginBottom:2}}>Exportar solo el guion musical</div>
-            <div style={{fontSize:".85rem",color:"rgba(247,242,234,.3)"}}>Arquetipo · Canciones · Playlists · Checklist</div>
-          </div>
-        </button>
-        <button onClick={()=>{ window.print(); }} style={{background:"#111D28",border:"1px solid rgba(201,160,85,.18)",borderRadius:12,padding:"14px 18px",fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:"1.2rem"}}>📚</span>
-          <div>
-            <div style={{marginBottom:2}}>Exportar guion + guía completa</div>
-            <div style={{fontSize:".85rem",color:"rgba(247,242,234,.3)"}}>Todo el documento incluyendo la Guía de Canciones de Ceci</div>
-          </div>
-        </button>
-      </div>
-
-      {/* ══ GUIA PARA PDF (visible solo al imprimir) ══ */}
-      <div id="pdf-guia-block" className="no-print" style={{display:"none"}}>
-      </div>
-      <div id="pdf-guia-print" style={{}}>
-        <div style={{pageBreakBefore:"always",paddingTop:8}}>
-          <SecLabel>📖 Guía de Canciones · El Violín de Ceci</SecLabel>
-          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:DIM,lineHeight:1.62,marginBottom:16}}>Las canciones más pedidas en bodas reales, con el criterio de Ceci para cada momento.</p>
-          {Object.entries(CANCIONES_POR_MOMENTO).map(([k,m])=>(
-            <div key={k} className="pdf-guia-section" style={{marginBottom:22,breakInside:"avoid"}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",fontWeight:700,color:G,marginBottom:4}}>{m.icono} {m.titulo}</div>
-              <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:DIM,lineHeight:1.6,margin:"0 0 8px",fontStyle:"italic"}}>{m.guia}</p>
-              <div style={{background:"rgba(201,160,85,.05)",border:"1px solid rgba(201,160,85,.12)",borderRadius:8,padding:"8px 12px",marginBottom:10}}>
-                <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(201,160,85,.7)"}}>⚠ {m.errores}</span>
-              </div>
-              {m.canciones.map((c,i)=>(
-                <div key={i} className="song-item" style={{display:"flex",gap:10,padding:"8px 0",borderBottom:"1px solid rgba(201,160,85,.06)"}}>
-                  <div className="song-num" style={{width:20,height:20,minWidth:20,borderRadius:"50%",background:"rgba(201,160,85,.1)",border:"1px solid rgba(201,160,85,.22)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>{i+1}</div>
-                  <div>
-                    <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:C}}>{c.t}</div>
-                    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:DIM}}>{c.a}</div>
-                    <div className="song-ceci" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(201,160,85,.6)",fontStyle:"italic"}}>"{c.n}"</div>
-                  </div>
+      {/* ══ 2. ARQUETIPO ══ */}
+      <AccordionBlock id="arquetipo" icon={arch?.e||"♪"} title="Su perfil musical" subtitle={arch?`${arch.n} · ${arch.m}`:""} isOpen={open.arquetipo} onToggle={()=>toggle("arquetipo")}>
+        {arch&&results.perfil&&<div style={{paddingTop:16}}>
+          <div style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(217,184,115,.12)",marginBottom:12}}>
+            <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",padding:"16px 18px",borderBottom:"1px solid rgba(217,184,115,.1)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:"1.8rem"}}>{arch.e}</span>
+                <div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontStyle:"italic",color:G}}>{arch.n}</div>
+                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(217,184,115,.5)",marginTop:2}}>{arch.m}</div>
                 </div>
-              ))}
+              </div>
+            </div>
+            <div style={{background:"rgba(17,28,39,.7)",padding:"14px 18px"}}>
+              {results.perfil.cluster&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(217,184,115,.4)",marginBottom:8}}>{results.perfil.cluster}</div>}
+              {results.perfil.desc&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.68,margin:"0 0 8px"}}>{results.perfil.desc}</p>}
+              {results.perfil.concepto&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.4)",lineHeight:1.62,fontStyle:"italic",margin:0,borderTop:"1px solid rgba(217,184,115,.06)",paddingTop:10}}>{results.perfil.concepto}</p>}
+            </div>
+          </div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:DIM,lineHeight:1.6,fontStyle:"italic",padding:"0 4px"}}>{arch.d}</div>
+        </div>}
+      </AccordionBlock>
+
+      {/* ══ 3. GUION ══ */}
+      <AccordionBlock id="guion" icon="♩" title="Guion musical de la ceremonia" subtitle="Canciones para cada momento, elegidas para ustedes" isOpen={open.guion} onToggle={()=>toggle("guion")} defaultTag="Principal">
+        <div style={{paddingTop:16}}>
+          {isCatolica&&<div style={{background:"rgba(217,184,115,.05)",border:"1px solid rgba(217,184,115,.14)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>⚠️ Los momentos litúrgicos (Aleluya, Comunión, Ofertorio) requieren música aprobada por la iglesia. Confirmá con el sacerdote antes de cerrar el repertorio.</p>
+          </div>}
+          {results.guion?.length>0
+            ? results.guion.map((item,i)=><SongCard key={i} item={item} idx={i}/>)
+            : <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,textAlign:"center",padding:"20px 0"}}>El guion musical no pudo generarse. Intentá de nuevo.</p>
+          }
+        </div>
+      </AccordionBlock>
+
+      {/* ══ 4. PLAYLISTS ══ */}
+      {(results.coctel?.length>0||results.cena?.length>0)&&<AccordionBlock id="playlists" icon="◈" title="Playlists de cóctel y cena" subtitle="Canciones curadas para después de la ceremonia" isOpen={open.playlists} onToggle={()=>toggle("playlists")}>
+        <div style={{paddingTop:16}}>
+          {results.coctel?.length>0&&<div style={{marginBottom:18}}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.45)",marginBottom:8}}>Cóctel</div>
+            <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.07)",borderRadius:12,padding:"4px 14px"}}>
+              {results.coctel.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
+            </div>
+          </div>}
+          {results.cena?.length>0&&<div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.45)",marginBottom:8}}>Cena</div>
+            <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.07)",borderRadius:12,padding:"4px 14px"}}>
+              {results.cena.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
+            </div>
+          </div>}
+        </div>
+      </AccordionBlock>}
+
+      {/* ══ 5. CHECKLIST ══ */}
+      <AccordionBlock id="checklist" icon="✓" title="Checklist de coordinación" subtitle={`${doneItems} de ${totalItems} completados · ${pct}%`} isOpen={open.checklist} onToggle={()=>toggle("checklist")}>
+        <div style={{paddingTop:16}}>
+          <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.1)",borderRadius:12,padding:"12px 16px",marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:C}}>{doneItems} de {totalItems} completados</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:pct===100?G:DIM}}>{pct}%</div>
+            </div>
+            <div style={{height:5,background:"rgba(217,184,115,.1)",borderRadius:3,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(to right,${G},#E9C978)`,borderRadius:3,transition:"width .4s ease"}}/>
+            </div>
+            {pct===100&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:G,fontStyle:"italic",margin:"8px 0 0",textAlign:"center"}}>¡Todo listo para el gran día! ✨</p>}
+          </div>
+          {[
+            {k:"planner",l:"Wedding Planner",e:"📋",important:[0,1,2]},
+            {k:"dj",l:"DJ",e:"🎧",important:[0,1,2]},
+            {k:"musicos",l:"Músicos en vivo",e:"🎻",important:[0,1]},
+            {k:"iglesia",l:"Iglesia",e:"⛪",important:[0,1,2]},
+            {k:"pareja",l:"Para la pareja",e:"💍",important:[0,1,5]},
+          ].filter(cat=>checklistFull[cat.k]?.length>0).map(cat=>(
+            <div key={cat.k} style={{marginBottom:14}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <span style={{fontSize:"1rem"}}>{cat.e}</span>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:G}}>{cat.l}</div>
+                <div style={{flex:1,height:"1px",background:"rgba(217,184,115,.08)"}}/>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:"rgba(217,184,115,.35)"}}>
+                  {checklistFull[cat.k].filter((_,i)=>checked[`${cat.k}_${i}`]).length}/{checklistFull[cat.k].length}
+                </div>
+              </div>
+              <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.07)",borderRadius:12,padding:"2px 14px"}}>
+                {checklistFull[cat.k].map((item,i)=><CheckItem key={i} label={item} done={!!checked[`${cat.k}_${i}`]} onToggle={()=>tog(`${cat.k}_${i}`)} important={cat.important.includes(i)}/>)}
+              </div>
             </div>
           ))}
-          <div style={{marginTop:20,borderTop:"1px solid rgba(201,160,85,.1)",paddingTop:16}}>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(201,160,85,.45)",marginBottom:14}}>5 reglas de Ceci para elegir bien</div>
-            {GUIA_TIPS.map((tip,i)=>(
-              <div key={i} style={{display:"flex",gap:12,paddingBottom:12,borderBottom:i<4?"1px solid rgba(201,160,85,.06)":"none",marginBottom:12}}>
-                <div style={{width:22,height:22,minWidth:22,borderRadius:"50%",background:"rgba(201,160,85,.1)",border:"1px solid rgba(201,160,85,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:G,flexShrink:0}}>{i+1}</div>
-                <div>
-                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:C,marginBottom:3}}>{tip.t}</div>
-                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:DIM,lineHeight:1.55}}>{tip.d}</div>
-                </div>
+          {results.errores?.length>0&&<>
+            <SecLabel>⚠ Errores frecuentes para esta boda</SecLabel>
+            {results.errores.map((e,i)=>(
+              <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<results.errores.length-1?"1px solid rgba(217,184,115,.06)":"none"}}>
+                <div style={{width:22,height:22,minWidth:22,borderRadius:"50%",background:"rgba(217,184,115,.08)",border:"1px solid rgba(217,184,115,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>!</div>
+                <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.62,margin:0}}>{e}</p>
               </div>
             ))}
-          </div>
+          </>}
         </div>
+      </AccordionBlock>
+
+      {/* ══ 6. COMPARTIR ══ */}
+      <AccordionBlock id="compartir" icon="📤" title="Compartir con proveedores" subtitle="Mensajes listos para enviar por WhatsApp a cada proveedor" isOpen={open.compartir} onToggle={()=>toggle("compartir")}>
+        <div style={{paddingTop:16}}>
+          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,marginBottom:14}}>Cada botón prepara un mensaje adaptado para ese proveedor — con la información exacta que necesita, sin que tengas que escribir nada.</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <a className="wbtn" href={`https://wa.me/?text=${generarMsgDJ(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{justifyContent:"center"}}>🎧 DJ</a>
+            <a className="wbtn" href={`https://wa.me/?text=${generarMsgPlanner(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{justifyContent:"center"}}>📋 Planner</a>
+          </div>
+          {tieneMusico&&<a className="wbtn" href={`https://wa.me/?text=${generarMsgMusico(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{width:"100%",justifyContent:"center",display:"flex"}}>🎻 Músico en vivo</a>}
+        </div>
+      </AccordionBlock>
+
+      {/* ══ 7. EXPORTAR ══ */}
+      <AccordionBlock id="exportar" icon="📄" title="Guardar o exportar" subtitle="PDF para imprimir o compartir con quien necesites" isOpen={open.exportar} onToggle={()=>toggle("exportar")}>
+        <div style={{paddingTop:16}}>
+          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,marginBottom:14}}>Guardá tu guion como PDF para tenerlo siempre a mano o enviárselo a tu planner.</p>
+          <button onClick={()=>window.print()} style={{width:"100%",background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.14)",borderRadius:12,padding:"14px 18px",fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <span style={{fontSize:"1.2rem"}}>🖨️</span>
+            <div>
+              <div style={{marginBottom:2}}>Guardar como PDF</div>
+              <div style={{fontSize:".85rem",color:"rgba(247,242,234,.3)"}}>En el diálogo de impresión, elegí "Guardar como PDF"</div>
+            </div>
+          </button>
+          {resultToken&&<div style={{background:"rgba(217,184,115,.05)",border:"1px solid rgba(217,184,115,.14)",borderRadius:12,padding:"14px 16px"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:6}}>Volver a tu resultado desde cualquier dispositivo</div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:DIM,wordBreak:"break-all",marginBottom:10,lineHeight:1.4}}>{typeof window!=="undefined"?`${window.location.origin}${window.location.pathname}?r=${resultToken}`:""}</div>
+            <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);alert("Link copiado ✓");}catch(e){}}}>Copiar link privado</button>
+          </div>}
+        </div>
+      </AccordionBlock>
+
+      {/* ══ UPSELL ══ */}
+      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,115,.22)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:10}}>¿Querés que Ceci lo revise con vos?</div>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:600,color:C,margin:"0 0 8px"}}>Revisión personalizada · 45 minutos</h3>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,margin:"0 0 20px"}}>Revisamos juntas este guion, ajustamos lo que necesitás y te quedás con todo confirmado antes de hablar con tus proveedores.</p>
+        <a className="pbtn" href="https://wa.me/595985689454?text=Hola%20Ceci!%20Quiero%20una%20revisión%20personalizada%20de%20mi%20guion%20musical" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",textDecoration:"none"}}>Escribirle a Ceci →</a>
+        <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.2)"}}>@elviolindececi · +595 985 689 454</p>
       </div>
 
-      {/* ══ UPSELL — CTA final ══ */}
-      <div style={{marginTop:36,background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(201,160,85,.22)",borderRadius:16,padding:"28px 24px",textAlign:"center"}} className="no-print">
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:10}}>¿Querés que Ceci lo revise con vos?</div>
-        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:400,color:C,margin:"0 0 8px"}}>Revisión personalizada · 45 minutos</h3>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,margin:"0 0 20px"}}>Revisamos juntas este guion, ajustamos lo que necesitás y te quedás con todo confirmado.</p>
-        <a className="pbtn" href="https://wa.me/595985689454?text=Hola%20Ceci!%20Quiero%20una%20revisión%20personalizada%20de%20mi%20guion%20musical" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",textDecoration:"none"}}>
-          Escribirle a Ceci por WhatsApp →
-        </a>
-        <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.2)"}}>+595 985 689 454 · @elviolindececi</p>
-      </div>
-
-      <div style={{textAlign:"center",marginTop:20}} className="no-print">
-        <button className="gbtn" onClick={onRestart}>← Crear otro guion</button>
-        <button className="gbtn" onClick={onLogout} style={{marginLeft:8}}>Cerrar sesión</button>
+      <div className="no-print" style={{textAlign:"center",marginTop:20}}>
+        <button className="gbtn" onClick={onRestart} style={{marginRight:8}}>← Volver a hacer el test</button>
+        <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
       </div>
 
     </div>
   </div>;
 }
-
 
 function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }={}){
   const [mode,setMode]=useState(initialMode);
