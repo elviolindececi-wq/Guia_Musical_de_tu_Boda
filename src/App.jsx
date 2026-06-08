@@ -624,6 +624,16 @@ ${txt}
   }
 };
 
+const callAIWithRetry = async (prompt, maxTokens=2000) => {
+  try {
+    return await callAI(prompt, maxTokens);
+  } catch (e) {
+    console.warn("Primer intento fallido, reintentando...", e.message);
+    await new Promise(r => setTimeout(r, 1500));
+    return await callAI(prompt, maxTokens);
+  }
+};
+
 const encodeWhatsApp = (text) => encodeURIComponent(text);
 
 const generarMsgDJ = (form, results, arch) => {
