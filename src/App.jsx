@@ -149,10 +149,10 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&display=swap');
 *,*::before,*::after{box-sizing:border-box}
 html{font-size:clamp(16px,1.1vw,19px);scroll-behavior:smooth}
-body{margin:0;background:#0C1721;color:#F7F2EA;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+body{margin:0;background:#07111B;color:#F8F2E6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
 button,input,textarea{font:inherit}
 button{-webkit-tap-highlight-color:transparent}
-#root{min-height:100vh;background:#0C1721}
+#root{min-height:100vh;background:#07111B}
 @media(max-width:480px){html{font-size:16px} body{min-width:320px}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -163,53 +163,53 @@ button{-webkit-tap-highlight-color:transparent}
 .fu3{animation:fadeUp .5s .21s ease both;opacity:0}
 .fu4{animation:fadeUp .5s .28s ease both;opacity:0}
 .fu5{animation:fadeUp .5s .35s ease both;opacity:0}
-input,textarea{background:transparent;border:none;border-bottom:1px solid rgba(201,160,85,.22);color:#F7F2EA;font-family:'Cormorant Garamond',serif;font-size:1.1rem;padding:12px 2px;width:100%;outline:none;transition:border-color .3s;-webkit-appearance:none}
-input:focus,textarea:focus{border-bottom-color:#D9B873}
-input::placeholder,textarea::placeholder{color:rgba(247,242,234,.3);font-style:italic}
+input,textarea{background:transparent;border:none;border-bottom:1px solid rgba(217,184,111,.22);color:#F8F2E6;font-family:'Cormorant Garamond',serif;font-size:1.1rem;padding:12px 2px;width:100%;outline:none;transition:border-color .3s;-webkit-appearance:none}
+input:focus,textarea:focus{border-bottom-color:#D9B86F}
+input::placeholder,textarea::placeholder{color:rgba(248,242,230,.3);font-style:italic}
 input[type=date]{color-scheme:dark}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#D9B873;border-radius:2px}
-.tag{display:inline-block;padding:9px 16px;border:1px solid rgba(201,160,85,.22);border-radius:100px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(247,242,234,.52);transition:all .2s;user-select:none;margin:3px 3px 3px 0}
-.tag:hover{border-color:rgba(201,160,85,.5);color:#F7F2EA}
-.tag.sel{background:rgba(201,160,85,.12);border-color:#D9B873;color:#E6C781}
-.pill{display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid rgba(201,160,85,.17);border-radius:12px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(247,242,234,.6);transition:all .2s;user-select:none;width:100%;margin-bottom:9px;background:transparent;text-align:left;line-height:1.4}
-.pill:hover{border-color:rgba(201,160,85,.38);color:#F7F2EA;background:rgba(201,160,85,.04)}
-.pill.sel{background:rgba(201,160,85,.09);border-color:#D9B873;color:#F7F2EA}
-.pbtn{background:linear-gradient(135deg,#D9B873,#E9C978);color:#0C1721;border:none;padding:16px 38px;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;letter-spacing:.06em;border-radius:100px;cursor:pointer;transition:all .3s;min-height:54px;white-space:nowrap}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#D9B86F;border-radius:2px}
+.tag{display:inline-block;padding:9px 16px;border:1px solid rgba(217,184,111,.22);border-radius:100px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(248,242,230,.52);transition:all .2s;user-select:none;margin:3px 3px 3px 0}
+.tag:hover{border-color:rgba(217,184,111,.5);color:#F8F2E6}
+.tag.sel{background:rgba(217,184,111,.12);border-color:#D9B86F;color:#E6C76A}
+.pill{display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid rgba(217,184,111,.17);border-radius:12px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(248,242,230,.6);transition:all .2s;user-select:none;width:100%;margin-bottom:9px;background:transparent;text-align:left;line-height:1.4}
+.pill:hover{border-color:rgba(217,184,111,.38);color:#F8F2E6;background:rgba(217,184,111,.04)}
+.pill.sel{background:rgba(217,184,111,.09);border-color:#D9B86F;color:#F8F2E6}
+.pbtn{background:linear-gradient(135deg,#D9B86F,#E6C76A);color:#0C1721;border:none;padding:16px 38px;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;letter-spacing:.06em;border-radius:100px;cursor:pointer;transition:all .3s;min-height:54px;white-space:nowrap}
 .pbtn:active{transform:scale(.98)}
 .pbtn:disabled{opacity:.28;cursor:not-allowed;transform:none}
-.gbtn{background:transparent;color:rgba(247,242,234,.42);border:1px solid rgba(247,242,234,.14);padding:13px 24px;font-family:'Cormorant Garamond',serif;font-size:1rem;border-radius:100px;cursor:pointer;transition:all .2s;min-height:52px}
-.gbtn:hover{border-color:rgba(247,242,234,.28);color:rgba(247,242,234,.72)}
+.gbtn{background:transparent;color:rgba(248,242,230,.42);border:1px solid rgba(248,242,230,.14);padding:13px 24px;font-family:'Cormorant Garamond',serif;font-size:1rem;border-radius:100px;cursor:pointer;transition:all .2s;min-height:52px}
+.gbtn:hover{border-color:rgba(248,242,230,.28);color:rgba(248,242,230,.72)}
 .wbtn{background:rgba(37,211,102,.1);color:#2ECC71;border:1px solid rgba(37,211,102,.28);padding:13px 20px;font-family:'Cormorant Garamond',serif;font-size:1rem;border-radius:100px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;text-decoration:none;line-height:1.3}
 .wbtn:hover{background:rgba(37,211,102,.18);border-color:rgba(37,211,102,.5)}
-.scard{background:#111D28;border:1px solid rgba(201,160,85,.1);border-radius:14px;padding:20px;margin-bottom:12px}
-.lbtn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1px solid rgba(201,160,85,.3);border-radius:100px;color:#D9B873;font-family:'Cormorant Garamond',serif;font-size:.95rem;cursor:pointer;background:transparent;transition:all .2s;text-decoration:none;white-space:nowrap}
-.lbtn:hover{background:rgba(201,160,85,.08)}
-.ci{display:flex;align-items:flex-start;gap:12px;padding:14px 0;cursor:pointer;border-bottom:1px solid rgba(201,160,85,.05)}
+.scard{background:#111C27;border:1px solid rgba(217,184,111,.1);border-radius:14px;padding:20px;margin-bottom:12px}
+.lbtn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1px solid rgba(217,184,111,.3);border-radius:100px;color:#D9B86F;font-family:'Cormorant Garamond',serif;font-size:.95rem;cursor:pointer;background:transparent;transition:all .2s;text-decoration:none;white-space:nowrap}
+.lbtn:hover{background:rgba(217,184,111,.08)}
+.ci{display:flex;align-items:flex-start;gap:12px;padding:14px 0;cursor:pointer;border-bottom:1px solid rgba(217,184,111,.05)}
 .ci:last-child{border-bottom:none}
-.cb{width:22px;height:22px;min-width:22px;border:1px solid rgba(201,160,85,.3);border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
-.cb.ck{background:rgba(201,160,85,.18);border-color:#D9B873}
+.cb{width:22px;height:22px;min-width:22px;border:1px solid rgba(217,184,111,.3);border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.cb.ck{background:rgba(217,184,111,.18);border-color:#D9B86F}
 .divider{display:flex;align-items:center;gap:14px;margin-bottom:22px}
 .divider::before,.divider::after{content:'';flex:1;height:1px}
-.divider::before{background:linear-gradient(to right,transparent,rgba(201,160,85,.18))}
-.divider::after{background:linear-gradient(to left,transparent,rgba(201,160,85,.18))}
-.fl{font-family:'Cormorant Garamond',serif;font-size:.82rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(201,160,85,.55);margin-top:26px;margin-bottom:10px}
-.sl-n{font-family:'Cormorant Garamond',serif;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:#D9B873;margin-bottom:8px}
-.sl-t{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,5vw,2rem);font-weight:700;color:#F7F2EA;margin:0 0 6px;line-height:1.15}
-.sl-s{font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(247,242,234,.44);margin:0;font-style:italic;line-height:1.5}
-.song-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(201,160,85,.06)}
+.divider::before{background:linear-gradient(to right,transparent,rgba(217,184,111,.18))}
+.divider::after{background:linear-gradient(to left,transparent,rgba(217,184,111,.18))}
+.fl{font-family:'Cormorant Garamond',serif;font-size:.82rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(217,184,111,.55);margin-top:26px;margin-bottom:10px}
+.sl-n{font-family:'Cormorant Garamond',serif;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:#D9B86F;margin-bottom:8px}
+.sl-t{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,5vw,2rem);font-weight:700;color:#F8F2E6;margin:0 0 6px;line-height:1.15}
+.sl-s{font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(248,242,230,.44);margin:0;font-style:italic;line-height:1.5}
+.song-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(217,184,111,.06)}
 .song-item:last-child{border-bottom:none}
-.song-num{width:24px;height:24px;min-width:24px;border-radius:50%;background:rgba(201,160,85,.1);border:1px solid rgba(201,160,85,.22);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:.8rem;color:#D9B873;margin-top:2px;flex-shrink:0}
-.song-ceci{font-family:'Cormorant Garamond',serif;font-size:.9rem;color:rgba(201,160,85,.6);font-style:italic;margin-top:4px;line-height:1.5}
-.guide-sec{background:#111D28;border:1px solid rgba(201,160,85,.1);border-radius:14px;padding:20px 22px;margin-bottom:14px}
-.guide-sec-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:600;color:#E6C781;margin:0 0 4px}
-.guide-sec-sub{font-family:'Cormorant Garamond',serif;font-size:.9rem;color:rgba(247,242,234,.38);font-style:italic;margin:0 0 14px}
-.tab{padding:10px 18px;font-family:'Cormorant Garamond',serif;font-size:.95rem;border-radius:100px;cursor:pointer;border:1px solid rgba(201,160,85,.2);color:rgba(247,242,234,.45);background:transparent;transition:all .2s;white-space:nowrap;min-height:42px}
-.tab.act{background:rgba(201,160,85,.12);border-color:#D9B873;color:#E6C781}
-.moment-card{border:1px solid rgba(201,160,85,.12);border-radius:13px;padding:17px 18px;margin-bottom:10px;background:#111D28;cursor:pointer;transition:border-color .2s}
-.moment-card:hover{border-color:rgba(201,160,85,.28)}
-.moment-card.sel{border-color:#D9B873;background:rgba(201,160,85,.05)}
-.info-box{background:rgba(201,160,85,.05);border:1px solid rgba(201,160,85,.15);border-radius:10px;padding:14px 16px;margin-top:10px}
-.arch-badge{display:inline-flex;align-items:center;gap:9px;background:rgba(201,160,85,.09);border:1px solid rgba(201,160,85,.25);border-radius:100px;padding:8px 18px;margin-bottom:14px}
+.song-num{width:24px;height:24px;min-width:24px;border-radius:50%;background:rgba(217,184,111,.1);border:1px solid rgba(217,184,111,.22);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:.8rem;color:#D9B86F;margin-top:2px;flex-shrink:0}
+.song-ceci{font-family:'Cormorant Garamond',serif;font-size:.9rem;color:rgba(217,184,111,.6);font-style:italic;margin-top:4px;line-height:1.5}
+.guide-sec{background:#111C27;border:1px solid rgba(217,184,111,.1);border-radius:14px;padding:20px 22px;margin-bottom:14px}
+.guide-sec-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:600;color:#E6C76A;margin:0 0 4px}
+.guide-sec-sub{font-family:'Cormorant Garamond',serif;font-size:.9rem;color:rgba(248,242,230,.38);font-style:italic;margin:0 0 14px}
+.tab{padding:10px 18px;font-family:'Cormorant Garamond',serif;font-size:.95rem;border-radius:100px;cursor:pointer;border:1px solid rgba(217,184,111,.2);color:rgba(248,242,230,.45);background:transparent;transition:all .2s;white-space:nowrap;min-height:42px}
+.tab.act{background:rgba(217,184,111,.12);border-color:#D9B86F;color:#E6C76A}
+.moment-card{border:1px solid rgba(217,184,111,.12);border-radius:13px;padding:17px 18px;margin-bottom:10px;background:#111C27;cursor:pointer;transition:border-color .2s}
+.moment-card:hover{border-color:rgba(217,184,111,.28)}
+.moment-card.sel{border-color:#D9B86F;background:rgba(217,184,111,.05)}
+.info-box{background:rgba(217,184,111,.05);border:1px solid rgba(217,184,111,.15);border-radius:10px;padding:14px 16px;margin-top:10px}
+.arch-badge{display:inline-flex;align-items:center;gap:9px;background:rgba(217,184,111,.09);border:1px solid rgba(217,184,111,.25);border-radius:100px;padding:8px 18px;margin-bottom:14px}
 @media(max-width:680px){
   .generating-notes{grid-template-columns:1fr!important}
 }
@@ -219,23 +219,24 @@ input[type=date]{color-scheme:dark}
   .lbtn{font-size:.88rem;padding:7px 13px}
 }
 
-.brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#D9B873;font-weight:500}
-.brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#F7F2EA;letter-spacing:.04em;line-height:1.15;text-wrap:balance}
-.brand-title .gold{color:#D9B873}
-.brand-subtitle{font-family:'Cormorant Garamond',serif;color:rgba(247,242,234,.82);font-weight:600;text-wrap:balance}
-.brand-copy{font-family:'Cormorant Garamond',serif;color:rgba(247,242,234,.68);line-height:1.75}
+.brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#D9B86F;font-weight:500}
+.brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#F8F2E6;letter-spacing:.04em;line-height:1.15;text-wrap:balance}
+.brand-title .gold{color:#D9B86F}
+.brand-subtitle{font-family:'Cormorant Garamond',serif;color:rgba(248,242,230,.82);font-weight:600;text-wrap:balance}
+.brand-copy{font-family:'Cormorant Garamond',serif;color:rgba(248,242,230,.68);line-height:1.75}
 .responsive-shell{width:100%;max-width:1120px;margin:0 auto;padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)}
-.auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:rgba(17,28,39,.88)!important;backdrop-filter:blur(14px);border:1px solid rgba(217,184,115,.22)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 28px 90px rgba(0,0,0,.36)}
-.auth-card input{background:rgba(247,242,234,.96)!important;color:#0C1721!important;border:1px solid rgba(217,184,115,.2)!important;border-radius:0!important;padding:14px 14px!important;font-family:'Cormorant Garamond',serif!important;font-weight:600;box-shadow:none!important}
+.auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:rgba(17,28,39,.88)!important;backdrop-filter:blur(14px);border:1px solid rgba(217,184,111,.22)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 28px 90px rgba(0,0,0,.36)}
+.auth-card input{background:rgba(248,242,230,.96)!important;color:#0C1721!important;border:1px solid rgba(217,184,111,.2)!important;border-radius:0!important;padding:14px 14px!important;font-family:'Cormorant Garamond',serif!important;font-weight:600;box-shadow:none!important}
 .auth-card input::placeholder{color:rgba(12,23,33,.45)!important}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:min(760px,100svh);padding-top:clamp(54px,9vw,112px);padding-bottom:clamp(54px,9vw,112px);text-align:center}
 .hero-title{font-size:clamp(2.7rem,9vw,6.2rem);max-width:980px;margin:0 auto 28px}
 .hero-kicker{margin-bottom:clamp(34px,7vw,72px)}
 .hero-sub{font-size:clamp(1.35rem,3vw,2rem);font-style:italic;margin:0 0 12px}
-.hero-line{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2vw,1.35rem);font-weight:700;letter-spacing:.02em;color:rgba(247,242,234,.86);margin:0}
+.hero-line{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2vw,1.35rem);font-weight:700;letter-spacing:.02em;color:rgba(248,242,230,.86);margin:0}
 @media(min-width:900px){
-  .desktop-two-col{display:grid!important;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  .desktop-two-col{display:grid!important;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
   .results-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}
+  .results-container{max-width:900px!important}
 }
 
 @media(max-width:900px){
@@ -257,8 +258,11 @@ input[type=date]{color-scheme:dark}
 }
 
 .tag-desktop{display:none}
+.momento-slide{user-select:none}
+div[style*="grab"]:active{cursor:grabbing}
+
 @media(min-width:640px){.tag-desktop{display:inline-block!important}}
-.accordion-open{border-color:rgba(217,184,115,.28)!important}
+.accordion-open{border-color:rgba(217,184,111,.28)!important}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   html,body{background:#fff!important;color:#1a1a1a!important;font-size:13px!important}
@@ -269,9 +273,9 @@ input[type=date]{color-scheme:dark}
   @page:first{margin-top:2.4cm}
 
   /* Portada */
-  .pdf-cover{background:#0C1721!important;color:#F7F2EA!important;padding:48px 40px!important;min-height:200px!important;border-radius:0!important;text-align:center;margin-bottom:24px;border-bottom:3px solid #D9B873}
-  .pdf-cover h1{color:#F7F2EA!important;font-size:28px!important;margin:0 0 6px!important}
-  .pdf-cover .sub{color:#D9B873!important;font-size:13px!important}
+  .pdf-cover{background:#07111B!important;color:#F8F2E6!important;padding:48px 40px!important;min-height:200px!important;border-radius:0!important;text-align:center;margin-bottom:24px;border-bottom:3px solid #D9B86F}
+  .pdf-cover h1{color:#F8F2E6!important;font-size:28px!important;margin:0 0 6px!important}
+  .pdf-cover .sub{color:#D9B86F!important;font-size:13px!important}
 
   /* Secciones */
   .divider{margin:18px 0 14px!important}
@@ -280,21 +284,21 @@ input[type=date]{color-scheme:dark}
 
   /* Cards */
   .scard{background:#faf8f5!important;border:1px solid #e0d5c0!important;border-radius:8px!important;break-inside:avoid;margin-bottom:10px!important;padding:14px!important}
-  .song-star-card{background:#faf5ec!important;border:2px solid #D9B873!important;border-radius:8px!important;break-inside:avoid;margin-bottom:10px!important;padding:14px!important}
+  .song-star-card{background:#faf5ec!important;border:2px solid #D9B86F!important;border-radius:8px!important;break-inside:avoid;margin-bottom:10px!important;padding:14px!important}
   .moment-card{background:#faf8f5!important;border:1px solid #e0d5c0!important;break-inside:avoid}
 
   /* Tipografía */
   h1,h2,h3{color:#1a1a1a!important}
-  [style*="color:#F7F2EA"],[style*="color: #F7F2EA"]{color:#1a1a1a!important}
-  [style*="color:rgba(247,242,234"]{color:#555!important}
-  [style*="color:#D9B873"],[style*="color: #D9B873"],[style*="color:#E6C781"]{color:#854F0B!important}
+  [style*="color:#F8F2E6"],[style*="color: #F7F2EA"]{color:#1a1a1a!important}
+  [style*="color:rgba(248,242,230"]{color:#555!important}
+  [style*="color:#D9B86F"],[style*="color: #D9B86F"],[style*="color:#E6C76A"]{color:#854F0B!important}
   [style*="background:#0"],[style*="background: #0"],[style*="background:#0e"]{background:#fff!important}
   [style*="background:#0f"]{background:#faf8f5!important}
 
   /* Checklist */
   .ci{border-bottom:1px solid #e8e0d0!important}
-  .cb{border:1px solid #D9B873!important;border-radius:3px!important}
-  .cb.ck{background:#D9B873!important}
+  .cb{border:1px solid #D9B86F!important;border-radius:3px!important}
+  .cb.ck{background:#D9B86F!important}
 
   /* Guía: forzar mostrar todas las secciones */
   .pdf-guia-section{display:block!important;break-inside:avoid;margin-bottom:16px}
@@ -302,7 +306,7 @@ input[type=date]{color-scheme:dark}
 }
 `;
 
-const G="#D9B873", C="#F7F2EA", DIM="rgba(247,242,234,.68)";
+const G="#D9B86F", C="#F8F2E6", DIM="rgba(248,242,230,.68)", DIMSOFT="rgba(248,242,230,.45)", BG="#07111B", BG2="#111C27", BG3="#152230", BORDER="rgba(217,184,111,.18)";
 
 const CECI_VOICE = `Sos Ceci, violinista con 200 bodas en Paraguay y Brasil. Estilo: Emocional, Elegante, Cinematográfico.
 FILOSOFÍA: La música no es decoración — es la emoción que todos van a recordar. Lo que la gente recuerda es cómo se sintió cuando empezó la música. En boda luxury, hasta los silencios tienen intención.
@@ -345,7 +349,7 @@ function GuiaCanciones({onStart,onBack}){
   const pageStyle={
     width:"100%",
     minHeight:"100vh",
-    background:"#0C1721",
+    background:"#07111B",
     padding:"clamp(28px,5vw,76px) clamp(18px,6vw,96px) 96px",
   };
   const shellStyle={width:"100%",maxWidth:1180,margin:"0 auto"};
@@ -362,9 +366,9 @@ function GuiaCanciones({onStart,onBack}){
         <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1rem,1.35vw,1.18rem)",color:DIM,margin:"0 auto",lineHeight:1.55,maxWidth:740}}>Guía musical · Test para definir tus canciones · Checklist musical</p>
       </div>
 
-      <div style={{...readableStyle,background:"rgba(17,28,39,.88)",border:"1px solid rgba(217,184,115,.18)",borderRadius:22,padding:"clamp(20px,3vw,32px)",marginBottom:"clamp(24px,3vw,34px)",boxShadow:"0 24px 70px rgba(0,0,0,.22)"}}>
+      <div style={{...readableStyle,background:"rgba(17,28,39,.88)",border:"1px solid rgba(217,184,111,.18)",borderRadius:22,padding:"clamp(20px,3vw,32px)",marginBottom:"clamp(24px,3vw,34px)",boxShadow:"0 24px 70px rgba(0,0,0,.22)"}}>
         <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.08rem,1.35vw,1.25rem)",color:C,lineHeight:1.75,margin:"0 0 10px"}}>Esta guía reúne el criterio de Ceci después de más de 200 bodas. No es una lista de Spotify — es lo que realmente funciona en cada momento, con la explicación de por qué.</p>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1rem,1.2vw,1.12rem)",color:"rgba(217,184,115,.68)",fontStyle:"italic",margin:0,lineHeight:1.6}}>Usala como punto de partida. Para que sea 100% tuya, hacé el test personalizado al final.</p>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1rem,1.2vw,1.12rem)",color:"rgba(217,184,111,.68)",fontStyle:"italic",margin:0,lineHeight:1.6}}>Usala como punto de partida. Para que sea 100% tuya, hacé el test personalizado al final.</p>
       </div>
 
       <div style={{...readableStyle,display:"flex",gap:10,overflowX:"auto",paddingBottom:8,marginBottom:20,scrollbarWidth:"none",justifyContent:"center",flexWrap:"wrap"}}>
@@ -379,10 +383,10 @@ function GuiaCanciones({onStart,onBack}){
           <h2 className="guide-sec-title" style={{fontSize:"clamp(1.55rem,2.6vw,2.25rem)",lineHeight:1.15}}>{momento.icono} {momento.titulo}</h2>
           <p className="guide-sec-sub" style={{fontSize:"clamp(1rem,1.2vw,1.12rem)"}}>Criterio de Ceci</p>
           <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.08rem,1.35vw,1.25rem)",color:C,lineHeight:1.75,margin:"0 0 16px"}}>{momento.guia}</p>
-          <div style={{background:"rgba(217,184,115,.06)",border:"1px solid rgba(217,184,115,.14)",borderRadius:14,padding:"14px 16px",marginBottom:22}}>
-            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(.98rem,1.1vw,1.08rem)",color:"rgba(217,184,115,.78)",margin:0,lineHeight:1.55}}>⚠️ {momento.errores}</p>
+          <div style={{background:"rgba(217,184,111,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:14,padding:"14px 16px",marginBottom:22}}>
+            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(.98rem,1.1vw,1.08rem)",color:"rgba(217,184,111,.78)",margin:0,lineHeight:1.55}}>⚠️ {momento.errores}</p>
           </div>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(217,184,115,.55)",marginBottom:12}}>Las más pedidas por los novios</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(217,184,111,.55)",marginBottom:12}}>Las más pedidas por los novios</div>
           {momento.canciones.map((c,i)=>{
             const q=encodeURIComponent(c.t+" "+c.a);
             return <div key={i} className="song-item">
@@ -398,10 +402,10 @@ function GuiaCanciones({onStart,onBack}){
         </div>
 
         <div>
-          <div style={{background:"rgba(17,28,39,.72)",border:"1px solid rgba(217,184,115,.14)",borderRadius:22,padding:"clamp(20px,2.5vw,30px)",marginBottom:22}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(217,184,115,.55)",marginBottom:16}}>5 reglas de Ceci para elegir bien</div>
-            {GUIA_TIPS.map((tip,i)=><div key={i} style={{display:"flex",gap:14,paddingBottom:16,borderBottom:i<4?"1px solid rgba(217,184,115,.08)":"none",marginBottom:16}}>
-              <div style={{width:30,height:30,minWidth:30,borderRadius:"50%",background:"rgba(217,184,115,.1)",border:"1px solid rgba(217,184,115,.22)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:G,flexShrink:0,marginTop:2}}>{i+1}</div>
+          <div style={{background:"rgba(17,28,39,.72)",border:"1px solid rgba(217,184,111,.14)",borderRadius:22,padding:"clamp(20px,2.5vw,30px)",marginBottom:22}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(217,184,111,.55)",marginBottom:16}}>5 reglas de Ceci para elegir bien</div>
+            {GUIA_TIPS.map((tip,i)=><div key={i} style={{display:"flex",gap:14,paddingBottom:16,borderBottom:i<4?"1px solid rgba(217,184,111,.08)":"none",marginBottom:16}}>
+              <div style={{width:30,height:30,minWidth:30,borderRadius:"50%",background:"rgba(217,184,111,.1)",border:"1px solid rgba(217,184,111,.22)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:G,flexShrink:0,marginTop:2}}>{i+1}</div>
               <div>
                 <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.05rem,1.2vw,1.18rem)",color:C,marginBottom:5,lineHeight:1.25}}>{tip.t}</div>
                 <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(.98rem,1.1vw,1.06rem)",color:DIM,lineHeight:1.62}}>{tip.d}</div>
@@ -409,12 +413,12 @@ function GuiaCanciones({onStart,onBack}){
             </div>)}
           </div>
 
-          <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,115,.24)",borderRadius:22,padding:"clamp(24px,3vw,34px)",textAlign:"center"}}>
+          <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,111,.24)",borderRadius:22,padding:"clamp(24px,3vw,34px)",textAlign:"center"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:12}}>El siguiente nivel</div>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.55rem,2.4vw,2.1rem)",fontWeight:600,color:C,margin:"0 0 12px",lineHeight:1.15}}>Hacé el test personalizado</h3>
             <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.02rem,1.2vw,1.14rem)",color:DIM,lineHeight:1.65,margin:"0 0 24px"}}>La guía te da el criterio general. El test crea el guion musical exacto para tu boda — con tu arquetipo, tus momentos elegidos y el checklist para tus proveedores.</p>
             <button className="pbtn" onClick={onStart}>Crear mi guion personalizado →</button>
-            <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.24)"}}>15 minutos · Resultado inmediato</p>
+            <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(248,242,230,.24)"}}>15 minutos · Resultado inmediato</p>
           </div>
         </div>
       </div>
@@ -470,7 +474,7 @@ const MOMENTOS_CATOLICA = [
   {id:"aleluya",icono:"✨",nombre:"Aleluya / antes del Evangelio",emocion:"Celebración litúrgica",desc:"⚠️ Momento litúrgico obligatorio. Debe ser el Aleluya u otro himno aprobado por la iglesia. No se puede reemplazar por música secular.",duracion:"1–2 min",obligatorio:true},
   {id:"ofertorio",icono:"🙏",nombre:"Ofertorio",emocion:"Ofrenda y recogimiento",desc:"Durante la preparación del altar. Música sacra, suave, que acompaña sin distraer.",duracion:"3–5 min"},
   {id:"comunion",icono:"🕊️",nombre:"Comunión",emocion:"Paz y profundidad espiritual",desc:"Momento de mayor recogimiento de la misa. La música debe ser sacra o en algunos casos se permite música más suave y contemplativa.",duracion:"5–10 min"},
-  {id:"firmas",icono:"📜",nombre:"Firma de las actas",emocion:"Intimidad y detalle",desc:"Mientras los novios firman, un momento musical íntimo puede llenar el espacio.",duracion:"3–5 min"},
+  {id:"firmas",icono:"📜",nombre:"Firma de las actas",emocion:"Intimidad y detalle",desc:"Mientras los novios firman. Elegí 1 canción por cada 3 testigos — si hay 6 testigos, necesitás al menos 2 canciones de 3 minutos cada una. Un momento íntimo que puede llenarse con música suave.",duracion:"3–8 min (según testigos)"},
   {id:"salida",icono:"🎊",nombre:"Salida de los novios",emocion:"Alegría y celebración",desc:"La iglesia permite más libertad en la salida. Es el primer momento de alegría compartida.",duracion:"2–3 min"},
 ];
 
@@ -692,14 +696,14 @@ function SL({n,l,sub}){return <div style={{marginBottom:24}}><div className="sl-
 
 function Progress({step}){
   return <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:34}}>
-    {Array.from({length:6}).map((_,i)=>(<div key={i} style={{width:i===step-1?24:6,height:5,borderRadius:3,background:i<step?G:"rgba(201,160,85,.1)",transition:"all .35s"}}/>))}
+    {Array.from({length:6}).map((_,i)=>(<div key={i} style={{width:i===step-1?24:6,height:5,borderRadius:3,background:i<step?G:"rgba(217,184,111,.1)",transition:"all .35s"}}/>))}
   </div>;
 }
 
 function Landing({onStart}){
-  return <div style={{background:"#0C1721",minHeight:"100vh",overflow:"hidden"}}>
+  return <div style={{background:"#07111B",minHeight:"100vh",overflow:"hidden"}}>
     <section className="responsive-shell hero-grid" style={{position:"relative"}}>
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 18%, rgba(217,184,115,.10), transparent 38%), radial-gradient(circle at 50% 100%, rgba(247,242,234,.035), transparent 48%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 18%, rgba(217,184,111,.10), transparent 38%), radial-gradient(circle at 50% 100%, rgba(248,242,230,.035), transparent 48%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",zIndex:1}}>
         <div className="brand-logo hero-kicker fu">El Violín de Ceci</div>
         <h1 className="brand-title hero-title fu1">
@@ -716,13 +720,21 @@ function Landing({onStart}){
 
     <section className="responsive-shell" style={{paddingBottom:"clamp(42px,8vw,88px)"}}>
       <div className="desktop-two-col" style={{display:"grid",gridTemplateColumns:"1fr",gap:22,alignItems:"start"}}>
-        <div style={{background:"#111C27",border:"1px solid rgba(217,184,115,.14)",borderRadius:22,padding:"clamp(22px,4vw,34px)"}}>
+        <div style={{background:"#111C27",border:"1px solid rgba(217,184,111,.14)",borderRadius:22,padding:"clamp(22px,4vw,34px)"}}>
           <div className="brand-logo" style={{fontSize:".7rem",letterSpacing:".18em",marginBottom:14}}>El problema que nadie habla</div>
           <p className="brand-copy" style={{fontSize:"clamp(1.05rem,2vw,1.25rem)",margin:"0 0 14px"}}>Podés tener el mejor salón, el vestido perfecto y una decoración impecable — pero si la música no está pensada, el momento puede no sentirse como lo imaginaste.</p>
           <p className="brand-copy" style={{fontSize:"clamp(1.05rem,2vw,1.25rem)",margin:"0",color:G,fontStyle:"italic"}}>La música no es un detalle. Es lo que transforma una boda bonita en un recuerdo inolvidable.</p>
         </div>
-        <div style={{position:"relative",width:"100%",paddingTop:"56.25%",borderRadius:22,overflow:"hidden",background:"#111C27",border:"1px solid rgba(217,184,115,.16)",boxShadow:"0 24px 80px rgba(0,0,0,.32)"}}>
-          <iframe src={VIDEO_URL} title="Ceci" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}}/>
+        <div style={{background:"#111C27",border:"1px solid rgba(217,184,111,.16)",borderRadius:22,padding:"clamp(28px,4vw,42px)",boxShadow:"0 24px 80px rgba(0,0,0,.32)",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"3.5rem",color:"rgba(217,184,111,.1)",lineHeight:1,marginBottom:12,userSelect:"none"}}>"</div>
+          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.2rem,2.2vw,1.55rem)",color:C,lineHeight:1.75,fontStyle:"italic",margin:"0 0 24px"}}>Lo que la gente recuerda de tu boda no es el vestido ni el salón. Recuerdan cómo se sintieron cuando empezó la música.</p>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:2,height:40,background:"rgba(217,184,111,.35)",borderRadius:1}}/>
+            <div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:G}}>Ceci</div>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:DIMSOFT}}>El Violín de Ceci · +200 bodas en Paraguay y Brasil</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -737,7 +749,7 @@ function Landing({onStart}){
             {e:"📤",t:"WhatsApp listo",d:"Mensajes adaptados para compartir con cada proveedor."},
             {e:"📄",t:"PDF premium",d:"Documento para guardar, imprimir o compartir."}
           ].map((item,i)=>(
-            <div key={i} style={{background:"#111C27",border:"1px solid rgba(217,184,115,.10)",borderRadius:18,padding:"20px 18px"}}>
+            <div key={i} style={{background:"#111C27",border:"1px solid rgba(217,184,111,.10)",borderRadius:18,padding:"20px 18px"}}>
               <div style={{fontSize:"1.65rem",marginBottom:10}}>{item.e}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.08rem",color:C,marginBottom:6}}>{item.t}</div>
               <div className="brand-copy" style={{fontSize:".98rem",lineHeight:1.6}}>{item.d}</div>
@@ -746,7 +758,7 @@ function Landing({onStart}){
         </div>
       </div>
 
-      <div style={{marginTop:"clamp(36px,6vw,64px)",background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,115,.24)",borderRadius:24,padding:"clamp(28px,5vw,46px)",textAlign:"center"}}>
+      <div style={{marginTop:"clamp(36px,6vw,64px)",background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,111,.24)",borderRadius:24,padding:"clamp(28px,5vw,46px)",textAlign:"center"}}>
         <div className="brand-logo" style={{fontSize:".74rem",letterSpacing:".18em",marginBottom:14}}>Tu Banda Sonora de Boda</div>
         <h2 className="brand-title" style={{fontSize:"clamp(1.8rem,5vw,3rem)",margin:"0 0 12px"}}>Diseñá la música de tu boda con criterio experto.</h2>
         <p className="brand-copy" style={{fontSize:"clamp(1rem,2vw,1.2rem)",margin:"0 0 10px"}}>Guía · Arquetipo · Guion personalizado · Checklist · WhatsApp · PDF</p>
@@ -773,24 +785,24 @@ function EmailCapture({form,setForm,onContinue,onRecover}){
     setRecovering(false);
   };
 
-  return <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#0C1721",padding:"32px 24px"}}>
+  return <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#07111B",padding:"32px 24px"}}>
     <div style={{maxWidth:440,width:"100%",textAlign:"center"}} className="fu">
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".2em",textTransform:"uppercase",color:G,marginBottom:18}}>El Violín de Ceci</div>
       <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.85rem",fontWeight:700,color:C,margin:"0 0 12px"}}>Tu guion musical está listo.</h2>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",color:DIM,lineHeight:1.7,margin:"0 0 10px"}}>Dejá tu email para recibir el resultado y el video de Ceci.</p>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(201,160,85,.45)",fontStyle:"italic",margin:"0 0 28px"}}>📧 También te enviamos el video de Ceci explicando cómo usarlo.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",color:DIM,lineHeight:1.7,margin:"0 0 10px"}}>Dejá tu email para guardar tu resultado y poder acceder desde cualquier dispositivo.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(217,184,111,.45)",fontStyle:"italic",margin:"0 0 28px"}}>📧 Tu resultado queda guardado en tu cuenta y podés volver a verlo cuando quieras.</p>
       <input type="email" placeholder="tu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setNotFound(false);}} style={{textAlign:"center",fontSize:"1.15rem",marginBottom:16}}/>
-      {notFound&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(201,160,85,.7)",margin:"0 0 12px",fontStyle:"italic"}}>No encontramos ese email. Continuá para crear tu guion nuevo.</p>}
+      {notFound&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(217,184,111,.7)",margin:"0 0 12px",fontStyle:"italic"}}>No encontramos ese email. Continuá para crear tu guion nuevo.</p>}
       <button className="pbtn" disabled={!ok} onClick={()=>{setForm(f=>({...f,email}));onContinue();}} style={{width:"100%",marginBottom:12}}>
         Ver mi resultado →
       </button>
-      <div style={{borderTop:"1px solid rgba(201,160,85,.1)",paddingTop:16,marginTop:4}}>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.3)",margin:"0 0 10px"}}>¿Ya completaste el test antes?</p>
+      <div style={{borderTop:"1px solid rgba(217,184,111,.1)",paddingTop:16,marginTop:4}}>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(248,242,230,.3)",margin:"0 0 10px"}}>¿Ya completaste el test antes?</p>
         <button className="gbtn" disabled={!ok||recovering} onClick={handleRecover} style={{width:"100%"}}>
           {recovering?"Buscando tu guion...":"Recuperar mi guion anterior →"}
         </button>
       </div>
-      <p style={{marginTop:14,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.2)"}}>Sin spam. Solo tu guion y novedades de Ceci.</p>
+      <p style={{marginTop:14,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(248,242,230,.2)"}}>Sin spam. Solo tu guion y novedades de Ceci.</p>
     </div>
   </div>;
 }
@@ -807,9 +819,9 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     if(step===5) return form.momentosSeleccionados.length>0;
     return !!form.recuerdo.trim();
   };
-  const isCatolica=form.tipoCeremonia.includes("Religiosa católica");
+  const isCatolica=(form.tipoCeremonia.includes("Religiosa")&&form.denominacionReligiosa==="Católica")||form.tipoCeremonia.includes("Religiosa católica");
   const momentosDisponibles=isCatolica?MOMENTOS_CATOLICA:MOMENTOS_CIVIL_SIMBOLICA;
-  const wrap=ch=><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#0C1721",padding:"24px 22px",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
+  const wrap=ch=><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#07111B",padding:"24px 22px",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
     <Progress step={step}/>
     <div style={{flex:1}} className="fu">{ch}</div>
     <div style={{display:"flex",gap:10,paddingTop:28,paddingBottom:8}}>
@@ -838,24 +850,40 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     </div>
   </>);
 
+  const tieneReligiosa=form.tipoCeremonia.includes("Religiosa");
+  const lugarGuia={
+    "Salón de fiestas":"Buenas condiciones acústicas. El DJ o músico puede amplificar sin problema. Temperatura controlada.",
+    "Al aire libre":"⚠️ El viento y el ruido ambiente pueden afectar la música. Se necesita amplificación con potencia extra. Probá el equipo antes.",
+    "Hacienda / estancia":"Espacios amplios y naturales. La acústica varía mucho según el sector. Siempre hacé prueba de sonido.",
+    "Hotel":"Salones con buena acústica generalmente. Consultá restricciones de decibeles y horario.",
+    "Espacio íntimo":"La música puede quedar perfecta sin amplificación o con un equipo pequeño. Ideal para músico acústico."
+  };
+
   if(step===2) return wrap(<>
-    <SL n={2} l="La ceremonia" sub="Podés combinar — en Paraguay es muy común hacer el civil y el religioso el mismo día."/>
+    <SL n={2} l="La ceremonia" sub="Podés combinar más de una — en Paraguay es muy común hacer el civil y el religioso el mismo día."/>
     <FL>Tipo de ceremonia</FL>
-    {["Religiosa católica","Religiosa no-católica","Civil","Simbólica","Otra"].map(v=>(
+    {["Religiosa","Civil","Simbólica","Otra"].map(v=>(
       <Pill key={v} label={v} selected={form.tipoCeremonia.includes(v)} onClick={()=>tog("tipoCeremonia",v)}/>
     ))}
-    {isCatolica&&<div className="info-box">
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,margin:"0 0 12px",lineHeight:1.6}}>
-        ⚠️ La iglesia católica tiene momentos litúrgicos con música obligatoria (Aleluya, Comunión). Muchas iglesias solo permiten música sacra. Siempre consultá con el sacerdote antes de definir el repertorio.
-      </p>
+    {tieneReligiosa&&<div className="info-box" style={{marginTop:8}}>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:G,marginBottom:8}}>Denominación religiosa</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+        {["Católica","Evangélica","Ortodoxa","Otra religión"].map(v=><Tag key={v} label={v} selected={(form.denominacionReligiosa||"")===v} onClick={()=>set("denominacionReligiosa",v)}/>)}
+      </div>
+      {(form.denominacionReligiosa==="Católica")&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:"12px 0 0",lineHeight:1.6}}>
+        ⚠️ La misa católica tiene momentos litúrgicos con música obligatoria (Aleluya, Comunión, Ofertorio). Muchas iglesias solo permiten música sacra. Siempre consultá con el sacerdote antes de definir el repertorio.
+      </p>}
       <FL>¿Hay restricciones musicales específicas?</FL>
-      <input placeholder="ej: Solo música sacra, no canciones en inglés..." value={form.restriccionIglesia||""} onChange={e=>set("restriccionIglesia",e.target.value)}/>
+      <input placeholder="ej: Solo música sacra, el sacerdote eligió el Aleluya..." value={form.restriccionIglesia||""} onChange={e=>set("restriccionIglesia",e.target.value)}/>
     </div>}
-    {(form.tipoCeremonia.includes("Civil")||form.tipoCeremonia.includes("Simbólica")||form.tipoCeremonia.includes("Religiosa no-católica")||form.tipoCeremonia.includes("Otra"))&&<>
+    {(form.tipoCeremonia.includes("Civil")||form.tipoCeremonia.includes("Simbólica")||form.tipoCeremonia.includes("Otra")||(tieneReligiosa&&form.denominacionReligiosa&&form.denominacionReligiosa!=="Católica"))&&<>
       <FL>¿Dónde será la ceremonia?</FL>
       <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
         {["Salón de fiestas","Al aire libre","Hacienda / estancia","Hotel","Espacio íntimo","Otro"].map(v=><Tag key={v} label={v} selected={form.lugarCeremonia===v} onClick={()=>set("lugarCeremonia",v)}/>)}
       </div>
+      {form.lugarCeremonia&&lugarGuia[form.lugarCeremonia]&&<div style={{background:"rgba(217,184,111,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>{lugarGuia[form.lugarCeremonia]}</p>
+      </div>}
     </>}
     <FL>Duración estimada</FL>
     <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
@@ -911,7 +939,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
 
   if(step===5) return wrap(<>
     <SL n={5} l="Los momentos de tu ceremonia"/>
-    <div style={{background:"rgba(217,184,115,.06)",border:"1px solid rgba(217,184,115,.14)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
+    <div style={{background:"rgba(217,184,111,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
       <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,margin:"0 0 6px",lineHeight:1.6}}>
         No necesitás saber qué se musicaliza en una boda — te guiamos momento a momento.
       </p>
@@ -920,9 +948,9 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
       </p>
     </div>
     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(201,160,85,.12)",color:G,border:"1px solid rgba(201,160,85,.25)"}}>★ Esencial</span>
-      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(247,242,234,.05)",color:DIM,border:"1px solid rgba(247,242,234,.12)"}}>○ Opcional</span>
-      {isCatolica&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(217,184,115,.08)",color:G,border:"1px solid rgba(201,160,85,.2)"}}>⛪ Litúrgico</span>}
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(217,184,111,.12)",color:G,border:"1px solid rgba(217,184,111,.25)"}}>★ Esencial</span>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(248,242,230,.05)",color:DIM,border:"1px solid rgba(248,242,230,.12)"}}>○ Opcional</span>
+      {isCatolica&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(217,184,111,.08)",color:G,border:"1px solid rgba(217,184,111,.2)"}}>⛪ Litúrgico</span>}
     </div>
     <div style={{marginTop:4}}>
       {momentosDisponibles.map((m,i)=>{
@@ -943,24 +971,24 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0,marginLeft:8}}>
               {m.obligatorio
-                ? <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(201,160,85,.6)",border:"1px solid rgba(201,160,85,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
-                : <div style={{width:22,height:22,borderRadius:4,border:`1px solid ${sel?G:"rgba(201,160,85,.3)"}`,background:sel?"rgba(201,160,85,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
+                ? <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(217,184,111,.6)",border:"1px solid rgba(217,184,111,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
+                : <div style={{width:22,height:22,borderRadius:4,border:`1px solid ${sel?G:"rgba(217,184,111,.3)"}`,background:sel?"rgba(217,184,111,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
                     {sel&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
                   </div>
               }
             </div>
           </div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(217,184,115,.6)",marginBottom:5,fontStyle:"italic"}}>{m.emocion} · {m.duracion}</div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:"rgba(247,242,234,.52)",lineHeight:1.58}}>{m.desc}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(217,184,111,.6)",marginBottom:5,fontStyle:"italic"}}>{m.emocion} · {m.duracion}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:"rgba(248,242,230,.52)",lineHeight:1.58}}>{m.desc}</div>
         </div>;
       })}
     </div>
-    {isCatolica&&<div style={{marginTop:12,background:"rgba(201,160,85,.05)",border:"1px solid rgba(201,160,85,.14)",borderRadius:10,padding:"12px 14px"}}>
+    {isCatolica&&<div style={{marginTop:12,background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"12px 14px"}}>
       <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:DIM,margin:0,lineHeight:1.6}}>
         ⚠️ Los momentos litúrgicos deben tener música aprobada por la iglesia. Consultá con el sacerdote antes de confirmar el repertorio.
       </p>
     </div>}
-    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(247,242,234,.28)",marginTop:12,fontStyle:"italic",lineHeight:1.5}}>
+    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(248,242,230,.28)",marginTop:12,fontStyle:"italic",lineHeight:1.5}}>
       No hay respuesta correcta única. La idea es construir una banda sonora que se sienta como ustedes.
     </p>
   </>);
@@ -971,7 +999,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     <textarea rows={2} placeholder="ej: una canción que escucharon juntos en un viaje, o que sonaba cuando se conocieron..." value={form.cancionPersonal} onChange={e=>set("cancionPersonal",e.target.value)} style={{resize:"none"}}/>
     <FL>¿Qué querés que la gente sienta o recuerde musicalmente? *</FL>
     <textarea rows={3} placeholder="Contanos con tus palabras, sin filtros — esto es lo que más importa..." value={form.recuerdo} onChange={e=>set("recuerdo",e.target.value)} style={{resize:"none"}}/>
-    <p style={{marginTop:24,fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.22)",lineHeight:1.65,fontStyle:"italic"}}>Con estas respuestas, Ceci crea un guion que no podría aplicarse a ninguna otra boda.</p>
+    <p style={{marginTop:24,fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(248,242,230,.22)",lineHeight:1.65,fontStyle:"italic"}}>Con estas respuestas, Ceci crea un guion que no podría aplicarse a ninguna otra boda.</p>
   </>);
 }
 
@@ -1013,47 +1041,47 @@ function Generating({names,phase}){
   useEffect(()=>{const t=setInterval(()=>setI(x=>(x+1)%pool.length),2600);return()=>clearInterval(t);},[pool.length]);
   useEffect(()=>{const t=setInterval(()=>setSeconds(x=>x+1),1000);return()=>clearInterval(t);},[]);
   const progress=Math.min(92,18+(phase*27)+(i*6));
-  return <div style={{minHeight:"100vh",background:"#0C1721",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
-    <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,rgba(17,28,39,.92),rgba(12,23,33,.96))",border:"1px solid rgba(201,160,85,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
+  return <div style={{minHeight:"100vh",background:"#07111B",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
+    <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,rgba(17,28,39,.92),rgba(12,23,33,.96))",border:"1px solid rgba(217,184,111,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".24em",textTransform:"uppercase",color:G,marginBottom:20}}>El Violín de Ceci</div>
       <div style={{position:"relative",width:92,height:92,margin:"0 auto 28px"}}>
-        <div style={{position:"absolute",inset:0,border:"1px solid rgba(201,160,85,.08)",borderRadius:"50%"}}/>
-        <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:G,borderRightColor:"rgba(201,160,85,.32)",borderRadius:"50%",animation:"spin 1.5s linear infinite"}}/>
-        <div style={{position:"absolute",inset:13,border:"1px solid rgba(201,160,85,.14)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:0,border:"1px solid rgba(217,184,111,.08)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:G,borderRightColor:"rgba(217,184,111,.32)",borderRadius:"50%",animation:"spin 1.5s linear infinite"}}/>
+        <div style={{position:"absolute",inset:13,border:"1px solid rgba(217,184,111,.14)",borderRadius:"50%"}}/>
         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:G,fontSize:"1.6rem"}}>♪</div>
       </div>
       <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.7rem)",fontWeight:400,color:C,margin:"0 0 8px",lineHeight:1.15}}>Creando la banda sonora de {names}</h2>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.05rem,2.2vw,1.25rem)",color:"rgba(247,242,234,.62)",fontStyle:"italic",margin:"0 0 28px",lineHeight:1.55}}>Respirá tranquila. Este proceso puede tardar un poco porque estamos creando un guion único, no una respuesta automática.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.05rem,2.2vw,1.25rem)",color:"rgba(248,242,230,.62)",fontStyle:"italic",margin:"0 0 28px",lineHeight:1.55}}>Respirá tranquila. Este proceso puede tardar un poco porque estamos creando un guion único, no una respuesta automática.</p>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:10}}>
         <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{PHASE_TITLES[phase]||PHASE_TITLES[0]}</span>
-        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(247,242,234,.34)"}}>Paso {phase+1} de 3 · {seconds}s</span>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(248,242,230,.34)"}}>Paso {phase+1} de 3 · {seconds}s</span>
       </div>
-      <div style={{height:6,background:"rgba(201,160,85,.12)",borderRadius:999,overflow:"hidden",marginBottom:24}}>
+      <div style={{height:6,background:"rgba(217,184,111,.12)",borderRadius:999,overflow:"hidden",marginBottom:24}}>
         <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(90deg,#C9A055,#E7C875)",borderRadius:999,transition:"width .55s ease"}}/>
       </div>
-      <div style={{background:"rgba(201,160,85,.06)",border:"1px solid rgba(201,160,85,.14)",borderRadius:18,padding:"18px 20px",marginBottom:18,minHeight:96,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:"rgba(217,184,111,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:18,padding:"18px 20px",marginBottom:18,minHeight:96,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(1.15rem,2.3vw,1.38rem)",color:C,animation:"pulse 2.4s ease infinite",fontStyle:"italic",margin:0,lineHeight:1.55}}>{pool[i]}</p>
       </div>
       <div className="generating-notes" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:10}}>
-        {CALMING_NOTES.map((note,idx)=><div key={idx} style={{background:"rgba(247,242,234,.035)",border:"1px solid rgba(247,242,234,.08)",borderRadius:14,padding:"12px 10px",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.52)",lineHeight:1.45}}>
+        {CALMING_NOTES.map((note,idx)=><div key={idx} style={{background:"rgba(248,242,230,.035)",border:"1px solid rgba(248,242,230,.08)",borderRadius:14,padding:"12px 10px",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(248,242,230,.52)",lineHeight:1.45}}>
           {note}
         </div>)}
       </div>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.28)",margin:"22px 0 0",lineHeight:1.5}}>Dejá esta pestaña abierta hasta que aparezca tu resultado.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(248,242,230,.28)",margin:"22px 0 0",lineHeight:1.5}}>Dejá esta pestaña abierta hasta que aparezca tu resultado.</p>
     </div>
   </div>;
 }
 
 // ─── ACORDEÓN ─────────────────────────────────────────────────────────────────
 function AccordionBlock({id,icon,title,subtitle,isOpen,onToggle,children,defaultTag}){
-  return <div style={{marginBottom:12,border:`1px solid ${isOpen?"rgba(217,184,115,.28)":"rgba(217,184,115,.1)"}`,borderRadius:18,overflow:"hidden",transition:"border-color .25s"}}>
+  return <div style={{marginBottom:12,border:`1px solid ${isOpen?"rgba(217,184,111,.28)":"rgba(217,184,111,.1)"}`,borderRadius:18,overflow:"hidden",transition:"border-color .25s"}}>
     <button onClick={onToggle} style={{width:"100%",background:isOpen?"linear-gradient(135deg,rgba(21,34,48,.96),rgba(12,23,33,.98))":"rgba(17,28,39,.72)",border:"none",cursor:"pointer",padding:"18px 22px",display:"flex",alignItems:"center",gap:14,textAlign:"left",transition:"background .25s"}}>
       <span style={{fontSize:"1.3rem",flexShrink:0}}>{icon}</span>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.05rem,2vw,1.2rem)",fontWeight:600,color:isOpen?G:C,lineHeight:1.2,transition:"color .25s"}}>{title}</div>
         {subtitle&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:DIM,marginTop:3,lineHeight:1.4}}>{subtitle}</div>}
       </div>
-      {defaultTag&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",padding:"3px 10px",borderRadius:20,background:"rgba(201,160,85,.1)",color:G,border:"1px solid rgba(201,160,85,.2)",flexShrink:0,display:"none"}} className="tag-desktop">{defaultTag}</span>}
+      {defaultTag&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",padding:"3px 10px",borderRadius:20,background:"rgba(217,184,111,.1)",color:G,border:"1px solid rgba(217,184,111,.2)",flexShrink:0,display:"none"}} className="tag-desktop">{defaultTag}</span>}
       <span style={{color:G,fontSize:"1.1rem",flexShrink:0,transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform .25s"}}>▾</span>
     </button>
     {isOpen&&<div style={{padding:"4px 22px 22px",background:"rgba(12,23,33,.6)"}}>{children}</div>}
@@ -1062,28 +1090,28 @@ function AccordionBlock({id,icon,title,subtitle,isOpen,onToggle,children,default
 
 function SecLabel({children}){
   return <div style={{display:"flex",alignItems:"center",gap:12,margin:"24px 0 14px"}}>
-    <div style={{height:"1px",width:16,background:`linear-gradient(to right,transparent,rgba(201,160,85,.3))`}}/>
-    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,160,85,.5)",whiteSpace:"nowrap"}}>{children}</div>
-    <div style={{height:"1px",flex:1,background:`linear-gradient(to right,rgba(201,160,85,.3),transparent)`}}/>
+    <div style={{height:"1px",width:16,background:`linear-gradient(to right,transparent,rgba(217,184,111,.3))`}}/>
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(217,184,111,.5)",whiteSpace:"nowrap"}}>{children}</div>
+    <div style={{height:"1px",flex:1,background:`linear-gradient(to right,rgba(217,184,111,.3),transparent)`}}/>
   </div>;
 }
 
 function SongCardStar({item}){
   const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
-  return <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,115,.3)",borderRadius:14,padding:"20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
-    <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,115,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+  return <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,111,.3)",borderRadius:14,padding:"20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
+    <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,111,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
       <div>
         <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{item.momento}</div>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",color:"rgba(217,184,115,.4)",fontStyle:"italic"}}>El momento más recordado</div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",color:"rgba(217,184,111,.4)",fontStyle:"italic"}}>El momento más recordado</div>
       </div>
-      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.3)",flexShrink:0,marginLeft:8}}>{item.duracion}</span>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(248,242,230,.3)",flexShrink:0,marginLeft:8}}>{item.duracion}</span>
     </div>
     <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.3rem,3vw,1.55rem)",color:C,marginBottom:3,lineHeight:1.2}}>{item.cancion}</div>
-    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,marginBottom:item.razon?12:0}}>{item.artista}{item.version&&<em style={{color:"rgba(247,242,234,.3)",fontStyle:"italic"}}> · {item.version}</em>}</div>
-    {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:"rgba(247,242,234,.62)",lineHeight:1.65,margin:"0 0 12px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,115,.25)",paddingLeft:12}}>{item.razon}</p>}
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,marginBottom:item.razon?12:0}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.3)",fontStyle:"italic"}}> · {item.version}</em>}</div>
+    {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:"rgba(248,242,230,.62)",lineHeight:1.65,margin:"0 0 12px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.25)",paddingLeft:12}}>{item.razon}</p>}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-      {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.28)"}}>Alt: {item.alt}</span>}
+      {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(248,242,230,.28)"}}>Alt: {item.alt}</span>}
       <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer">▶ Escuchar</a>
     </div>
   </div>;
@@ -1093,18 +1121,18 @@ function SongCard({item,idx}){
   const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
   const isNovia=item.momento?.toLowerCase().includes("novia");
   if(isNovia) return <SongCardStar item={item}/>;
-  return <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
+  return <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
     <div style={{flexShrink:0,marginTop:2,textAlign:"center"}}>
       <div style={{fontSize:"1.2rem"}}>{item.icono}</div>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(217,184,115,.4)"}}>{String(idx+1).padStart(2,"0")}</div>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(217,184,111,.4)"}}>{String(idx+1).padStart(2,"0")}</div>
     </div>
     <div style={{flex:1,minWidth:0}}>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.5)",marginBottom:3}}>{item.momento}</div>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,111,.5)",marginBottom:3}}>{item.momento}</div>
       <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:C,marginBottom:2,lineHeight:1.2}}>{item.cancion}</div>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,marginBottom:item.razon?6:0}}>{item.artista}{item.version&&<em style={{color:"rgba(247,242,234,.28)",fontStyle:"italic"}}> · {item.version}</em>}{item.duracion&&<span style={{color:"rgba(247,242,234,.22)",marginLeft:8}}>{item.duracion}</span>}</div>
-      {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(247,242,234,.5)",lineHeight:1.55,margin:"0 0 8px",fontStyle:"italic"}}>{item.razon}</p>}
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,marginBottom:item.razon?6:0}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.28)",fontStyle:"italic"}}> · {item.version}</em>}{item.duracion&&<span style={{color:"rgba(248,242,230,.22)",marginLeft:8}}>{item.duracion}</span>}</div>
+      {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:"rgba(248,242,230,.5)",lineHeight:1.55,margin:"0 0 8px",fontStyle:"italic"}}>{item.razon}</p>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
-        {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(247,242,234,.24)"}}>Alt: {item.alt}</span>}
+        {item.alt&&<span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(248,242,230,.24)"}}>Alt: {item.alt}</span>}
         <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 12px"}}>▶</a>
       </div>
     </div>
@@ -1113,25 +1141,106 @@ function SongCard({item,idx}){
 
 function PlaylistRow({item,num}){
   const q=encodeURIComponent(`${item.c||""} ${item.a||""}`);
-  return <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto auto",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(217,184,115,.05)"}}>
-    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(217,184,115,.3)",textAlign:"center"}}>{num}</div>
+  return <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto auto",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(217,184,111,.05)"}}>
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(217,184,111,.3)",textAlign:"center"}}>{num}</div>
     <div>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{item.c}</div>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:DIM}}>{item.a}</div>
     </div>
-    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",color:"rgba(247,242,234,.2)",whiteSpace:"nowrap"}}>{item.d}</div>
+    <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",color:"rgba(248,242,230,.2)",whiteSpace:"nowrap"}}>{item.d}</div>
     <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{padding:"5px 10px",fontSize:".8rem"}}>▶</a>
   </div>;
 }
 
 function CheckItem({label,done,onToggle,important}){
   return <div className="ci" onClick={onToggle}>
-    <div className={`cb${done?" ck":""}`} style={{borderColor:important&&!done?"rgba(217,184,115,.45)":undefined}}>
+    <div className={`cb${done?" ck":""}`} style={{borderColor:important&&!done?"rgba(217,184,111,.45)":undefined}}>
       {done&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
     </div>
-    <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:done?"rgba(247,242,234,.22)":C,textDecoration:done?"line-through":"none",lineHeight:1.55,transition:"all .2s"}}>{label}</span>
+    <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:done?"rgba(248,242,230,.22)":C,textDecoration:done?"line-through":"none",lineHeight:1.55,transition:"all .2s"}}>{label}</span>
   </div>;
 }
+
+// ─── CARRUSEL HORIZONTAL DE MOMENTOS ──────────────────────────────────────────
+function GuionCarousel({items}){
+  const scrollRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const scrollTo = (idx) => {
+    const el = scrollRef.current;
+    if(!el) return;
+    const cards = el.querySelectorAll('.momento-slide');
+    if(cards[idx]) cards[idx].scrollIntoView({behavior:'smooth', block:'nearest', inline:'start'});
+    setActiveIdx(idx);
+  };
+
+  useEffect(()=>{
+    const el = scrollRef.current;
+    if(!el) return;
+    const onScroll = () => {
+      const cards = el.querySelectorAll('.momento-slide');
+      let closest = 0, minDist = Infinity;
+      cards.forEach((card, i) => {
+        const dist = Math.abs(card.getBoundingClientRect().left - el.getBoundingClientRect().left);
+        if(dist < minDist){ minDist = dist; closest = i; }
+      });
+      setActiveIdx(closest);
+    };
+    el.addEventListener('scroll', onScroll, {passive:true});
+    return ()=>el.removeEventListener('scroll', onScroll);
+  },[]);
+
+  if(!items || items.length === 0) return <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,textAlign:"center",padding:"20px 0"}}>El guion musical no pudo generarse. Intentá de nuevo.</p>;
+
+  return <div>
+    {/* Scroll horizontal */}
+    <div ref={scrollRef} style={{display:"flex",overflowX:"auto",gap:14,scrollSnapType:"x mandatory",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",padding:"4px 2px 8px",cursor:"grab"}}>
+      {items.map((item,i)=>{
+        const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
+        const isNovia=item.momento?.toLowerCase().includes("novia");
+        return <div key={i} className="momento-slide" style={{
+          minWidth:"min(88vw,360px)",maxWidth:380,scrollSnapAlign:"start",flexShrink:0,
+          background:isNovia?"linear-gradient(135deg,#152230,#0C1721)":"rgba(17,28,39,.85)",
+          border:`1px solid ${isNovia?"rgba(217,184,111,.32)":"rgba(217,184,111,.12)"}`,
+          borderRadius:18,padding:"22px 20px",position:"relative",overflow:"hidden"
+        }}>
+          {isNovia&&<div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,111,.1) 0%,transparent 70%)",pointerEvents:"none"}}/>}
+          {/* Número y ícono */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:"1.4rem"}}>{item.icono||"♪"}</span>
+              <div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",letterSpacing:".1em",textTransform:"uppercase",color:G}}>{item.momento}</div>
+                {isNovia&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".72rem",color:"rgba(217,184,111,.5)",fontStyle:"italic"}}>El momento más recordado</div>}
+              </div>
+            </div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".75rem",color:"rgba(248,242,230,.25)",background:"rgba(217,184,111,.06)",padding:"3px 8px",borderRadius:20}}>{item.duracion}</div>
+          </div>
+          {/* Canción principal */}
+          <div style={{borderTop:"1px solid rgba(217,184,111,.1)",paddingTop:14,marginBottom:12}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.2rem,3vw,1.45rem)",color:C,marginBottom:4,lineHeight:1.15}}>{item.cancion}</div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.32)",fontStyle:"italic"}}> · {item.version}</em>}</div>
+          </div>
+          {/* Razón de Ceci */}
+          {item.razon&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:"rgba(248,242,230,.6)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.22)",paddingLeft:12}}>{item.razon}</p>}
+          {/* Footer */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6,marginTop:"auto",paddingTop:4}}>
+            {item.alt&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(248,242,230,.28)"}}>Alt: {item.alt}</div>}
+            <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{marginLeft:"auto"}}>▶ Escuchar</a>
+          </div>
+        </div>;
+      })}
+    </div>
+    {/* Dots de navegación */}
+    <div style={{display:"flex",justifyContent:"center",gap:7,marginTop:12}}>
+      {items.map((_,i)=><button key={i} onClick={()=>scrollTo(i)} style={{width:i===activeIdx?22:7,height:7,borderRadius:4,border:"none",background:i===activeIdx?G:"rgba(217,184,111,.2)",cursor:"pointer",transition:"all .3s",padding:0}}/>)}
+    </div>
+    <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",color:"rgba(248,242,230,.24)",textAlign:"center",marginTop:6,fontStyle:"italic"}}>
+      {activeIdx+1} de {items.length} · Deslizá para ver todos los momentos
+    </p>
+  </div>;
+}
+
 
 function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestart,onLogout}){
   const tog=k=>setChecked(c=>({...c,[k]:!c[k]}));
@@ -1142,7 +1251,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
 
   const fecha=form.fechaBoda?new Date(form.fechaBoda+"T12:00:00").toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}):"";
   const arch=ARQUETIPOS[arquetipo];
-  const isCatolica=form.tipoCeremonia?.includes("Religiosa católica");
+  const isCatolica=(form.tipoCeremonia?.includes("Religiosa")&&form.denominacionReligiosa==="Católica")||form.tipoCeremonia?.includes("Religiosa católica");
   const tieneMusico=form.formatoMusical?.some(f=>["Violín en vivo","Banda","Cuarteto cuerdas","Piano","Cantante"].includes(f));
 
   const checklistFull={
@@ -1157,24 +1266,24 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
   const doneItems=Object.entries(checklistFull).flatMap(([k,items])=>items.map((_,i)=>checked[`${k}_${i}`])).filter(Boolean).length;
   const pct=totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{maxWidth:840,margin:"0 auto",background:"#0C1721",minHeight:"100vh",padding:"0 0 80px"}}>
+  return <div style={{maxWidth:860,margin:"0 auto",background:"#07111B",minHeight:"100vh",padding:"0 0 100px"}}>
 
     {/* ══ PORTADA ══ */}
-    <div className="pdf-cover" style={{padding:"clamp(36px,6vw,64px) clamp(20px,4vw,48px)",textAlign:"center",borderBottom:"1px solid rgba(217,184,115,.08)",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 0%,rgba(217,184,115,.06) 0%,transparent 100%)",pointerEvents:"none"}}/>
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.72rem,.9vw,.86rem)",letterSpacing:".22em",textTransform:"uppercase",color:"rgba(217,184,115,.5)",marginBottom:18}}>El Violín de Ceci · Tu Banda Sonora de Boda</div>
+    <div className="pdf-cover" style={{padding:"clamp(36px,6vw,64px) clamp(20px,4vw,48px)",textAlign:"center",borderBottom:"1px solid rgba(217,184,111,.08)",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 80% 60% at 50% 0%,rgba(217,184,111,.06) 0%,transparent 100%)",pointerEvents:"none"}}/>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.72rem,.9vw,.86rem)",letterSpacing:".22em",textTransform:"uppercase",color:"rgba(217,184,111,.5)",marginBottom:18}}>El Violín de Ceci · Tu Banda Sonora de Boda</div>
       <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,5vw,2.8rem)",fontWeight:600,color:C,margin:"0 0 6px",lineHeight:1.1}}>
-        {form.nombre1} <span style={{color:"rgba(217,184,115,.4)",fontWeight:300}}>&</span> {form.nombre2}
+        {form.nombre1} <span style={{color:"rgba(217,184,111,.4)",fontWeight:300}}>&</span> {form.nombre2}
       </h1>
-      {(fecha||form.ciudad)&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:"rgba(247,242,234,.38)",margin:"0 0 18px",letterSpacing:".04em"}}>{fecha}{fecha&&form.ciudad?" · ":""}{form.ciudad}</p>}
-      {arch&&<div style={{display:"inline-flex",alignItems:"center",gap:10,background:"rgba(217,184,115,.08)",border:"1px solid rgba(217,184,115,.22)",borderRadius:100,padding:"9px 20px",marginBottom:16}}>
+      {(fecha||form.ciudad)&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:"rgba(248,242,230,.38)",margin:"0 0 18px",letterSpacing:".04em"}}>{fecha}{fecha&&form.ciudad?" · ":""}{form.ciudad}</p>}
+      {arch&&<div style={{display:"inline-flex",alignItems:"center",gap:10,background:"rgba(217,184,111,.08)",border:"1px solid rgba(217,184,111,.22)",borderRadius:100,padding:"9px 20px",marginBottom:16}}>
         <span style={{fontSize:"1.2rem"}}>{arch.e}</span>
         <div style={{textAlign:"left"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:G,fontStyle:"italic"}}>{arch.n}</div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",color:"rgba(217,184,115,.5)"}}>{arch.m}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",color:"rgba(217,184,111,.5)"}}>{arch.m}</div>
         </div>
       </div>}
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(247,242,234,.28)",margin:0,lineHeight:1.6}}>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:"rgba(248,242,230,.28)",margin:0,lineHeight:1.6}}>
         No necesitás leer todo de una vez. Abrí cada sección cuando la necesites.
       </p>
     </div>
@@ -1182,7 +1291,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
     <div style={{padding:"24px 20px 0"}}>
 
       {/* Link privado */}
-      {resultToken&&<div className="no-print" style={{background:"rgba(217,184,115,.05)",border:"1px solid rgba(217,184,115,.16)",borderRadius:14,padding:"14px 18px",marginBottom:16}}>
+      {resultToken&&<div className="no-print" style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.16)",borderRadius:14,padding:"14px 18px",marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
           <div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:3}}>Tu link privado de acceso</div>
@@ -1195,8 +1304,8 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 1. RESUMEN GENERAL ══ */}
       <AccordionBlock id="resumen" icon="✦" title="Resumen de su boda" subtitle={`${form.nombre1} & ${form.nombre2}${arch?` · ${arch.n}`:""}`} isOpen={open.resumen} onToggle={()=>toggle("resumen")}>
         <div style={{paddingTop:16}}>
-          {results.nota&&<div style={{position:"relative",padding:"20px 20px 16px",borderRadius:12,background:"rgba(12,23,33,.8)",border:"1px solid rgba(217,184,115,.14)",marginBottom:16}}>
-            <div style={{position:"absolute",top:12,left:16,fontFamily:"'Playfair Display',serif",fontSize:"3rem",color:"rgba(217,184,115,.07)",lineHeight:1,userSelect:"none"}}>"</div>
+          {results.nota&&<div style={{position:"relative",padding:"20px 20px 16px",borderRadius:12,background:"rgba(12,23,33,.8)",border:"1px solid rgba(217,184,111,.14)",marginBottom:16}}>
+            <div style={{position:"absolute",top:12,left:16,fontFamily:"'Playfair Display',serif",fontSize:"3rem",color:"rgba(217,184,111,.07)",lineHeight:1,userSelect:"none"}}>"</div>
             <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",fontStyle:"italic",color:C,lineHeight:1.78,margin:"0 0 12px",paddingTop:6}}>{results.nota}</p>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <div style={{height:"1px",width:20,background:G,opacity:.4}}/>
@@ -1204,8 +1313,8 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
             </div>
           </div>}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:16}}>
-            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"rgba(17,28,39,.7)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(217,184,115,.08)"}}>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.45)",marginBottom:4}}>{it.l}</div>
+            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"rgba(17,28,39,.7)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(217,184,111,.08)"}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,111,.45)",marginBottom:4}}>{it.l}</div>
               <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{it.v}</div>
             </div>)}
           </div>
@@ -1216,20 +1325,20 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 2. ARQUETIPO ══ */}
       <AccordionBlock id="arquetipo" icon={arch?.e||"♪"} title="Su perfil musical" subtitle={arch?`${arch.n} · ${arch.m}`:""} isOpen={open.arquetipo} onToggle={()=>toggle("arquetipo")}>
         {arch&&results.perfil&&<div style={{paddingTop:16}}>
-          <div style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(217,184,115,.12)",marginBottom:12}}>
-            <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",padding:"16px 18px",borderBottom:"1px solid rgba(217,184,115,.1)"}}>
+          <div style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(217,184,111,.12)",marginBottom:12}}>
+            <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",padding:"16px 18px",borderBottom:"1px solid rgba(217,184,111,.1)"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <span style={{fontSize:"1.8rem"}}>{arch.e}</span>
                 <div>
                   <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontStyle:"italic",color:G}}>{arch.n}</div>
-                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(217,184,115,.5)",marginTop:2}}>{arch.m}</div>
+                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:"rgba(217,184,111,.5)",marginTop:2}}>{arch.m}</div>
                 </div>
               </div>
             </div>
             <div style={{background:"rgba(17,28,39,.7)",padding:"14px 18px"}}>
-              {results.perfil.cluster&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(217,184,115,.4)",marginBottom:8}}>{results.perfil.cluster}</div>}
+              {results.perfil.cluster&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".76rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(217,184,111,.4)",marginBottom:8}}>{results.perfil.cluster}</div>}
               {results.perfil.desc&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.68,margin:"0 0 8px"}}>{results.perfil.desc}</p>}
-              {results.perfil.concepto&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.4)",lineHeight:1.62,fontStyle:"italic",margin:0,borderTop:"1px solid rgba(217,184,115,.06)",paddingTop:10}}>{results.perfil.concepto}</p>}
+              {results.perfil.concepto&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(248,242,230,.4)",lineHeight:1.62,fontStyle:"italic",margin:0,borderTop:"1px solid rgba(217,184,111,.06)",paddingTop:10}}>{results.perfil.concepto}</p>}
             </div>
           </div>
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".9rem",color:DIM,lineHeight:1.6,fontStyle:"italic",padding:"0 4px"}}>{arch.d}</div>
@@ -1237,15 +1346,12 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       </AccordionBlock>
 
       {/* ══ 3. GUION ══ */}
-      <AccordionBlock id="guion" icon="♩" title="Guion musical de la ceremonia" subtitle="Canciones para cada momento, elegidas para ustedes" isOpen={open.guion} onToggle={()=>toggle("guion")} defaultTag="Principal">
+      <AccordionBlock id="guion" icon="♩" title="Guion musical de la ceremonia" subtitle="Deslizá para ver cada momento de la ceremonia" isOpen={open.guion} onToggle={()=>toggle("guion")} defaultTag="Principal">
         <div style={{paddingTop:16}}>
-          {isCatolica&&<div style={{background:"rgba(217,184,115,.05)",border:"1px solid rgba(217,184,115,.14)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+          {isCatolica&&<div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
             <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>⚠️ Los momentos litúrgicos (Aleluya, Comunión, Ofertorio) requieren música aprobada por la iglesia. Confirmá con el sacerdote antes de cerrar el repertorio.</p>
           </div>}
-          {results.guion?.length>0
-            ? results.guion.map((item,i)=><SongCard key={i} item={item} idx={i}/>)
-            : <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,textAlign:"center",padding:"20px 0"}}>El guion musical no pudo generarse. Intentá de nuevo.</p>
-          }
+          <GuionCarousel items={results.guion||[]}/>
         </div>
       </AccordionBlock>
 
@@ -1253,14 +1359,14 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {(results.coctel?.length>0||results.cena?.length>0)&&<AccordionBlock id="playlists" icon="◈" title="Playlists de cóctel y cena" subtitle="Canciones curadas para después de la ceremonia" isOpen={open.playlists} onToggle={()=>toggle("playlists")}>
         <div style={{paddingTop:16}}>
           {results.coctel?.length>0&&<div style={{marginBottom:18}}>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.45)",marginBottom:8}}>Cóctel</div>
-            <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.07)",borderRadius:12,padding:"4px 14px"}}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,111,.45)",marginBottom:8}}>Cóctel</div>
+            <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.07)",borderRadius:12,padding:"4px 14px"}}>
               {results.coctel.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
             </div>
           </div>}
           {results.cena?.length>0&&<div>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,115,.45)",marginBottom:8}}>Cena</div>
-            <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.07)",borderRadius:12,padding:"4px 14px"}}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(217,184,111,.45)",marginBottom:8}}>Cena</div>
+            <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.07)",borderRadius:12,padding:"4px 14px"}}>
               {results.cena.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
             </div>
           </div>}
@@ -1268,15 +1374,15 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       </AccordionBlock>}
 
       {/* ══ 5. CHECKLIST ══ */}
-      <AccordionBlock id="checklist" icon="✓" title="Checklist de coordinación" subtitle={`${doneItems} de ${totalItems} completados · ${pct}%`} isOpen={open.checklist} onToggle={()=>toggle("checklist")}>
+      <AccordionBlock id="checklist" icon="✓" title="Checklist de coordinación" subtitle={`${doneItems} de ${totalItems} tareas completadas · ${pct}%`} isOpen={open.checklist} onToggle={()=>toggle("checklist")}>
         <div style={{paddingTop:16}}>
-          <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.1)",borderRadius:12,padding:"12px 16px",marginBottom:16}}>
+          <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.1)",borderRadius:12,padding:"12px 16px",marginBottom:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
               <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:C}}>{doneItems} de {totalItems} completados</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:pct===100?G:DIM}}>{pct}%</div>
             </div>
-            <div style={{height:5,background:"rgba(217,184,115,.1)",borderRadius:3,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(to right,${G},#E9C978)`,borderRadius:3,transition:"width .4s ease"}}/>
+            <div style={{height:5,background:"rgba(217,184,111,.1)",borderRadius:3,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(to right,${G},#E6C76A)`,borderRadius:3,transition:"width .4s ease"}}/>
             </div>
             {pct===100&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".88rem",color:G,fontStyle:"italic",margin:"8px 0 0",textAlign:"center"}}>¡Todo listo para el gran día! ✨</p>}
           </div>
@@ -1291,12 +1397,12 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
                 <span style={{fontSize:"1rem"}}>{cat.e}</span>
                 <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:G}}>{cat.l}</div>
-                <div style={{flex:1,height:"1px",background:"rgba(217,184,115,.08)"}}/>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:"rgba(217,184,115,.35)"}}>
+                <div style={{flex:1,height:"1px",background:"rgba(217,184,111,.08)"}}/>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",color:"rgba(217,184,111,.35)"}}>
                   {checklistFull[cat.k].filter((_,i)=>checked[`${cat.k}_${i}`]).length}/{checklistFull[cat.k].length}
                 </div>
               </div>
-              <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.07)",borderRadius:12,padding:"2px 14px"}}>
+              <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.07)",borderRadius:12,padding:"2px 14px"}}>
                 {checklistFull[cat.k].map((item,i)=><CheckItem key={i} label={item} done={!!checked[`${cat.k}_${i}`]} onToggle={()=>tog(`${cat.k}_${i}`)} important={cat.important.includes(i)}/>)}
               </div>
             </div>
@@ -1304,8 +1410,8 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
           {results.errores?.length>0&&<>
             <SecLabel>⚠ Errores frecuentes para esta boda</SecLabel>
             {results.errores.map((e,i)=>(
-              <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<results.errores.length-1?"1px solid rgba(217,184,115,.06)":"none"}}>
-                <div style={{width:22,height:22,minWidth:22,borderRadius:"50%",background:"rgba(217,184,115,.08)",border:"1px solid rgba(217,184,115,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>!</div>
+              <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<results.errores.length-1?"1px solid rgba(217,184,111,.06)":"none"}}>
+                <div style={{width:22,height:22,minWidth:22,borderRadius:"50%",background:"rgba(217,184,111,.08)",border:"1px solid rgba(217,184,111,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>!</div>
                 <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,lineHeight:1.62,margin:0}}>{e}</p>
               </div>
             ))}
@@ -1316,7 +1422,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 6. COMPARTIR ══ */}
       <AccordionBlock id="compartir" icon="📤" title="Compartir con proveedores" subtitle="Mensajes listos para enviar por WhatsApp a cada proveedor" isOpen={open.compartir} onToggle={()=>toggle("compartir")}>
         <div style={{paddingTop:16}}>
-          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,marginBottom:14}}>Cada botón prepara un mensaje adaptado para ese proveedor — con la información exacta que necesita, sin que tengas que escribir nada.</p>
+          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,marginBottom:14}}>Estos botones preparan un mensaje de WhatsApp adaptado para cada proveedor. No todos necesitan recibir la misma información — cada uno recibe exactamente lo que necesita.</p>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <a className="wbtn" href={`https://wa.me/?text=${generarMsgDJ(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{justifyContent:"center"}}>🎧 DJ</a>
             <a className="wbtn" href={`https://wa.me/?text=${generarMsgPlanner(form,results,arch)}`} target="_blank" rel="noopener noreferrer" style={{justifyContent:"center"}}>📋 Planner</a>
@@ -1329,14 +1435,14 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       <AccordionBlock id="exportar" icon="📄" title="Guardar o exportar" subtitle="PDF para imprimir o compartir con quien necesites" isOpen={open.exportar} onToggle={()=>toggle("exportar")}>
         <div style={{paddingTop:16}}>
           <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,marginBottom:14}}>Guardá tu guion como PDF para tenerlo siempre a mano o enviárselo a tu planner.</p>
-          <button onClick={()=>window.print()} style={{width:"100%",background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,115,.14)",borderRadius:12,padding:"14px 18px",fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <button onClick={()=>window.print()} style={{width:"100%",background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.14)",borderRadius:12,padding:"14px 18px",fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
             <span style={{fontSize:"1.2rem"}}>🖨️</span>
             <div>
               <div style={{marginBottom:2}}>Guardar como PDF</div>
-              <div style={{fontSize:".85rem",color:"rgba(247,242,234,.3)"}}>En el diálogo de impresión, elegí "Guardar como PDF"</div>
+              <div style={{fontSize:".85rem",color:"rgba(248,242,230,.3)"}}>En el diálogo de impresión, elegí "Guardar como PDF"</div>
             </div>
           </button>
-          {resultToken&&<div style={{background:"rgba(217,184,115,.05)",border:"1px solid rgba(217,184,115,.14)",borderRadius:12,padding:"14px 16px"}}>
+          {resultToken&&<div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.14)",borderRadius:12,padding:"14px 16px"}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:6}}>Volver a tu resultado desde cualquier dispositivo</div>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:DIM,wordBreak:"break-all",marginBottom:10,lineHeight:1.4}}>{typeof window!=="undefined"?`${window.location.origin}${window.location.pathname}?r=${resultToken}`:""}</div>
             <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);alert("Link copiado ✓");}catch(e){}}}>Copiar link privado</button>
@@ -1345,12 +1451,12 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       </AccordionBlock>
 
       {/* ══ UPSELL ══ */}
-      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,115,.22)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
+      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,111,.22)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:10}}>¿Querés que Ceci lo revise con vos?</div>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:600,color:C,margin:"0 0 8px"}}>Revisión personalizada · 45 minutos</h3>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,margin:"0 0 20px"}}>Revisamos juntas este guion, ajustamos lo que necesitás y te quedás con todo confirmado antes de hablar con tus proveedores.</p>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,margin:"0 0 20px"}}>Revisamos este guion juntas, ajustamos lo que necesitás y quedás lista para hablar con tus proveedores con todo confirmado.</p>
         <a className="pbtn" href="https://wa.me/595985689454?text=Hola%20Ceci!%20Quiero%20una%20revisión%20personalizada%20de%20mi%20guion%20musical" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",textDecoration:"none"}}>Escribirle a Ceci →</a>
-        <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(247,242,234,.2)"}}>@elviolindececi · +595 985 689 454</p>
+        <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(248,242,230,.2)"}}>@elviolindececi · +595 985 689 454</p>
       </div>
 
       <div className="no-print" style={{textAlign:"center",marginTop:20}}>
@@ -1398,8 +1504,12 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
       options:{ emailRedirectTo: window.location.origin }
     });
     setLoading(false);
-    if(error) return setErr(error.message);
-    setMsg("Cuenta creada. Si Supabase pide confirmación, revisá tu email. Si no, ya podés iniciar sesión.");
+    if(error){
+      const msg = error.message?.toLowerCase();
+      if(msg?.includes("already")) return setErr("Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.");
+      return setErr("No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.");
+    }
+    setMsg("Cuenta creada. Revisá tu email para confirmar el acceso — puede llegar en unos minutos.");
     setMode("login");
   };
 
@@ -1443,7 +1553,7 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
   const title = mode==="signup" ? "Crear mi cuenta" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Entrar a mi producto";
   const subtitle = mode==="signup" ? "Usá el mismo email con el que compraste el producto." : mode==="forgot" ? "Te enviaremos un link para crear una nueva contraseña." : mode==="update" ? "Definí una nueva contraseña para volver a entrar." : "Iniciá sesión para ver o crear tu guion musical.";
 
-  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",background:"radial-gradient(circle at 50% 0%, rgba(217,184,115,.10), transparent 42%), #0C1721",padding:"clamp(18px,4vw,42px)"}}>
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",background:"radial-gradient(circle at 50% 0%, rgba(217,184,111,.10), transparent 42%), #0C1721",padding:"clamp(18px,4vw,42px)"}}>
     <div className="fu auth-card" style={{textAlign:"center"}}>
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 className="brand-title" style={{fontSize:"clamp(1.85rem,6vw,2.35rem)",margin:"0 0 8px"}}>{title}</h1>
@@ -1457,17 +1567,17 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
       {mode==="update"&&<input type="password" placeholder="Nueva contraseña" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{textAlign:"center",marginBottom:18}} />}
 
       {err&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"#ff8b8b",lineHeight:1.5,margin:"0 0 12px"}}>{err}</p>}
-      {msg&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(201,160,85,.85)",lineHeight:1.5,margin:"0 0 12px"}}>{msg}</p>}
+      {msg&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(217,184,111,.85)",lineHeight:1.5,margin:"0 0 12px"}}>{msg}</p>}
 
       {mode==="login"&&<button className="pbtn" disabled={loading} onClick={signIn} style={{width:"100%"}}>{loading?"Entrando...":"Entrar →"}</button>}
       {mode==="signup"&&<button className="pbtn" disabled={loading} onClick={signUp} style={{width:"100%"}}>{loading?"Creando...":"Crear cuenta →"}</button>}
       {mode==="forgot"&&<button className="pbtn" disabled={loading} onClick={forgot} style={{width:"100%"}}>{loading?"Enviando...":"Enviar recuperación →"}</button>}
       {mode==="update"&&<button className="pbtn" disabled={loading} onClick={updatePassword} style={{width:"100%"}}>{loading?"Guardando...":"Guardar nueva contraseña →"}</button>}
 
-      <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(217,184,115,.12)",display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(217,184,111,.12)",display:"flex",flexDirection:"column",gap:8}}>
         {mode!=="login"&&<button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Ya tengo cuenta</button>}
         {mode!=="signup"&&mode!=="update"&&<button className="gbtn" onClick={()=>{clean();setMode("signup");}} style={{width:"100%"}}>Crear cuenta nueva</button>}
-        {mode!=="forgot"&&mode!=="update"&&<button onClick={()=>{clean();setMode("forgot");}} style={{background:"transparent",border:"none",color:"rgba(201,160,85,.55)",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",cursor:"pointer",textDecoration:"underline",marginTop:2}}>Olvidé mi contraseña</button>}
+        {mode!=="forgot"&&mode!=="update"&&<button onClick={()=>{clean();setMode("forgot");}} style={{background:"transparent",border:"none",color:"rgba(217,184,111,.55)",fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",cursor:"pointer",textDecoration:"underline",marginTop:2}}>Olvidé mi contraseña</button>}
       </div>
     </div>
   </div>;
@@ -1477,40 +1587,70 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
 function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout }){
   const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
   const link = resultToken && typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?r=${resultToken}` : "";
+  const [copied, setCopied] = useState(false);
   const copyLink = async()=>{
     if(!link) return;
-    try{ await navigator.clipboard.writeText(link); }catch(e){}
+    try{
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(()=>setCopied(false), 2400);
+    }catch(e){}
   };
 
-  return <div style={{minHeight:"100vh",background:"radial-gradient(circle at 50% 0%, rgba(217,184,115,.10), transparent 42%), #0C1721",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
-    <div className="auth-card" style={{maxWidth:760,textAlign:"center"}}>
-      <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
-      <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.2rem)",margin:"0 0 10px"}}>
-        {hasResults ? "Tu guion musical está guardado" : "Bienvenida a tu producto"}
-      </h1>
-      <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.25rem)",margin:"0 auto 22px",maxWidth:560}}>
-        {hasResults
-          ? "Cada vez que entres con tu cuenta vas a volver directo a tu resultado. No hace falta completar el test de nuevo."
-          : "Tu acceso ya está activo. Empezá el test para crear tu guion musical personalizado."}
-      </p>
+  return <div style={{minHeight:"100svh",background:`radial-gradient(ellipse 80% 50% at 50% 0%, rgba(217,184,111,.08), transparent 60%), ${BG}`,display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
+    <div className="fu" style={{width:"100%",maxWidth:"min(680px,calc(100vw - 32px))",textAlign:"center"}}>
 
-      <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(217,184,115,.16)",borderRadius:18,padding:"20px",margin:"22px 0",textAlign:"left"}}>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".86rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(217,184,115,.65)",marginBottom:8}}>Cuenta activa</div>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.25rem",color:C,wordBreak:"break-word"}}>{user?.email}</div>
-        {hasResults&&pareja&&<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",color:DIM,marginTop:6}}>Resultado de {pareja}</div>}
-      </div>
+      <div className="brand-logo" style={{marginBottom:20}}>El Violín de Ceci</div>
 
-      {hasResults&&link&&<div style={{background:"rgba(201,160,85,.07)",border:"1px solid rgba(201,160,85,.18)",borderRadius:16,padding:"16px",marginBottom:22,textAlign:"left"}}>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".82rem",letterSpacing:".13em",textTransform:"uppercase",color:G,marginBottom:6}}>Link privado</div>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".95rem",color:"rgba(247,242,234,.62)",lineHeight:1.5,wordBreak:"break-all"}}>{link}</div>
-        <button className="lbtn" onClick={copyLink} style={{marginTop:12}}>Copiar link</button>
-      </div>}
+      {hasResults ? <>
+        <h1 className="brand-title" style={{fontSize:"clamp(2.2rem,6vw,3.2rem)",margin:"0 0 12px"}}>
+          Tu guion musical está guardado
+        </h1>
+        <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.18rem)",margin:"0 auto 28px",maxWidth:520,lineHeight:1.75}}>
+          No hace falta completar el test de nuevo. Podés volver a ver tu resultado, copiar tu link privado o crear una nueva versión si cambió algo de la boda.
+        </p>
 
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginTop:10}}>
-        {hasResults&&<button className="pbtn" onClick={onViewResults}>Ver mi resultado →</button>}
-        <button className={hasResults ? "gbtn" : "pbtn"} onClick={onStartNew}>{hasResults ? "Volver a hacer el test" : "Crear mi guion musical →"}</button>
-        <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
-      </div>
+        {pareja&&<div style={{background:BG2,border:`1px solid ${BORDER}`,borderRadius:16,padding:"16px 20px",marginBottom:16,textAlign:"left"}}>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(217,184,111,.55)",marginBottom:6}}>Resultado guardado</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.25rem",color:C}}>{pareja}</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".92rem",color:DIM,marginTop:3}}>{user?.email}</div>
+        </div>}
+
+        {link&&<div style={{background:"rgba(217,184,111,.06)",border:`1px solid ${BORDER}`,borderRadius:14,padding:"14px 18px",marginBottom:22,textAlign:"left"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:G,marginBottom:4}}>Link privado para volver a tu guion</div>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:DIMSOFT,lineHeight:1.45,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{link}</div>
+            </div>
+            <button className="lbtn" onClick={copyLink} style={{flexShrink:0}}>{copied?"¡Copiado ✓":"Copiar link"}</button>
+          </div>
+        </div>}
+
+        <button className="pbtn" onClick={onViewResults} style={{width:"100%",marginBottom:10,fontSize:"1.1rem"}}>Ver mi resultado →</button>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <button className="gbtn" onClick={onStartNew}>Hacer el test de nuevo</button>
+          <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
+        </div>
+
+      </> : <>
+        <h1 className="brand-title" style={{fontSize:"clamp(2.2rem,6vw,3.2rem)",margin:"0 0 12px"}}>
+          Bienvenida a tu producto
+        </h1>
+        <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.18rem)",margin:"0 auto 10px",maxWidth:520,lineHeight:1.75}}>
+          Tu acceso ya está activo. Ahora podés crear tu guion musical personalizado.
+        </p>
+        <p className="brand-copy" style={{fontSize:"clamp(.95rem,1.8vw,1.05rem)",margin:"0 auto 28px",maxWidth:480,lineHeight:1.7,opacity:.7}}>
+          Vas a responder algunas preguntas sobre su boda, su estilo y los momentos que querés musicalizar. Al final recibís un guion musical personalizado — con canciones para cada momento, checklist y mensajes listos para tus proveedores.
+        </p>
+
+        <div style={{background:BG2,border:`1px solid ${BORDER}`,borderRadius:16,padding:"16px 20px",marginBottom:24,textAlign:"left"}}>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(217,184,111,.55)",marginBottom:6}}>Cuenta activa</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.05rem",color:C}}>{user?.email}</div>
+        </div>
+
+        <button className="pbtn" onClick={onStartNew} style={{width:"100%",marginBottom:10,fontSize:"1.1rem"}}>Crear mi guion musical →</button>
+        <button className="gbtn" onClick={onLogout} style={{width:"100%"}}>Cerrar sesión</button>
+      </>}
     </div>
   </div>;
 }
@@ -1521,7 +1661,7 @@ const EMPTY_FORM={
   palabrasEstilo:[],objetivoEmocional:"",personalidad:"",
   generos:[],artistas:"",cancionesProhibidas:"",idioma:"",
   momentosSeleccionados:[],formatoMusical:[],
-  cancionPersonal:"",recuerdo:"",email:""
+  cancionPersonal:"",recuerdo:"",email:"",denominacionReligiosa:""
 };
 
 export default function App(){
@@ -1758,7 +1898,7 @@ export default function App(){
     setArquetipo(arch);
     const archData=ARQUETIPOS[arch];
 
-    const isCatolica=formWithEmail.tipoCeremonia.includes("Religiosa católica");
+    const isCatolica=(formWithEmail.tipoCeremonia.includes("Religiosa")&&formWithEmail.denominacionReligiosa==="Católica")||formWithEmail.tipoCeremonia.includes("Religiosa católica");
     const momentosBase=isCatolica?MOMENTOS_CATOLICA:MOMENTOS_CIVIL_SIMBOLICA;
     const momentosStr=formWithEmail.momentosSeleccionados.map(id=>{
       const m=momentosBase.find(x=>x.id===id);
@@ -1825,7 +1965,7 @@ export default function App(){
     }
   };
 
-  if(authLoading) return <div style={{minHeight:"100vh",background:"#0C1721",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Cormorant Garamond',serif"}}>Cargando acceso...</div>;
+  if(authLoading) return <div style={{minHeight:"100vh",background:"#07111B",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Cormorant Garamond',serif"}}>Cargando acceso...</div>;
   if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onPasswordUpdated={()=>{
     setRecoveryMode(false);
     setAuthNotice("");
