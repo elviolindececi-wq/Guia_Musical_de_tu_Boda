@@ -1,74 +1,72 @@
+// api/generate.js
+const https = require('https');
+
 module.exports = async function handler(req, res) {
-  try {
-    if (req.method === "OPTIONS") {
-      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      return res.status(200).end();
-    }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: { message: "Method not allowed" } });
-    }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method not allowed' } });
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({
-        error: {
-          message: "Falta ANTHROPIC_API_KEY en las variables de entorno de Vercel."
-        }
-      });
-    }
-
-    const body = req.body || {};
-
-    const model = body.model || "claude-sonnet-4-6";
-    const maxTokens = body.max_tokens || 2000;
-    const messages = Array.isArray(body.messages) ? body.messages : [];
-
-    if (!messages.length) {
-      return res.status(400).json({
-        error: { message: "Falta messages en el request." }
-      });
-    }
-
-    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: maxTokens,
-        temperature: typeof body.temperature === "number" ? body.temperature : 0,
-        messages
-      })
-    });
-
-    const raw = await anthropicResponse.text();
-
-    let data;
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch (error) {
-      console.error("Anthropic devolvió texto no JSON:", raw);
-      return res.status(500).json({
-        error: { message: "Anthropic devolvió una respuesta inválida." }
-      });
-    }
-
-    if (!anthropicResponse.ok) {
-      console.error("Error de Anthropic:", data);
-      return res.status(anthropicResponse.status).json(data);
-    }
-
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error("Error en /api/generate:", error);
-    return res.status(500).json({
-      error: { message: error.message || "Error interno en /api/generate" }
-    });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error('FALTA ANTHROPIC_API_KEY');
+    return res.status(500).json({ error: { message: 'API key no configurada.' } });
   }
+
+  const body = req.body || {};
+  const payload = JSON.stringify({
+    model: body.model || 'claude-sonnet-4-6',
+    max_tokens: body.max_tokens || 2000,
+    messages: Array.isArray(body.messages) ? body.messages : []
+  });
+
+  console.log('Llamando a Anthropic, modelo:', body.model, 'tokens:', body.max_tokens);
+
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const request = https.request(options, (response) => {
+      let data = '';
+      response.on('data', chunk => { data += chunk; });
+      response.on('end', () => {
+        console.log('Respuesta de Anthropic, status:', response.statusCode, 'bytes:', data.length);
+        try {
+          const parsed = JSON.parse(data);
+          res.status(response.statusCode).json(parsed);
+        } catch (e) {
+          console.error('JSON inválido de Anthropic:', data.substring(0, 500));
+          res.status(500).json({ error: { message: 'Respuesta inválida de Anthropic.' } });
+        }
+        resolve();
+      });
+    });
+
+    request.on('error', (e) => {
+      console.error('Error HTTPS:', e.message);
+      res.status(500).json({ error: { message: e.message } });
+      resolve();
+    });
+
+    request.setTimeout(55000, () => {
+      console.error('Timeout esperando respuesta de Anthropic');
+      request.destroy();
+      res.status(504).json({ error: { message: 'Tiempo de espera agotado. Intentá de nuevo.' } });
+      resolve();
+    });
+
+    request.write(payload);
+    request.end();
+  });
 };
