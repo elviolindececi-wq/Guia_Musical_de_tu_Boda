@@ -1461,11 +1461,14 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       </AccordionBlock>
 
       {/* ══ UPSELL ══ */}
-      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,111,.22)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:10}}>¿Querés que Ceci lo revise con vos?</div>
-        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:600,color:C,margin:"0 0 8px"}}>Revisión personalizada · 45 minutos</h3>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,margin:"0 0 20px"}}>Revisamos este guion juntas, ajustamos lo que necesitás y quedás lista para hablar con tus proveedores con todo confirmado.</p>
-        <a className="pbtn" href="https://wa.me/595985689454?text=Hola%20Ceci!%20Quiero%20una%20revisión%20personalizada%20de%20mi%20guion%20musical" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",textDecoration:"none"}}>Escribirle a Ceci →</a>
+      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#152230,#07111B)",border:"1px solid rgba(217,184,111,.22)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:12}}>Servicio adicional</div>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.3rem,3vw,1.6rem)",fontWeight:600,color:C,margin:"0 0 10px",lineHeight:1.2}}>¿Querés que Ceci revise tu guion con vos?</h3>
+        <div style={{display:"inline-block",background:"rgba(217,184,111,.1)",border:"1px solid rgba(217,184,111,.28)",borderRadius:100,padding:"7px 20px",marginBottom:14}}>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.08rem",color:G,fontWeight:600,letterSpacing:".02em"}}>Revisión personalizada de 45 minutos — USD 30</span>
+        </div>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1rem",color:DIM,lineHeight:1.68,margin:"0 auto 20px",maxWidth:400}}>Escribile a Ceci por WhatsApp y coordinan fecha y forma de pago.</p>
+        <a className="pbtn" href="https://wa.me/595985689454?text=Hola%20Ceci!%20Me%20interesa%20la%20revisión%20personalizada%20de%20mi%20guion%20musical%20(USD%2030%20-%2045%20min)" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",textDecoration:"none"}}>Escribirle a Ceci →</a>
         <p style={{marginTop:12,fontFamily:"'Cormorant Garamond',serif",fontSize:".85rem",color:"rgba(248,242,230,.2)"}}>@elviolindececi · +595 985 689 454</p>
       </div>
 
