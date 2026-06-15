@@ -312,7 +312,7 @@ const CECI_VOICE = `Sos Ceci, violinista con 200 bodas en Paraguay y Brasil. Est
 FILOSOFÍA: La música no es decoración — es la emoción que todos van a recordar. Lo que la gente recuerda es cómo se sintió cuando empezó la música. En boda luxury, hasta los silencios tienen intención.
 ERRORES: elegir pensando en el público no en los novios; canciones de moda que no los representan; ignorar la letra; dejar la música para último; canciones rítmicas sin voz (Your Song, Signed Sealed Delivered pierden fuerza en instrumental).
 SIEMPRE FUNCIONA: Can't Help Falling in Love.
-CONTEXTO PARAGUAY: Muchas bodas combinan civil + religioso el mismo día. Religiosas católicas en iglesia. No-católicas y civiles en venues.`;
+EJEMPLO REGIONAL: en Paraguay es comun celebrar dos ceremonias el mismo dia (religiosa + civil), cada una en un lugar distinto. La ceremonia religiosa catolica suele ser en iglesia; ceremonias cristianas no catolicas y civiles suelen ser en salones u otros venues.`;
 
 // Guía de criterio musical de Ceci por momento — función emocional + ejemplos reales
 const CECI_MOMENTOS_GUIA = {
@@ -889,6 +889,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
 
   const tieneReligiosa=form.tipoCeremonia.includes("Religiosa");
   const lugarGuia={
+    "Iglesia / templo":"La acústica suele ser muy buena para música en vivo. Consultá con anticipación qué instrumentos y repertorio están permitidos.",
     "Salón de fiestas":"Buenas condiciones acústicas. El DJ o músico puede amplificar sin problema. Temperatura controlada.",
     "Al aire libre":"⚠️ El viento y el ruido ambiente pueden afectar la música. Se necesita amplificación con potencia extra. Probá el equipo antes.",
     "Hacienda / estancia":"Espacios amplios y naturales. La acústica varía mucho según el sector. Siempre hacé prueba de sonido.",
@@ -897,7 +898,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
   };
 
   if(step===2) return wrap(<>
-    <SL n={2} l="La ceremonia" sub="Podés combinar más de una — en Paraguay es muy común hacer el civil y el religioso el mismo día."/>
+    <SL n={2} l="La ceremonia" sub="Podés combinar más de una. Por ejemplo, en Paraguay se estila celebrar dos ceremonias el mismo día."/>
     <FL>Tipo de ceremonia</FL>
     {["Religiosa","Civil","Simbólica","Otra"].map(v=>(
       <Pill key={v} label={v} selected={form.tipoCeremonia.includes(v)} onClick={()=>tog("tipoCeremonia",v)}/>
@@ -905,16 +906,29 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     {tieneReligiosa&&<div className="info-box" style={{marginTop:8}}>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:G,marginBottom:8}}>Denominación religiosa</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-        {["Católica","Evangélica","Ortodoxa","Otra religión"].map(v=><Tag key={v} label={v} selected={(form.denominacionReligiosa||"")===v} onClick={()=>set("denominacionReligiosa",v)}/>)}
+        {["Católica","Cristiana","Ortodoxa","Otra religión"].map(v=><Tag key={v} label={v} selected={(form.denominacionReligiosa||"")===v} onClick={()=>set("denominacionReligiosa",v)}/>)}
       </div>
       {(form.denominacionReligiosa==="Católica")&&<p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:"12px 0 0",lineHeight:1.6}}>
         ⚠️ La misa católica tiene momentos litúrgicos con música obligatoria (Aleluya, Comunión, Ofertorio). Muchas iglesias solo permiten música sacra. Siempre consultá con el sacerdote antes de definir el repertorio.
       </p>}
       <FL>¿Hay restricciones musicales específicas?</FL>
       <input placeholder="ej: Solo música sacra, el sacerdote eligió el Aleluya..." value={form.restriccionIglesia||""} onChange={e=>set("restriccionIglesia",e.target.value)}/>
+
+      <FL>¿Dónde será la ceremonia religiosa?</FL>
+      <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
+        {["Iglesia / templo","Salón de fiestas","Al aire libre","Hotel","Otro"].map(v=><Tag key={v} label={v} selected={form.lugarCeremoniaReligiosa===v} onClick={()=>set("lugarCeremoniaReligiosa",v)}/>)}
+      </div>
+      {form.lugarCeremoniaReligiosa&&lugarGuia[form.lugarCeremoniaReligiosa]&&<div style={{background:"rgba(217,184,111,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>{lugarGuia[form.lugarCeremoniaReligiosa]}</p>
+      </div>}
     </div>}
-    {(form.tipoCeremonia.includes("Civil")||form.tipoCeremonia.includes("Simbólica")||form.tipoCeremonia.includes("Otra")||(tieneReligiosa&&form.denominacionReligiosa&&form.denominacionReligiosa!=="Católica"))&&<>
-      <FL>¿Dónde será la ceremonia?</FL>
+    {tieneReligiosa&&form.tipoCeremonia.includes("Civil")&&<div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.12)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>
+        💡 Como van a tener ceremonia religiosa y civil, es común que sean en lugares distintos — por ejemplo, primero la iglesia y después el salón. Más abajo van a poder indicar dónde será la parte civil.
+      </p>
+    </div>}
+    {(form.tipoCeremonia.includes("Civil")||form.tipoCeremonia.includes("Simbólica")||form.tipoCeremonia.includes("Otra")||(tieneReligiosa&&form.denominacionReligiosa&&form.denominacionReligiosa!=="Católica"&&!form.tipoCeremonia.includes("Civil")))&&<>
+      <FL>{tieneReligiosa?"¿Dónde será la ceremonia civil?":"¿Dónde será la ceremonia?"}</FL>
       <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
         {["Salón de fiestas","Al aire libre","Hacienda / estancia","Hotel","Espacio íntimo","Otro"].map(v=><Tag key={v} label={v} selected={form.lugarCeremonia===v} onClick={()=>set("lugarCeremonia",v)}/>)}
       </div>
@@ -1709,7 +1723,7 @@ const EMPTY_FORM={
   palabrasEstilo:[],objetivoEmocional:"",personalidad:"",
   generos:[],artistas:"",cancionesProhibidas:"",idioma:"",
   momentosSeleccionados:[],formatoMusical:[],
-  cancionPersonal:"",recuerdo:"",email:"",denominacionReligiosa:""
+  cancionPersonal:"",recuerdo:"",email:"",denominacionReligiosa:"",lugarCeremoniaReligiosa:""
 };
 
 export default function App(){
@@ -1965,7 +1979,7 @@ export default function App(){
       return m?`${m.nombre}${m.obligatorio?" (litúrgico-obligatorio)":""}`:id;
     }).join(", ");
 
-    const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. Géneros: ${formWithEmail.generos.join(", ")||"nd"}. Artistas ref: ${formWithEmail.artistas||"nd"}. Prohibidas: ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma: ${formWithEmail.idioma||"nd"}. Momentos a cubrir: ${momentosStr}. Canción personal: ${formWithEmail.cancionPersonal||"ninguna"}. Qué quieren que recuerden: ${formWithEmail.recuerdo||"nd"}.`;
+    const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar ceremonia religiosa: ${formWithEmail.lugarCeremoniaReligiosa||"nd"}. Lugar ceremonia civil/otra: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. Géneros: ${formWithEmail.generos.join(", ")||"nd"}. Artistas ref: ${formWithEmail.artistas||"nd"}. Prohibidas: ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma: ${formWithEmail.idioma||"nd"}. Momentos a cubrir: ${momentosStr}. Canción personal: ${formWithEmail.cancionPersonal||"ninguna"}. Qué quieren que recuerden: ${formWithEmail.recuerdo||"nd"}.`;
 
     try{
       setPhase(0);
