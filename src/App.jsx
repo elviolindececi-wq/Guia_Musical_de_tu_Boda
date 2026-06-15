@@ -314,6 +314,27 @@ ERRORES: elegir pensando en el público no en los novios; canciones de moda que 
 SIEMPRE FUNCIONA: Can't Help Falling in Love.
 CONTEXTO PARAGUAY: Muchas bodas combinan civil + religioso el mismo día. Religiosas católicas en iglesia. No-católicas y civiles en venues.`;
 
+// Guía de criterio musical de Ceci por momento — función emocional + ejemplos reales
+const CECI_MOMENTOS_GUIA = {
+  llegada: "Función: crear atmósfera y anticipación antes de que empiece la ceremonia, sin robar protagonismo a lo que viene. Emociones: calidez, anticipación, recogimiento.",
+  cortejo: "Función: suavizar la transición y preparar el terreno para lo importante, transmitiendo delicadeza. Emociones: ternura, inocencia, expectativa creciente. Ejemplos que funcionan: Canon in D (Pachelbel), Yo Soy Tu Amigo Fiel, Slipping Through My Fingers (ABBA). Evitar canciones enérgicas, especialmente si el cortejo son niños — priorizar inocencia.",
+  novio: "Función: abrir la puerta emocional, crear anticipación SIN dramatismo, que los invitados respiren profundo antes de la entrada de la novia. Emociones: alegría (pero no euforia), calidez, expectativa. Ejemplos que funcionan: Now We Are Free (Gladiador), Mi Corazón Encantado, Himno de la Champions. Evitar temas muy dramáticos.",
+  novia: "Función: DEJAR SIN ALIENTO — convertir este momento en una película, sostener la emoción de TODOS los presentes. Es el momento más recordado e IRREPETIBLE de toda la boda. Emociones: majestuosidad, solemnidad, romance profundo, emoción contenida. Ejemplos que funcionan: Can't Help Falling in Love, Young and Beautiful, Veo en Ti la Luz. La canción debe generar piel de gallina y acompañar una caminata lenta.",
+  votos: "Función: crear un contenedor emocional seguro — la música NO compite con las palabras de la pareja, sostiene la intimidad sin invadir. Emociones: sinceridad, vulnerabilidad, amor profundo, intimidad. Ejemplos que funcionan: Your Song, Memories, No Hay Nadie Más. Si la pareja tiene una canción que se dedicaron, este es el momento ideal para usarla. Preferentemente instrumental o muy suave, requiere micrófono para los novios.",
+  alianzas: "Función: elevar el momento del intercambio de anillos y el primer beso — marcar el antes y el después, transmitir romance. Es un momento breve (aprox 1 minuto). Emociones: romance, celebración contenida, conexión profunda, promesa. Ejemplos que funcionan: Hasta Mi Final, Por Ti Seré, Make You Feel My Love. Tip: usar la parte del coro/estribillo de la canción elegida, ya que el momento es corto.",
+  aleluya: "Momento litúrgico OBLIGATORIO en misa católica — debe ser el Aleluya u otro himno aprobado por la iglesia, NUNCA música secular. Función: celebración litúrgica dentro del rito.",
+  ofertorio: "Función: acompañar la preparación del altar con recogimiento, sin distraer. Música sacra y suave. Emociones: fe, paz, trascendencia. Coordinar siempre con el sacerdote.",
+  comunion: "Función: sostener el momento de mayor recogimiento de la misa, conectar con lo trascendente. Emociones: fe, solemnidad, trascendencia, paz. Ejemplos que funcionan: Ave María, Hallelujah, cánticos de la iglesia local. NUNCA música secular — coordinar siempre con el sacerdote.",
+  firmas: "Función: acompañar un momento de acción (firma del acta) sin distraer, pero transmitiendo que algo importante está pasando. Emociones: solemnidad, celebración contenida, seguridad. Ejemplos que funcionan: Lover, Esta Noche Es Para Amar, Enchanted. Tip: en este momento las canciones suelen sonar completas — elegir temas que la pareja disfrute de principio a fin. Regla práctica: 1 canción completa por cada 3 testigos en el altar.",
+  fotos: "Función: cambiar TOTALMENTE el tono del evento — de solemne a festivo, que los invitados empiecen a sonreír mientras la pareja sale a sacarse fotos ya casados. Emociones: alegría, celebración, felicidad, esperanza. Ejemplos que funcionan: Here Comes the Sun, Just the Way You Are, Que Suerte Tenerte. Canciones enérgicas, con presencia de percusión/bombo.",
+  salida: "Función: CELEBRAR CON ALEGRÍA — la pareja ya está casada, es el clímax emocional feliz de toda la ceremonia. Emociones: alegría desbordante, celebración, triunfo del amor, esperanza. Ejemplos que funcionan: Viva la Vida, Marry You, Que Suerte Tenerte. Que se sienta totalmente de la pareja — épico pero cálido.",
+  primer_baile: "Función: SER SU HISTORIA — que cada nota cuente quiénes son como pareja, convirtiendo unos minutos en un recuerdo eterno. Emociones: amor profundo, intimidad (aunque todos miren), alegría, conexión. Ejemplos de referencia: Just the Two of Us, Sarà Perché Ti Amo, How Long Will I Love You — o idealmente la canción personal que la pareja eligió. Este es el momento MÁS personal de toda la boda, no seguir tendencias genéricas.",
+};
+
+const CECI_COCTEL_GUIA = "Recepción/cóctel: la música debe acompañar sin dominar, crear una atmósfera agradable para que los invitados conversen cómodamente mientras la pareja está en sesión de fotos — honrando el atardecer. Emociones: calidez, modernidad, relajación, sofisticación. Volumen moderado-bajo. Referencias de estilo: If I Ain't Got You, Golden Hour, Telepatía. Se pueden mezclar estilos musicales.";
+
+const CECI_CENA_GUIA = "Cena: la música debe ser FUNCIONAL sin desaparecer — que los invitados puedan conversar tranquilos, sin competir con el momento, generando una atmósfera agradable de disfrute. Emociones: comodidad, alegría suave, conexión, disfrute. Estilos recomendados: Jazz, Bossa Nova, Soul, Pop acústico. Volumen bajo-moderado, evitar temas con mucha letra que distraigan la conversación.";
+
 const ARQUETIPOS = {
   cinematograficos:{e:"🎬",n:"Los Cinematográficos",d:"Su boda va a ser una escena que la gente recuerde como si hubiera salido de una película.",m:"Bandas sonoras, épico, arreglos orquestales"},
   clasicos:{e:"💐",n:"Los Clásicos Románticos",d:"Elegancia atemporal. La boda que siempre imaginaron, sin sorpresas — solo emoción pura.",m:"Clásica, romántica, atemporal, con historia"},
@@ -463,7 +484,10 @@ const MOMENTOS_CIVIL_SIMBOLICA = [
   {id:"novio",icono:"🤵",nombre:"Entrada del novio",emocion:"Solidez y emoción contenida",desc:"Muchos novios no saben qué hacer en este momento. La música correcta los sostiene y le dice a todos: esto ya empezó.",duracion:"1–2 min"},
   {id:"novia",icono:"👰",nombre:"Entrada de la novia ★",emocion:"El momento más recordado de toda la boda",desc:"La canción elegida para este momento es la que van a escuchar el resto de su vida y volver a ese instante. No puede ser genérica.",duracion:"1.5–3 min"},
   {id:"votos",icono:"💍",nombre:"Durante la ceremonia / votos",emocion:"Contemplación y profundidad",desc:"La música no puede competir con la palabra. Tiene que sostenerla sin robarle protagonismo. Preferentemente instrumental.",duracion:"Según la ceremonia"},
+  {id:"alianzas",icono:"💞",nombre:"Intercambio de anillos",emocion:"Romance y promesa",desc:"Es breve pero cargado de peso emocional: se intercambian los anillos y llega el primer beso. La música eleva ese 'ya está, somos uno'.",duracion:"~1 min"},
   {id:"salida",icono:"🎊",nombre:"Salida de los novios",emocion:"Primera celebración juntos",desc:"Acaban de decirse que sí. Puede subir la energía para arrancar la fiesta o ser un momento íntimo de transición.",duracion:"2–3 min"},
+  {id:"fotos",icono:"📸",nombre:"Fotos después de la ceremonia",emocion:"Cambio de tono — alegría y celebración",desc:"Termina la ceremonia oficial y las vibras cambian totalmente: ya están casados, ahora es para celebrar. Música enérgica mientras se sacan las fotos.",duracion:"5–10 min"},
+  {id:"primer_baile",icono:"💃",nombre:"Primer baile",emocion:"Su historia, su momento",desc:"El primer baile como casados. Muchas parejas eligen su 'canción especial' — la que significa algo solo para ellos. Es el momento más personal de toda la boda.",duracion:"3–5 min"},
 ];
 
 const MOMENTOS_CATOLICA = [
@@ -474,8 +498,11 @@ const MOMENTOS_CATOLICA = [
   {id:"aleluya",icono:"✨",nombre:"Aleluya / antes del Evangelio",emocion:"Celebración litúrgica",desc:"⚠️ Momento litúrgico obligatorio. Debe ser el Aleluya u otro himno aprobado por la iglesia. No se puede reemplazar por música secular.",duracion:"1–2 min",obligatorio:true},
   {id:"ofertorio",icono:"🙏",nombre:"Ofertorio",emocion:"Ofrenda y recogimiento",desc:"Durante la preparación del altar. Música sacra, suave, que acompaña sin distraer.",duracion:"3–5 min"},
   {id:"comunion",icono:"🕊️",nombre:"Comunión",emocion:"Paz y profundidad espiritual",desc:"Momento de mayor recogimiento de la misa. La música debe ser sacra o en algunos casos se permite música más suave y contemplativa.",duracion:"5–10 min"},
+  {id:"alianzas",icono:"💞",nombre:"Intercambio de anillos",emocion:"Romance y promesa",desc:"Es breve pero cargado de peso emocional: se intercambian los anillos y llega el primer beso de casados. La música eleva ese 'ya está, somos uno'.",duracion:"~1 min"},
   {id:"firmas",icono:"📜",nombre:"Firma de las actas",emocion:"Intimidad y detalle",desc:"Mientras los novios firman. Elegí 1 canción por cada 3 testigos — si hay 6 testigos, necesitás al menos 2 canciones de 3 minutos cada una. Un momento íntimo que puede llenarse con música suave.",duracion:"3–8 min (según testigos)"},
   {id:"salida",icono:"🎊",nombre:"Salida de los novios",emocion:"Alegría y celebración",desc:"La iglesia permite más libertad en la salida. Es el primer momento de alegría compartida.",duracion:"2–3 min"},
+  {id:"fotos",icono:"📸",nombre:"Fotos en el altar",emocion:"Cambio de tono — alegría y celebración",desc:"Termina la ceremonia oficial y las vibras cambian totalmente: ya están casados, ahora es para celebrar. Música enérgica mientras se sacan las fotos.",duracion:"5–10 min"},
+  {id:"primer_baile",icono:"💃",nombre:"Primer baile",emocion:"Su historia, su momento",desc:"El primer baile como casados. Muchas parejas eligen su 'canción especial' — la que significa algo solo para ellos. Es el momento más personal de toda la boda.",duracion:"3–5 min"},
 ];
 
 const ESTILOS=["Romántica","Elegante","Íntima","Alegre","Moderna","Clásica","Bohemia","Luxury","Vintage","Emotiva","Festiva","Cinematográfica"];
@@ -1107,7 +1134,7 @@ function SecLabel({children}){
 }
 
 function SongCardStar({item}){
-  const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
+  const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}${item.version?" "+item.version:""}`);
   return <div style={{background:"linear-gradient(135deg,#152230,#0C1721)",border:"1px solid rgba(217,184,111,.3)",borderRadius:14,padding:"20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
     <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,111,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
@@ -1128,7 +1155,7 @@ function SongCardStar({item}){
 }
 
 function SongCard({item,idx}){
-  const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}`);
+  const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}${item.version?" "+item.version:""}`);
   const isNovia=item.momento?.toLowerCase().includes("novia");
   if(isNovia) return <SongCardStar item={item}/>;
   return <div style={{background:"rgba(17,28,39,.7)",border:"1px solid rgba(217,184,111,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
@@ -1948,14 +1975,17 @@ export default function App(){
       setPhase(1);
       const momentosListado = formWithEmail.momentosSeleccionados.map(id => {
         const m = momentosBase.find(x => x.id === id);
-        return m ? m.nombre + (m.obligatorio ? " (liturgico)" : "") : null;
-      }).filter(Boolean).join(", ");
+        if (!m) return null;
+        const nombre = m.nombre + (m.obligatorio ? " (liturgico)" : "");
+        const guia = CECI_MOMENTOS_GUIA[id];
+        return guia ? (nombre + " => " + guia) : nombre;
+      }).filter(Boolean).join(" | ");
 
-      const p2 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ". Estilo: " + (r1.perfil?.cluster||"romantico") + ".\nMomentos: " + momentosListado + ".\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings cortos sin comillas internas:\n{\"guion\":[{\"momento\":\"nombre\",\"icono\":\"emoji\",\"cancion\":\"titulo\",\"artista\":\"artista\",\"version\":\"version\",\"duracion\":\"2:30\",\"razon\":\"razon corta sin comillas\",\"alt\":\"titulo - artista\"}]}\nPara momentos liturgicos usa musica sacra. Incluye TODOS los momentos listados.";
+      const p2 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ". Estilo: " + (r1.perfil?.cluster||"romantico") + ".\nCRITERIO POR MOMENTO (la funcion emocional y los ejemplos son la guia real de Ceci, basate en ellos para elegir o inspirarte, ajustando al estilo/generos de la pareja si corresponde):\n" + momentosListado + "\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings cortos sin comillas internas:\n{\"guion\":[{\"momento\":\"nombre\",\"icono\":\"emoji\",\"cancion\":\"titulo\",\"artista\":\"artista\",\"version\":\"version\",\"duracion\":\"2:30\",\"razon\":\"razon corta sin comillas\",\"alt\":\"titulo - artista\"}]}\nLa cancion elegida para cada momento debe cumplir la FUNCION EMOCIONAL descripta en el criterio, no ser generica. El campo 'version' es OBLIGATORIO y debe indicar el formato de interpretacion mas adecuado para el momento de CEREMONIA (ej: 'Instrumental violin', 'Violin y piano', 'Version acustica', 'Cuarteto de cuerdas', 'Vocal original') segun el formato musical disponible de la pareja; si tienen DJ o solo grabada y el momento lo permite, version puede ser 'Original'. Para momentos liturgicos usa SOLO musica sacra aprobada. Incluye TODOS los momentos listados, en el mismo orden.";
       const r2 = await callAIWithRetry(p2, 3000);
 
       setPhase(2);
-      const p3 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ".\nSOLO JSON COMPACTO EN UNA LINEA sin saltos de linea. Strings cortos sin comillas internas:\n{\"coctel\":[{\"c\":\"cancion\",\"a\":\"artista\",\"d\":\"3:30\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"cena\":[{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"checklist\":{\"dj\":[\"item1\",\"item2\",\"item3\"],\"musicos\":[\"item1\",\"item2\"],\"planner\":[\"item1\",\"item2\"],\"pareja\":[\"consejo1\",\"consejo2\",\"consejo3\"]},\"errores\":[\"error1 con solucion\",\"error2\",\"error3\"]}";
+      const p3 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ".\nCRITERIO COCTEL: " + CECI_COCTEL_GUIA + "\nCRITERIO CENA: " + CECI_CENA_GUIA + "\nSOLO JSON COMPACTO EN UNA LINEA sin saltos de linea. Strings cortos sin comillas internas:\n{\"coctel\":[{\"c\":\"cancion\",\"a\":\"artista\",\"d\":\"3:30\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"cena\":[{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"checklist\":{\"dj\":[\"item1\",\"item2\",\"item3\"],\"musicos\":[\"item1\",\"item2\"],\"planner\":[\"item1\",\"item2\"],\"pareja\":[\"consejo1\",\"consejo2\",\"consejo3\"]},\"errores\":[\"error1 con solucion\",\"error2\",\"error3\"]}\nLas canciones de coctel y cena deben cumplir el criterio descripto arriba (atmosfera, volumen y estilos sugeridos), no ser temas genericos de fiesta.";
       const r3 = await callAIWithRetry(p3, 2500);
 
       const finalResults = {nota:r1.nota,perfil:r1.perfil,...r2,...r3};
