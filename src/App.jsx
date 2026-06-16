@@ -2103,6 +2103,30 @@ export default function App(){
     const tieneCancionPersonal = formWithEmail.cancionPersonal && formWithEmail.cancionPersonal.trim().length > 2;
     const tieneArtistas = formWithEmail.artistas && formWithEmail.artistas.trim().length > 2;
     const tieneProhibidas = formWithEmail.cancionesProhibidas && formWithEmail.cancionesProhibidas.trim().length > 2;
+
+    // Idioma: regla estricta cuando la pareja eligió un idioma específico (no "Mezcla" ni "No importa")
+    const idiomaEstrictoMap = { "Castellano": "español/castellano", "Inglés": "inglés" };
+    const idiomaEstricto = idiomaEstrictoMap[formWithEmail.idioma] || null;
+    const idiomaInstruccion = idiomaEstricto
+      ? `REGLA IDIOMA: la pareja eligió canciones en ${idiomaEstricto} ÚNICAMENTE. TODAS las canciones del guion y las playlists deben tener letra en ${idiomaEstricto} (las instrumentales sin letra están exentas de esta regla). No mezcles idiomas salvo que sea instrumental.`
+      : formWithEmail.idioma === "Mezcla"
+        ? "REGLA IDIOMA: la pareja quiere una mezcla de español e inglés — combiná ambos idiomas de forma equilibrada a lo largo del guion."
+        : "";
+
+    // Formato musical: traducir el formato elegido a instrucción concreta de versión instrumental
+    const formatoInstruccionMap = {
+      "Violín en vivo": "Para los momentos de ceremonia, la versión debe ser ejecutable por UN violín solo (instrumental violín solo, o violín con backing track). No sugieras versiones de banda completa.",
+      "Cuarteto cuerdas": "Para los momentos de ceremonia, la versión debe ser para CUARTETO DE CUERDAS (2 violines, viola, violonchelo) — instrumental, sin batería ni vientos.",
+      "Piano": "Para los momentos de ceremonia, la versión debe ser ejecutable por PIANO SOLO — instrumental.",
+      "Banda": "Para los momentos de ceremonia, la versión puede ser interpretada por una banda en vivo completa (voz + instrumentos).",
+      "Cantante": "Para los momentos de ceremonia, la versión debe contemplar un CANTANTE en vivo (con pista o acompañamiento mínimo).",
+      "DJ": "Para los momentos de ceremonia, la versión es la grabación original o un edit de DJ — no requiere instrumento en vivo.",
+      "Solo grabada": "Todas las versiones deben ser la grabación original o un edit — no hay músicos en vivo disponibles."
+    };
+    const formatosElegidos = (formWithEmail.formatoMusical || []).filter(f => formatoInstruccionMap[f]);
+    const formatoInstruccion = formatosElegidos.length > 0
+      ? "REGLA FORMATO INSTRUMENTAL: " + formatosElegidos.map(f => formatoInstruccionMap[f]).join(" ")
+      : "";
     
     const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar ceremonia religiosa: ${formWithEmail.lugarCeremoniaReligiosa||"nd"}. Lugar ceremonia civil/otra: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. GÉNEROS OBLIGATORIOS (todas las canciones DEBEN ser de estos géneros o muy cercanos): ${generos}. Artistas de referencia de estilo (las canciones deben sonar similares a estos artistas): ${formWithEmail.artistas||"ninguno indicado"}. CANCIONES PROHIBIDAS (no usar ninguna de estas ni versiones de ellas): ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma preferido para letras: ${formWithEmail.idioma||"cualquiera"}. Momentos a cubrir: ${momentosStr}. CANCIÓN PERSONAL DE LA PAREJA: ${formWithEmail.cancionPersonal||"no indicaron"}. Qué quieren que la gente recuerde musicalmente: ${formWithEmail.recuerdo||"nd"}.`;
 
@@ -2139,8 +2163,10 @@ export default function App(){
         "\n\nREGLAS DE SELECCIÓN MUSICAL (cumplirlas en orden de prioridad):" +
         "\n1. GÉNEROS: todas las canciones deben ser de los géneros indicados en el contexto o muy cercanos. Si la pareja eligió Pop, no pongas ópera. Si eligió Disney, todas deben sonar a Disney/películas animadas." +
         "\n2. ARTISTAS REFERENCIA: el estilo sonoro debe ser consistente con los artistas mencionados como referencia." +
-        (cancionPersonalInstruccion ? "\n3. " + cancionPersonalInstruccion : "") +
-        (prohibidasInstruccion ? "\n4. " + prohibidasInstruccion : "") +
+        (idiomaInstruccion ? "\n3. " + idiomaInstruccion : "") +
+        (formatoInstruccion ? "\n4. " + formatoInstruccion : "") +
+        (cancionPersonalInstruccion ? "\n5. " + cancionPersonalInstruccion : "") +
+        (prohibidasInstruccion ? "\n6. " + prohibidasInstruccion : "") +
         "\n\nCRITERIO POR MOMENTO (función emocional + ejemplos validados de Ceci como punto de partida):\n" + momentosListado +
         "\n\nPOOL DE CANCIONES VALIDADAS POR CECI (usá estas como referencia, adaptando a los géneros de la pareja):\n" + seedPool +
         "\n\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings sin comillas internas:" +
@@ -2154,9 +2180,11 @@ export default function App(){
 
       const p3 = CECI_VOICE + "\nBODA: " + ctx + "\nArquetipo: " + archData.n + "." +
         "\n\nGÉNEROS OBLIGATORIOS: " + generos + ". Las playlists deben sonar a estos géneros, no a música de bodas genérica." +
+        (idiomaInstruccion ? "\n" + idiomaInstruccion : "") +
         (prohibidasInstruccion ? "\n" + prohibidasInstruccion : "") +
         "\n\nCRITERIO CÓCTEL: " + CECI_COCTEL_GUIA + " Canciones de referencia de Ceci: " + coctelSeedStr +
         "\nCRITERIO CENA: " + CECI_CENA_GUIA + " Canciones de referencia de Ceci: " + cenaSeedStr +
+        "\nREGLA DE PROGRESIÓN EN CENA (MUY IMPORTANTE): el array 'cena' debe estar ORDENADO de forma progresiva — las primeras canciones (posiciones 1-2) deben ser las MÁS TRANQUILAS y suaves (volumen bajo, ideal para conversar), las del medio (posiciones 3-4) deben subir levemente la energía, y las últimas (posiciones 5-6) deben tener más ritmo y movimiento, sirviendo de puente para abrir la pista de baile al terminar la cena. Es una transición gradual de lento a movido, nunca un salto abrupto." +
         "\n\nDevuelve SOLO JSON COMPACTO EN UNA LINEA. Sin saltos de linea. Strings sin comillas internas:" +
         "\n{\"coctel\":[{\"c\":\"cancion\",\"a\":\"artista\",\"d\":\"3:30\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"cena\":[{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"checklist\":{\"dj\":[\"tarea especifica 1\",\"tarea 2\",\"tarea 3\"],\"musicos\":[\"tarea 1\",\"tarea 2\"],\"planner\":[\"tarea 1\",\"tarea 2\"],\"pareja\":[\"consejo 1\",\"consejo 2\",\"consejo 3\"]},\"errores\":[\"error comun 1 con solucion concreta\",\"error 2\",\"error 3\"]}";
       const r3 = await callAIWithRetry(p3, 2500);
