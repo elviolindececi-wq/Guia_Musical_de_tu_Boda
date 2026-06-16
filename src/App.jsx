@@ -315,6 +315,21 @@ SIEMPRE FUNCIONA: Can't Help Falling in Love.
 EJEMPLO REGIONAL: en Paraguay es comun celebrar dos ceremonias el mismo dia (religiosa + civil), cada una en un lugar distinto. La ceremonia religiosa catolica suele ser en iglesia; ceremonias cristianas no catolicas y civiles suelen ser en salones u otros venues.`;
 
 // Guía de criterio musical de Ceci por momento — función emocional + ejemplos reales
+// Pool de canciones validadas por Ceci (de su guía real) — punto de partida por momento
+const CECI_SONG_POOL = {
+  novio: ["Now We Are Free (Gladiador)", "Mi Corazón Encantado", "Himno de la Champions"],
+  cortejo: ["Canon in D - Pachelbel", "Yo Soy Tu Amigo Fiel", "Slipping Through My Fingers - ABBA"],
+  novia: ["Can't Help Falling in Love - Elvis Presley", "Young and Beautiful - Lana Del Rey", "Veo en Ti la Luz (Tangled)"],
+  votos: ["Your Song - Elton John", "Memories - Maroon 5", "No Hay Nadie Más - Sebastián Yatra"],
+  alianzas: ["Hasta Mi Final - Il Divo", "Por Ti Seré - Il Divo", "Make You Feel My Love - Adele"],
+  firmas: ["Lover - Taylor Swift", "Esta Noche Es Para Amar - Luciano Pereyra", "Enchanted - Taylor Swift"],
+  fotos: ["Here Comes the Sun - The Beatles", "Just the Way You Are - Bruno Mars", "Que Suerte Tenerte - Luck Ra"],
+  salida: ["Viva la Vida - Coldplay", "Marry You - Bruno Mars", "Que Suerte Tenerte - Luck Ra"],
+  primer_baile: ["Just the Two of Us", "Sarà Perché Ti Amo - Ricchi e Poveri", "How Long Will I Love You - Ellie Goulding"],
+  coctel: ["If I Ain't Got You - Alicia Keys", "Golden Hour - JVKE", "Telepatía - Kali Uchis"],
+  cena: ["Fly Me to the Moon - Frank Sinatra", "The Girl from Ipanema - João Gilberto", "At Last - Etta James"],
+};
+
 const CECI_MOMENTOS_GUIA = {
   llegada: "Función: crear atmósfera y anticipación antes de que empiece la ceremonia, sin robar protagonismo a lo que viene. Emociones: calidez, anticipación, recogimiento.",
   cortejo: "Función: suavizar la transición y preparar el terreno para lo importante, transmitiendo delicadeza. Emociones: ternura, inocencia, expectativa creciente. Ejemplos que funcionan: Canon in D (Pachelbel), Yo Soy Tu Amigo Fiel, Slipping Through My Fingers (ABBA). Evitar canciones enérgicas, especialmente si el cortejo son niños — priorizar inocencia.",
@@ -970,8 +985,16 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     </div>
     <FL>3 artistas o canciones que los representen como pareja</FL>
     <input placeholder="ej: Coldplay, La Oreja de Van Gogh, Hans Zimmer" value={form.artistas} onChange={e=>set("artistas",e.target.value)}/>
-    <FL>¿Alguna canción que definitivamente NO quieren?</FL>
-    <input placeholder="(opcional) — y si querés, contanos por qué" value={form.cancionesProhibidas} onChange={e=>set("cancionesProhibidas",e.target.value)}/>
+    <FL>¿Alguna canción que definitivamente NO quieren en su boda?</FL>
+    <div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.12)",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:DIM,margin:"0 0 6px",lineHeight:1.6}}>
+        Esto es más común de lo que parece — y es muy útil para nosotras.
+      </p>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(248,242,230,.38)",margin:0,lineHeight:1.6,fontStyle:"italic"}}>
+        Puede ser una canción muy repetida en bodas, una que los recuerde de algo que no quieren traer, o simplemente una que no los representa. El guion no va a incluirla ni versiones de ella.
+      </p>
+    </div>
+    <input placeholder="ej: La Bamba, Despacito, la canción del ex — anotá todo lo que se les ocurra" value={form.cancionesProhibidas} onChange={e=>set("cancionesProhibidas",e.target.value)}/>
     <FL>Idioma preferido</FL>
     <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
       {["Castellano","Inglés","Mezcla","No importa"].map(v=><Tag key={v} label={v} selected={form.idioma===v} onClick={()=>set("idioma",v)}/>)}
@@ -1161,9 +1184,12 @@ function SongCardStar({item}){
     <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.3rem,3vw,1.55rem)",color:C,marginBottom:3,lineHeight:1.2}}>{item.cancion}</div>
     <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:DIM,marginBottom:item.razon?12:0}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.3)",fontStyle:"italic"}}> · {item.version}</em>}</div>
     {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".97rem",color:"rgba(248,242,230,.62)",lineHeight:1.65,margin:"0 0 12px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.25)",paddingLeft:12}}>{item.razon}</p>}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {item.alt&&<span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(248,242,230,.28)"}}>Alt: {item.alt}</span>}
-      <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer">▶ Escuchar</a>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <AudioButton cancion={item.cancion} artista={item.artista}/>
+        <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 12px"}}>YT</a>
+      </div>
     </div>
   </div>;
 }
@@ -1211,6 +1237,91 @@ function CheckItem({label,done,onToggle,important}){
     <span style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:done?"rgba(248,242,230,.22)":C,textDecoration:done?"line-through":"none",lineHeight:1.55,transition:"all .2s"}}>{label}</span>
   </div>;
 }
+
+// ─── REPRODUCTOR DE AUDIO (iTunes preview 30s) ────────────────────────────────
+function AudioButton({cancion, artista}){
+  const [state, setState] = React.useState("idle"); // idle | loading | playing | paused | error
+  const [progress, setProgress] = React.useState(0);
+  const audioRef = React.useRef(null);
+  const intervalRef = React.useRef(null);
+
+  const cleanup = () => {
+    clearInterval(intervalRef.current);
+    if(audioRef.current){
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+  };
+
+  React.useEffect(() => () => cleanup(), []);
+
+  const toggle = async () => {
+    // Si ya hay audio reproduciéndose → pausar
+    if(state === "playing"){
+      audioRef.current?.pause();
+      clearInterval(intervalRef.current);
+      setState("paused");
+      return;
+    }
+    // Si estaba pausado → reanudar
+    if(state === "paused"){
+      audioRef.current?.play();
+      intervalRef.current = setInterval(() => {
+        const a = audioRef.current;
+        if(!a) return;
+        setProgress(a.currentTime / (a.duration || 30) * 100);
+        if(a.ended){ setState("idle"); setProgress(0); clearInterval(intervalRef.current); }
+      }, 250);
+      setState("playing");
+      return;
+    }
+    // Primer play → buscar en iTunes
+    setState("loading");
+    try {
+      const q = encodeURIComponent(`${cancion} ${artista}`);
+      const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=3&entity=song`);
+      const data = await res.json();
+      const preview = data?.results?.find(r => r.previewUrl)?.previewUrl;
+      if(!preview) throw new Error("sin preview");
+      
+      const audio = new Audio(preview);
+      audio.crossOrigin = "anonymous";
+      audioRef.current = audio;
+      await audio.play();
+      setState("playing");
+      intervalRef.current = setInterval(() => {
+        setProgress(audio.currentTime / (audio.duration || 30) * 100);
+        if(audio.ended){ setState("idle"); setProgress(0); clearInterval(intervalRef.current); }
+      }, 250);
+    } catch(e) {
+      setState("error");
+      setTimeout(() => setState("idle"), 2500);
+    }
+  };
+
+  const icons = { idle:"▶", loading:"·", playing:"⏸", paused:"▶", error:"✕" };
+  const labels = { idle:"Preview", loading:"Buscando...", playing:"Pausar", paused:"Reanudar", error:"No disponible" };
+  const isActive = state === "playing" || state === "paused";
+
+  return <div style={{display:"flex",alignItems:"center",gap:8}}>
+    <button onClick={toggle} style={{
+      display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",
+      border:`1px solid ${state==="error"?"rgba(255,139,139,.35)":isActive?"rgba(217,184,111,.55)":"rgba(217,184,111,.3)"}`,
+      borderRadius:100,background:isActive?"rgba(217,184,111,.1)":"transparent",
+      color:state==="error"?"#FF8B8B":"#D9B86F",
+      fontFamily:"'Lora',serif",fontWeight:600,fontSize:".88rem",cursor:"pointer",
+      transition:"all .2s",minWidth:110,justifyContent:"center",
+      opacity:state==="loading"?.7:1
+    }}>
+      <span style={{fontSize:".8rem",animation:state==="loading"?"pulse 1s infinite":undefined}}>{icons[state]}</span>
+      {labels[state]}
+    </button>
+    {isActive&&<div style={{flex:1,height:3,background:"rgba(217,184,111,.12)",borderRadius:2,overflow:"hidden",minWidth:60}}>
+      <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(to right,#D9B86F,#E6C76A)",transition:"width .25s linear",borderRadius:2}}/>
+    </div>}
+  </div>;
+}
+
 
 // ─── CARRUSEL HORIZONTAL DE MOMENTOS ──────────────────────────────────────────
 function GuionCarousel({items}){
@@ -1275,9 +1386,12 @@ function GuionCarousel({items}){
           {/* Razón de Ceci */}
           {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:"rgba(248,242,230,.6)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.22)",paddingLeft:12}}>{item.razon}</p>}
           {/* Footer */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6,marginTop:"auto",paddingTop:4}}>
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:"auto",paddingTop:4}}>
             {item.alt&&<div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(248,242,230,.28)"}}>Alt: {item.alt}</div>}
-            <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{marginLeft:"auto"}}>▶ Escuchar</a>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <AudioButton cancion={item.cancion} artista={item.artista}/>
+              <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 10px"}}>YT</a>
+            </div>
           </div>
         </div>;
       })}
@@ -1979,7 +2093,13 @@ export default function App(){
       return m?`${m.nombre}${m.obligatorio?" (litúrgico-obligatorio)":""}`:id;
     }).join(", ");
 
-    const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar ceremonia religiosa: ${formWithEmail.lugarCeremoniaReligiosa||"nd"}. Lugar ceremonia civil/otra: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. Géneros: ${formWithEmail.generos.join(", ")||"nd"}. Artistas ref: ${formWithEmail.artistas||"nd"}. Prohibidas: ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma: ${formWithEmail.idioma||"nd"}. Momentos a cubrir: ${momentosStr}. Canción personal: ${formWithEmail.cancionPersonal||"ninguna"}. Qué quieren que recuerden: ${formWithEmail.recuerdo||"nd"}.`;
+    // Build detailed context
+    const generos = formWithEmail.generos.join(", ") || "variado";
+    const tieneCancionPersonal = formWithEmail.cancionPersonal && formWithEmail.cancionPersonal.trim().length > 2;
+    const tieneArtistas = formWithEmail.artistas && formWithEmail.artistas.trim().length > 2;
+    const tieneProhibidas = formWithEmail.cancionesProhibidas && formWithEmail.cancionesProhibidas.trim().length > 2;
+    
+    const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar ceremonia religiosa: ${formWithEmail.lugarCeremoniaReligiosa||"nd"}. Lugar ceremonia civil/otra: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. GÉNEROS OBLIGATORIOS (todas las canciones DEBEN ser de estos géneros o muy cercanos): ${generos}. Artistas de referencia de estilo (las canciones deben sonar similares a estos artistas): ${formWithEmail.artistas||"ninguno indicado"}. CANCIONES PROHIBIDAS (no usar ninguna de estas ni versiones de ellas): ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma preferido para letras: ${formWithEmail.idioma||"cualquiera"}. Momentos a cubrir: ${momentosStr}. CANCIÓN PERSONAL DE LA PAREJA: ${formWithEmail.cancionPersonal||"no indicaron"}. Qué quieren que la gente recuerde musicalmente: ${formWithEmail.recuerdo||"nd"}.`;
 
     try{
       setPhase(0);
@@ -1995,11 +2115,45 @@ export default function App(){
         return guia ? (nombre + " => " + guia) : nombre;
       }).filter(Boolean).join(" | ");
 
-      const p2 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ". Estilo: " + (r1.perfil?.cluster||"romantico") + ".\nCRITERIO POR MOMENTO (la funcion emocional y los ejemplos son la guia real de Ceci, basate en ellos para elegir o inspirarte, ajustando al estilo/generos de la pareja si corresponde):\n" + momentosListado + "\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings cortos sin comillas internas:\n{\"guion\":[{\"momento\":\"nombre\",\"icono\":\"emoji\",\"cancion\":\"titulo\",\"artista\":\"artista\",\"version\":\"version\",\"duracion\":\"2:30\",\"razon\":\"razon corta sin comillas\",\"alt\":\"titulo - artista\"}]}\nLa cancion elegida para cada momento debe cumplir la FUNCION EMOCIONAL descripta en el criterio, no ser generica. El campo 'version' es OBLIGATORIO y debe indicar el formato de interpretacion mas adecuado para el momento de CEREMONIA (ej: 'Instrumental violin', 'Violin y piano', 'Version acustica', 'Cuarteto de cuerdas', 'Vocal original') segun el formato musical disponible de la pareja; si tienen DJ o solo grabada y el momento lo permite, version puede ser 'Original'. Para momentos liturgicos usa SOLO musica sacra aprobada. Incluye TODOS los momentos listados, en el mismo orden.";
+      // Build per-moment seed pool based on selected moments
+      const seedPool = formWithEmail.momentosSeleccionados
+        .map(id => {
+          const songs = CECI_SONG_POOL[id];
+          return songs ? `${id}: ejemplos validados por Ceci → ${songs.join(", ")}` : null;
+        }).filter(Boolean).join(" | ");
+
+      const cancionPersonalInstruccion = tieneCancionPersonal
+        ? `REGLA CANCION PERSONAL: La pareja indicó que su canción personal es "${formWithEmail.cancionPersonal}". DEBES incluirla en el momento "votos" o "primer_baile" si están seleccionados, o en el momento más íntimo disponible. Adaptá la versión al formato musical disponible.`
+        : "";
+
+      const prohibidasInstruccion = tieneProhibidas
+        ? `REGLA PROHIBIDAS: Estas canciones NO pueden aparecer bajo ninguna forma ni versión: ${formWithEmail.cancionesProhibidas}. Verificá canción por canción antes de responder.`
+        : "";
+
+      const p2 = CECI_VOICE + "\nBODA: " + ctx + "\nArquetipo: " + archData.n + ". Estilo identificado: " + (r1.perfil?.cluster||"romantico") + "." +
+        "\n\nREGLAS DE SELECCIÓN MUSICAL (cumplirlas en orden de prioridad):" +
+        "\n1. GÉNEROS: todas las canciones deben ser de los géneros indicados en el contexto o muy cercanos. Si la pareja eligió Pop, no pongas ópera. Si eligió Disney, todas deben sonar a Disney/películas animadas." +
+        "\n2. ARTISTAS REFERENCIA: el estilo sonoro debe ser consistente con los artistas mencionados como referencia." +
+        (cancionPersonalInstruccion ? "\n3. " + cancionPersonalInstruccion : "") +
+        (prohibidasInstruccion ? "\n4. " + prohibidasInstruccion : "") +
+        "\n\nCRITERIO POR MOMENTO (función emocional + ejemplos validados de Ceci como punto de partida):\n" + momentosListado +
+        "\n\nPOOL DE CANCIONES VALIDADAS POR CECI (usá estas como referencia, adaptando a los géneros de la pareja):\n" + seedPool +
+        "\n\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings sin comillas internas:" +
+        "\n{\"guion\":[{\"momento\":\"nombre\",\"icono\":\"emoji\",\"cancion\":\"titulo\",\"artista\":\"artista\",\"version\":\"Instrumental violin / Vocal original / etc\",\"duracion\":\"2:30\",\"razon\":\"por que esta cancion cumple la funcion emocional para ESTA pareja especificamente\",\"alt\":\"titulo alternativo - artista\"}]}" +
+        "\nIncluye TODOS los momentos listados en el mismo orden. Para litúrgicos: solo música sacra aprobada.";
       const r2 = await callAIWithRetry(p2, 3000);
 
       setPhase(2);
-      const p3 = CECI_VOICE + "\nBODA: " + ctx + ". Arquetipo: " + archData.n + ".\nCRITERIO COCTEL: " + CECI_COCTEL_GUIA + "\nCRITERIO CENA: " + CECI_CENA_GUIA + "\nSOLO JSON COMPACTO EN UNA LINEA sin saltos de linea. Strings cortos sin comillas internas:\n{\"coctel\":[{\"c\":\"cancion\",\"a\":\"artista\",\"d\":\"3:30\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"cena\":[{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"checklist\":{\"dj\":[\"item1\",\"item2\",\"item3\"],\"musicos\":[\"item1\",\"item2\"],\"planner\":[\"item1\",\"item2\"],\"pareja\":[\"consejo1\",\"consejo2\",\"consejo3\"]},\"errores\":[\"error1 con solucion\",\"error2\",\"error3\"]}\nLas canciones de coctel y cena deben cumplir el criterio descripto arriba (atmosfera, volumen y estilos sugeridos), no ser temas genericos de fiesta.";
+      const coctelSeedStr = CECI_SONG_POOL.coctel.join(", ");
+      const cenaSeedStr = CECI_SONG_POOL.cena.join(", ");
+
+      const p3 = CECI_VOICE + "\nBODA: " + ctx + "\nArquetipo: " + archData.n + "." +
+        "\n\nGÉNEROS OBLIGATORIOS: " + generos + ". Las playlists deben sonar a estos géneros, no a música de bodas genérica." +
+        (prohibidasInstruccion ? "\n" + prohibidasInstruccion : "") +
+        "\n\nCRITERIO CÓCTEL: " + CECI_COCTEL_GUIA + " Canciones de referencia de Ceci: " + coctelSeedStr +
+        "\nCRITERIO CENA: " + CECI_CENA_GUIA + " Canciones de referencia de Ceci: " + cenaSeedStr +
+        "\n\nDevuelve SOLO JSON COMPACTO EN UNA LINEA. Sin saltos de linea. Strings sin comillas internas:" +
+        "\n{\"coctel\":[{\"c\":\"cancion\",\"a\":\"artista\",\"d\":\"3:30\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"cena\":[{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"},{\"c\":\"\",\"a\":\"\",\"d\":\"\"}],\"checklist\":{\"dj\":[\"tarea especifica 1\",\"tarea 2\",\"tarea 3\"],\"musicos\":[\"tarea 1\",\"tarea 2\"],\"planner\":[\"tarea 1\",\"tarea 2\"],\"pareja\":[\"consejo 1\",\"consejo 2\",\"consejo 3\"]},\"errores\":[\"error comun 1 con solucion concreta\",\"error 2\",\"error 3\"]}";
       const r3 = await callAIWithRetry(p3, 2500);
 
       const finalResults = {nota:r1.nota,perfil:r1.perfil,...r2,...r3};
