@@ -1240,10 +1240,10 @@ function CheckItem({label,done,onToggle,important}){
 
 // ─── REPRODUCTOR DE AUDIO (iTunes preview 30s) ────────────────────────────────
 function AudioButton({cancion, artista}){
-  const [state, setState] = React.useState("idle"); // idle | loading | playing | paused | error
-  const [progress, setProgress] = React.useState(0);
-  const audioRef = React.useRef(null);
-  const intervalRef = React.useRef(null);
+  const [state, setState] = useState("idle"); // idle | loading | playing | paused | error
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef(null);
+  const intervalRef = useRef(null);
 
   const cleanup = () => {
     clearInterval(intervalRef.current);
@@ -1253,7 +1253,7 @@ function AudioButton({cancion, artista}){
     }
   };
 
-  React.useEffect(() => () => cleanup(), []);
+  useEffect(() => () => cleanup(), []);
 
   const toggle = async () => {
     // Si ya hay audio reproduciéndose → pausar
@@ -2236,4 +2236,5 @@ export default function App(){
 
   return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
+
 
