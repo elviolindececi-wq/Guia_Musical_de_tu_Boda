@@ -1187,7 +1187,7 @@ function SongCardStar({item}){
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {item.alt&&<span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(248,242,230,.28)"}}>Alt: {item.alt}</span>}
       <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-        <AudioButton cancion={item.cancion} artista={item.artista}/>
+        <AudioButton cancion={item.cancion} artista={item.artista} version={item.version} alt={item.alt}/>
         <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 12px"}}>YT</a>
       </div>
     </div>
@@ -1208,9 +1208,12 @@ function SongCard({item,idx}){
       <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",color:C,marginBottom:2,lineHeight:1.2}}>{item.cancion}</div>
       <div style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:DIM,marginBottom:item.razon?6:0}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.28)",fontStyle:"italic"}}> · {item.version}</em>}{item.duracion&&<span style={{color:"rgba(248,242,230,.22)",marginLeft:8}}>{item.duracion}</span>}</div>
       {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(248,242,230,.5)",lineHeight:1.55,margin:"0 0 8px",fontStyle:"italic"}}>{item.razon}</p>}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {item.alt&&<span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(248,242,230,.24)"}}>Alt: {item.alt}</span>}
-        <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 12px"}}>▶</a>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          <AudioButton cancion={item.cancion} artista={item.artista} version={item.version} alt={item.alt}/>
+          <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 10px"}}>YT</a>
+        </div>
       </div>
     </div>
   </div>;
@@ -1244,9 +1247,10 @@ function CheckItem({label,done,onToggle,important}){
 }
 
 // ─── REPRODUCTOR DE AUDIO (iTunes preview 30s) ────────────────────────────────
-function AudioButton({cancion, artista}){
+function AudioButton({cancion, artista, version, alt}){
   const [state, setState] = useState("idle"); // idle | loading | playing | paused | error
   const [progress, setProgress] = useState(0);
+  const [usedAlt, setUsedAlt] = useState(false);
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -1259,6 +1263,27 @@ function AudioButton({cancion, artista}){
   };
 
   useEffect(() => () => cleanup(), []);
+
+  // Busca un preview probando varias consultas en orden de especificidad,
+  // priorizando lo que SÍ existe en el catálogo y descartando lo que no.
+  const buscarPreview = async () => {
+    const queries = [];
+    if(version && !/^original$/i.test(version.trim())) queries.push({ q:`${cancion} ${artista} ${version}`, isAlt:false });
+    queries.push({ q:`${cancion} ${artista}`, isAlt:false });
+    if(alt && alt.trim().length > 2) queries.push({ q:alt, isAlt:true });
+    queries.push({ q:cancion, isAlt:false });
+
+    for(const item of queries){
+      try{
+        const q = encodeURIComponent(item.q);
+        const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=5&entity=song`);
+        const data = await res.json();
+        const found = data?.results?.find(r => r.previewUrl);
+        if(found) return { preview: found.previewUrl, isAlt: item.isAlt };
+      }catch(e){ /* probar siguiente consulta */ }
+    }
+    return null;
+  };
 
   const toggle = async () => {
     // Si ya hay audio reproduciéndose → pausar
@@ -1280,19 +1305,17 @@ function AudioButton({cancion, artista}){
       setState("playing");
       return;
     }
-    // Primer play → buscar en iTunes
+    // Primer play → buscar en iTunes, priorizando resultados con preview disponible
     setState("loading");
     try {
-      const q = encodeURIComponent(`${cancion} ${artista}`);
-      const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=3&entity=song`);
-      const data = await res.json();
-      const preview = data?.results?.find(r => r.previewUrl)?.previewUrl;
-      if(!preview) throw new Error("sin preview");
-      
-      const audio = new Audio(preview);
+      const result = await buscarPreview();
+      if(!result) throw new Error("sin preview disponible");
+
+      const audio = new Audio(result.preview);
       audio.crossOrigin = "anonymous";
       audioRef.current = audio;
       await audio.play();
+      setUsedAlt(result.isAlt);
       setState("playing");
       intervalRef.current = setInterval(() => {
         setProgress(audio.currentTime / (audio.duration || 30) * 100);
@@ -1305,7 +1328,12 @@ function AudioButton({cancion, artista}){
   };
 
   const icons = { idle:"▶", loading:"·", playing:"⏸", paused:"▶", error:"✕" };
-  const labels = { idle:"Preview", loading:"Buscando...", playing:"Pausar", paused:"Reanudar", error:"No disponible" };
+  const labels = {
+    idle:"Preview", loading:"Buscando...",
+    playing: usedAlt ? "Pausar (alt)" : "Pausar",
+    paused: usedAlt ? "Reanudar (alt)" : "Reanudar",
+    error:"No disponible"
+  };
   const isActive = state === "playing" || state === "paused";
 
   return <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1394,7 +1422,7 @@ function GuionCarousel({items}){
           <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:"auto",paddingTop:4}}>
             {item.alt&&<div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(248,242,230,.28)"}}>Alt: {item.alt}</div>}
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <AudioButton cancion={item.cancion} artista={item.artista}/>
+              <AudioButton cancion={item.cancion} artista={item.artista} version={item.version} alt={item.alt}/>
               <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 10px"}}>YT</a>
             </div>
           </div>
@@ -2137,7 +2165,7 @@ export default function App(){
       : `REGLA EXCLUSIÓN: NUNCA recomiendes vallenato ni cumbia en ningún momento (ceremonia, cóctel o cena), salvo que la pareja los haya mencionado explícitamente en artistas de referencia. Esto aplica incluso si el género elegido es Latina/Flamenco — eso NO incluye vallenato ni cumbia salvo pedido explícito.`;
 
     // Contenido lírico excluido — canciones de desamor/ruptura no tienen sentido en una boda
-    const contenidoLiricoExcluido = `REGLA CONTENIDO LÍRICO: NUNCA recomiendes canciones cuya letra hable de desamor, ruptura, despedida, extrañar a un ex, o sufrimiento amoroso — sin importar cuán popular o "linda" suene musicalmente. Esto aplica a TODOS los momentos (ceremonia, cóctel, cena). Antes de incluir una canción, verificá mentalmente el tema central de su letra: si trata sobre perder el amor, terminar una relación, o extrañar a alguien que ya no está, DESCARTALA y elegí otra opción que celebre el amor presente y la unión de la pareja.`;
+    const contenidoLiricoExcluido = `REGLA CONTENIDO LÍRICO (CRÍTICA, verificar SIEMPRE antes de responder): NUNCA recomiendes canciones cuya letra hable de desamor, ruptura, despecho, traición, infidelidad, celos, peleas de pareja, extrañar a un ex, o sufrimiento amoroso — sin importar cuán pegadiza, popular o "romántica de oído" suene la melodía. Muchos artistas populares en español tienen catálogos MIXTOS: canciones realmente sobre amor pleno y comprometido junto con otras sobre desamor/traición/despecho que suenan parecido musicalmente. Ejemplo de artistas con este patrón: Morat (tiene temas de amor genuino como "Yo Te Esperaré" o "Llueve", pero también temas de despecho/traición como "Cómo Te Atreves" o "Besos en Guerra" — hay que elegir SOLO de la primera categoría), Camilo, Sebastián Yatra, Reik. Para CUALQUIER canción en español que consideres, repasá mentalmente el tema real de la letra completa (no solo el estribillo o el tono de la melodía) antes de incluirla. Si tenés dudas sobre el contenido exacto de la letra, elegí una alternativa más segura y reconocida explícitamente como canción de amor comprometido/boda (ej: "Eres Tú" de Yarey, "Color Esperanza", "Y Te Vas", "Llueve" de Morat, "Tu Foto" de Ozuna, baladas clásicas de bodas). Esta regla aplica a TODOS los momentos: ceremonia, cóctel y cena.`;
     
     const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar ceremonia religiosa: ${formWithEmail.lugarCeremoniaReligiosa||"nd"}. Lugar ceremonia civil/otra: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. GÉNEROS OBLIGATORIOS (todas las canciones DEBEN ser de estos géneros o muy cercanos): ${generos}. Artistas de referencia de estilo (las canciones deben sonar similares a estos artistas): ${formWithEmail.artistas||"ninguno indicado"}. CANCIONES PROHIBIDAS (no usar ninguna de estas ni versiones de ellas): ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma preferido para letras: ${formWithEmail.idioma||"cualquiera"}. Momentos a cubrir: ${momentosStr}. CANCIÓN PERSONAL DE LA PAREJA: ${formWithEmail.cancionPersonal||"no indicaron"}. Qué quieren que la gente recuerde musicalmente: ${formWithEmail.recuerdo||"nd"}.`;
 
@@ -2284,4 +2312,3 @@ export default function App(){
 
   return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
-
