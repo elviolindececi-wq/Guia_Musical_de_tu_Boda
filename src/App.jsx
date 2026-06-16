@@ -2115,9 +2115,9 @@ export default function App(){
 
     // Formato musical: traducir el formato elegido a instrucción concreta de versión instrumental
     const formatoInstruccionMap = {
-      "Violín en vivo": "Para los momentos de ceremonia, la versión debe ser ejecutable por UN violín solo (instrumental violín solo, o violín con backing track). No sugieras versiones de banda completa.",
-      "Cuarteto cuerdas": "Para los momentos de ceremonia, la versión debe ser para CUARTETO DE CUERDAS (2 violines, viola, violonchelo) — instrumental, sin batería ni vientos.",
-      "Piano": "Para los momentos de ceremonia, la versión debe ser ejecutable por PIANO SOLO — instrumental.",
+      "Violín en vivo": "Para los momentos de ceremonia, la versión debe ser ejecutable por UN violín solo (instrumental violín solo, o violín con backing track). El campo 'artista' DEBE ser un artista o canal REAL conocido por hacer covers instrumentales en violín de canciones populares (ej: 'The Piano Guys', 'Lindsey Stirling', 'Violin Joe', 'cover violín' del artista original) — NO inventes una versión genérica que no existe. Si no conocés un cover real específico, usa el formato '[Canción] - Instrumental violín (cover)' y aclaralo en 'razon'. No sugieras versiones de banda completa.",
+      "Cuarteto cuerdas": "Para los momentos de ceremonia, la versión debe ser para CUARTETO DE CUERDAS (2 violines, viola, violonchelo) — instrumental, sin batería ni vientos. El campo 'artista' DEBE ser un artista o canal REAL conocido por covers de cuarteto de cuerdas (ej: 'Vitamin String Quartet', 'The String Tribute Players', 'Adagio Strings') — NO inventes una versión que no existe. Si no conocés un cover real específico de esa canción exacta, decilo en 'razon' y sugerí buscar 'string quartet cover' de ese tema.",
+      "Piano": "Para los momentos de ceremonia, la versión debe ser ejecutable por PIANO SOLO — instrumental. El campo 'artista' debe ser un artista/canal real de covers en piano (ej: 'The Piano Guys', 'Costantino Carrara') si existe, o aclarar en 'razon' que es una versión piano cover genérica.",
       "Banda": "Para los momentos de ceremonia, la versión puede ser interpretada por una banda en vivo completa (voz + instrumentos).",
       "Cantante": "Para los momentos de ceremonia, la versión debe contemplar un CANTANTE en vivo (con pista o acompañamiento mínimo).",
       "DJ": "Para los momentos de ceremonia, la versión es la grabación original o un edit de DJ — no requiere instrumento en vivo.",
@@ -2127,6 +2127,17 @@ export default function App(){
     const formatoInstruccion = formatosElegidos.length > 0
       ? "REGLA FORMATO INSTRUMENTAL: " + formatosElegidos.map(f => formatoInstruccionMap[f]).join(" ")
       : "";
+
+    // Géneros explícitamente excluidos — nunca recomendar salvo que la pareja los haya pedido explícitamente
+    const generosExcluidos = ["vallenato", "cumbia"];
+    const textoLibreGeneros = `${formWithEmail.artistas||""} ${formWithEmail.generos.join(" ")}`.toLowerCase();
+    const pidieronExplicitamente = generosExcluidos.some(ex => textoLibreGeneros.includes(ex));
+    const generosExcluidosTexto = pidieronExplicitamente
+      ? ""
+      : `REGLA EXCLUSIÓN: NUNCA recomiendes vallenato ni cumbia en ningún momento (ceremonia, cóctel o cena), salvo que la pareja los haya mencionado explícitamente en artistas de referencia. Esto aplica incluso si el género elegido es Latina/Flamenco — eso NO incluye vallenato ni cumbia salvo pedido explícito.`;
+
+    // Contenido lírico excluido — canciones de desamor/ruptura no tienen sentido en una boda
+    const contenidoLiricoExcluido = `REGLA CONTENIDO LÍRICO: NUNCA recomiendes canciones cuya letra hable de desamor, ruptura, despedida, extrañar a un ex, o sufrimiento amoroso — sin importar cuán popular o "linda" suene musicalmente. Esto aplica a TODOS los momentos (ceremonia, cóctel, cena). Antes de incluir una canción, verificá mentalmente el tema central de su letra: si trata sobre perder el amor, terminar una relación, o extrañar a alguien que ya no está, DESCARTALA y elegí otra opción que celebre el amor presente y la unión de la pareja.`;
     
     const ctx=`Pareja: ${formWithEmail.nombre1} y ${formWithEmail.nombre2}. Ciudad: ${formWithEmail.ciudad||"nd"}. Invitados: ${formWithEmail.invitados||"nd"}. Ceremonias: ${formWithEmail.tipoCeremonia.join(" + ")||"nd"}. Restricciones iglesia: ${formWithEmail.restriccionIglesia||"ninguna"}. Lugar ceremonia religiosa: ${formWithEmail.lugarCeremoniaReligiosa||"nd"}. Lugar ceremonia civil/otra: ${formWithEmail.lugarCeremonia||"nd"}. Duración: ${formWithEmail.duracion||"nd"}. Formato musical: ${formWithEmail.formatoMusical.join(", ")||"nd"}. Arquetipo: ${archData.n}. Objetivo emocional: ${formWithEmail.objetivoEmocional||"nd"}. GÉNEROS OBLIGATORIOS (todas las canciones DEBEN ser de estos géneros o muy cercanos): ${generos}. Artistas de referencia de estilo (las canciones deben sonar similares a estos artistas): ${formWithEmail.artistas||"ninguno indicado"}. CANCIONES PROHIBIDAS (no usar ninguna de estas ni versiones de ellas): ${formWithEmail.cancionesProhibidas||"ninguna"}. Idioma preferido para letras: ${formWithEmail.idioma||"cualquiera"}. Momentos a cubrir: ${momentosStr}. CANCIÓN PERSONAL DE LA PAREJA: ${formWithEmail.cancionPersonal||"no indicaron"}. Qué quieren que la gente recuerde musicalmente: ${formWithEmail.recuerdo||"nd"}.`;
 
@@ -2163,10 +2174,12 @@ export default function App(){
         "\n\nREGLAS DE SELECCIÓN MUSICAL (cumplirlas en orden de prioridad):" +
         "\n1. GÉNEROS: todas las canciones deben ser de los géneros indicados en el contexto o muy cercanos. Si la pareja eligió Pop, no pongas ópera. Si eligió Disney, todas deben sonar a Disney/películas animadas." +
         "\n2. ARTISTAS REFERENCIA: el estilo sonoro debe ser consistente con los artistas mencionados como referencia." +
-        (idiomaInstruccion ? "\n3. " + idiomaInstruccion : "") +
-        (formatoInstruccion ? "\n4. " + formatoInstruccion : "") +
-        (cancionPersonalInstruccion ? "\n5. " + cancionPersonalInstruccion : "") +
-        (prohibidasInstruccion ? "\n6. " + prohibidasInstruccion : "") +
+        "\n3. " + contenidoLiricoExcluido +
+        (generosExcluidosTexto ? "\n4. " + generosExcluidosTexto : "") +
+        (idiomaInstruccion ? "\n5. " + idiomaInstruccion : "") +
+        (formatoInstruccion ? "\n6. " + formatoInstruccion : "") +
+        (cancionPersonalInstruccion ? "\n7. " + cancionPersonalInstruccion : "") +
+        (prohibidasInstruccion ? "\n8. " + prohibidasInstruccion : "") +
         "\n\nCRITERIO POR MOMENTO (función emocional + ejemplos validados de Ceci como punto de partida):\n" + momentosListado +
         "\n\nPOOL DE CANCIONES VALIDADAS POR CECI (usá estas como referencia, adaptando a los géneros de la pareja):\n" + seedPool +
         "\n\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings sin comillas internas:" +
@@ -2180,6 +2193,8 @@ export default function App(){
 
       const p3 = CECI_VOICE + "\nBODA: " + ctx + "\nArquetipo: " + archData.n + "." +
         "\n\nGÉNEROS OBLIGATORIOS: " + generos + ". Las playlists deben sonar a estos géneros, no a música de bodas genérica." +
+        "\n" + contenidoLiricoExcluido +
+        (generosExcluidosTexto ? "\n" + generosExcluidosTexto : "") +
         (idiomaInstruccion ? "\n" + idiomaInstruccion : "") +
         (prohibidasInstruccion ? "\n" + prohibidasInstruccion : "") +
         "\n\nCRITERIO CÓCTEL: " + CECI_COCTEL_GUIA + " Canciones de referencia de Ceci: " + coctelSeedStr +
@@ -2269,6 +2284,4 @@ export default function App(){
 
   return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
-
-
 
