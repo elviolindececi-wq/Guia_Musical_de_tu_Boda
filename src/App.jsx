@@ -1250,7 +1250,7 @@ function CheckItem({label,done,onToggle,important}){
 function AudioButton({cancion, artista, version, alt}){
   const [state, setState] = useState("idle"); // idle | loading | playing | paused | error
   const [progress, setProgress] = useState(0);
-  const [usedAlt, setUsedAlt] = useState(false);
+  const [nowPlaying, setNowPlaying] = useState(null); // { title, artist } | null — solo se setea cuando difiere de lo mostrado en la card
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -1263,6 +1263,14 @@ function AudioButton({cancion, artista, version, alt}){
   };
 
   useEffect(() => () => cleanup(), []);
+
+  // Separa "Título - Artista" en sus dos partes para poder mostrarlo claramente
+  const parseAlt = (str) => {
+    if(!str) return { title: str, artist: "" };
+    const parts = str.split(" - ");
+    if(parts.length >= 2) return { title: parts[0].trim(), artist: parts.slice(1).join(" - ").trim() };
+    return { title: str.trim(), artist: "" };
+  };
 
   // Busca un preview probando varias consultas en orden de especificidad,
   // priorizando lo que SÍ existe en el catálogo y descartando lo que no.
@@ -1279,7 +1287,7 @@ function AudioButton({cancion, artista, version, alt}){
         const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=5&entity=song`);
         const data = await res.json();
         const found = data?.results?.find(r => r.previewUrl);
-        if(found) return { preview: found.previewUrl, isAlt: item.isAlt };
+        if(found) return { preview: found.previewUrl, isAlt: item.isAlt, trackName: found.trackName, artistName: found.artistName };
       }catch(e){ /* probar siguiente consulta */ }
     }
     return null;
@@ -1315,7 +1323,9 @@ function AudioButton({cancion, artista, version, alt}){
       audio.crossOrigin = "anonymous";
       audioRef.current = audio;
       await audio.play();
-      setUsedAlt(result.isAlt);
+      // Si el resultado vino de la búsqueda alternativa, mostrar EXACTAMENTE qué está sonando
+      // (usamos los metadatos reales que devuelve iTunes, no solo el texto del campo alt)
+      setNowPlaying(result.isAlt ? { title: result.trackName || parseAlt(alt).title, artist: result.artistName || parseAlt(alt).artist } : null);
       setState("playing");
       intervalRef.current = setInterval(() => {
         setProgress(audio.currentTime / (audio.duration || 30) * 100);
@@ -1328,29 +1338,32 @@ function AudioButton({cancion, artista, version, alt}){
   };
 
   const icons = { idle:"▶", loading:"·", playing:"⏸", paused:"▶", error:"✕" };
-  const labels = {
-    idle:"Preview", loading:"Buscando...",
-    playing: usedAlt ? "Pausar (alt)" : "Pausar",
-    paused: usedAlt ? "Reanudar (alt)" : "Reanudar",
-    error:"No disponible"
-  };
+  const labels = { idle:"Preview", loading:"Buscando...", playing:"Pausar", paused:"Reanudar", error:"No disponible" };
   const isActive = state === "playing" || state === "paused";
 
-  return <div style={{display:"flex",alignItems:"center",gap:8}}>
-    <button onClick={toggle} style={{
-      display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",
-      border:`1px solid ${state==="error"?"rgba(255,139,139,.35)":isActive?"rgba(217,184,111,.55)":"rgba(217,184,111,.3)"}`,
-      borderRadius:100,background:isActive?"rgba(217,184,111,.1)":"transparent",
-      color:state==="error"?"#FF8B8B":"#D9B86F",
-      fontFamily:"'Lora',serif",fontWeight:600,fontSize:".88rem",cursor:"pointer",
-      transition:"all .2s",minWidth:110,justifyContent:"center",
-      opacity:state==="loading"?.7:1
-    }}>
-      <span style={{fontSize:".8rem",animation:state==="loading"?"pulse 1s infinite":undefined}}>{icons[state]}</span>
-      {labels[state]}
-    </button>
-    {isActive&&<div style={{flex:1,height:3,background:"rgba(217,184,111,.12)",borderRadius:2,overflow:"hidden",minWidth:60}}>
-      <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(to right,#D9B86F,#E6C76A)",transition:"width .25s linear",borderRadius:2}}/>
+  return <div style={{display:"flex",flexDirection:"column",gap:6}}>
+    <div style={{display:"flex",alignItems:"center",gap:8}}>
+      <button onClick={toggle} style={{
+        display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",
+        border:`1px solid ${state==="error"?"rgba(255,139,139,.35)":isActive?"rgba(217,184,111,.55)":"rgba(217,184,111,.3)"}`,
+        borderRadius:100,background:isActive?"rgba(217,184,111,.1)":"transparent",
+        color:state==="error"?"#FF8B8B":"#D9B86F",
+        fontFamily:"'Lora',serif",fontWeight:600,fontSize:".88rem",cursor:"pointer",
+        transition:"all .2s",minWidth:110,justifyContent:"center",
+        opacity:state==="loading"?.7:1
+      }}>
+        <span style={{fontSize:".8rem",animation:state==="loading"?"pulse 1s infinite":undefined}}>{icons[state]}</span>
+        {labels[state]}
+      </button>
+      {isActive&&<div style={{flex:1,height:3,background:"rgba(217,184,111,.12)",borderRadius:2,overflow:"hidden",minWidth:60}}>
+        <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(to right,#D9B86F,#E6C76A)",transition:"width .25s linear",borderRadius:2}}/>
+      </div>}
+    </div>
+    {isActive&&nowPlaying&&<div style={{display:"flex",alignItems:"center",gap:6,paddingLeft:2}}>
+      <span style={{fontSize:".7rem"}}>🔊</span>
+      <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(248,242,230,.45)",fontStyle:"italic",lineHeight:1.3}}>
+        Sonando: {nowPlaying.title}{nowPlaying.artist?` – ${nowPlaying.artist}`:""} <span style={{color:"rgba(217,184,111,.5)"}}>(no es la versión exacta sugerida)</span>
+      </span>
     </div>}
   </div>;
 }
