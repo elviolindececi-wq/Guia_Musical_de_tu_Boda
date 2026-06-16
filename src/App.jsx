@@ -1218,14 +1218,19 @@ function SongCard({item,idx}){
 
 function PlaylistRow({item,num}){
   const q=encodeURIComponent(`${item.c||""} ${item.a||""}`);
-  return <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto auto",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(217,184,111,.05)"}}>
-    <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(217,184,111,.3)",textAlign:"center"}}>{num}</div>
-    <div>
-      <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{item.c}</div>
-      <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:DIM}}>{item.a}</div>
+  return <div style={{padding:"10px 0",borderBottom:"1px solid rgba(217,184,111,.05)"}}>
+    <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto",alignItems:"center",gap:10}}>
+      <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(217,184,111,.3)",textAlign:"center"}}>{num}</div>
+      <div style={{minWidth:0}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{item.c}</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:DIM}}>{item.a}</div>
+      </div>
+      <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(248,242,230,.2)",whiteSpace:"nowrap"}}>{item.d}</div>
     </div>
-    <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(248,242,230,.2)",whiteSpace:"nowrap"}}>{item.d}</div>
-    <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{padding:"5px 10px",fontSize:".8rem"}}>▶</a>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,paddingLeft:32}}>
+      <AudioButton cancion={item.c} artista={item.a}/>
+      <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{padding:"6px 10px",fontSize:".8rem"}}>YT</a>
+    </div>
   </div>;
 }
 
@@ -2236,5 +2241,6 @@ export default function App(){
 
   return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
+
 
 
