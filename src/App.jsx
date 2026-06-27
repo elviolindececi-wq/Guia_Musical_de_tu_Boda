@@ -253,6 +253,7 @@ input[type=date]{color-scheme:dark}
 
 @media(min-width:901px){
   .desktop-guide-grid{grid-template-columns:1.15fr .85fr!important;gap:36px!important}
+  .tabs-scroll-container{justify-content:center!important;overflow:hidden!important}
   .guide-sec{font-size:1.04rem}
 }
 
@@ -413,7 +414,7 @@ function GuiaCanciones({onStart,onBack}){
 
     {/* Tab bar — horizontal scroll en mobile, centrado en desktop */}
     <div style={{position:"sticky",top:0,zIndex:10,background:"#F5EFE0",borderBottom:"0.5px solid rgba(201,169,110,.2)",paddingBottom:0}}>
-      <div ref={tabRef} style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",padding:"0 12px",justifyContent:"center",flexWrap:"nowrap"}}>
+      <div ref={tabRef} className="tabs-scroll-container" style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",padding:"0 12px",justifyContent:"flex-start",flexWrap:"nowrap"}}>
         {tabs.map(k=>{
           const m=CANCIONES_POR_MOMENTO[k];
           const active=tab===k;
@@ -1409,7 +1410,6 @@ function AudioButton({cancion, artista, version, alt}){
       if(!result) throw new Error("sin preview disponible");
 
       const audio = new Audio(result.preview);
-      audio.crossOrigin = "anonymous";
       audioRef.current = audio;
       await audio.play();
       // Si el resultado vino de la búsqueda alternativa, mostrar EXACTAMENTE qué está sonando
