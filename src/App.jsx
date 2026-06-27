@@ -1368,13 +1368,14 @@ function AudioButton({cancion, artista, version, alt}){
     const queries = [];
     if(version && !/^original$/i.test(version.trim())) queries.push({ q:`${cancion} ${artista} ${version}`, isAlt:false });
     queries.push({ q:`${cancion} ${artista}`, isAlt:false });
+    queries.push({ q:`${cancion}`, isAlt:false });
     if(alt && alt.trim().length > 2) queries.push({ q:alt, isAlt:true });
-    queries.push({ q:cancion, isAlt:false });
+    queries.push({ q:`${artista}`, isAlt:true });
 
     for(const item of queries){
       try{
         const q = encodeURIComponent(item.q);
-        const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=5&entity=song`);
+        const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=10&entity=song&country=US`);
         const data = await res.json();
         const found = data?.results?.find(r => r.previewUrl);
         if(found) return { preview: found.previewUrl, isAlt: item.isAlt, trackName: found.trackName, artistName: found.artistName };
@@ -2310,6 +2311,7 @@ export default function App(){
         (formatoInstruccion ? "\n6. " + formatoInstruccion : "") +
         (cancionPersonalInstruccion ? "\n7. " + cancionPersonalInstruccion : "") +
         (prohibidasInstruccion ? "\n8. " + prohibidasInstruccion : "") +
+        "\n9. REGLA VERSIONES: NUNCA sugieras versiones remix, remixed, mashup, bootleg, ni edits de canciones. Usá siempre la versión ORIGINAL del artista, o una versión en piano/instrumental acústico si el formato lo requiere. Por ejemplo: Young and Beautiful de Lana Del Rey debe ser la versión original de la película El Gran Gatsby, o una versión en piano solo — NUNCA una versión remixada. Si una canción es conocida por sus remixes, especificá explícitamente en el campo version: Original o Piano solo." +
         "\n\nCRITERIO POR MOMENTO (función emocional + ejemplos validados de Ceci como punto de partida):\n" + momentosListado +
         "\n\nPOOL DE CANCIONES VALIDADAS POR CECI (usá estas como referencia, adaptando a los géneros de la pareja):\n" + seedPool +
         "\n\nDevuelve SOLO JSON COMPACTO EN UNA SOLA LINEA. Sin saltos de linea. Strings sin comillas internas:" +
