@@ -164,16 +164,20 @@ button{-webkit-tap-highlight-color:transparent}
 .fu4{animation:fadeUp .5s .28s ease both;opacity:0}
 .fu5{animation:fadeUp .5s .35s ease both;opacity:0}
 input,textarea{background:transparent;border:none;border-bottom:1px solid rgba(74,94,58,.28);color:#1A1A14;font-family:'Lora',serif;font-weight:500;font-size:1.15rem;padding:12px 2px;width:100%;outline:none;transition:border-color .3s;-webkit-appearance:none}
-input:focus,textarea:focus{border-bottom-color:#D9B86F}
+input:focus,textarea:focus{border-bottom-color:#4A5E3A;outline:none}
+input[type="date"]{color-scheme:light;color:#1A1A14}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.25) sepia(1) saturate(4) hue-rotate(75deg);cursor:pointer;opacity:0.7}
 input::placeholder,textarea::placeholder{color:rgba(26,26,20,.35);font-style:italic;font-weight:400}
 input[type=date]{color-scheme:dark}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#D9B86F;border-radius:2px}
 .tag{display:inline-block;padding:9px 16px;border:1px solid rgba(74,94,58,.3);border-radius:100px;cursor:pointer;font-family:'Lora',serif;font-weight:600;font-size:1rem;color:rgba(26,26,20,.65);transition:all .2s;user-select:none;margin:3px 3px 3px 0}
-.tag:hover{border-color:rgba(217,184,111,.5);color:#F8F2E6}
+.tag:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14}
 .tag.sel{background:#4A5E3A;border-color:#4A5E3A;color:#F5EFE0}
+.tag:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14}
 .pill{display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid rgba(74,94,58,.25);border-radius:12px;cursor:pointer;font-family:'Lora',serif;font-weight:600;font-size:1.05rem;color:rgba(26,26,20,.65);transition:all .2s;user-select:none;width:100%;margin-bottom:9px;background:#FBF7EF;text-align:left;line-height:1.4}
-.pill:hover{border-color:rgba(217,184,111,.38);color:#F8F2E6;background:rgba(217,184,111,.04)}
+.pill:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14;background:rgba(74,94,58,.05)}
 .pill.sel{background:#4A5E3A;border-color:#4A5E3A;color:#F5EFE0}
+.pill:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14;background:rgba(74,94,58,.05)}
 .pbtn{background:#4A5E3A;color:#F5EFE0;border:none;padding:16px 38px;font-family:'Lora',serif;font-size:1.1rem;font-weight:600;letter-spacing:.04em;border-radius:100px;cursor:pointer;transition:all .3s;min-height:54px;white-space:nowrap}
 .pbtn:active{transform:scale(.98)}
 .pbtn:disabled{opacity:.28;cursor:not-allowed;transform:none}
@@ -181,35 +185,35 @@ input[type=date]{color-scheme:dark}
 .gbtn:hover{border-color:#4A5E3A;color:#4A5E3A}
 .wbtn{background:rgba(37,211,102,.1);color:#2ECC71;border:1px solid rgba(37,211,102,.28);padding:13px 20px;font-family:'Lora',serif;font-weight:600;font-size:1rem;border-radius:100px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;text-decoration:none;line-height:1.3}
 .wbtn:hover{background:rgba(37,211,102,.18);border-color:rgba(37,211,102,.5)}
-.scard{background:#111C27;border:1px solid rgba(217,184,111,.1);border-radius:14px;padding:20px;margin-bottom:12px}
+.scard{background:#FBF7EF;border:0.5px solid rgba(201,169,110,.25);border-radius:14px;padding:20px;margin-bottom:12px}
 .lbtn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1px solid rgba(74,94,58,.35);border-radius:100px;color:#4A5E3A;font-family:'Lora',serif;font-weight:600;font-size:.95rem;cursor:pointer;background:transparent;transition:all .2s;text-decoration:none;white-space:nowrap}
 .lbtn:hover{background:rgba(74,94,58,.08)}
-.ci{display:flex;align-items:flex-start;gap:12px;padding:14px 0;cursor:pointer;border-bottom:1px solid rgba(217,184,111,.05)}
+.ci{display:flex;align-items:flex-start;gap:12px;padding:14px 0;cursor:pointer;border-bottom:0.5px solid rgba(74,94,58,.1)}
 .ci:last-child{border-bottom:none}
-.cb{width:22px;height:22px;min-width:22px;border:1px solid rgba(217,184,111,.3);border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
-.cb.ck{background:rgba(217,184,111,.18);border-color:#D9B86F}
+.cb{width:22px;height:22px;min-width:22px;border:1px solid rgba(74,94,58,.3);border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.cb.ck{background:#4A5E3A;border-color:#4A5E3A}
 .divider{display:flex;align-items:center;gap:14px;margin-bottom:22px}
 .divider::before,.divider::after{content:'';flex:1;height:1px}
-.divider::before{background:linear-gradient(to right,transparent,rgba(217,184,111,.18))}
-.divider::after{background:linear-gradient(to left,transparent,rgba(217,184,111,.18))}
+.divider::before{background:linear-gradient(to right,transparent,rgba(201,169,110,.28))}
+.divider::after{background:linear-gradient(to left,transparent,rgba(201,169,110,.28))}
 .fl{font-family:'Cinzel',serif;font-weight:500;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:#4A5E3A;margin-top:26px;margin-bottom:10px}
 .sl-n{font-family:'Cinzel',serif;font-weight:500;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:#4A5E3A;margin-bottom:8px}
 .sl-t{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,5vw,2rem);font-weight:600;color:#1A1A14;margin:0 0 6px;line-height:1.15}
 .sl-s{font-family:'Lora',serif;font-weight:400;font-size:1.02rem;color:rgba(26,26,20,.55);margin:0;font-style:italic;line-height:1.55}
-.song-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(217,184,111,.06)}
+.song-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:0.5px solid rgba(245,239,224,.15)}
 .song-item:last-child{border-bottom:none}
-.song-num{width:24px;height:24px;min-width:24px;border-radius:50%;background:rgba(74,94,58,.1);border:1px solid rgba(74,94,58,.25);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:600;font-size:.8rem;color:#4A5E3A;margin-top:2px;flex-shrink:0}
-.song-ceci{font-family:'Lora',serif;font-size:.9rem;color:rgba(217,184,111,.6);font-style:italic;margin-top:4px;line-height:1.5}
-.guide-sec{background:#111C27;border:1px solid rgba(217,184,111,.1);border-radius:14px;padding:20px 22px;margin-bottom:14px}
+.song-num{width:24px;height:24px;min-width:24px;border-radius:50%;background:rgba(201,169,110,.15);border:1px solid rgba(201,169,110,.4);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:600;font-size:.8rem;color:#C9A96E;margin-top:2px;flex-shrink:0}
+.song-ceci{font-family:'Lora',serif;font-size:.9rem;color:rgba(201,169,110,.8);font-style:italic;margin-top:4px;line-height:1.5}
+.guide-sec{background:#4A5E3A;border:0.5px solid rgba(201,169,110,.3);border-radius:18px;padding:clamp(22px,3vw,34px);margin-bottom:14px}
 .guide-sec-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:600;color:#E6C76A;margin:0 0 4px}
-.guide-sec-sub{font-family:'Lora',serif;font-size:.9rem;color:rgba(248,242,230,.38);font-style:italic;margin:0 0 14px}
+.guide-sec-sub{font-family:'Lora',serif;font-size:.9rem;color:rgba(201,169,110,.75);font-style:italic;margin:0 0 14px}
 .tab{padding:10px 18px;font-family:'Lora',serif;font-weight:600;font-size:.95rem;border-radius:100px;cursor:pointer;border:1px solid rgba(74,94,58,.2);color:rgba(26,26,20,.45);background:transparent;transition:all .2s;white-space:nowrap;min-height:42px}
-.tab.act{background:rgba(217,184,111,.12);border-color:#D9B86F;color:#E6C76A}
-.moment-card{border:1px solid rgba(217,184,111,.12);border-radius:13px;padding:17px 18px;margin-bottom:10px;background:#111C27;cursor:pointer;transition:border-color .2s}
-.moment-card:hover{border-color:rgba(217,184,111,.28)}
-.moment-card.sel{border-color:#4A5E3A;background:rgba(74,94,58,.07)}
-.info-box{background:rgba(217,184,111,.05);border:1px solid rgba(217,184,111,.15);border-radius:10px;padding:14px 16px;margin-top:10px}
-.arch-badge{display:inline-flex;align-items:center;gap:9px;background:rgba(217,184,111,.09);border:1px solid rgba(217,184,111,.25);border-radius:100px;padding:8px 18px;margin-bottom:14px}
+.tab.act{background:#4A5E3A;border-color:#4A5E3A;color:#F5EFE0}
+.moment-card{border:0.5px solid rgba(74,94,58,.18);border-radius:13px;padding:17px 18px;margin-bottom:10px;background:#FBF7EF;cursor:pointer;transition:border-color .2s}
+.moment-card:hover{border-color:#4A5E3A;background:rgba(74,94,58,.05)}
+.moment-card.sel{border-color:#4A5E3A;background:rgba(74,94,58,.1);box-shadow:inset 0 0 0 1px #4A5E3A}
+.info-box{background:rgba(74,94,58,.05);border:0.5px solid rgba(74,94,58,.18);border-radius:10px;padding:14px 16px;margin-top:10px}
+.arch-badge{display:inline-flex;align-items:center;gap:9px;background:rgba(74,94,58,.08);border:0.5px solid rgba(74,94,58,.25);border-radius:100px;padding:8px 18px;margin-bottom:14px}
 @media(max-width:680px){
   .generating-notes{grid-template-columns:1fr!important}
 }
@@ -223,16 +227,16 @@ input[type=date]{color-scheme:dark}
 .brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#F8F2E6;letter-spacing:.04em;line-height:1.15;text-wrap:balance}
 .brand-title .gold{color:#D9B86F}
 .brand-subtitle{font-family:'Lora',serif;color:rgba(26,26,20,.75);font-weight:600;text-wrap:balance}
-.brand-copy{font-family:'Lora',serif;color:rgba(248,242,230,.68);line-height:1.75}
+.brand-copy{font-family:'Lora',serif;color:rgba(26,26,20,.62);line-height:1.75}
 .responsive-shell{width:100%;max-width:1120px;margin:0 auto;padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)}
 .auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:#FBF7EF!important;backdrop-filter:blur(20px);border:0.5px solid rgba(201,169,110,.3)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 8px 40px rgba(74,94,58,.1)}
-.auth-card input{background:rgba(248,242,230,.96)!important;color:#0C1721!important;border:1px solid rgba(217,184,111,.2)!important;border-radius:0!important;padding:14px 14px!important;font-family:'Lora',serif!important;font-weight:600;box-shadow:none!important}
+.auth-card input{background:transparent!important;color:#1A1A14!important;border:none!important;border-bottom:1.5px solid rgba(74,94,58,.3)!important;border-radius:0!important;padding:13px 4px!important;font-family:'Lora',serif!important;font-weight:500;box-shadow:none!important}
 .auth-card input::placeholder{color:rgba(26,26,20,.35)!important}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:min(760px,100svh);padding-top:clamp(54px,9vw,112px);padding-bottom:clamp(54px,9vw,112px);text-align:center}
 .hero-title{font-size:clamp(2.7rem,9vw,6.2rem);max-width:980px;margin:0 auto 28px}
 .hero-kicker{margin-bottom:clamp(34px,7vw,72px)}
 .hero-sub{font-size:clamp(1.35rem,3vw,2rem);font-style:italic;margin:0 0 12px}
-.hero-line{font-family:'Lora',serif;font-size:clamp(1rem,2vw,1.35rem);font-weight:700;letter-spacing:.02em;color:rgba(248,242,230,.86);margin:0}
+.hero-line{font-family:'Lora',serif;font-size:clamp(1rem,2vw,1.35rem);font-weight:700;letter-spacing:.02em;color:rgba(26,26,20,.85);margin:0}
 @media(min-width:900px){
   .desktop-two-col{display:grid!important;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
   .results-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}
@@ -262,7 +266,7 @@ input[type=date]{color-scheme:dark}
 div[style*="grab"]:active{cursor:grabbing}
 
 @media(min-width:640px){.tag-desktop{display:inline-block!important}}
-.accordion-open{border-color:rgba(217,184,111,.28)!important}
+.accordion-open{border-color:rgba(74,94,58,.35)!important}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   html,body{background:#fff!important;color:#1a1a1a!important;font-size:13px!important}
@@ -273,8 +277,8 @@ div[style*="grab"]:active{cursor:grabbing}
   @page:first{margin-top:2.4cm}
 
   /* Portada */
-  .pdf-cover{background:#07111B!important;color:#F8F2E6!important;padding:48px 40px!important;min-height:200px!important;border-radius:0!important;text-align:center;margin-bottom:24px;border-bottom:3px solid #D9B86F}
-  .pdf-cover h1{color:#F8F2E6!important;font-size:28px!important;margin:0 0 6px!important}
+  .pdf-cover{background:#4A5E3A!important;color:#F5EFE0!important;padding:48px 40px!important;min-height:200px!important;border-radius:0!important;text-align:center;margin-bottom:24px;border-bottom:3px solid #C9A96E}
+  .pdf-cover h1{color:#F5EFE0!important;font-size:28px!important;margin:0 0 6px!important}
   .pdf-cover .sub{color:#D9B86F!important;font-size:13px!important}
 
   /* Secciones */
@@ -402,9 +406,9 @@ function GuiaCanciones({onStart,onBack}){
         <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1rem,1.35vw,1.18rem)",color:DIM,margin:"0 auto",lineHeight:1.55,maxWidth:740}}>Guía musical · Test para definir tus canciones · Checklist musical</p>
       </div>
 
-      <div style={{...readableStyle,background:"#FBF7EF",border:"1px solid rgba(217,184,111,.18)",borderRadius:22,padding:"clamp(20px,3vw,32px)",marginBottom:"clamp(24px,3vw,34px)",boxShadow:"0 24px 70px rgba(0,0,0,.22)"}}>
+      <div style={{...readableStyle,background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.25)",borderRadius:18,padding:"clamp(20px,3vw,32px)",marginBottom:"clamp(24px,3vw,34px)",boxShadow:"0 4px 24px rgba(74,94,58,.08)"}}>
         <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.08rem,1.35vw,1.25rem)",color:C,lineHeight:1.75,margin:"0 0 10px"}}>Esta guía reúne el criterio de Ceci después de más de 200 bodas. No es una lista de Spotify — es lo que realmente funciona en cada momento, con la explicación de por qué.</p>
-        <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1rem,1.2vw,1.12rem)",color:"rgba(217,184,111,.68)",fontStyle:"italic",margin:0,lineHeight:1.6}}>Usala como punto de partida. Para que sea 100% tuya, hacé el test personalizado al final.</p>
+        <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1rem,1.2vw,1.12rem)",color:"rgba(26,26,20,.45)",fontStyle:"italic",margin:0,lineHeight:1.6}}>Usala como punto de partida. Para que sea 100% tuya, hacé el test personalizado al final.</p>
       </div>
 
       <div style={{...readableStyle,display:"flex",gap:10,overflowX:"auto",paddingBottom:8,marginBottom:20,scrollbarWidth:"none",justifyContent:"center",flexWrap:"wrap"}}>
@@ -418,30 +422,33 @@ function GuiaCanciones({onStart,onBack}){
         <div className="guide-sec" key={tab} style={{padding:"clamp(22px,3vw,34px)",borderRadius:22}}>
           <h2 className="guide-sec-title" style={{fontSize:"clamp(1.55rem,2.6vw,2.25rem)",lineHeight:1.15}}>{momento.icono} {momento.titulo}</h2>
           <p className="guide-sec-sub" style={{fontSize:"clamp(1rem,1.2vw,1.12rem)"}}>Criterio de Ceci</p>
-          <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.08rem,1.35vw,1.25rem)",color:C,lineHeight:1.75,margin:"0 0 16px"}}>{momento.guia}</p>
-          <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:14,padding:"14px 16px",marginBottom:22}}>
-            <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,1.1vw,1.08rem)",color:"rgba(217,184,111,.78)",margin:0,lineHeight:1.55}}>⚠️ {momento.errores}</p>
+          <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.08rem,1.35vw,1.25rem)",color:"#F5EFE0",lineHeight:1.75,margin:"0 0 16px"}}>{momento.guia}</p>
+          <div style={{background:"rgba(0,0,0,.18)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:12,padding:"14px 16px",marginBottom:22}}>
+            <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,1.1vw,1.08rem)",color:"#C9A96E",margin:0,lineHeight:1.55}}>⚠️ {momento.errores}</p>
           </div>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,169,110,.6)",marginBottom:12}}>Las más pedidas por los novios</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,169,110,.8)",marginBottom:12}}>Las más pedidas por los novios</div>
           {momento.canciones.map((c,i)=>{
             const q=encodeURIComponent(c.t+" "+c.a);
             return <div key={i} className="song-item">
               <div className="song-num">{i+1}</div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.15rem,1.45vw,1.35rem)",color:C,lineHeight:1.2}}>{c.t}</div>
-                <div style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,1.15vw,1.08rem)",color:DIM,marginBottom:3}}>{c.a}</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.15rem,1.45vw,1.35rem)",color:"#F5EFE0",lineHeight:1.2}}>{c.t}</div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,1.15vw,1.08rem)",color:"rgba(245,239,224,.62)",marginBottom:3}}>{c.a}</div>
                 <div className="song-ceci">"{c.n}"</div>
               </div>
-              <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{flexShrink:0,marginTop:4}}>▶</a>
+              <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0,marginTop:4}}>
+                <AudioButton cancion={c.t} artista={c.a}/>
+                <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".8rem",padding:"5px 10px"}}>YT</a>
+              </div>
             </div>;
           })}
         </div>
 
         <div>
-          <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.14)",borderRadius:22,padding:"clamp(20px,2.5vw,30px)",marginBottom:22}}>
+          <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.14)",borderRadius:22,padding:"clamp(20px,2.5vw,30px)",marginBottom:22}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,169,110,.6)",marginBottom:16}}>5 reglas de Ceci para elegir bien</div>
-            {GUIA_TIPS.map((tip,i)=><div key={i} style={{display:"flex",gap:14,paddingBottom:16,borderBottom:i<4?"1px solid rgba(217,184,111,.08)":"none",marginBottom:16}}>
-              <div style={{width:30,height:30,minWidth:30,borderRadius:"50%",background:"rgba(74,94,58,.08)",border:"1px solid rgba(217,184,111,.22)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Lora',serif",fontSize:".95rem",color:G,flexShrink:0,marginTop:2}}>{i+1}</div>
+            {GUIA_TIPS.map((tip,i)=><div key={i} style={{display:"flex",gap:14,paddingBottom:16,borderBottom:i<4?"1px solid rgba(74,94,58,.1)":"none",marginBottom:16}}>
+              <div style={{width:30,height:30,minWidth:30,borderRadius:"50%",background:"rgba(74,94,58,.08)",border:"1px solid rgba(201,169,110,.28)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Lora',serif",fontSize:".95rem",color:G,flexShrink:0,marginTop:2}}>{i+1}</div>
               <div>
                 <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.05rem,1.2vw,1.18rem)",color:C,marginBottom:5,lineHeight:1.25}}>{tip.t}</div>
                 <div style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,1.1vw,1.06rem)",color:DIM,lineHeight:1.62}}>{tip.d}</div>
@@ -449,12 +456,12 @@ function GuiaCanciones({onStart,onBack}){
             </div>)}
           </div>
 
-          <div style={{background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(217,184,111,.24)",borderRadius:22,padding:"clamp(24px,3vw,34px)",textAlign:"center"}}>
+          <div style={{background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"clamp(24px,3vw,34px)",textAlign:"center"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".78rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:12}}>El siguiente nivel</div>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.55rem,2.4vw,2.1rem)",fontWeight:600,color:C,margin:"0 0 12px",lineHeight:1.15}}>Hacé el test personalizado</h3>
             <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.02rem,1.2vw,1.14rem)",color:DIM,lineHeight:1.65,margin:"0 0 24px"}}>La guía te da el criterio general. El test crea el guion musical exacto para tu boda — con tu arquetipo, tus momentos elegidos y el checklist para tus proveedores.</p>
             <button className="pbtn" onClick={onStart}>Crear mi guion personalizado →</button>
-            <p style={{marginTop:12,fontFamily:"'Lora',serif",fontSize:".92rem",color:"rgba(248,242,230,.24)"}}>15 minutos · Resultado inmediato</p>
+            <p style={{marginTop:12,fontFamily:"'Lora',serif",fontSize:".92rem",color:"rgba(26,26,20,.32)"}}>15 minutos · Resultado inmediato</p>
           </div>
         </div>
       </div>
@@ -755,7 +762,7 @@ function Progress({step}){
 function Landing({onStart}){
   return <div style={{background:"#F5EFE0",minHeight:"100vh",overflow:"hidden"}}>
     <section className="responsive-shell hero-grid" style={{position:"relative"}}>
-      <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 18%, rgba(217,184,111,.10), transparent 38%), radial-gradient(circle at 50% 100%, rgba(248,242,230,.035), transparent 48%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 18%, rgba(74,94,58,.08), transparent 38%), radial-gradient(circle at 50% 100%, rgba(74,94,58,.025), transparent 48%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",zIndex:1}}>
         <div className="brand-logo hero-kicker fu">El Violín de Ceci</div>
         <h1 className="brand-title hero-title fu1">
@@ -772,12 +779,12 @@ function Landing({onStart}){
 
     <section className="responsive-shell" style={{paddingBottom:"clamp(42px,8vw,88px)"}}>
       <div className="desktop-two-col" style={{display:"grid",gridTemplateColumns:"1fr",gap:22,alignItems:"start"}}>
-        <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.14)",borderRadius:22,padding:"clamp(22px,4vw,34px)"}}>
+        <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.14)",borderRadius:22,padding:"clamp(22px,4vw,34px)"}}>
           <div className="brand-logo" style={{fontSize:".7rem",letterSpacing:".18em",marginBottom:14}}>El problema que nadie habla</div>
           <p className="brand-copy" style={{fontSize:"clamp(1.05rem,2vw,1.25rem)",margin:"0 0 14px"}}>Podés tener el mejor salón, el vestido perfecto y una decoración impecable — pero si la música no está pensada, el momento puede no sentirse como lo imaginaste.</p>
           <p className="brand-copy" style={{fontSize:"clamp(1.05rem,2vw,1.25rem)",margin:"0",color:G,fontStyle:"italic"}}>La música no es un detalle. Es lo que transforma una boda bonita en un recuerdo inolvidable.</p>
         </div>
-        <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.16)",borderRadius:22,padding:"clamp(28px,4vw,42px)",boxShadow:"0 24px 80px rgba(0,0,0,.32)",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+        <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.25)",borderRadius:22,padding:"clamp(28px,4vw,42px)",boxShadow:"0 24px 80px rgba(0,0,0,.32)",display:"flex",flexDirection:"column",justifyContent:"center"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"3.5rem",color:"rgba(74,94,58,.08)",lineHeight:1,marginBottom:12,userSelect:"none"}}>"</div>
           <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.2rem,2.2vw,1.55rem)",color:C,lineHeight:1.75,fontStyle:"italic",margin:"0 0 24px"}}>Lo que la gente recuerda de tu boda no es el vestido ni el salón. Recuerdan cómo se sintieron cuando empezó la música.</p>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -801,7 +808,7 @@ function Landing({onStart}){
             {e:"📤",t:"WhatsApp listo",d:"Mensajes adaptados para compartir con cada proveedor."},
             {e:"📄",t:"PDF premium",d:"Documento para guardar, imprimir o compartir."}
           ].map((item,i)=>(
-            <div key={i} style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.10)",borderRadius:18,padding:"20px 18px"}}>
+            <div key={i} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:18,padding:"20px 18px"}}>
               <div style={{fontSize:"1.65rem",marginBottom:10}}>{item.e}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.08rem",color:C,marginBottom:6}}>{item.t}</div>
               <div className="brand-copy" style={{fontSize:".98rem",lineHeight:1.6}}>{item.d}</div>
@@ -810,7 +817,7 @@ function Landing({onStart}){
         </div>
       </div>
 
-      <div style={{marginTop:"clamp(36px,6vw,64px)",background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(217,184,111,.24)",borderRadius:24,padding:"clamp(28px,5vw,46px)",textAlign:"center"}}>
+      <div style={{marginTop:"clamp(36px,6vw,64px)",background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(201,169,110,.24)",borderRadius:24,padding:"clamp(28px,5vw,46px)",textAlign:"center"}}>
         <div className="brand-logo" style={{fontSize:".74rem",letterSpacing:".18em",marginBottom:14}}>Tu Banda Sonora de Boda</div>
         <h2 className="brand-title" style={{fontSize:"clamp(1.8rem,5vw,3rem)",margin:"0 0 12px"}}>Diseñá la música de tu boda con criterio experto.</h2>
         <p className="brand-copy" style={{fontSize:"clamp(1rem,2vw,1.2rem)",margin:"0 0 10px"}}>Guía · Arquetipo · Guion personalizado · Checklist · WhatsApp · PDF</p>
@@ -844,17 +851,17 @@ function EmailCapture({form,setForm,onContinue,onRecover}){
       <p style={{fontFamily:"'Lora',serif",fontSize:"1.05rem",color:DIM,lineHeight:1.7,margin:"0 0 10px"}}>Dejá tu email para guardar tu resultado y poder acceder desde cualquier dispositivo.</p>
       <p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(201,169,110,.5)",fontStyle:"italic",margin:"0 0 28px"}}>📧 Tu resultado queda guardado en tu cuenta y podés volver a verlo cuando quieras.</p>
       <input type="email" placeholder="tu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setNotFound(false);}} style={{textAlign:"center",fontSize:"1.15rem",marginBottom:16}}/>
-      {notFound&&<p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(217,184,111,.7)",margin:"0 0 12px",fontStyle:"italic"}}>No encontramos ese email. Continuá para crear tu guion nuevo.</p>}
+      {notFound&&<p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(201,169,110,.7)",margin:"0 0 12px",fontStyle:"italic"}}>No encontramos ese email. Continuá para crear tu guion nuevo.</p>}
       <button className="pbtn" disabled={!ok} onClick={()=>{setForm(f=>({...f,email}));onContinue();}} style={{width:"100%",marginBottom:12}}>
         Ver mi resultado →
       </button>
-      <div style={{borderTop:"1px solid rgba(217,184,111,.1)",paddingTop:16,marginTop:4}}>
+      <div style={{borderTop:"1px solid rgba(201,169,110,.1)",paddingTop:16,marginTop:4}}>
         <p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:"rgba(26,26,20,.28)",margin:"0 0 10px"}}>¿Ya completaste el test antes?</p>
         <button className="gbtn" disabled={!ok||recovering} onClick={handleRecover} style={{width:"100%"}}>
           {recovering?"Buscando tu guion...":"Recuperar mi guion anterior →"}
         </button>
       </div>
-      <p style={{marginTop:14,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(248,242,230,.2)"}}>Sin spam. Solo tu guion y novedades de Ceci.</p>
+      <p style={{marginTop:14,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.28)"}}>Sin spam. Solo tu guion y novedades de Ceci.</p>
     </div>
   </div>;
 }
@@ -933,11 +940,11 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
       <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
         {["Iglesia / templo","Salón de fiestas","Al aire libre","Hotel","Otro"].map(v=><Tag key={v} label={v} selected={form.lugarCeremoniaReligiosa===v} onClick={()=>set("lugarCeremoniaReligiosa",v)}/>)}
       </div>
-      {form.lugarCeremoniaReligiosa&&lugarGuia[form.lugarCeremoniaReligiosa]&&<div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
+      {form.lugarCeremoniaReligiosa&&lugarGuia[form.lugarCeremoniaReligiosa]&&<div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.14)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
         <p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>{lugarGuia[form.lugarCeremoniaReligiosa]}</p>
       </div>}
     </div>}
-    {tieneReligiosa&&form.tipoCeremonia.includes("Civil")&&<div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.12)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
+    {tieneReligiosa&&form.tipoCeremonia.includes("Civil")&&<div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(201,169,110,.12)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
       <p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>
         💡 Como van a tener ceremonia religiosa y civil, es común que sean en lugares distintos — por ejemplo, primero la iglesia y después el salón. Más abajo van a poder indicar dónde será la parte civil.
       </p>
@@ -947,7 +954,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
       <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
         {["Salón de fiestas","Al aire libre","Hacienda / estancia","Hotel","Espacio íntimo","Otro"].map(v=><Tag key={v} label={v} selected={form.lugarCeremonia===v} onClick={()=>set("lugarCeremonia",v)}/>)}
       </div>
-      {form.lugarCeremonia&&lugarGuia[form.lugarCeremonia]&&<div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
+      {form.lugarCeremonia&&lugarGuia[form.lugarCeremonia]&&<div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.14)",borderRadius:10,padding:"10px 14px",marginTop:8}}>
         <p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>{lugarGuia[form.lugarCeremonia]}</p>
       </div>}
     </>}
@@ -986,7 +993,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
     <FL>3 artistas o canciones que los representen como pareja</FL>
     <input placeholder="ej: Coldplay, La Oreja de Van Gogh, Hans Zimmer" value={form.artistas} onChange={e=>set("artistas",e.target.value)}/>
     <FL>¿Alguna canción que definitivamente NO quieren en su boda?</FL>
-    <div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.12)",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
+    <div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(201,169,110,.12)",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
       <p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:DIM,margin:"0 0 6px",lineHeight:1.6}}>
         Esto es más común de lo que parece — y es muy útil para nosotras.
       </p>
@@ -1013,7 +1020,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
 
   if(step===5) return wrap(<>
     <SL n={5} l="Los momentos de tu ceremonia"/>
-    <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
+    <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.14)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
       <p style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,margin:"0 0 6px",lineHeight:1.6}}>
         No necesitás saber qué se musicaliza en una boda — te guiamos momento a momento.
       </p>
@@ -1022,9 +1029,9 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
       </p>
     </div>
     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(74,94,58,.1)",color:G,border:"1px solid rgba(217,184,111,.25)"}}>★ Esencial</span>
-      <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(248,242,230,.05)",color:DIM,border:"1px solid rgba(248,242,230,.12)"}}>○ Opcional</span>
-      {isCatolica&&<span style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(74,94,58,.08)",color:G,border:"1px solid rgba(217,184,111,.2)"}}>⛪ Litúrgico</span>}
+      <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(74,94,58,.1)",color:G,border:"1px solid rgba(201,169,110,.25)"}}>★ Esencial</span>
+      <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(26,26,20,.04)",color:DIM,border:"0.5px solid rgba(74,94,58,.18)"}}>○ Opcional</span>
+      {isCatolica&&<span style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 12px",borderRadius:20,background:"rgba(74,94,58,.08)",color:G,border:"1px solid rgba(201,169,110,.2)"}}>⛪ Litúrgico</span>}
     </div>
     <div style={{marginTop:4}}>
       {momentosDisponibles.map((m,i)=>{
@@ -1045,19 +1052,19 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0,marginLeft:8}}>
               {m.obligatorio
-                ? <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(217,184,111,.6)",border:"1px solid rgba(217,184,111,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
-                : <div style={{width:22,height:22,borderRadius:4,border:`1px solid ${sel?G:"rgba(74,94,58,.3)"}`,background:sel?"rgba(217,184,111,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
+                ? <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(201,169,110,.6)",border:"1px solid rgba(201,169,110,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
+                : <div style={{width:22,height:22,borderRadius:4,border:`1px solid ${sel?G:"rgba(74,94,58,.3)"}`,background:sel?"rgba(201,169,110,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
                     {sel&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
                   </div>
               }
             </div>
           </div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(217,184,111,.6)",marginBottom:5,fontStyle:"italic"}}>{m.emocion} · {m.duracion}</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:"rgba(248,242,230,.52)",lineHeight:1.58}}>{m.desc}</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(201,169,110,.6)",marginBottom:5,fontStyle:"italic"}}>{m.emocion} · {m.duracion}</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:"rgba(26,26,20,.58)",lineHeight:1.58}}>{m.desc}</div>
         </div>;
       })}
     </div>
-    {isCatolica&&<div style={{marginTop:12,background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"12px 14px"}}>
+    {isCatolica&&<div style={{marginTop:12,background:"rgba(201,169,110,.05)",border:"1px solid rgba(74,94,58,.14)",borderRadius:10,padding:"12px 14px"}}>
       <p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:DIM,margin:0,lineHeight:1.6}}>
         ⚠️ Los momentos litúrgicos deben tener música aprobada por la iglesia. Consultá con el sacerdote antes de confirmar el repertorio.
       </p>
@@ -1116,28 +1123,28 @@ function Generating({names,phase}){
   useEffect(()=>{const t=setInterval(()=>setSeconds(x=>x+1),1000);return()=>clearInterval(t);},[]);
   const progress=Math.min(92,18+(phase*27)+(i*6));
   return <div style={{minHeight:"100vh",background:"#F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
-    <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,#FBF7EF,#F5EFE0)",border:"1px solid rgba(217,184,111,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
+    <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,#FBF7EF,#F5EFE0)",border:"1px solid rgba(201,169,110,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".24em",textTransform:"uppercase",color:G,marginBottom:20}}>El Violín de Ceci</div>
       <div style={{position:"relative",width:92,height:92,margin:"0 auto 28px"}}>
-        <div style={{position:"absolute",inset:0,border:"1px solid rgba(217,184,111,.08)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:0,border:"1px solid rgba(74,94,58,.1)",borderRadius:"50%"}}/>
         <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:G,borderRightColor:"rgba(74,94,58,.32)",borderRadius:"50%",animation:"spin 1.5s linear infinite"}}/>
-        <div style={{position:"absolute",inset:13,border:"1px solid rgba(217,184,111,.14)",borderRadius:"50%"}}/>
+        <div style={{position:"absolute",inset:13,border:"1px solid rgba(74,94,58,.14)",borderRadius:"50%"}}/>
         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:G,fontSize:"1.6rem"}}>♪</div>
       </div>
       <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.7rem)",fontWeight:400,color:C,margin:"0 0 8px",lineHeight:1.15}}>Creando la banda sonora de {names}</h2>
       <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.05rem,2.2vw,1.25rem)",color:"rgba(26,26,20,.58)",fontStyle:"italic",margin:"0 0 28px",lineHeight:1.55}}>Respirá tranquila. Este proceso puede tardar un poco porque estamos creando un guion único, no una respuesta automática.</p>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:10}}>
         <span style={{fontFamily:"'Lora',serif",fontSize:".92rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{PHASE_TITLES[phase]||PHASE_TITLES[0]}</span>
-        <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(248,242,230,.34)"}}>Paso {phase+1} de 3 · {seconds}s</span>
+        <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.52)"}}>Paso {phase+1} de 3 · {seconds}s</span>
       </div>
       <div style={{height:6,background:"rgba(74,94,58,.1)",borderRadius:999,overflow:"hidden",marginBottom:24}}>
         <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(90deg,#4A5E3A,#7B8C6E)",borderRadius:999,transition:"width .55s ease"}}/>
       </div>
-      <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(217,184,111,.14)",borderRadius:18,padding:"18px 20px",marginBottom:18,minHeight:96,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.14)",borderRadius:18,padding:"18px 20px",marginBottom:18,minHeight:96,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.15rem,2.3vw,1.38rem)",color:C,animation:"pulse 2.4s ease infinite",fontStyle:"italic",margin:0,lineHeight:1.55}}>{pool[i]}</p>
       </div>
       <div className="generating-notes" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:10}}>
-        {CALMING_NOTES.map((note,idx)=><div key={idx} style={{background:"rgba(248,242,230,.035)",border:"1px solid rgba(248,242,230,.08)",borderRadius:14,padding:"12px 10px",fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(248,242,230,.52)",lineHeight:1.45}}>
+        {CALMING_NOTES.map((note,idx)=><div key={idx} style={{background:"rgba(26,26,20,.03)",border:"0.5px solid rgba(74,94,58,.14)",borderRadius:14,padding:"12px 10px",fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.58)",lineHeight:1.45}}>
           {note}
         </div>)}
       </div>
@@ -1196,7 +1203,7 @@ function AccordionBlock({id,icon,title,subtitle,isOpen,onToggle,children,default
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.05rem,2vw,1.2rem)",fontWeight:600,color:isOpen?G:C,lineHeight:1.2,transition:"color .25s"}}>{title}</div>
         {subtitle&&<div style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:DIM,marginTop:3,lineHeight:1.4}}>{subtitle}</div>}
       </div>
-      {defaultTag&&<span style={{fontFamily:"'Lora',serif",fontSize:".75rem",padding:"3px 10px",borderRadius:20,background:"rgba(74,94,58,.08)",color:G,border:"1px solid rgba(217,184,111,.2)",flexShrink:0,display:"none"}} className="tag-desktop">{defaultTag}</span>}
+      {defaultTag&&<span style={{fontFamily:"'Lora',serif",fontSize:".75rem",padding:"3px 10px",borderRadius:20,background:"rgba(74,94,58,.08)",color:G,border:"1px solid rgba(201,169,110,.2)",flexShrink:0,display:"none"}} className="tag-desktop">{defaultTag}</span>}
       <span style={{color:G,fontSize:"1.1rem",flexShrink:0,transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform .25s"}}>▾</span>
     </button>
     {isOpen&&<div style={{padding:"4px 22px 22px",background:"rgba(234,228,210,.7)"}}>{children}</div>}
@@ -1205,16 +1212,16 @@ function AccordionBlock({id,icon,title,subtitle,isOpen,onToggle,children,default
 
 function SecLabel({children}){
   return <div style={{display:"flex",alignItems:"center",gap:12,margin:"24px 0 14px"}}>
-    <div style={{height:"1px",width:16,background:`linear-gradient(to right,transparent,rgba(217,184,111,.3))`}}/>
+    <div style={{height:"1px",width:16,background:`linear-gradient(to right,transparent,rgba(201,169,110,.3))`}}/>
     <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:"rgba(201,169,110,.55)",whiteSpace:"nowrap"}}>{children}</div>
-    <div style={{height:"1px",flex:1,background:`linear-gradient(to right,rgba(217,184,111,.3),transparent)`}}/>
+    <div style={{height:"1px",flex:1,background:`linear-gradient(to right,rgba(201,169,110,.3),transparent)`}}/>
   </div>;
 }
 
 function SongCardStar({item}){
   const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}${item.version?" "+item.version:""}`);
-  return <div style={{background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(217,184,111,.3)",borderRadius:14,padding:"20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
-    <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,111,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+  return <div style={{background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(201,169,110,.3)",borderRadius:14,padding:"20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
+    <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(74,94,58,.1) 0%,transparent 70%)",pointerEvents:"none"}}/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
       <div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{item.momento}</div>
@@ -1224,7 +1231,7 @@ function SongCardStar({item}){
     </div>
     <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.3rem,3vw,1.55rem)",color:C,marginBottom:3,lineHeight:1.2}}>{item.cancion}</div>
     <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:DIM,marginBottom:item.razon?12:0}}>{item.artista}{item.version&&<em style={{color:"rgba(26,26,20,.28)",fontStyle:"italic"}}> · {item.version}</em>}</div>
-    {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".97rem",color:"rgba(26,26,20,.58)",lineHeight:1.65,margin:"0 0 12px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.25)",paddingLeft:12}}>{item.razon}</p>}
+    {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".97rem",color:"rgba(26,26,20,.58)",lineHeight:1.65,margin:"0 0 12px",fontStyle:"italic",borderLeft:"2px solid rgba(201,169,110,.25)",paddingLeft:12}}>{item.razon}</p>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {item.alt&&<span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.28)"}}>Alt: {item.alt}</span>}
       <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
@@ -1239,7 +1246,7 @@ function SongCard({item,idx}){
   const q=encodeURIComponent(`${item.cancion||""} ${item.artista||""}${item.version?" "+item.version:""}`);
   const isNovia=item.momento?.toLowerCase().includes("novia");
   if(isNovia) return <SongCardStar item={item}/>;
-  return <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
+  return <div style={{background:"#FBF7EF",border:"1px solid rgba(201,169,110,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
     <div style={{flexShrink:0,marginTop:2,textAlign:"center"}}>
       <div style={{fontSize:"1.2rem"}}>{item.icono}</div>
       <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.35)"}}>{String(idx+1).padStart(2,"0")}</div>
@@ -1250,7 +1257,7 @@ function SongCard({item,idx}){
       <div style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:DIM,marginBottom:item.razon?6:0}}>{item.artista}{item.version&&<em style={{color:"rgba(26,26,20,.28)",fontStyle:"italic"}}> · {item.version}</em>}{item.duracion&&<span style={{color:"rgba(26,26,20,.22)",marginLeft:8}}>{item.duracion}</span>}</div>
       {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.48)",lineHeight:1.55,margin:"0 0 8px",fontStyle:"italic"}}>{item.razon}</p>}
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {item.alt&&<span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(248,242,230,.24)"}}>Alt: {item.alt}</span>}
+        {item.alt&&<span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.32)"}}>Alt: {item.alt}</span>}
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
           <AudioButton cancion={item.cancion} artista={item.artista} version={item.version} alt={item.alt}/>
           <a className="lbtn" href={`https://www.youtube.com/results?search_query=${q}`} target="_blank" rel="noopener noreferrer" style={{fontSize:".82rem",padding:"6px 10px"}}>YT</a>
@@ -1262,14 +1269,14 @@ function SongCard({item,idx}){
 
 function PlaylistRow({item,num}){
   const q=encodeURIComponent(`${item.c||""} ${item.a||""}`);
-  return <div style={{padding:"10px 0",borderBottom:"1px solid rgba(217,184,111,.05)"}}>
+  return <div style={{padding:"10px 0",borderBottom:"1px solid rgba(201,169,110,.05)"}}>
     <div style={{display:"grid",gridTemplateColumns:"22px 1fr auto",alignItems:"center",gap:10}}>
       <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(74,94,58,.3)",textAlign:"center"}}>{num}</div>
       <div style={{minWidth:0}}>
         <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{item.c}</div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:DIM}}>{item.a}</div>
       </div>
-      <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(248,242,230,.2)",whiteSpace:"nowrap"}}>{item.d}</div>
+      <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.45)",whiteSpace:"nowrap"}}>{item.d}</div>
     </div>
     <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,paddingLeft:32}}>
       <AudioButton cancion={item.c} artista={item.a}/>
@@ -1453,7 +1460,7 @@ function GuionCarousel({items}){
           border:`1px solid ${isNovia?"rgba(74,94,58,.32)":"rgba(74,94,58,.1)"}`,
           borderRadius:18,padding:"22px 20px",position:"relative",overflow:"hidden"
         }}>
-          {isNovia&&<div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(217,184,111,.1) 0%,transparent 70%)",pointerEvents:"none"}}/>}
+          {isNovia&&<div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(201,169,110,.1) 0%,transparent 70%)",pointerEvents:"none"}}/>}
           {/* Número y ícono */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1463,15 +1470,15 @@ function GuionCarousel({items}){
                 {isNovia&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(201,169,110,.55)",fontStyle:"italic"}}>El momento más recordado</div>}
               </div>
             </div>
-            <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(248,242,230,.25)",background:"rgba(74,94,58,.06)",padding:"3px 8px",borderRadius:20}}>{item.duracion}</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.32)",background:"rgba(74,94,58,.06)",padding:"3px 8px",borderRadius:20}}>{item.duracion}</div>
           </div>
           {/* Canción principal */}
-          <div style={{borderTop:"1px solid rgba(217,184,111,.1)",paddingTop:14,marginBottom:12}}>
+          <div style={{borderTop:"1px solid rgba(201,169,110,.1)",paddingTop:14,marginBottom:12}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.2rem,3vw,1.45rem)",color:C,marginBottom:4,lineHeight:1.15}}>{item.cancion}</div>
-            <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:isNovia?"rgba(245,239,224,.65)":"rgba(26,26,20,.65)"}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.32)",fontStyle:"italic"}}> · {item.version}</em>}</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:isNovia?"rgba(245,239,224,.65)":"rgba(26,26,20,.65)"}}>{item.artista}{item.version&&<em style={{color:"rgba(26,26,20,.38)",fontStyle:"italic"}}> · {item.version}</em>}</div>
           </div>
           {/* Razón de Ceci */}
-          {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:"rgba(248,242,230,.6)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.22)",paddingLeft:12}}>{item.razon}</p>}
+          {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:isNovia?"rgba(245,239,224,.78)":"rgba(26,26,20,.72)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:`2px solid ${isNovia?"rgba(255,255,255,.2)":"rgba(201,169,110,.45)"}`,paddingLeft:12}}>{item.razon}</p>}
           {/* Footer */}
           <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:"auto",paddingTop:4}}>
             {item.alt&&<div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.28)"}}>Alt: {item.alt}</div>}
@@ -1487,7 +1494,7 @@ function GuionCarousel({items}){
     <div style={{display:"flex",justifyContent:"center",gap:7,marginTop:12}}>
       {items.map((_,i)=><button key={i} onClick={()=>scrollTo(i)} style={{width:i===activeIdx?22:7,height:7,borderRadius:4,border:"none",background:i===activeIdx?G:"rgba(74,94,58,.2)",cursor:"pointer",transition:"all .3s",padding:0}}/>)}
     </div>
-    <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(248,242,230,.24)",textAlign:"center",marginTop:6,fontStyle:"italic"}}>
+    <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.45)",textAlign:"center",marginTop:6,fontStyle:"italic"}}>
       {activeIdx+1} de {items.length} · Deslizá para ver todos los momentos
     </p>
   </div>;
@@ -1543,7 +1550,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
     <div style={{padding:"12px 16px 0"}}>
       <BotanicalDivider/>
       {/* Link privado */}
-      {resultToken&&<div className="no-print" style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.16)",borderRadius:14,padding:"14px 18px",marginBottom:16}}>
+      {resultToken&&<div className="no-print" style={{background:"rgba(201,169,110,.05)",border:"0.5px solid rgba(201,169,110,.25)",borderRadius:14,padding:"14px 18px",marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
           <div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:3}}>Tu link privado de acceso</div>
@@ -1556,8 +1563,8 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 1. RESUMEN GENERAL ══ */}
       <AccordionBlock id="resumen" icon="✦" title="Resumen de su boda" subtitle={`${form.nombre1} & ${form.nombre2}${arch?` · ${arch.n}`:""}`} isOpen={open.resumen} onToggle={()=>toggle("resumen")}>
         <div style={{paddingTop:16}}>
-          {results.nota&&<div style={{position:"relative",padding:"20px 20px 16px",borderRadius:12,background:"#FBF7EF",border:"1px solid rgba(217,184,111,.14)",marginBottom:16}}>
-            <div style={{position:"absolute",top:12,left:16,fontFamily:"'Playfair Display',serif",fontSize:"3rem",color:"rgba(217,184,111,.07)",lineHeight:1,userSelect:"none"}}>"</div>
+          {results.nota&&<div style={{position:"relative",padding:"20px 20px 16px",borderRadius:12,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.14)",marginBottom:16}}>
+            <div style={{position:"absolute",top:12,left:16,fontFamily:"'Playfair Display',serif",fontSize:"3rem",color:"rgba(201,169,110,.07)",lineHeight:1,userSelect:"none"}}>"</div>
             <p style={{fontFamily:"'Lora',serif",fontSize:"1.05rem",fontStyle:"italic",color:C,lineHeight:1.78,margin:"0 0 12px",paddingTop:6}}>{results.nota}</p>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <div style={{height:"1px",width:20,background:G,opacity:.4}}/>
@@ -1565,7 +1572,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
             </div>
           </div>}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:16}}>
-            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"#FBF7EF",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(217,184,111,.08)"}}>
+            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"#FBF7EF",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(74,94,58,.1)"}}>
               <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,169,110,.5)",marginBottom:4}}>{it.l}</div>
               <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{it.v}</div>
             </div>)}
@@ -1577,8 +1584,8 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 2. ARQUETIPO ══ */}
       <AccordionBlock id="arquetipo" icon={arch?.e||"♪"} title="Su perfil musical" subtitle={arch?`${arch.n} · ${arch.m}`:""} isOpen={open.arquetipo} onToggle={()=>toggle("arquetipo")}>
         {arch&&results.perfil&&<div style={{paddingTop:16}}>
-          <div style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(217,184,111,.12)",marginBottom:12}}>
-            <div style={{background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",padding:"16px 18px",borderBottom:"1px solid rgba(217,184,111,.1)"}}>
+          <div style={{borderRadius:12,overflow:"hidden",border:"1px solid rgba(201,169,110,.12)",marginBottom:12}}>
+            <div style={{background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",padding:"16px 18px",borderBottom:"1px solid rgba(201,169,110,.1)"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <span style={{fontSize:"1.8rem"}}>{arch.e}</span>
                 <div>
@@ -1590,7 +1597,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
             <div style={{background:"#FBF7EF",padding:"14px 18px"}}>
               {results.perfil.cluster&&<div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.35)",marginBottom:8}}>{results.perfil.cluster}</div>}
               {results.perfil.desc&&<p style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.68,margin:"0 0 8px"}}>{results.perfil.desc}</p>}
-              {results.perfil.concepto&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.38)",lineHeight:1.62,fontStyle:"italic",margin:0,borderTop:"1px solid rgba(217,184,111,.06)",paddingTop:10}}>{results.perfil.concepto}</p>}
+              {results.perfil.concepto&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.38)",lineHeight:1.62,fontStyle:"italic",margin:0,borderTop:"1px solid rgba(201,169,110,.06)",paddingTop:10}}>{results.perfil.concepto}</p>}
             </div>
           </div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:DIM,lineHeight:1.6,fontStyle:"italic",padding:"0 4px"}}>{arch.d}</div>
@@ -1600,7 +1607,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 3. GUION ══ */}
       <AccordionBlock id="guion" icon="♩" title="Guion musical de la ceremonia" subtitle="Deslizá para ver cada momento de la ceremonia" isOpen={open.guion} onToggle={()=>toggle("guion")} defaultTag="Principal">
         <div style={{paddingTop:16}}>
-          {isCatolica&&<div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.14)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+          {isCatolica&&<div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(74,94,58,.14)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
             <p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:DIM,margin:0,lineHeight:1.6}}>⚠️ Los momentos litúrgicos (Aleluya, Comunión, Ofertorio) requieren música aprobada por la iglesia. Confirmá con el sacerdote antes de cerrar el repertorio.</p>
           </div>}
           <GuionCarousel items={results.guion||[]}/>
@@ -1612,13 +1619,13 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
         <div style={{paddingTop:16}}>
           {results.coctel?.length>0&&<div style={{marginBottom:18}}>
             <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,169,110,.5)",marginBottom:8}}>Cóctel</div>
-            <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.07)",borderRadius:12,padding:"4px 14px"}}>
+            <div style={{background:"#FBF7EF",border:"1px solid rgba(201,169,110,.07)",borderRadius:12,padding:"4px 14px"}}>
               {results.coctel.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
             </div>
           </div>}
           {results.cena?.length>0&&<div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,169,110,.5)",marginBottom:8}}>Cena</div>
-            <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.07)",borderRadius:12,padding:"4px 14px"}}>
+            <div style={{background:"#FBF7EF",border:"1px solid rgba(201,169,110,.07)",borderRadius:12,padding:"4px 14px"}}>
               {results.cena.map((item,i)=><PlaylistRow key={i} item={item} num={i+1}/>)}
             </div>
           </div>}
@@ -1628,7 +1635,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       {/* ══ 5. CHECKLIST ══ */}
       <AccordionBlock id="checklist" icon="✓" title="Checklist de coordinación" subtitle={`${doneItems} de ${totalItems} tareas completadas · ${pct}%`} isOpen={open.checklist} onToggle={()=>toggle("checklist")}>
         <div style={{paddingTop:16}}>
-          <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.1)",borderRadius:12,padding:"12px 16px",marginBottom:16}}>
+          <div style={{background:"#FBF7EF",border:"1px solid rgba(201,169,110,.1)",borderRadius:12,padding:"12px 16px",marginBottom:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
               <div style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:C}}>{doneItems} de {totalItems} completados</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:pct===100?G:DIM}}>{pct}%</div>
@@ -1654,7 +1661,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
                   {checklistFull[cat.k].filter((_,i)=>checked[`${cat.k}_${i}`]).length}/{checklistFull[cat.k].length}
                 </div>
               </div>
-              <div style={{background:"#FBF7EF",border:"1px solid rgba(217,184,111,.07)",borderRadius:12,padding:"2px 14px"}}>
+              <div style={{background:"#FBF7EF",border:"1px solid rgba(201,169,110,.07)",borderRadius:12,padding:"2px 14px"}}>
                 {checklistFull[cat.k].map((item,i)=><CheckItem key={i} label={item} done={!!checked[`${cat.k}_${i}`]} onToggle={()=>tog(`${cat.k}_${i}`)} important={cat.important.includes(i)}/>)}
               </div>
             </div>
@@ -1662,8 +1669,8 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
           {results.errores?.length>0&&<>
             <SecLabel>⚠ Errores frecuentes para esta boda</SecLabel>
             {results.errores.map((e,i)=>(
-              <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<results.errores.length-1?"1px solid rgba(217,184,111,.06)":"none"}}>
-                <div style={{width:22,height:22,minWidth:22,borderRadius:"50%",background:"rgba(74,94,58,.08)",border:"1px solid rgba(217,184,111,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>!</div>
+              <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:i<results.errores.length-1?"1px solid rgba(201,169,110,.06)":"none"}}>
+                <div style={{width:22,height:22,minWidth:22,borderRadius:"50%",background:"rgba(74,94,58,.08)",border:"1px solid rgba(201,169,110,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:G,flexShrink:0,marginTop:2}}>!</div>
                 <p style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.62,margin:0}}>{e}</p>
               </div>
             ))}
@@ -1687,14 +1694,14 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       <AccordionBlock id="exportar" icon="📄" title="Guardar o exportar" subtitle="PDF para imprimir o compartir con quien necesites" isOpen={open.exportar} onToggle={()=>toggle("exportar")}>
         <div style={{paddingTop:16}}>
           <p style={{fontFamily:"'Lora',serif",fontSize:".97rem",color:DIM,lineHeight:1.65,marginBottom:14}}>Guardá tu guion como PDF para tenerlo siempre a mano o enviárselo a tu planner.</p>
-          <button onClick={()=>window.print()} style={{width:"100%",background:"#FBF7EF",border:"1px solid rgba(217,184,111,.14)",borderRadius:12,padding:"14px 18px",fontFamily:"'Lora',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <button onClick={()=>window.print()} style={{width:"100%",background:"#FBF7EF",border:"1px solid rgba(74,94,58,.14)",borderRadius:12,padding:"14px 18px",fontFamily:"'Lora',serif",fontSize:"1rem",color:C,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
             <span style={{fontSize:"1.2rem"}}>🖨️</span>
             <div>
               <div style={{marginBottom:2}}>Guardar como PDF</div>
               <div style={{fontSize:".85rem",color:"rgba(26,26,20,.28)"}}>En el diálogo de impresión, elegí "Guardar como PDF"</div>
             </div>
           </button>
-          {resultToken&&<div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.14)",borderRadius:12,padding:"14px 16px"}}>
+          {resultToken&&<div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(74,94,58,.14)",borderRadius:12,padding:"14px 16px"}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:6}}>Volver a tu resultado desde cualquier dispositivo</div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:DIM,wordBreak:"break-all",marginBottom:10,lineHeight:1.4}}>{typeof window!=="undefined"?`${window.location.origin}${window.location.pathname}?r=${resultToken}`:""}</div>
             <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);alert("Link copiado ✓");}catch(e){}}}>Copiar link privado</button>
@@ -1703,15 +1710,15 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       </AccordionBlock>
 
       {/* ══ UPSELL ══ */}
-      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(217,184,111,.22)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
+      <div className="no-print" style={{marginTop:20,background:"linear-gradient(135deg,#EAE4D2,#F5EFE0)",border:"1px solid rgba(201,169,110,.28)",borderRadius:18,padding:"clamp(22px,4vw,32px)",textAlign:"center"}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".16em",textTransform:"uppercase",color:G,marginBottom:12}}>Servicio adicional</div>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.3rem,3vw,1.6rem)",fontWeight:600,color:C,margin:"0 0 10px",lineHeight:1.2}}>¿Querés que Ceci revise tu guion con vos?</h3>
-        <div style={{display:"inline-block",background:"rgba(74,94,58,.08)",border:"1px solid rgba(217,184,111,.28)",borderRadius:100,padding:"7px 20px",marginBottom:14}}>
+        <div style={{display:"inline-block",background:"rgba(74,94,58,.08)",border:"1px solid rgba(201,169,110,.28)",borderRadius:100,padding:"7px 20px",marginBottom:14}}>
           <span style={{fontFamily:"'Lora',serif",fontSize:"1.08rem",color:G,fontWeight:600,letterSpacing:".02em"}}>Revisión personalizada de 45 minutos — USD 30</span>
         </div>
         <p style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:DIM,lineHeight:1.68,margin:"0 auto 20px",maxWidth:400}}>Escribile a Ceci por WhatsApp y coordinan fecha y forma de pago.</p>
         <a className="pbtn" href="https://wa.me/595985689454?text=Hola%20Ceci!%20Me%20interesa%20la%20revisión%20personalizada%20de%20mi%20guion%20musical%20(USD%2030%20-%2045%20min)" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",textDecoration:"none"}}>Escribirle a Ceci →</a>
-        <p style={{marginTop:12,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(248,242,230,.2)"}}>@elviolindececi · +595 985 689 454</p>
+        <p style={{marginTop:12,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.42)"}}>@elviolindececi · +595 985 689 454</p>
       </div>
 
       <div className="no-print" style={{textAlign:"center",marginTop:20}}>
@@ -1808,7 +1815,7 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
   const title = mode==="signup" ? "Crear mi cuenta" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Entrar a mi producto";
   const subtitle = mode==="signup" ? "Usá el mismo email con el que compraste el producto." : mode==="forgot" ? "Te enviaremos un link para crear una nueva contraseña." : mode==="update" ? "Definí una nueva contraseña para volver a entrar." : "Iniciá sesión para ver o crear tu guion musical.";
 
-  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",background:"radial-gradient(circle at 50% 0%, rgba(217,184,111,.10), transparent 42%), #0C1721",padding:"clamp(18px,4vw,42px)"}}>
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",background:`radial-gradient(ellipse 80% 50% at 50% 0%, rgba(74,94,58,.07), transparent 60%), ${BG}`,padding:"clamp(18px,4vw,42px)"}}>
     <div className="fu auth-card" style={{textAlign:"center"}}>
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 className="brand-title" style={{fontSize:"clamp(1.85rem,6vw,2.35rem)",margin:"0 0 8px"}}>{title}</h1>
@@ -1822,14 +1829,14 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
       {mode==="update"&&<input type="password" placeholder="Nueva contraseña" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{textAlign:"center",marginBottom:18}} />}
 
       {err&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"#ff8b8b",lineHeight:1.5,margin:"0 0 12px"}}>{err}</p>}
-      {msg&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(217,184,111,.85)",lineHeight:1.5,margin:"0 0 12px"}}>{msg}</p>}
+      {msg&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(201,169,110,.85)",lineHeight:1.5,margin:"0 0 12px"}}>{msg}</p>}
 
       {mode==="login"&&<button className="pbtn" disabled={loading} onClick={signIn} style={{width:"100%"}}>{loading?"Entrando...":"Entrar →"}</button>}
       {mode==="signup"&&<button className="pbtn" disabled={loading} onClick={signUp} style={{width:"100%"}}>{loading?"Creando...":"Crear cuenta →"}</button>}
       {mode==="forgot"&&<button className="pbtn" disabled={loading} onClick={forgot} style={{width:"100%"}}>{loading?"Enviando...":"Enviar recuperación →"}</button>}
       {mode==="update"&&<button className="pbtn" disabled={loading} onClick={updatePassword} style={{width:"100%"}}>{loading?"Guardando...":"Guardar nueva contraseña →"}</button>}
 
-      <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(217,184,111,.12)",display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(201,169,110,.12)",display:"flex",flexDirection:"column",gap:8}}>
         {mode!=="login"&&<button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Ya tengo cuenta</button>}
         {mode!=="signup"&&mode!=="update"&&<button className="gbtn" onClick={()=>{clean();setMode("signup");}} style={{width:"100%"}}>Crear cuenta nueva</button>}
         {mode!=="forgot"&&mode!=="update"&&<button onClick={()=>{clean();setMode("forgot");}} style={{background:"transparent",border:"none",color:"rgba(201,169,110,.6)",fontFamily:"'Lora',serif",fontSize:".95rem",cursor:"pointer",textDecoration:"underline",marginTop:2}}>Olvidé mi contraseña</button>}
@@ -1865,7 +1872,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
           No hace falta completar el test de nuevo. Podés volver a ver tu resultado, copiar tu link privado o crear una nueva versión si cambió algo de la boda.
         </p>
 
-        {pareja&&<div style={{background:BG2,border:`1px solid ${BORDER}`,borderRadius:16,padding:"16px 20px",marginBottom:16,textAlign:"left"}}>
+        {pareja&&<div style={{background:BG2,border:`0.5px solid ${BORDER}`,borderRadius:14,padding:"16px 18px",marginBottom:14,textAlign:"left"}}>
           <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(201,169,110,.6)",marginBottom:6}}>Resultado guardado</div>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.25rem",color:C}}>{pareja}</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:DIM,marginTop:3}}>{user?.email}</div>
@@ -1897,11 +1904,11 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
         <p className="brand-copy" style={{fontSize:"clamp(.95rem,1.8vw,1.05rem)",margin:"0 auto 16px",maxWidth:480,lineHeight:1.7,opacity:.7}}>
           Van a responder algunas preguntas sobre su boda y su estilo musical. Al final van a recibir:
         </p>
-        <div style={{background:"rgba(217,184,111,.05)",border:"1px solid rgba(217,184,111,.12)",borderRadius:14,padding:"16px 18px",marginBottom:24,textAlign:"left",maxWidth:480,margin:"0 auto 24px"}}>
+        <div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(201,169,110,.12)",borderRadius:14,padding:"16px 18px",marginBottom:24,textAlign:"left",maxWidth:480,margin:"0 auto 24px"}}>
           {["🎼 Guion musical personalizado con canciones para cada momento","✅ Checklist musical para coordinar con sus proveedores","📋 Plantilla para cargar sus canciones","📤 Mensajes listos para enviar a DJ, músico y planner"].map((item,i)=>(
-            <div key={i} style={{fontFamily:"'Lora',serif",fontSize:"clamp(.95rem,1.6vw,1.05rem)",color:C,lineHeight:1.65,padding:"5px 0",borderBottom:i<3?"1px solid rgba(217,184,111,.08)":"none"}}>{item}</div>
+            <div key={i} style={{fontFamily:"'Lora',serif",fontSize:"clamp(.95rem,1.6vw,1.05rem)",color:C,lineHeight:1.65,padding:"5px 0",borderBottom:i<3?"1px solid rgba(74,94,58,.1)":"none"}}>{item}</div>
           ))}
-          <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(217,184,111,.6)",marginTop:10,fontStyle:"italic",lineHeight:1.6}}>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(201,169,110,.6)",marginTop:10,fontStyle:"italic",lineHeight:1.6}}>
             💡 Si tienen dudas sobre cómo usar algún recurso, no olviden ver el video explicativo en el área de miembros de Hotmart.
           </div>
         </div>
