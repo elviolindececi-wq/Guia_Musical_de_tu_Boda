@@ -225,7 +225,7 @@ input[type=date]{color-scheme:dark}
 .brand-subtitle{font-family:'Lora',serif;color:rgba(26,26,20,.75);font-weight:600;text-wrap:balance}
 .brand-copy{font-family:'Lora',serif;color:rgba(248,242,230,.68);line-height:1.75}
 .responsive-shell{width:100%;max-width:1120px;margin:0 auto;padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)}
-.auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:rgba(17,28,39,.88)!important;backdrop-filter:blur(14px);border:1px solid rgba(217,184,111,.22)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 28px 90px rgba(0,0,0,.36)}
+.auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:#FBF7EF!important;backdrop-filter:blur(20px);border:0.5px solid rgba(201,169,110,.3)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 8px 40px rgba(74,94,58,.1)}
 .auth-card input{background:rgba(248,242,230,.96)!important;color:#0C1721!important;border:1px solid rgba(217,184,111,.2)!important;border-radius:0!important;padding:14px 14px!important;font-family:'Lora',serif!important;font-weight:600;box-shadow:none!important}
 .auth-card input::placeholder{color:rgba(26,26,20,.35)!important}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:min(760px,100svh);padding-top:clamp(54px,9vw,112px);padding-bottom:clamp(54px,9vw,112px);text-align:center}
@@ -1190,7 +1190,7 @@ function WaxSeal({initials, color="#4A5E3A"}){
 // ─── ACORDEÓN ─────────────────────────────────────────────────────────────────
 function AccordionBlock({id,icon,title,subtitle,isOpen,onToggle,children,defaultTag}){
   return <div style={{marginBottom:12,border:`1px solid ${isOpen?"rgba(74,94,58,.28)":"rgba(74,94,58,.08)"}`,borderRadius:18,overflow:"hidden",transition:"border-color .25s"}}>
-    <button onClick={onToggle} style={{width:"100%",background:isOpen?"linear-gradient(135deg,rgba(21,34,48,.96),rgba(12,23,33,.98))":"rgba(17,28,39,.72)",border:"none",cursor:"pointer",padding:"18px 22px",display:"flex",alignItems:"center",gap:14,textAlign:"left",transition:"background .25s"}}>
+    <button onClick={onToggle} style={{width:"100%",background:isOpen?"#FBF7EF":"rgba(251,247,239,.95)",border:"none",cursor:"pointer",padding:"18px 22px",display:"flex",alignItems:"center",gap:14,textAlign:"left",transition:"background .25s"}}>
       <span style={{fontSize:"1.3rem",flexShrink:0}}>{icon}</span>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.05rem,2vw,1.2rem)",fontWeight:600,color:isOpen?G:C,lineHeight:1.2,transition:"color .25s"}}>{title}</div>
@@ -1449,7 +1449,7 @@ function GuionCarousel({items}){
         const isNovia=item.momento?.toLowerCase().includes("novia");
         return <div key={i} className="momento-slide" style={{
           minWidth:"min(88vw,360px)",maxWidth:380,scrollSnapAlign:"start",flexShrink:0,
-          background:isNovia?"linear-gradient(135deg,#152230,#0C1721)":"rgba(17,28,39,.85)",
+          background:isNovia?"#4A5E3A":"#FBF7EF",
           border:`1px solid ${isNovia?"rgba(74,94,58,.32)":"rgba(74,94,58,.1)"}`,
           borderRadius:18,padding:"22px 20px",position:"relative",overflow:"hidden"
         }}>
@@ -1468,7 +1468,7 @@ function GuionCarousel({items}){
           {/* Canción principal */}
           <div style={{borderTop:"1px solid rgba(217,184,111,.1)",paddingTop:14,marginBottom:12}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.2rem,3vw,1.45rem)",color:C,marginBottom:4,lineHeight:1.15}}>{item.cancion}</div>
-            <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:DIM}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.32)",fontStyle:"italic"}}> · {item.version}</em>}</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:isNovia?"rgba(245,239,224,.65)":"rgba(26,26,20,.65)"}}>{item.artista}{item.version&&<em style={{color:"rgba(248,242,230,.32)",fontStyle:"italic"}}> · {item.version}</em>}</div>
           </div>
           {/* Razón de Ceci */}
           {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:"rgba(248,242,230,.6)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:"2px solid rgba(217,184,111,.22)",paddingLeft:12}}>{item.razon}</p>}
@@ -2366,3 +2366,4 @@ export default function App(){
 
   return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
+
