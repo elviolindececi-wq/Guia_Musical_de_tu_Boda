@@ -229,7 +229,15 @@ input[type=date]{color-scheme:dark}
 .brand-subtitle{font-family:'Lora',serif;color:rgba(26,26,20,.75);font-weight:600;text-wrap:balance}
 .brand-copy{font-family:'Lora',serif;color:rgba(26,26,20,.62);line-height:1.75}
 .responsive-shell{width:100%;max-width:1120px;margin:0 auto;padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)}
-.auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:#FBF7EF!important;backdrop-filter:blur(20px);border:0.5px solid rgba(201,169,110,.3)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 8px 40px rgba(74,94,58,.1)}
+.auth-floral-bg{
+  background: url('/bg-mobile.jpg') center center / cover no-repeat, #F5EFE0;
+}
+@media(min-width:600px){
+  .auth-floral-bg{
+    background: url('/bg-desktop.jpg') center center / cover no-repeat, #F5EFE0;
+  }
+}
+.auth-card{width:100%;max-width:min(460px,calc(100vw - 32px));background:rgba(251,247,239,.96)!important;backdrop-filter:blur(12px);border:0.5px solid rgba(201,169,110,.4)!important;border-radius:24px!important;padding:clamp(24px,5vw,38px)!important;box-shadow:0 12px 48px rgba(26,20,14,.18)}
 .auth-card input{background:transparent!important;color:#1A1A14!important;border:none!important;border-bottom:1.5px solid rgba(74,94,58,.3)!important;border-radius:0!important;padding:13px 4px!important;font-family:'Lora',serif!important;font-weight:500;box-shadow:none!important}
 .auth-card input::placeholder{color:rgba(26,26,20,.35)!important}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:min(760px,100svh);padding-top:clamp(54px,9vw,112px);padding-bottom:clamp(54px,9vw,112px);text-align:center}
@@ -243,9 +251,6 @@ input[type=date]{color-scheme:dark}
   .results-container{max-width:900px!important}
 }
 
-@media(max-width:900px){
-  .desktop-guide-grid{grid-template-columns:1fr}
-}
 @media(min-width:901px){
   .desktop-guide-grid{grid-template-columns:1.15fr .85fr!important;gap:36px!important}
   .guide-sec{font-size:1.04rem}
@@ -412,13 +417,20 @@ function GuiaCanciones({onStart,onBack}){
         {tabs.map(k=>{
           const m=CANCIONES_POR_MOMENTO[k];
           const active=tab===k;
+          // On mobile show shorter label, on desktop show more
+          const label = m.titulo.length > 18 ? m.titulo.split(" ").slice(0,2).join(" ") : m.titulo;
           return <button key={k} data-tab={k} onClick={()=>scrollTab(k)} style={{
-            display:"inline-flex",alignItems:"center",gap:6,padding:"14px 18px",
+            display:"inline-flex",alignItems:"center",gap:6,padding:"13px 16px",
             border:"none",borderBottom:`2.5px solid ${active?"#4A5E3A":"transparent"}`,
-            background:"transparent",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,
-            fontFamily:"'Lora',serif",fontWeight:active?700:500,fontSize:".92rem",
-            color:active?"#4A5E3A":"rgba(26,26,20,.45)",transition:"all .2s"
-          }}>{m.icono} {m.titulo.split(" ").slice(0,2).join(" ")}</button>;
+            background:active?"rgba(74,94,58,.06)":"transparent",
+            cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,
+            fontFamily:"'Lora',serif",fontWeight:active?700:500,fontSize:"clamp(.82rem,.9vw,.95rem)",
+            color:active?"#4A5E3A":"rgba(26,26,20,.5)",transition:"all .2s",
+            borderRadius:active?"8px 8px 0 0":"0"
+          }}>
+            <span style={{fontSize:"1rem"}}>{m.icono}</span>
+            <span>{label}</span>
+          </button>;
         })}
       </div>
       {/* Scroll hint */}
@@ -429,7 +441,7 @@ function GuiaCanciones({onStart,onBack}){
 
     {/* Main content — single column on mobile, two on desktop */}
     <div style={{maxWidth:1100,margin:"0 auto",padding:"clamp(16px,4vw,40px) clamp(12px,4vw,48px) 0"}}>
-      <div className="desktop-guide-grid" style={{display:"grid",gridTemplateColumns:"1fr",gap:"clamp(16px,3vw,36px)",alignItems:"start"}}>
+      <div className="desktop-guide-grid" style={{display:"grid",gap:"clamp(16px,3vw,36px)",alignItems:"start"}}>
 
         {/* LEFT — Momento actual */}
         <div key={tab} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.28)",borderRadius:18,overflow:"hidden"}}>
@@ -1846,28 +1858,7 @@ function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }
   const title = mode==="signup" ? "Crear mi cuenta" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Entrar a mi producto";
   const subtitle = mode==="signup" ? "Usá el mismo email con el que compraste el producto." : mode==="forgot" ? "Te enviaremos un link para crear una nueva contraseña." : mode==="update" ? "Definí una nueva contraseña para volver a entrar." : "Iniciá sesión para ver o crear tu guion musical.";
 
-  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",background:`radial-gradient(ellipse 80% 50% at 50% 0%, rgba(74,94,58,.07), transparent 60%), ${BG}`,padding:"clamp(18px,4vw,42px)",position:"relative",overflow:"hidden"}}>
-    {/* Botanical decorative elements — corners */}
-    <svg style={{position:"absolute",top:0,left:0,width:"min(280px,45vw)",height:"auto",opacity:.45,pointerEvents:"none"}} viewBox="0 0 220 220" fill="none">
-      <path d="M0,180 Q20,120 60,80 Q30,120 0,180" fill="#4A5E3A" opacity=".35"/>
-      <path d="M0,200 Q40,140 90,100 Q50,140 0,200" fill="#7B8C6E" opacity=".22"/>
-      <path d="M0,160 Q30,100 70,60" stroke="#4A5E3A" strokeWidth="1.5" opacity=".3"/>
-      <path d="M70,60 Q62,48 54,52 Q62,56 70,60" fill="#4A5E3A" opacity=".35"/>
-      <path d="M0,130 Q35,85 65,55" stroke="#4A5E3A" strokeWidth="1.2" opacity=".25"/>
-      <path d="M65,55 Q58,44 51,48 Q58,52 65,55" fill="#7B8C6E" opacity=".28"/>
-      <path d="M45,80 Q55,68 62,58" stroke="#7B8C6E" strokeWidth="1" opacity=".2"/>
-      <circle cx="90" cy="100" r="4" fill="#C9A96E" opacity=".35"/>
-      <circle cx="70" cy="60" r="3" fill="#C9A96E" opacity=".4"/>
-      <circle cx="65" cy="55" r="2.5" fill="#C9A96E" opacity=".3"/>
-    </svg>
-    <svg style={{position:"absolute",bottom:0,right:0,width:"min(280px,45vw)",height:"auto",opacity:.45,pointerEvents:"none",transform:"rotate(180deg)"}} viewBox="0 0 220 220" fill="none">
-      <path d="M0,180 Q20,120 60,80 Q30,120 0,180" fill="#4A5E3A" opacity=".35"/>
-      <path d="M0,200 Q40,140 90,100 Q50,140 0,200" fill="#7B8C6E" opacity=".22"/>
-      <path d="M0,160 Q30,100 70,60" stroke="#4A5E3A" strokeWidth="1.5" opacity=".3"/>
-      <path d="M70,60 Q62,48 54,52 Q62,56 70,60" fill="#4A5E3A" opacity=".35"/>
-      <circle cx="90" cy="100" r="4" fill="#C9A96E" opacity=".35"/>
-      <circle cx="70" cy="60" r="3" fill="#C9A96E" opacity=".4"/>
-    </svg>
+  return <div className="auth-floral-bg" style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(18px,4vw,42px)",position:"relative",overflow:"hidden"}}>
     <div className="fu auth-card" style={{textAlign:"center",position:"relative",zIndex:1}}>
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.85rem,6vw,2.35rem)",fontWeight:600,color:"#1A1A14",margin:"0 0 8px",lineHeight:1.15}}>{title}</h1>
