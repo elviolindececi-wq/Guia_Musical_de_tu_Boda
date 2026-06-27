@@ -1224,7 +1224,7 @@ function SongCardStar({item}){
     <div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(74,94,58,.1) 0%,transparent 70%)",pointerEvents:"none"}}/>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
       <div>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".12em",textTransform:"uppercase",color:G}}>{item.momento}</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A"}}>{item.momento}</div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(74,94,58,.35)",fontStyle:"italic"}}>El momento más recordado</div>
       </div>
       <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.28)",flexShrink:0,marginLeft:8}}>{item.duracion}</span>
@@ -1456,18 +1456,18 @@ function GuionCarousel({items}){
         const isNovia=item.momento?.toLowerCase().includes("novia");
         return <div key={i} className="momento-slide" style={{
           minWidth:"min(88vw,360px)",maxWidth:380,scrollSnapAlign:"start",flexShrink:0,
-          background:isNovia?"#4A5E3A":"#FBF7EF",
-          border:`1px solid ${isNovia?"rgba(74,94,58,.32)":"rgba(74,94,58,.1)"}`,
+          background:"#FBF7EF",
+          border:"0.5px solid rgba(201,169,110,.28)",
           borderRadius:18,padding:"22px 20px",position:"relative",overflow:"hidden"
         }}>
-          {isNovia&&<div style={{position:"absolute",top:0,right:0,width:80,height:80,background:"radial-gradient(circle,rgba(201,169,110,.1) 0%,transparent 70%)",pointerEvents:"none"}}/>}
+          {isNovia&&<div style={{position:"absolute",top:0,right:0,width:6,height:80,background:"linear-gradient(to bottom,#C9A96E,transparent)",borderRadius:"0 18px 0 0",opacity:.4,pointerEvents:"none"}}/>}
           {/* Número y ícono */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <span style={{fontSize:"1.4rem"}}>{item.icono||"♪"}</span>
               <div>
-                <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",letterSpacing:".1em",textTransform:"uppercase",color:G}}>{item.momento}</div>
-                {isNovia&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(201,169,110,.55)",fontStyle:"italic"}}>El momento más recordado</div>}
+                <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A"}}>{item.momento}</div>
+                {isNovia&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.6)",fontStyle:"italic"}}>El momento más recordado</div>}
               </div>
             </div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.32)",background:"rgba(74,94,58,.06)",padding:"3px 8px",borderRadius:20}}>{item.duracion}</div>
@@ -1478,7 +1478,7 @@ function GuionCarousel({items}){
             <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:isNovia?"rgba(245,239,224,.65)":"rgba(26,26,20,.65)"}}>{item.artista}{item.version&&<em style={{color:"rgba(26,26,20,.38)",fontStyle:"italic"}}> · {item.version}</em>}</div>
           </div>
           {/* Razón de Ceci */}
-          {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:isNovia?"rgba(245,239,224,.78)":"rgba(26,26,20,.72)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:`2px solid ${isNovia?"rgba(255,255,255,.2)":"rgba(201,169,110,.45)"}`,paddingLeft:12}}>{item.razon}</p>}
+          {item.razon&&<p style={{fontFamily:"'Lora',serif",fontSize:".93rem",color:"rgba(26,26,20,.72)",lineHeight:1.65,margin:"0 0 14px",fontStyle:"italic",borderLeft:"2px solid rgba(201,169,110,.4)",paddingLeft:12}}>{item.razon}</p>}
           {/* Footer */}
           <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:"auto",paddingTop:4}}>
             {item.alt&&<div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.28)"}}>Alt: {item.alt}</div>}
@@ -1572,9 +1572,9 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
             </div>
           </div>}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:16}}>
-            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"#FBF7EF",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(74,94,58,.1)"}}>
-              <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,169,110,.5)",marginBottom:4}}>{it.l}</div>
-              <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:C,lineHeight:1.3}}>{it.v}</div>
+            {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"#FBF7EF",borderRadius:10,padding:"14px 16px",border:"0.5px solid rgba(201,169,110,.28)",boxShadow:"0 1px 4px rgba(74,94,58,.06)"}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:5}}>{it.l}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",lineHeight:1.3}}>{it.v}</div>
             </div>)}
           </div>
           <button className="pbtn" onClick={()=>setOpen(o=>({...o,guion:true,resumen:false}))} style={{width:"100%"}}>Empezar por mi guion musical →</button>
@@ -1730,7 +1730,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
   </div>;
 }
 
-function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }={}){
+function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }={}){
   const [mode,setMode]=useState(initialMode);
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
@@ -1740,7 +1740,7 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
   const [err,setErr]=useState(initialError || "");
 
   useEffect(()=>{
-    setMode(initialMode || "login");
+    setMode(initialMode || "signup");
     setErr(initialError || "");
     setMsg("");
   },[initialMode, initialError]);
@@ -1818,7 +1818,7 @@ function AuthScreen({ initialMode="login", initialError="", onPasswordUpdated }=
   return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",background:`radial-gradient(ellipse 80% 50% at 50% 0%, rgba(74,94,58,.07), transparent 60%), ${BG}`,padding:"clamp(18px,4vw,42px)"}}>
     <div className="fu auth-card" style={{textAlign:"center"}}>
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
-      <h1 className="brand-title" style={{fontSize:"clamp(1.85rem,6vw,2.35rem)",margin:"0 0 8px"}}>{title}</h1>
+      <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.85rem,6vw,2.35rem)",fontWeight:600,color:"#1A1A14",margin:"0 0 8px",lineHeight:1.15}}>{title}</h1>
       <p className="brand-copy" style={{fontSize:"clamp(1rem,3vw,1.12rem)",margin:"0 0 22px"}}>{subtitle}</p>
 
       {mode!=="update"&&<>
@@ -2341,7 +2341,7 @@ export default function App(){
     setView("auth");
     window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
   }}/>;
-  if(!user || view==="auth") return <AuthScreen initialMode="login" initialError={authNotice}/>;
+  if(!user || view==="auth") return <AuthScreen initialMode="signup" initialError={authNotice}/>;
   if(view==="home") return <HomeScreen
     user={user}
     hasResults={!!results}
@@ -2373,4 +2373,3 @@ export default function App(){
 
   return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
 }
-
