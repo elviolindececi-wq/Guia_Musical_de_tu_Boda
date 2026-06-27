@@ -411,25 +411,23 @@ function GuiaCanciones({onStart,onBack}){
       <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1rem,1.6vw,1.25rem)",color:"rgba(26,26,20,.55)",margin:"0 auto",lineHeight:1.55,fontStyle:"italic",maxWidth:580}}>Qué funciona en cada momento — y por qué</p>
     </div>
 
-    {/* Tab bar — horizontal scroll en mobile */}
+    {/* Tab bar — horizontal scroll en mobile, centrado en desktop */}
     <div style={{position:"sticky",top:0,zIndex:10,background:"#F5EFE0",borderBottom:"0.5px solid rgba(201,169,110,.2)",paddingBottom:0}}>
-      <div ref={tabRef} style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",padding:"0 12px"}}>
+      <div ref={tabRef} style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",padding:"0 12px",justifyContent:"center",flexWrap:"nowrap"}}>
         {tabs.map(k=>{
           const m=CANCIONES_POR_MOMENTO[k];
           const active=tab===k;
-          // On mobile show shorter label, on desktop show more
-          const label = m.titulo.length > 18 ? m.titulo.split(" ").slice(0,2).join(" ") : m.titulo;
           return <button key={k} data-tab={k} onClick={()=>scrollTab(k)} style={{
             display:"inline-flex",alignItems:"center",gap:6,padding:"13px 16px",
             border:"none",borderBottom:`2.5px solid ${active?"#4A5E3A":"transparent"}`,
             background:active?"rgba(74,94,58,.06)":"transparent",
             cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,
-            fontFamily:"'Lora',serif",fontWeight:active?700:500,fontSize:"clamp(.82rem,.9vw,.95rem)",
+            fontFamily:"'Lora',serif",fontWeight:active?700:500,fontSize:"clamp(.8rem,.85vw,.92rem)",
             color:active?"#4A5E3A":"rgba(26,26,20,.5)",transition:"all .2s",
             borderRadius:active?"8px 8px 0 0":"0"
           }}>
             <span style={{fontSize:"1rem"}}>{m.icono}</span>
-            <span>{label}</span>
+            <span>{m.titulo}</span>
           </button>;
         })}
       </div>
