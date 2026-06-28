@@ -229,11 +229,45 @@ input[type=date]{color-scheme:dark}
 .brand-subtitle{font-family:'Lora',serif;color:rgba(26,26,20,.75);font-weight:600;text-wrap:balance}
 .brand-copy{font-family:'Lora',serif;color:rgba(26,26,20,.68);line-height:1.75}
 .responsive-shell{width:100%;max-width:1120px;margin:0 auto;padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)}
+.home-floral-bg{
+  background: url('/bg-mobile.jpg') center center / cover no-repeat fixed, #F5EFE0;
+}
+@media(min-width:600px){
+  .home-floral-bg{
+    background: url('/bg-desktop.jpg') center center / cover no-repeat fixed, #F5EFE0;
+  }
+}
+.home-content-card{
+  background: rgba(251,247,239,.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 0.5px solid rgba(201,169,110,.3);
+  border-radius: 24px;
+  padding: clamp(28px,5vw,52px) clamp(24px,5vw,48px);
+  box-shadow: 0 12px 48px rgba(26,20,14,.14);
+}
 .auth-floral-bg{
   background: url('/bg-mobile.jpg') center center / cover no-repeat, #F5EFE0;
 }
 @media(min-width:600px){
-  .auth-floral-bg{
+  .home-floral-bg{
+  background: url('/bg-mobile.jpg') center center / cover no-repeat fixed, #F5EFE0;
+}
+@media(min-width:600px){
+  .home-floral-bg{
+    background: url('/bg-desktop.jpg') center center / cover no-repeat fixed, #F5EFE0;
+  }
+}
+.home-content-card{
+  background: rgba(251,247,239,.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 0.5px solid rgba(201,169,110,.3);
+  border-radius: 24px;
+  padding: clamp(28px,5vw,52px) clamp(24px,5vw,48px);
+  box-shadow: 0 12px 48px rgba(26,20,14,.14);
+}
+.auth-floral-bg{
     background: url('/bg-desktop.jpg') center center / cover no-repeat, #F5EFE0;
   }
 }
@@ -1901,8 +1935,8 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
     }catch(e){}
   };
 
-  return <div style={{minHeight:"100svh",background:`radial-gradient(ellipse 80% 50% at 50% 0%, rgba(74,94,58,.06), transparent 60%), ${BG}`,display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
-    <div className="fu" style={{width:"100%",maxWidth:"min(680px,calc(100vw - 32px))",textAlign:"center"}}>
+  return <div className="home-floral-bg" style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
+    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(680px,calc(100vw - 32px))",textAlign:"center"}}>
 
       <div className="brand-logo" style={{marginBottom:20}}>El Violín de Ceci</div>
 
