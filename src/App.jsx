@@ -1578,7 +1578,7 @@ function GuionCarousel({items}){
 }
 
 
-function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestart,onLogout}){
+function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestart,onLogout,onGoHome}){
   const tog=k=>setChecked(c=>({...c,[k]:!c[k]}));
   const [open,setOpen]=useState({resumen:true,arquetipo:false,guion:true,playlists:false,checklist:false,compartir:false,exportar:false});
   const toggle=k=>setOpen(o=>({...o,[k]:!o[k]}));
@@ -1603,6 +1603,17 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
   const pct=totalItems>0?Math.round(doneItems/totalItems*100):0;
 
   return <div style={{maxWidth:860,margin:"0 auto",background:"rgba(245,239,224,.88)",minHeight:"100vh",padding:"0 0 100px"}}>
+
+    {/* ══ NAV BAR ══ */}
+    <div className="no-print" style={{background:"rgba(245,239,224,.95)",backdropFilter:"blur(8px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",padding:"10px clamp(14px,3vw,32px)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,position:"sticky",top:0,zIndex:20}}>
+      <button onClick={onGoHome} style={{display:"inline-flex",alignItems:"center",gap:6,background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.5)",cursor:"pointer",padding:"4px 0"}}>
+        ← Inicio
+      </button>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Tu Banda Sonora de Boda</div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={onGoHome} style={{background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"6px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#4A5E3A",cursor:"pointer"}}>📋 Módulos</button>
+      </div>
+    </div>
 
     {/* ══ PORTADA ══ */}
     <div className="pdf-cover" style={{padding:"clamp(36px,6vw,64px) clamp(20px,4vw,48px)",textAlign:"center",borderBottom:"0.5px solid rgba(201,169,110,.25)",position:"relative",overflow:"hidden",background:"#4A5E3A"}}>
@@ -1923,7 +1934,7 @@ function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }
 }
 
 
-function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout }){
+function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout, onGoModule }){
   const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
   const link = resultToken && typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?r=${resultToken}` : "";
   const [copied, setCopied] = useState(false);
@@ -1937,7 +1948,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
   };
 
   return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
-    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(680px,calc(100vw - 32px))",textAlign:"center"}}>
+    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(760px,calc(100vw - 32px))",textAlign:"center"}}>
 
       <div className="brand-logo" style={{marginBottom:20}}>El Violín de Ceci</div>
 
@@ -1970,6 +1981,9 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
           <button className="gbtn" onClick={onStartNew}>Hacer el test de nuevo</button>
           <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
         </div>
+
+        {/* ── Module cards ── */}
+        <ModuleCards hasResults={true} onViewResults={onViewResults} onStartNew={onStartNew} onGoModule={onGoModule}/>
 
       </> : <>
         <h1 className="brand-title" style={{fontSize:"clamp(2.2rem,6vw,3.2rem)",margin:"0 0 12px"}}>
@@ -2010,6 +2024,1541 @@ const EMPTY_FORM={
   momentosSeleccionados:[],formatoMusical:[],
   cancionPersonal:"",recuerdo:"",email:"",denominacionReligiosa:"",lugarCeremoniaReligiosa:""
 };
+
+
+
+// ─── MODULE CARDS (shared in HomeScreen) ──────────────────────────────────────
+function ModuleCards({ hasResults, onViewResults, onStartNew, onGoModule }){
+  const modules = [
+    {emoji:"🎵",label:"Banda sonora",desc:"Guion musical de tu boda",action:hasResults?onViewResults:onStartNew,status:hasResults?"Ver resultado":"Empezar",done:hasResults},
+    {emoji:"💰",label:"Presupuesto",desc:"Control de gastos",action:()=>onGoModule("budget"),status:"Activo",done:false},
+    {emoji:"🏢",label:"Proveedores",desc:"Cotizaciones y contratos",action:()=>onGoModule("vendors"),status:"Nuevo ✦",done:false},
+    {emoji:"📋",label:"Checklist",desc:"Plan completo de la boda",action:()=>onGoModule("checklist-boda"),status:"Nuevo ✦",done:false},
+    {emoji:"👥",label:"Invitados",desc:"Lista y seating por mesas",action:()=>onGoModule("guests"),status:"Nuevo ✦",done:false},
+    {emoji:"⏰",label:"Cronograma",desc:"Timeline del día",action:()=>onGoModule("timeline"),status:"Nuevo ✦",done:false},
+  ];
+  return <div style={{marginTop:28,paddingTop:24,borderTop:"0.5px solid rgba(201,169,110,.2)",textAlign:"left"}}>
+    <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Módulos de planificación</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      {modules.map(({emoji,label,desc,action,status,done})=>
+        <button key={label} onClick={action||undefined} disabled={!action} style={{
+          background:done?"rgba(74,94,58,.08)":"#FBF7EF",
+          border:`0.5px solid ${done?"rgba(74,94,58,.28)":"rgba(201,169,110,.25)"}`,
+          borderRadius:14,padding:"14px 12px",textAlign:"left",cursor:action?"pointer":"default",
+          opacity:action?1:.55,transition:"all .2s",outline:"none"
+        }}>
+          <div style={{fontSize:"1.4rem",marginBottom:5}}>{emoji}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:".92rem",color:"#1A1A14",lineHeight:1.2,marginBottom:2}}>{label}</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.42)",marginBottom:8,lineHeight:1.3}}>{desc}</div>
+          <div style={{display:"inline-block",fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".1em",textTransform:"uppercase",padding:"3px 8px",borderRadius:100,
+            background:done?"#4A5E3A":status.includes("Nuevo")?"rgba(201,169,110,.2)":"rgba(74,94,58,.08)",
+            color:done?"#F5EFE0":status.includes("Nuevo")?"rgba(150,110,50,.9)":"rgba(74,94,58,.5)"}}>{status}</div>
+        </button>
+      )}
+    </div>
+  </div>;
+}
+
+
+const CURRENCIES = [
+  // América Latina (primero por ser el mercado principal)
+  {code:"PYG", symbol:"₲",  label:"Guaraní paraguayo"},
+  {code:"ARS", symbol:"$",  label:"Peso argentino"},
+  {code:"BRL", symbol:"R$", label:"Real brasileño"},
+  {code:"UYU", symbol:"$U", label:"Peso uruguayo"},
+  {code:"BOB", symbol:"Bs", label:"Boliviano"},
+  {code:"CLP", symbol:"$",  label:"Peso chileno"},
+  {code:"COP", symbol:"$",  label:"Peso colombiano"},
+  {code:"PEN", symbol:"S/", label:"Sol peruano"},
+  {code:"VES", symbol:"Bs",  label:"Bolívar venezolano"},
+  {code:"CRC", symbol:"₡",  label:"Colón costarricense"},
+  {code:"GTQ", symbol:"Q",  label:"Quetzal guatemalteco"},
+  {code:"HNL", symbol:"L",  label:"Lempira hondureño"},
+  {code:"NIO", symbol:"C$", label:"Córdoba nicaragüense"},
+  {code:"PAB", symbol:"B/", label:"Balboa panameño"},
+  {code:"DOP", symbol:"RD$",label:"Peso dominicano"},
+  {code:"CUP", symbol:"$",  label:"Peso cubano"},
+  {code:"HTG", symbol:"G",  label:"Gourde haitiano"},
+  {code:"JMD", symbol:"J$", label:"Dólar jamaicano"},
+  {code:"TTD", symbol:"TT$",label:"Dólar de Trinidad"},
+  {code:"BBD", symbol:"$",  label:"Dólar de Barbados"},
+  {code:"BMD", symbol:"$",  label:"Dólar de Bermudas"},
+  {code:"XCD", symbol:"$",  label:"Dólar caribeño oriental"},
+  // Norteamérica
+  {code:"USD", symbol:"$",  label:"Dólar estadounidense"},
+  {code:"CAD", symbol:"$",  label:"Dólar canadiense"},
+  {code:"MXN", symbol:"$",  label:"Peso mexicano"},
+  // Europa
+  {code:"EUR", symbol:"€",  label:"Euro"},
+  {code:"GBP", symbol:"£",  label:"Libra esterlina"},
+  {code:"CHF", symbol:"Fr", label:"Franco suizo"},
+  {code:"SEK", symbol:"kr", label:"Corona sueca"},
+  {code:"NOK", symbol:"kr", label:"Corona noruega"},
+  {code:"DKK", symbol:"kr", label:"Corona danesa"},
+  {code:"PLN", symbol:"zł", label:"Esloti polaco"},
+  {code:"CZK", symbol:"Kč", label:"Corona checa"},
+  {code:"HUF", symbol:"Ft", label:"Forinto húngaro"},
+  {code:"RON", symbol:"lei",label:"Leu rumano"},
+  {code:"BGN", symbol:"лв", label:"Lev búlgaro"},
+  {code:"HRK", symbol:"kn", label:"Kuna croata"},
+  {code:"RSD", symbol:"din",label:"Dinar serbio"},
+  {code:"ISK", symbol:"kr", label:"Corona islandesa"},
+  {code:"UAH", symbol:"₴",  label:"Grivna ucraniana"},
+  {code:"RUB", symbol:"₽",  label:"Rublo ruso"},
+  {code:"TRY", symbol:"₺",  label:"Lira turca"},
+  {code:"GEL", symbol:"₾",  label:"Lari georgiano"},
+  {code:"AMD", symbol:"֏",  label:"Dram armenio"},
+  // Asia-Pacífico
+  {code:"JPY", symbol:"¥",  label:"Yen japonés"},
+  {code:"CNY", symbol:"¥",  label:"Yuan chino"},
+  {code:"KRW", symbol:"₩",  label:"Won surcoreano"},
+  {code:"INR", symbol:"₹",  label:"Rupia india"},
+  {code:"AUD", symbol:"$",  label:"Dólar australiano"},
+  {code:"NZD", symbol:"$",  label:"Dólar neozelandés"},
+  {code:"SGD", symbol:"$",  label:"Dólar singapurense"},
+  {code:"HKD", symbol:"$",  label:"Dólar de Hong Kong"},
+  {code:"TWD", symbol:"$",  label:"Nuevo dólar taiwanés"},
+  {code:"THB", symbol:"฿",  label:"Baht tailandés"},
+  {code:"MYR", symbol:"RM", label:"Ringgit malayo"},
+  {code:"IDR", symbol:"Rp", label:"Rupia indonesia"},
+  {code:"PHP", symbol:"₱",  label:"Peso filipino"},
+  {code:"VND", symbol:"₫",  label:"Dong vietnamita"},
+  {code:"PKR", symbol:"₨",  label:"Rupia pakistaní"},
+  {code:"BDT", symbol:"৳",  label:"Taka bangladesí"},
+  {code:"LKR", symbol:"₨",  label:"Rupia de Sri Lanka"},
+  {code:"NPR", symbol:"₨",  label:"Rupia nepalesa"},
+  {code:"MMK", symbol:"K",  label:"Kyat birmano"},
+  {code:"KHR", symbol:"៛",  label:"Riel camboyano"},
+  {code:"LAK", symbol:"₭",  label:"Kip laosiano"},
+  {code:"MNT", symbol:"₮",  label:"Tugrik mongol"},
+  {code:"KZT", symbol:"₸",  label:"Tenge kazajo"},
+  {code:"UZS", symbol:"сум",label:"Som uzbeko"},
+  // Medio Oriente y África
+  {code:"AED", symbol:"د.إ",label:"Dírham emiratí"},
+  {code:"SAR", symbol:"﷼",  label:"Riyal saudí"},
+  {code:"QAR", symbol:"﷼",  label:"Riyal catarí"},
+  {code:"KWD", symbol:"د.ك",label:"Dinar kuwaití"},
+  {code:"BHD", symbol:"BD", label:"Dinar bareiní"},
+  {code:"OMR", symbol:"﷼",  label:"Riyal omaní"},
+  {code:"JOD", symbol:"JD", label:"Dinar jordano"},
+  {code:"ILS", symbol:"₪",  label:"Nuevo séquel israelí"},
+  {code:"EGP", symbol:"£",  label:"Libra egipcia"},
+  {code:"MAD", symbol:"MAD",label:"Dírham marroquí"},
+  {code:"TND", symbol:"د.ت",label:"Dinar tunecino"},
+  {code:"DZD", symbol:"دج", label:"Dinar argelino"},
+  {code:"LYD", symbol:"LD", label:"Dinar libio"},
+  {code:"NGN", symbol:"₦",  label:"Naira nigeriana"},
+  {code:"ZAR", symbol:"R",  label:"Rand sudafricano"},
+  {code:"KES", symbol:"KSh",label:"Chelín keniano"},
+  {code:"GHS", symbol:"GH₵",label:"Cedi ghanés"},
+  {code:"ETB", symbol:"Br", label:"Birr etíope"},
+  {code:"TZS", symbol:"TSh",label:"Chelín tanzano"},
+  {code:"UGX", symbol:"USh",label:"Chelín ugandés"},
+  {code:"RWF", symbol:"FRw",label:"Franco ruandés"},
+  {code:"XOF", symbol:"CFA",label:"Franco CFA Oeste"},
+  {code:"XAF", symbol:"CFA",label:"Franco CFA Central"},
+];
+const getCurrencySymbol = (code) => CURRENCIES.find(c=>c.code===code)?.symbol || code;
+
+
+// ─── SYNC: calcula cotizado+pagado del budget a partir de vendors ─────────────
+function calcBudgetFromVendors(budgetData, vendorsList){
+  if(!budgetData || !vendorsList) return budgetData;
+  const next = {
+    ...budgetData,
+    categorias: (budgetData.categorias||[]).map(cat => {
+      const catVendors = vendorsList.filter(v => v.cat === cat.id && v.estado !== "descartado");
+      const cotizado = catVendors.reduce((s,v) => s + parseFloat(v.precio||0), 0);
+      const pagado   = vendorsList.filter(v => v.cat===cat.id && v.estado==="pagado")
+                                  .reduce((s,v) => s + parseFloat(v.precio||0), 0);
+      return {...cat, cotizado, pagado};
+    })
+  };
+  return next;
+}
+
+// ─── MÓDULO PRESUPUESTO ────────────────────────────────────────────────────────
+const CATEGORIAS_DEFAULT = [
+  {id:"salon",    emoji:"🏛️", nombre:"Salón / Venue",              estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"catering", emoji:"🍽️", nombre:"Catering y bebidas",         estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"musica",   emoji:"🎵", nombre:"Música y entretenimiento",   estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"flores",   emoji:"🌸", nombre:"Flores y decoración",        estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"vestuario",emoji:"👗", nombre:"Vestuario",                  estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"foto",     emoji:"📸", nombre:"Fotografía",                 estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"video",    emoji:"🎬", nombre:"Video / Cinematografía",     estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"torta",    emoji:"🎂", nombre:"Torta",                      estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"papel",    emoji:"💌", nombre:"Papelería e invitaciones",   estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"transport",emoji:"🚗", nombre:"Transporte",                 estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"beauty",   emoji:"💄", nombre:"Maquillaje y peluquería",    estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"luna",     emoji:"🌴", nombre:"Luna de miel",               estimado:0,cotizado:0,pagado:0,notas:""},
+  {id:"imprev",   emoji:"⚡", nombre:"Imprevistos (10%)",          estimado:0,cotizado:0,pagado:0,notas:""},
+];
+
+function fmt(n){ return Number(n||0).toLocaleString("es-PY",{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function num(v){ return parseFloat(String(v).replace(/[^0-9.]/g,""))||0; }
+
+function BudgetModule({ user, onBack }){
+  const [data, setData] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [currency, setCurrency] = useState("USD");
+
+  // Load from Supabase
+  useEffect(()=>{
+    if(!user) return;
+    const load = async()=>{
+      try{
+        const {data:row} = await supabase.from("wedding_data").select("budget,currency,vendors").eq("user_id",user.id).single();
+        const vendors = Array.isArray(row?.vendors) ? row.vendors : [];
+        let budget = (row?.budget && row.budget.categorias?.length > 0)
+          ? row.budget
+          : {total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))};
+        // Auto-sync cotizado + pagado from vendors
+        budget = calcBudgetFromVendors(budget, vendors);
+        setData(budget);
+        if(row?.currency) setCurrency(row.currency);
+      }catch(e){
+        setData({total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))});
+      }
+    };
+    load();
+  },[user]);
+
+  const save = async(newData, newCurrency)=>{
+    setSaving(true);
+    try{
+      await supabase.from("wedding_data").upsert({
+        user_id: user.id,
+        budget: newData || data,
+        currency: newCurrency || currency,
+        updated_at: new Date().toISOString()
+      },{onConflict:"user_id"});
+      setSaved(true);
+      setTimeout(()=>setSaved(false), 2000);
+    }catch(e){ console.error(e); }
+    setSaving(false);
+  };
+
+  const updateTotal = (v)=>{
+    const next = {...data, total: num(v)};
+    setData(next);
+  };
+
+  const updateCat = (id, field, value)=>{
+    const next = {...data, categorias: data.categorias.map(c=> c.id===id ? {...c,[field]:field==="notas"?value:num(value)} : c)};
+    setData(next);
+  };
+
+  const addCategoria = ()=>{
+    if(!newCatName.trim()) return;
+    const next = {...data, categorias:[...data.categorias, {id:"c_"+Date.now(),emoji:"📌",nombre:newCatName.trim(),estimado:0,cotizado:0,pagado:0,notas:""}]};
+    setData(next);
+    setNewCatName("");
+    setAddingCat(false);
+    save(next);
+  };
+
+  const removeCategoria = (id)=>{
+    const next = {...data, categorias: data.categorias.filter(c=>c.id!==id)};
+    setData(next);
+    save(next);
+  };
+
+  if(!data) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando presupuesto...</p>
+  </div>;
+
+  const cats = data.categorias || [];
+  const totalEstimado = cats.reduce((s,c)=>s+num(c.estimado),0);
+  const totalCotizado = cats.reduce((s,c)=>s+num(c.cotizado),0);
+  const totalPagado   = cats.reduce((s,c)=>s+num(c.pagado),0);
+  const totalBudget   = num(data.total);
+  const pctPagado     = totalBudget>0 ? Math.min(100,Math.round(totalPagado/totalBudget*100)) : 0;
+  const pctCotizado   = totalBudget>0 ? Math.min(100,Math.round(totalCotizado/totalBudget*100)) : 0;
+  const restante      = totalBudget - totalPagado;
+  const SYM = getCurrencySymbol(currency) + " ";
+
+  const CatRow = ({c})=>{
+    const isEdit = editId===c.id;
+    const pctCat = num(c.estimado)>0 ? Math.min(100,Math.round(num(c.pagado)/num(c.estimado)*100)) : 0;
+    const overBudget = num(c.cotizado) > num(c.estimado) && num(c.estimado)>0;
+    const [localEst, setLocalEst] = useState(c.estimado||"");
+    const [localCot, setLocalCot] = useState(c.cotizado||"");
+    const [localPag, setLocalPag] = useState(c.pagado||"");
+    const [localNota, setLocalNota] = useState(c.notas||"");
+
+    const commitRow = ()=>{
+      setTimeout(()=>{
+        setData(prev=>{
+          const next = {...prev, categorias: prev.categorias.map(x=> x.id===c.id ? {...x,estimado:num(localEst),notas:localNota} : x)};
+          save(next);
+          return next;
+        });
+      },50);
+      setEditId(null);
+    };
+
+    return <div style={{background:"#FBF7EF",border:`0.5px solid ${overBudget?"rgba(200,80,60,.35)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px 16px",marginBottom:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:isEdit?12:8}}>
+        <span style={{fontSize:"1.3rem",flexShrink:0}}>{c.emoji}</span>
+        <span style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:"1rem",color:"#1A1A14",flex:1}}>{c.nombre}</span>
+        {overBudget&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".1em",color:"rgba(200,80,60,.8)",background:"rgba(200,80,60,.08)",padding:"2px 8px",borderRadius:100}}>SOBRE PRES.</span>}
+        {!overBudget && num(c.estimado)>0 && num(c.cotizado)===0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".1em",color:"rgba(200,140,0,.75)",background:"rgba(255,200,0,.08)",padding:"2px 8px",borderRadius:100}}>SIN COTIZAR</span>}
+        {num(c.estimado)===0 && num(c.cotizado)>0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".1em",color:"rgba(74,94,58,.6)",background:"rgba(74,94,58,.08)",padding:"2px 8px",borderRadius:100}}>SIN ESTIMADO</span>}
+        {num(c.pagado)>0 && num(c.pagado)>=num(c.cotizado) && num(c.cotizado)>0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".1em",color:"rgba(74,94,58,.85)",background:"rgba(74,94,58,.12)",padding:"2px 8px",borderRadius:100}}>✓ PAGADO</span>}
+        <button onClick={()=>isEdit?commitRow():setEditId(c.id)} style={{background:isEdit?"#4A5E3A":"transparent",color:isEdit?"#F5EFE0":"rgba(26,26,20,.4)",border:`1px solid ${isEdit?"#4A5E3A":"rgba(74,94,58,.25)"}`,borderRadius:100,padding:"4px 12px",fontFamily:"'Lora',serif",fontSize:".78rem",cursor:"pointer"}}>
+          {isEdit?"✓ Guardar":"Editar"}
+        </button>
+        <button onClick={()=>removeCategoria(c.id)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.25)",fontSize:"1.1rem",cursor:"pointer",padding:"0 4px",lineHeight:1}}>×</button>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{height:6,background:"rgba(74,94,58,.1)",borderRadius:6,marginBottom:10,overflow:"hidden"}}>
+        <div style={{height:"100%",width:`${pctCat}%`,background:pctCat>=100?"#4A5E3A":"rgba(74,94,58,.55)",borderRadius:6,transition:"width .4s"}}/>
+      </div>
+
+      {/* Amount columns */}
+      {!isEdit ? <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        {[{label:"Presupuestado",val:c.estimado,color:"rgba(26,26,20,.55)"},
+          {label:"Cotizado",val:c.cotizado,color:overBudget?"rgba(200,80,60,.8)":"rgba(201,169,110,.85)"},
+          {label:"Pagado",val:c.pagado,color:"#4A5E3A"}].map(({label,val,color})=>
+          <div key={label} style={{textAlign:"center"}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>{label}</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:600,color}}>{SYM}{fmt(val)}</div>
+          </div>
+        )}
+      </div>
+      : <div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+          {[{label:"Presupuestado",key:"est",val:localEst,set:setLocalEst,editable:true}].map(({label,key,val,set})=>
+            <div key={key}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>{label}</div>
+              <input type="number" value={val} onChange={e=>set(e.target.value)} placeholder="0"
+                style={{width:"100%",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+            </div>
+          )}
+          {[{label:"Cotizado 🔗",val:num(c.cotizado)},{label:"Pagado 🔗",val:num(c.pagado)}].map(({label,val})=>
+            <div key={label}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.28)",marginBottom:4}}>{label}</div>
+              <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px dashed rgba(74,94,58,.2)",background:"rgba(74,94,58,.04)",color:"rgba(26,26,20,.4)"}}>
+                {SYM}{fmt(val)} <span style={{fontSize:".7rem",color:"rgba(74,94,58,.4)"}}>desde proveedores</span>
+              </div>
+            </div>
+          )}
+        </div>
+        <input type="text" value={localNota} onChange={e=>setLocalNota(e.target.value)} placeholder="Notas (proveedor, fecha de pago, etc.)"
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"rgba(26,26,20,.7)",boxSizing:"border-box"}}/>
+      </div>}
+
+      {c.notas&&!isEdit&&<p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.45)",fontStyle:"italic",margin:"8px 0 0"}}>{c.notas}</p>}
+    </div>;
+  };
+
+  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
+    {/* Header */}
+    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se sincronizan automáticamente desde Proveedores</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <select value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer"}}>
+              {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
+            </select>
+            <button onClick={()=>save()} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"9px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",minWidth:90}}>
+              {saving?"Guardando...":saved?"¡Guardado ✓":"Guardar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(16px,3vw,32px) clamp(12px,4vw,48px) 0"}}>
+
+      {/* Budget total input */}
+      <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"clamp(18px,3vw,28px)",marginBottom:24}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Presupuesto total de la boda</div>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20,flexWrap:"wrap"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:200}}>
+            <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1.5rem",color:"rgba(26,26,20,.4)"}}>{SYM}</span>
+            <input type="number" value={data.total||""} onChange={e=>updateTotal(e.target.value)}
+              onBlur={()=>save()} placeholder="0"
+              style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.4rem)",fontWeight:700,color:"#1A1A14",border:"none",borderBottom:"2px solid #4A5E3A",background:"transparent",padding:"4px 0",width:"100%",outline:"none"}}/>
+          </div>
+        </div>
+
+        {/* Summary bars */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:20}}>
+          {[{label:"Presupuestado",val:totalEstimado,color:"rgba(26,26,20,.55)"},
+            {label:"Cotizado",val:totalCotizado,color:"rgba(201,169,110,.85)"},
+            {label:"Pagado",val:totalPagado,color:"#4A5E3A"},
+            {label:"Disponible",val:Math.max(0,restante),color:restante<0?"rgba(200,80,60,.8)":"rgba(74,94,58,.6)"}
+          ].map(({label,val,color})=><div key={label} style={{textAlign:"center",background:"rgba(245,239,224,.6)",borderRadius:10,padding:"12px 8px"}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>{label}</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1rem,2vw,1.3rem)",fontWeight:700,color}}>{SYM}{fmt(val)}</div>
+          </div>)}
+        </div>
+
+        {/* Master progress bar */}
+        {totalBudget > 0 && <div>
+          <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.45)",marginBottom:6}}>
+            <span>Pagado: {pctPagado}%</span>
+            <span>Cotizado: {pctCotizado}%</span>
+          </div>
+          <div style={{height:10,background:"rgba(74,94,58,.1)",borderRadius:10,overflow:"hidden",position:"relative"}}>
+            <div style={{position:"absolute",height:"100%",width:`${pctCotizado}%`,background:"rgba(201,169,110,.4)",borderRadius:10,transition:"width .4s"}}/>
+            <div style={{position:"absolute",height:"100%",width:`${pctPagado}%`,background:"#4A5E3A",borderRadius:10,transition:"width .4s"}}/>
+          </div>
+        </div>}
+      </div>
+
+      {/* ══ ALERTAS ══ */}
+      {(()=>{
+        const sinProveedor = cats.filter(c => num(c.estimado)>0 && num(c.cotizado)===0 && num(c.pagado)===0);
+        const sobrePresup  = cats.filter(c => num(c.cotizado)>num(c.estimado) && num(c.estimado)>0);
+        const sinEstimado  = cats.filter(c => num(c.estimado)===0 && num(c.cotizado)>0);
+        const alerts = [];
+        if(sinProveedor.length>0) alerts.push({
+          icon:"⚠️", color:"rgba(200,140,0,.8)", bg:"rgba(255,200,0,.06)", border:"rgba(200,140,0,.25)",
+          msg:`${sinProveedor.length} categoría${sinProveedor.length>1?"s":""} con presupuesto estimado sin proveedores cotizados: ${sinProveedor.map(c=>c.nombre).join(", ")}.`
+        });
+        if(sobrePresup.length>0) alerts.push({
+          icon:"🔴", color:"rgba(200,60,60,.8)", bg:"rgba(200,60,60,.05)", border:"rgba(200,60,60,.25)",
+          msg:`${sobrePresup.length} categoría${sobrePresup.length>1?"s sobrepasan":"sobre pasa"} el presupuesto estimado: ${sobrePresup.map(c=>c.nombre).join(", ")}.`
+        });
+        if(sinEstimado.length>0) alerts.push({
+          icon:"💡", color:"rgba(74,94,58,.7)", bg:"rgba(74,94,58,.05)", border:"rgba(74,94,58,.2)",
+          msg:`${sinEstimado.length} categoría${sinEstimado.length>1?"s tienen":"tiene"} proveedores cotizados pero sin presupuesto estimado. Editá el estimado para comparar.`
+        });
+        if(totalBudget===0) alerts.push({
+          icon:"📝", color:"rgba(26,26,20,.45)", bg:"rgba(26,26,20,.03)", border:"rgba(26,26,20,.1)",
+          msg:"Definí primero el presupuesto total de la boda arriba para ver el análisis completo."
+        });
+        if(alerts.length===0) return null;
+        return <div style={{marginBottom:20}}>
+          {alerts.map((a,i)=><div key={i} style={{background:a.bg,border:`0.5px solid ${a.border}`,borderRadius:12,padding:"12px 16px",marginBottom:8,display:"flex",gap:10,alignItems:"flex-start"}}>
+            <span style={{flexShrink:0,marginTop:1}}>{a.icon}</span>
+            <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:a.color,margin:0,lineHeight:1.55}}>{a.msg}</p>
+          </div>)}
+        </div>;
+      })()}
+
+      {/* Categories */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Por categoría</div>
+        <button onClick={()=>setAddingCat(true)} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,padding:"6px 14px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#4A5E3A",cursor:"pointer"}}>+ Agregar categoría</button>
+      </div>
+
+      {addingCat&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.3)",borderRadius:14,padding:"14px 16px",marginBottom:12,display:"flex",gap:10,alignItems:"center"}}>
+        <input autoFocus type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&addCategoria()}
+          placeholder="Nombre de la categoría (ej: Cohetes, Sweets table...)"
+          style={{flex:1,fontFamily:"'Lora',serif",fontSize:"1rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14"}}/>
+        <button onClick={addCategoria} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer"}}>Agregar</button>
+        <button onClick={()=>{setAddingCat(false);setNewCatName("");}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.4)",fontSize:"1.2rem",cursor:"pointer"}}>×</button>
+      </div>}
+
+      {cats.map(c=><CatRow key={c.id} c={c}/>)}
+
+      {/* Footer tip */}
+      <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:12,padding:"14px 18px",marginTop:24,display:"flex",gap:10}}>
+        <span style={{flexShrink:0}}>💡</span>
+        <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,margin:0}}>
+          <strong>Tip:</strong> Completá primero el presupuesto total y el estimado de cada categoría, luego actualizá el cotizado cuando tengas propuestas de proveedores, y finalmente el pagado cuando confirmes. Los presupuestos de boda en Paraguay suelen exceder el estimado inicial en un 15-20% — dejá siempre un margen de imprevistos.
+        </p>
+      </div>
+    </div>
+  </div>;
+}
+
+
+// ─── MÓDULO PROVEEDORES ───────────────────────────────────────────────────────
+const VENDOR_CATS = [
+  {id:"salon",    emoji:"🏛️", label:"Salón / Venue"},
+  {id:"catering", emoji:"🍽️", label:"Catering"},
+  {id:"musica",   emoji:"🎵", label:"Música"},
+  {id:"foto",     emoji:"📸", label:"Fotografía"},
+  {id:"video",    emoji:"🎬", label:"Video"},
+  {id:"flores",   emoji:"🌸", label:"Flores / Decoración"},
+  {id:"vestuario",emoji:"👗", label:"Vestuario"},
+  {id:"torta",    emoji:"🎂", label:"Torta"},
+  {id:"beauty",   emoji:"💄", label:"Maquillaje / Peinado"},
+  {id:"transport",emoji:"🚗", label:"Transporte"},
+  {id:"papel",    emoji:"💌", label:"Papelería"},
+  {id:"otro",     emoji:"📌", label:"Otro"},
+];
+const VENDOR_ESTADOS = [
+  {id:"evaluando", label:"Evaluando",  color:"rgba(201,169,110,.8)",  bg:"rgba(201,169,110,.1)"},
+  {id:"contratado",label:"Contratado", color:"rgba(74,94,58,.8)",     bg:"rgba(74,94,58,.1)"},
+  {id:"pagado",    label:"Pagado",     color:"#4A5E3A",               bg:"rgba(74,94,58,.15)"},
+  {id:"descartado",label:"Descartado", color:"rgba(26,26,20,.35)",    bg:"rgba(26,26,20,.05)"},
+];
+
+function VendorForm({vendor, onSave, onCancel}){
+  const [v, setV] = useState(vendor || {id:Date.now()+"",cat:"salon",nombre:"",contacto:"",precio:"",estado:"evaluando",link:"",notas:""});
+  const set = (k,val) => setV(x=>({...x,[k]:val}));
+  return <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"20px",marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Categoría</div>
+        <select value={v.cat} onChange={e=>set("cat",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+          {VENDOR_CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+        </select>
+      </div>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Estado</div>
+        <select value={v.estado} onChange={e=>set("estado",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+          {VENDOR_ESTADOS.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
+        </select>
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Nombre / Empresa</div>
+        <input type="text" value={v.nombre} onChange={e=>set("nombre",e.target.value)} placeholder="ej: Salón Los Pinos"
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+      </div>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Contacto</div>
+        <input type="text" value={v.contacto} onChange={e=>set("contacto",e.target.value)} placeholder="Tel / email / Instagram"
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Precio cotizado</div>
+        <input type="number" value={v.precio} onChange={e=>set("precio",e.target.value)} placeholder="0"
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+      </div>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Link (web / Instagram)</div>
+        <input type="text" value={v.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+      </div>
+    </div>
+    <div style={{marginBottom:14}}>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Notas</div>
+      <textarea value={v.notas} onChange={e=>set("notas",e.target.value)} rows={2} placeholder="Incluye vajilla, requiere depósito del 30%, etc."
+        style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box"}}/>
+    </div>
+    <div style={{display:"flex",gap:10}}>
+      <button onClick={()=>onSave(v)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"10px 22px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",cursor:"pointer"}}>✓ Guardar</button>
+      <button onClick={onCancel} style={{background:"transparent",border:"1px solid rgba(74,94,58,.25)",borderRadius:100,padding:"10px 18px",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.5)",cursor:"pointer"}}>Cancelar</button>
+    </div>
+  </div>;
+}
+
+function VendorsModule({user, onBack}){
+  const [vendors, setVendors] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [filterCat, setFilterCat] = useState("all");
+  const [filterEst, setFilterEst] = useState("all");
+
+  useEffect(()=>{
+    if(!user) return;
+    const load = async()=>{
+      try{
+        const {data:row} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).single();
+        setVendors(Array.isArray(row?.vendors) ? row.vendors : []);
+      }catch(e){ setVendors([]); }
+    };
+    load();
+  },[user]);
+
+  const save = async(list) => {
+    setSaving(true);
+    try{
+      const vendorList = list || vendors;
+      // Load current budget to sync cotizado/pagado
+      const {data:row} = await supabase.from("wedding_data").select("budget").eq("user_id",user.id).single();
+      const currentBudget = row?.budget || {total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))};
+      const updatedBudget = calcBudgetFromVendors(currentBudget, vendorList);
+      await supabase.from("wedding_data").upsert({
+        user_id:user.id,
+        vendors:vendorList,
+        budget:updatedBudget,
+        updated_at:new Date().toISOString()
+      },{onConflict:"user_id"});
+      setSaved(true); setTimeout(()=>setSaved(false),2000);
+    }catch(e){ console.error(e); }
+    setSaving(false);
+  };
+
+  const saveVendor = (v) => {
+    const next = editId==="new" ? [...(vendors||[]),v] : (vendors||[]).map(x=>x.id===v.id?v:x);
+    setVendors(next); setEditId(null); setAdding(false); save(next);
+  };
+  const removeVendor = (id) => { const next=(vendors||[]).filter(x=>x.id!==id); setVendors(next); save(next); };
+
+  if(vendors===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando proveedores...</p></div>;
+
+  const catMap = Object.fromEntries(VENDOR_CATS.map(c=>[c.id,c]));
+  const estMap = Object.fromEntries(VENDOR_ESTADOS.map(e=>[e.id,e]));
+  const filtered = vendors.filter(v=>(filterCat==="all"||v.cat===filterCat)&&(filterEst==="all"||v.estado===filterEst));
+
+  const contratados = vendors.filter(v=>v.estado==="contratado"||v.estado==="pagado").length;
+  const totalCotizado = vendors.reduce((s,v)=>s+parseFloat(v.precio||0),0);
+
+  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
+    {/* Header */}
+    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>🏢 Proveedores</h1>
+          </div>
+          <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",marginTop:8}}>+ Agregar</button>
+        </div>
+        {/* Summary pills */}
+        <div style={{display:"flex",gap:12,marginTop:16,flexWrap:"wrap"}}>
+          {[{label:`${vendors.length} en total`,color:"rgba(245,239,224,.7)"},{label:`${contratados} contratados`,color:"rgba(201,169,110,.85)"},{label:`USD ${num(totalCotizado).toLocaleString()} cotizado`,color:"rgba(245,239,224,.6)"}].map(p=>
+            <div key={p.label} style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:p.color}}>{p.label}</div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div style={{maxWidth:900,margin:"0 auto",padding:"clamp(16px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+      {/* Add form */}
+      {adding && editId==="new" && <VendorForm onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
+
+      {/* Filters */}
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:18,alignItems:"center"}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginRight:4}}>Filtrar:</div>
+        <select value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+          <option value="all">Todas las categorías</option>
+          {VENDOR_CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+        </select>
+        <select value={filterEst} onChange={e=>setFilterEst(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+          <option value="all">Todos los estados</option>
+          {VENDOR_ESTADOS.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
+        </select>
+        {(filterCat!=="all"||filterEst!=="all")&&<button onClick={()=>{setFilterCat("all");setFilterEst("all");}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.4)",fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer"}}>✕ Limpiar</button>}
+      </div>
+
+      {filtered.length===0 && !adding && <div style={{textAlign:"center",padding:"48px 20px",background:"#FBF7EF",borderRadius:18,border:"0.5px solid rgba(201,169,110,.2)"}}>
+        <div style={{fontSize:"2.5rem",marginBottom:12}}>🏢</div>
+        <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",color:"#1A1A14",marginBottom:8}}>Aún no hay proveedores</p>
+        <p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.45)",margin:"0 0 20px"}}>Agregá tu primer proveedor con el botón de arriba</p>
+        <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"12px 24px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>+ Agregar proveedor</button>
+      </div>}
+
+      {filtered.map(v=>{
+        const cat = catMap[v.cat]||{emoji:"📌",label:"Otro"};
+        const est = estMap[v.estado]||VENDOR_ESTADOS[0];
+        if(editId===v.id) return <VendorForm key={v.id} vendor={v} onSave={saveVendor} onCancel={()=>setEditId(null)}/>;
+        return <div key={v.id} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.22)",borderRadius:14,padding:"16px 18px",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+            <div style={{fontSize:"1.5rem",flexShrink:0,marginTop:2}}>{cat.emoji}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:"1.05rem",color:"#1A1A14"}}>{v.nombre||"Sin nombre"}</div>
+                <span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".1em",textTransform:"uppercase",padding:"3px 8px",borderRadius:100,background:est.bg,color:est.color}}>{est.label}</span>
+              </div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>{cat.label}</div>
+              <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                {v.contacto&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)"}}>📞 {v.contacto}</div>}
+                {v.precio&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.65)",fontWeight:600}}>USD {parseFloat(v.precio).toLocaleString()}</div>}
+                {v.link&&<a href={v.link.startsWith("http")?v.link:`https://${v.link}`} target="_blank" rel="noopener noreferrer" style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"#4A5E3A",textDecoration:"none"}}>🔗 Ver</a>}
+              </div>
+              {v.notas&&<p style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.45)",fontStyle:"italic",margin:"6px 0 0",lineHeight:1.5}}>{v.notas}</p>}
+            </div>
+            <div style={{display:"flex",gap:6,flexShrink:0}}>
+              <button onClick={()=>setEditId(v.id)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:100,padding:"5px 12px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#4A5E3A",cursor:"pointer"}}>Editar</button>
+              <button onClick={()=>removeVendor(v.id)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.2)",fontSize:"1.1rem",cursor:"pointer",padding:"4px"}}>×</button>
+            </div>
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+
+// ─── WEATHER WIDGET ───────────────────────────────────────────────────────────
+const WMO_ICONS = {
+  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+  51:"🌦️",53:"🌦️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",
+  71:"🌨️",73:"🌨️",75:"❄️",80:"🌦️",81:"🌧️",82:"⛈️",
+  95:"⛈️",96:"⛈️",99:"⛈️"
+};
+const WMO_DESC = {
+  0:"Despejado",1:"Mayormente despejado",2:"Parcialmente nublado",3:"Nublado",
+  45:"Neblina",51:"Llovizna",53:"Llovizna moderada",55:"Llovizna intensa",
+  61:"Lluvia leve",63:"Lluvia moderada",65:"Lluvia intensa",71:"Nieve leve",
+  75:"Nieve intensa",80:"Chubascos",81:"Chubascos moderados",82:"Chubascos fuertes",
+  95:"Tormenta",99:"Tormenta fuerte"
+};
+
+function WeatherWidget({fechaBoda, ciudad}){
+  const [wx, setWx] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(null);
+
+  useEffect(()=>{
+    if(!fechaBoda || !ciudad) return;
+    const fetch_wx = async()=>{
+      setLoading(true); setErr(null);
+      try{
+        const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(ciudad)}&count=1&language=es&format=json`);
+        const geoData = await geo.json();
+        if(!geoData.results?.length) throw new Error("Ciudad no encontrada");
+        const {latitude:lat, longitude:lon, name, country} = geoData.results[0];
+        const weddingDate = new Date(fechaBoda+"T12:00:00");
+        const today = new Date();
+        const diffDays = Math.round((weddingDate-today)/(1000*60*60*24));
+        if(diffDays >= 0 && diffDays <= 16){
+          const fc = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto&forecast_days=16`);
+          const fcData = await fc.json();
+          const idx = fcData.daily.time.indexOf(fechaBoda);
+          if(idx>=0) setWx({type:"forecast",name,country,diffDays,tmax:fcData.daily.temperature_2m_max[idx],tmin:fcData.daily.temperature_2m_min[idx],rain:fcData.daily.precipitation_sum[idx],code:fcData.daily.weather_code[idx]});
+        } else if(diffDays > 16){
+          const year = weddingDate.getFullYear()-1;
+          const mm = String(weddingDate.getMonth()+1).padStart(2,"0");
+          const hist = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${year}-${mm}-01&end_date=${year}-${mm}-28&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`);
+          const hd = await hist.json();
+          const avgMax = (hd.daily.temperature_2m_max.reduce((a,b)=>a+(b||0),0)/hd.daily.temperature_2m_max.length).toFixed(1);
+          const avgMin = (hd.daily.temperature_2m_min.reduce((a,b)=>a+(b||0),0)/hd.daily.temperature_2m_min.length).toFixed(1);
+          const rainDays = hd.daily.precipitation_sum.filter(v=>v>1).length;
+          setWx({type:"historic",name,country,diffDays,avgMax,avgMin,rainDays,month:weddingDate.toLocaleString("es",{month:"long"})});
+        }
+      }catch(e){ setErr(e.message); }
+      setLoading(false);
+    };
+    fetch_wx();
+  },[fechaBoda,ciudad]);
+
+  if(!fechaBoda || !ciudad) return null;
+  if(loading) return <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:12,padding:"12px 16px",marginBottom:16}}><p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.45)",margin:0,fontStyle:"italic"}}>🔍 Consultando clima para {ciudad}...</p></div>;
+  if(err) return <div style={{background:"rgba(200,80,60,.05)",border:"0.5px solid rgba(200,80,60,.2)",borderRadius:12,padding:"12px 16px",marginBottom:16}}><p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(200,80,60,.7)",margin:0}}>⚠️ Clima: {err}</p></div>;
+  if(!wx) return null;
+
+  const icon = WMO_ICONS[wx.code]||"🌡️";
+  const desc = WMO_DESC[wx.code]||"";
+
+  return <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px",marginBottom:16}}>
+    <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>🌤️ Clima para tu boda — {wx.name}, {wx.country}</div>
+    {wx.type==="forecast"&&<div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+      <div style={{fontSize:"2.5rem",lineHeight:1}}>{icon}</div>
+      <div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"#1A1A14"}}>{desc}</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.6)",marginTop:4}}>🌡️ {wx.tmin}° – {wx.tmax}°C &nbsp;·&nbsp; {wx.rain>0?`🌧️ ${wx.rain}mm esperados`:"☀️ Sin lluvia esperada"}</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(74,94,58,.7)",marginTop:4,fontStyle:"italic"}}>{wx.diffDays===0?"¡Es hoy!":wx.diffDays===1?"¡Es mañana!":`Faltan ${wx.diffDays} días`} — pronóstico actualizado</div>
+      </div>
+    </div>}
+    {wx.type==="historic"&&<div>
+      <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:"#1A1A14",marginBottom:4}}>Clima típico para {wx.month} en {wx.name}</div>
+      <div style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.6)"}}>🌡️ {wx.avgMin}° – {wx.avgMax}°C &nbsp;·&nbsp; {wx.rainDays} días de lluvia (promedio histórico)</div>
+      <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.38)",marginTop:6,fontStyle:"italic"}}>Faltan {wx.diffDays} días — el pronóstico exacto estará disponible 16 días antes.</div>
+    </div>}
+    {wx.type==="forecast"&&wx.rain>2&&<div style={{marginTop:10,background:"rgba(200,80,60,.06)",border:"0.5px solid rgba(200,80,60,.2)",borderRadius:8,padding:"10px 12px"}}>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(200,80,60,.75)",margin:0}}>⚠️ Se esperan lluvias. Si tenés eventos al aire libre, confirmá el plan B con el venue.</p>
+    </div>}
+  </div>;
+}
+
+// ─── MÓDULO INVITADOS ─────────────────────────────────────────────────────────
+const RESTRICCIONES = ["Ninguna","Vegetariano","Vegano","Sin gluten","Sin lactosa","Kosher","Halal","Alergia (notar)","Otra"];
+const CONFIRMACIONES = [
+  {id:"pendiente",  label:"Pendiente",  color:"rgba(201,169,110,.8)", bg:"rgba(201,169,110,.1)"},
+  {id:"confirmado", label:"Confirmado", color:"rgba(74,94,58,.85)",   bg:"rgba(74,94,58,.1)"},
+  {id:"no_va",      label:"No va",      color:"rgba(26,26,20,.35)",   bg:"rgba(26,26,20,.05)"},
+];
+const LADOS = ["Novio","Novia","Ambos"];
+
+function GuestsModule({user, onBack}){
+  const [guests, setGuests]     = useState(null);
+  const [tableSize, setTableSize] = useState(10);
+  const [viewMode, setViewMode] = useState("lista");
+  const [filter, setFilter]     = useState({lado:"",conf:"",mesa:""});
+  const [editId, setEditId]     = useState(null);
+  const [saving, setSaving]     = useState(false);
+  const [saved, setSaved]       = useState(false);
+  const [newGuest, setNewGuest] = useState({nombre:"",lado:"Ambos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
+  const [addMode, setAddMode]   = useState(false);
+
+  useEffect(()=>{
+    if(!user) return;
+    supabase.from("wedding_data").select("guests,table_size").eq("user_id",user.id).single()
+      .then(({data:row})=>{
+        setGuests(Array.isArray(row?.guests)?row.guests:[]);
+        if(row?.table_size) setTableSize(row.table_size);
+      }).catch(()=>setGuests([]));
+  },[user]);
+
+  const save = async(list, ts) => {
+    setSaving(true);
+    try{
+      await supabase.from("wedding_data").upsert({user_id:user.id,guests:list||guests,table_size:ts||tableSize,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+      setSaved(true); setTimeout(()=>setSaved(false),1500);
+    }catch(e){}
+    setSaving(false);
+  };
+
+  const exportToExcel = () => {
+    if(!guests || guests.length===0) return;
+    // Build CSV
+    const rows = [
+      ["Nombre","Personas","Mesa","Lado","Confirmación","Restricción alimentaria","Notas"],
+      ...guests.map(g=>[
+        g.nombre||"",
+        parseInt(g.cantidadInvitados||1),
+        g.mesa||"Sin asignar",
+        g.lado||"",
+        g.confirmacion==="confirmado"?"Confirmado":g.confirmacion==="no_va"?"No va":"Pendiente",
+        g.restriccion||"Ninguna",
+        g.notas||""
+      ])
+    ];
+    // Add summary rows
+    const total = guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+    const conf  = guests.filter(g=>g.confirmacion==="confirmado").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+    rows.push([]);
+    rows.push(["RESUMEN","","","","","",""]);
+    rows.push(["Total invitaciones",guests.length,"","","","",""]);
+    rows.push(["Total personas",total,"","","","",""]);
+    rows.push(["Confirmados",conf,"","","","",""]);
+    rows.push(["Pendientes",total-conf-guests.filter(g=>g.confirmacion==="no_va").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0),"","","","",""]);
+    // Restrictions
+    const restrMap = {};
+    guests.forEach(g=>{ if(g.restriccion&&g.restriccion!=="Ninguna") restrMap[g.restriccion]=(restrMap[g.restriccion]||0)+parseInt(g.cantidadInvitados||1); });
+    Object.entries(restrMap).forEach(([r,n])=>rows.push([r,n,"","","","",""]));
+    // Convert to CSV
+    const csv = rows.map(row=>row.map(cell=>
+      typeof cell==="string"&&(cell.includes(",")||cell.includes('"'))?`"${cell.replace(/"/g,'""')}"`:cell
+    ).join(",")).join("\r\n");
+    // BOM for Excel to read UTF-8 correctly
+    const blob = new Blob(["﻿"+csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "invitados_boda.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const addGuest = () => {
+    if(!newGuest.nombre.trim()) return;
+    const next = [...(guests||[]), {...newGuest, id:Date.now()+""}];
+    setGuests(next); save(next);
+    setNewGuest({nombre:"",lado:"Ambos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
+    setAddMode(false);
+  };
+  const updateGuest = (id,field,val) => { const next=guests.map(g=>g.id===id?{...g,[field]:val}:g); setGuests(next); save(next); };
+  const removeGuest = (id) => { const next=guests.filter(g=>g.id!==id); setGuests(next); save(next); };
+
+  if(guests===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando invitados...</p></div>;
+
+  const confMap = Object.fromEntries(CONFIRMACIONES.map(c=>[c.id,c]));
+  const filtered = guests.filter(g=>(!filter.lado||g.lado===filter.lado)&&(!filter.conf||g.confirmacion===filter.conf));
+  const inv   = guests.length;
+  const total = guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+  const conf  = guests.filter(g=>g.confirmacion==="confirmado").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+  const noVa  = guests.filter(g=>g.confirmacion==="no_va").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+  const pend  = total-conf-noVa;
+  const restr = RESTRICCIONES.filter(r=>r!=="Ninguna").map(r=>({r,n:guests.filter(g=>g.restriccion===r).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)})).filter(x=>x.n>0);
+  const maxMesa = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
+  const tables = Array.from({length:maxMesa},(_,i)=>({num:i+1,guests:guests.filter(g=>parseInt(g.mesa)===i+1),personas:guests.filter(g=>parseInt(g.mesa)===i+1).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)}));
+  const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
+
+  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,239,224,.12)",borderRadius:100,padding:"7px 12px"}}>
+              <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.65)"}}>Mesa:</span>
+              {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#C9A96E":"transparent",color:tableSize===n?"#1A1A14":"rgba(245,239,224,.55)",border:`0.5px solid ${tableSize===n?"#C9A96E":"rgba(245,239,224,.2)"}`,borderRadius:100,padding:"3px 9px",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:tableSize===n?700:400,cursor:"pointer"}}>{n}</button>)}
+            </div>
+            <button onClick={exportToExcel} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".85rem",borderRadius:100,cursor:"pointer"}}>↓ Excel</button>
+            <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:14,marginTop:12,flexWrap:"wrap"}}>
+          {[{v:inv,l:"Invitaciones"},{v:total,l:"Personas"},{v:conf,l:"Confirmados",c:"rgba(201,169,110,.9)"},{v:pend,l:"Pendientes",c:"rgba(245,239,224,.5)"},{v:noVa,l:"No van",c:"rgba(245,239,224,.3)"}].map(s=>
+            <div key={s.l} style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:s.c||"rgba(245,239,224,.8)"}}><strong>{s.v}</strong> {s.l}</div>
+          )}
+        </div>
+        {restr.length>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(201,169,110,.7)",marginTop:6}}>Restricciones: {restr.map(x=>`${x.r}: ${x.n}`).join(" · ")}</div>}
+        {(saving||saved)&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(201,169,110,.8)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
+      </div>
+    </div>
+
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+      {addMode&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"18px",marginBottom:14}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>Nuevo invitado</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:8}}>
+          {[{label:"Nombre",key:"nombre",type:"text",placeholder:"Nombre completo"},{label:"Mesa Nº",key:"mesa",type:"number",placeholder:"Nº"},{label:"Personas",key:"cantidadInvitados",type:"number",placeholder:"1"}].map(f=>
+            <div key={f.key}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.6)",marginBottom:4}}>{f.label}</div>
+              <input type={f.type} value={newGuest[f.key]} onChange={e=>setNewGuest(x=>({...x,[f.key]:e.target.value}))} placeholder={f.placeholder}
+                style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+            </div>
+          )}
+          {[{label:"Lado",key:"lado",opts:LADOS},{label:"Confirmación",key:"confirmacion",opts:CONFIRMACIONES.map(c=>c.id)},{label:"Restricción",key:"restriccion",opts:RESTRICCIONES}].map(f=>
+            <div key={f.key}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.6)",marginBottom:4}}>{f.label}</div>
+              <select value={newGuest[f.key]} onChange={e=>setNewGuest(x=>({...x,[f.key]:e.target.value}))} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}>
+                {f.opts.map(o=><option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:8}}>
+          <button onClick={addGuest} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"9px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",cursor:"pointer"}}>✓ Agregar</button>
+          <button onClick={()=>setAddMode(false)} style={{background:"transparent",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.45)",cursor:"pointer"}}>Cancelar</button>
+        </div>
+      </div>}
+
+      <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{display:"flex",background:"#FBF7EF",borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
+          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Por mesas"}].map(v=>
+            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:"7px 14px",borderRadius:100,border:"none",fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer",background:viewMode===v.id?"#4A5E3A":"transparent",color:viewMode===v.id?"#F5EFE0":"rgba(26,26,20,.45)",transition:"all .2s"}}>{v.label}</button>
+          )}
+        </div>
+        {viewMode==="lista"&&<>
+          <select value={filter.conf} onChange={e=>setFilter(f=>({...f,conf:e.target.value}))} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"6px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+            <option value="">Todos</option>{CONFIRMACIONES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+          </select>
+          <select value={filter.lado} onChange={e=>setFilter(f=>({...f,lado:e.target.value}))} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"6px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+            <option value="">Todos los lados</option>{LADOS.map(l=><option key={l}>{l}</option>)}
+          </select>
+        </>}
+        <div style={{marginLeft:"auto",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} entradas</div>
+      </div>
+
+      {viewMode==="lista"&&<>
+        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"40px 20px",background:"#FBF7EF",borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
+          <div style={{fontSize:"2rem",marginBottom:10}}>👥</div>
+          <button onClick={()=>setAddMode(true)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"11px 22px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>+ Agregar primer invitado</button>
+        </div>}
+        {filtered.map(g=>{
+          const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
+          const isEdit=editId===g.id;
+          return <div key={g.id} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+            {!isEdit?<div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              <div style={{flex:1,minWidth:130}}>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14"}}>{g.nombre}
+                  {parseInt(g.cantidadInvitados||1)>1&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:"#4A5E3A",borderRadius:100,padding:"2px 7px",marginLeft:6}}>✉️ ×{g.cantidadInvitados}</span>}
+                </div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.42)",marginTop:2}}>{g.lado}{g.mesa?` · Mesa ${g.mesa}`:""}{g.restriccion&&g.restriccion!=="Ninguna"?` · ⚠️ ${g.restriccion}`:""}</div>
+              </div>
+              <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                <select value={g.confirmacion} onChange={e=>updateGuest(g.id,"confirmacion",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:100,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer"}}>
+                  {CONFIRMACIONES.map(cc=><option key={cc.id} value={cc.id}>{cc.label}</option>)}
+                </select>
+                <input type="number" value={g.mesa||""} onChange={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Mesa" min="1"
+                  style={{width:65,fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
+                <button onClick={()=>setEditId(g.id)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer"}}>Editar</button>
+                <button onClick={()=>{ if(window.confirm(`¿Eliminar a ${g.nombre}?`)) removeGuest(g.id); }} style={{background:"rgba(200,60,60,.08)",border:"0.5px solid rgba(200,60,60,.25)",borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(200,60,60,.75)",cursor:"pointer"}}>Eliminar</button>
+              </div>
+            </div>
+            :<div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:7,marginBottom:7}}>
+                <input type="number" defaultValue={g.cantidadInvitados||1} onBlur={e=>updateGuest(g.id,"cantidadInvitados",e.target.value)} min="1"
+                  style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.25)",background:"rgba(74,94,58,.06)",color:"#1A1A14"}} title="Personas"/>
+                <input type="text" defaultValue={g.nombre} onBlur={e=>updateGuest(g.id,"nombre",e.target.value)} placeholder="Nombre"
+                  style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                <select defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+                  {LADOS.map(l=><option key={l}>{l}</option>)}
+                </select>
+                <select defaultValue={g.restriccion} onBlur={e=>updateGuest(g.id,"restriccion",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+                  {RESTRICCIONES.map(r=><option key={r}>{r}</option>)}
+                </select>
+              </div>
+              <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 16px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓ Listo</button>
+            </div>}
+          </div>;
+        })}
+      </>}
+
+      {viewMode==="mesas"&&<>
+        {sinMesa.length>0&&<div style={{background:"rgba(201,169,110,.08)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:12,padding:"12px 16px",marginBottom:14}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:8}}>Sin mesa asignada ({sinMesa.length})</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {sinMesa.map(g=><div key={g.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(201,169,110,.08)",borderRadius:100,padding:"4px 10px"}}>
+              <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.65)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
+              <input type="number" placeholder="Mesa" min="1" onChange={e=>e.target.value&&updateGuest(g.id,"mesa",e.target.value)}
+                style={{width:46,fontFamily:"'Lora',serif",fontSize:".78rem",padding:"2px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
+            </div>)}
+          </div>
+        </div>}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+          {tables.map(t=>{
+            const pct=Math.round(t.personas/tableSize*100);
+            const over=t.personas>tableSize;
+            return <div key={t.num} style={{background:"#FBF7EF",border:`0.5px solid ${over?"rgba(200,80,60,.4)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.05rem",color:"#1A1A14"}}>Mesa {t.num}</div>
+                <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}/{tableSize}{over&&" ⚠️"}</span>
+              </div>
+              <div style={{height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",marginBottom:10}}>
+                <div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:over?"rgba(200,80,60,.5)":pct>=80?"#C9A96E":"#4A5E3A",borderRadius:4,transition:"width .3s"}}/>
+              </div>
+              {t.guests.map(g=>{
+                const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
+                return <div key={g.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,padding:"5px 0",borderBottom:"0.5px solid rgba(74,94,58,.06)"}}>
+                  <div>
+                    <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"#1A1A14"}}>{g.nombre}</span>
+                    {parseInt(g.cantidadInvitados||1)>1&&<span style={{fontSize:".75rem",color:"rgba(74,94,58,.5)",marginLeft:4}}>×{g.cantidadInvitados}</span>}
+                    {g.restriccion&&g.restriccion!=="Ninguna"&&<div style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(200,140,0,.65)"}}>⚠️ {g.restriccion}</div>}
+                  </div>
+                  <span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
+                </div>;
+              })}
+              {t.personas<tableSize&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.35)",fontStyle:"italic",marginTop:6}}>{tableSize-t.personas} lugar{tableSize-t.personas!==1?"es":""} libre{tableSize-t.personas!==1?"s":""}</div>}
+            </div>;
+          })}
+        </div>
+      </>}
+    </div>
+  </div>;
+}
+
+// ─── MÓDULO CRONOGRAMA ────────────────────────────────────────────────────────
+const TIMELINE_DEFAULTS = [
+  {id:"t1",hora:"08:00",titulo:"Peinado y maquillaje — Novia",duracion:180,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t2",hora:"11:00",titulo:"Peinado y maquillaje — Damas",duracion:90,lugar:"",notas:"",color:"#7B8C6E"},
+  {id:"t3",hora:"12:30",titulo:"Llegada del fotógrafo",duracion:0,lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t4",hora:"13:00",titulo:"Sesión de fotos previa",duracion:60,lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t5",hora:"15:00",titulo:"Llegada de invitados",duracion:30,lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t6",hora:"15:30",titulo:"Ceremonia",duracion:60,lugar:"",notas:"",color:"#1A1A14"},
+  {id:"t7",hora:"16:30",titulo:"Salida y fotos en altar",duracion:30,lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t8",hora:"17:00",titulo:"Cóctel",duracion:90,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t9",hora:"18:30",titulo:"Ingreso al salón",duracion:15,lugar:"",notas:"",color:"#1A1A14"},
+  {id:"t10",hora:"18:45",titulo:"Primer baile",duracion:10,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t11",hora:"19:00",titulo:"Brindis",duracion:15,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t12",hora:"19:15",titulo:"Cena",duracion:90,lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t13",hora:"20:45",titulo:"Torta y baile general",duracion:30,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t14",hora:"21:00",titulo:"Baile y fiesta",duracion:180,lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t15",hora:"00:00",titulo:"Cierre",duracion:0,lugar:"",notas:"",color:"#1A1A14"},
+];
+
+function TimelineModule({user, form, onBack}){
+  const [events, setEvents] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saved,  setSaved]  = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [newEv, setNewEv]   = useState({id:"",hora:"",titulo:"",duracion:30,lugar:"",notas:""});
+
+  useEffect(()=>{
+    if(!user) return;
+    supabase.from("wedding_data").select("timeline").eq("user_id",user.id).single()
+      .then(({data:row})=>setEvents(Array.isArray(row?.timeline)&&row.timeline.length>0?row.timeline:TIMELINE_DEFAULTS))
+      .catch(()=>setEvents(TIMELINE_DEFAULTS));
+  },[user]);
+
+  const save = async(list) => {
+    setSaving(true);
+    try{
+      await supabase.from("wedding_data").upsert({user_id:user.id,timeline:list||events,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+      setSaved(true); setTimeout(()=>setSaved(false),1500);
+    }catch(e){}
+    setSaving(false);
+  };
+
+  const sorted = [...(events||[])].sort((a,b)=>a.hora.localeCompare(b.hora));
+  const addEvent = () => {
+    if(!newEv.titulo.trim()||!newEv.hora) return;
+    const next = [...(events||[]),{...newEv,id:"ev_"+Date.now()}];
+    setEvents(next); save(next); setAdding(false);
+    setNewEv({id:"",hora:"",titulo:"",duracion:30,lugar:"",notas:""});
+  };
+  const updateEv = (id,field,val) => { const next=events.map(e=>e.id===id?{...e,[field]:val}:e); setEvents(next); save(next); };
+  const removeEv = (id) => { const next=events.filter(e=>e.id!==id); setEvents(next); save(next); };
+
+  if(events===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando cronograma...</p></div>;
+
+  const fecha = form?.fechaBoda?new Date(form.fechaBoda+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):null;
+
+  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>⏰ Cronograma del día</h1>
+            {fecha&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(245,239,224,.5)",textTransform:"capitalize"}}>{fecha}</div>}
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setAdding(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",borderRadius:100,cursor:"pointer"}}>+ Evento</button>
+            <button onClick={()=>save()} style={{background:"rgba(245,239,224,.12)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.2)",padding:"10px 16px",fontFamily:"'Lora',serif",fontSize:".85rem",borderRadius:100,cursor:"pointer"}}>{saving?"Guardando...":saved?"✓ Guardado":"Guardar"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+      {adding&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"18px",marginBottom:14}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:8}}>
+          {[{label:"Hora",key:"hora",type:"time"},{label:"Evento",key:"titulo",type:"text",placeholder:"ej: Primer baile"},{label:"Duración (min)",key:"duracion",type:"number"},{label:"Lugar",key:"lugar",type:"text",placeholder:"ej: Jardín"}].map(f=>
+            <div key={f.key}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginBottom:4}}>{f.label}</div>
+              <input type={f.type} value={newEv[f.key]} onChange={e=>setNewEv(x=>({...x,[f.key]:e.target.value}))} placeholder={f.placeholder||""}
+                style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+            </div>
+          )}
+        </div>
+        <textarea value={newEv.notas} onChange={e=>setNewEv(x=>({...x,notas:e.target.value}))} rows={2} placeholder="Notas para proveedores..."
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box",marginBottom:10}}/>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={addEvent} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"9px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",cursor:"pointer"}}>✓ Agregar</button>
+          <button onClick={()=>setAdding(false)} style={{background:"transparent",border:"1px solid rgba(74,94,58,.22)",borderRadius:100,padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.42)",cursor:"pointer"}}>Cancelar</button>
+        </div>
+      </div>}
+      <div style={{position:"relative",paddingLeft:24}}>
+        <div style={{position:"absolute",left:10,top:0,bottom:0,width:2,background:"rgba(74,94,58,.1)",borderRadius:2}}/>
+        {sorted.map(ev=>{
+          const isEdit=editId===ev.id;
+          return <div key={ev.id} style={{position:"relative",marginBottom:10,paddingLeft:18}}>
+            <div style={{position:"absolute",left:-6,top:13,width:13,height:13,borderRadius:"50%",background:ev.color||"#4A5E3A",border:"2px solid #F5EFE0",boxShadow:"0 0 0 2px rgba(74,94,58,.15)"}}/>
+            <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"12px 14px"}}>
+              {!isEdit?<div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+                <div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                    <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".08em",color:"#4A5E3A",fontWeight:600}}>{ev.hora}</div>
+                    {ev.duracion>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.32)",background:"rgba(74,94,58,.05)",padding:"1px 8px",borderRadius:100}}>⏱ {ev.duracion<60?`${ev.duracion} min`:`${Math.floor(ev.duracion/60)}h${ev.duracion%60>0?` ${ev.duracion%60}min`:""}`}</div>}
+                  </div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14"}}>{ev.titulo}</div>
+                  {ev.lugar&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(74,94,58,.55)",marginTop:2}}>📍 {ev.lugar}</div>}
+                  {ev.notas&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.38)",fontStyle:"italic",marginTop:3}}>{ev.notas}</div>}
+                </div>
+                <div style={{display:"flex",gap:5,flexShrink:0}}>
+                  <button onClick={()=>setEditId(ev.id)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer"}}>Editar</button>
+                  <button onClick={()=>removeEv(ev.id)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.18)",fontSize:"1rem",cursor:"pointer",padding:"2px"}}>×</button>
+                </div>
+              </div>
+              :<div>
+                <div style={{display:"grid",gridTemplateColumns:"90px 1fr 70px auto",gap:8,alignItems:"center",marginBottom:7}}>
+                  <input type="time" defaultValue={ev.hora} onBlur={e=>updateEv(ev.id,"hora",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                  <input type="text" defaultValue={ev.titulo} onBlur={e=>updateEv(ev.id,"titulo",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:"100%"}}/>
+                  <input type="number" defaultValue={ev.duracion} onBlur={e=>updateEv(ev.id,"duracion",e.target.value)} placeholder="min" title="Duración en minutos" style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:"100%"}}/>
+                  <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓</button>
+                </div>
+                <input type="text" defaultValue={ev.lugar||""} onBlur={e=>updateEv(ev.id,"lugar",e.target.value)} placeholder="Lugar" style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:5}}/>
+              </div>}
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── MÓDULO CHECKLIST GENERAL ─────────────────────────────────────────────────
+const CHECKLIST_GENERAL = [
+  {etapa:"12+ meses", items:[
+    "Definir fecha y ciudad de la boda",
+    "Establecer el presupuesto total",
+    "Elegir el tipo de ceremonia (religiosa, civil, simbólica)",
+    "Definir cantidad aproximada de invitados",
+    "Reservar el salón / venue principal",
+    "Contratar fotógrafo (los buenos se agotan con mucha anticipación)",
+    "Contratar videógrafo",
+    "Empezar a buscar vestido de novia (requiere meses de producción)",
+    "Definir el estilo general de la boda",
+  ]},
+  {etapa:"9-12 meses", items:[
+    "Contratar catering",
+    "Contratar DJ o banda / músicos para la fiesta",
+    "Elegir música para la ceremonia (violín, cuarteto, piano, etc.)",
+    "Reservar estadía para la noche de bodas",
+    "Iniciar lista de invitados completa",
+    "Elegir padrinos y damas",
+    "Comenzar a planificar la luna de miel",
+    "Buscar y reservar florista / decoradora",
+  ]},
+  {etapa:"6-9 meses", items:[
+    "Enviar invitaciones de Save the Date",
+    "Hacer prueba de vestido",
+    "Contratar maquilladora y peluquera",
+    "Definir menú con el catering",
+    "Contratar la torta de bodas",
+    "Definir papelería e invitaciones formales",
+    "Reservar transporte para el día de la boda",
+    "Armar el guion musical de la ceremonia",
+    "Coordinar lista de canciones con DJ o músico",
+  ]},
+  {etapa:"3-6 meses", items:[
+    "Enviar invitaciones formales",
+    "Organizar lista de mesas y seating chart",
+    "Confirmar todos los proveedores contratados",
+    "Hacer segunda prueba de vestido",
+    "Elegir y comprar alianzas",
+    "Planificar el cronograma del día de la boda",
+    "Organizar ensayo de ceremonia",
+    "Reservar lugares para el ensayo de la novia y cortejo",
+  ]},
+  {etapa:"1-3 meses", items:[
+    "Confirmar asistencia de todos los invitados",
+    "Finalizar seating chart con nombres definitivos",
+    "Hacer prueba de maquillaje y peinado",
+    "Compartir el guion musical con DJ, fotógrafo y coordinador",
+    "Preparar sobre de propinas para proveedores",
+    "Confirmar horarios con cada proveedor",
+    "Armar la playlist de canciones de la fiesta",
+    "Preparar el discurso o carta si lo hay",
+  ]},
+  {etapa:"Último mes", items:[
+    "Confirmar todos los proveedores con llamada o mensaje",
+    "Enviar cronograma del día a cada proveedor",
+    "Hacer prueba final de vestido",
+    "Preparar la valija de la luna de miel",
+    "Designar a alguien de confianza para coordinar el día",
+    "Preparar sobre con documentos necesarios (acta, pasaportes si viajan, etc.)",
+    "Hacer depósitos finales a proveedores que lo requieran",
+  ]},
+  {etapa:"Semana de la boda", items:[
+    "Confirmar horarios con TODOS los proveedores",
+    "Preparar los sobres de pago del día",
+    "Ensayo de ceremonia con cortejo y músicos",
+    "Prueba de sonido en el venue",
+    "Descansar y delegar lo que se pueda",
+    "Preparar las cosas para el día (vestido, accesorios, etc.)",
+  ]},
+  {etapa:"Día anterior", items:[
+    "Confirmar que todos los proveedores están en orden",
+    "Preparar lo que no se puede olvidar el día de mañana",
+    "Descansar temprano",
+    "Tener el número de todos los proveedores a mano",
+    "Cargar todos los teléfonos",
+  ]},
+  {etapa:"Día de la boda", items:[
+    "Desayunar bien",
+    "Revisar que el anillo / alianza esté lista",
+    "Confirmar la llegada del fotógrafo y músico",
+    "Revisar que el DJ tenga el guion musical impreso",
+    "Disfrutar — cada detalle ya está coordinado",
+  ]},
+];
+
+function ChecklistModule({user, form, results, onGoMusic, onBack}){
+  const [checked,   setChecked]   = useState(null);
+  const [custom,    setCustom]    = useState({}); // {etapaIdx: [{id,texto,completada}]}
+  const [order,     setOrder]     = useState({}); // {etapaIdx: [idx array for predefined]}
+  const [saving,    setSaving]    = useState(false);
+  const [saved,     setSaved]     = useState(false);
+  const [openStage, setOpenStage] = useState(0);
+  const [addingTo,  setAddingTo]  = useState(null); // etapa index being added to
+  const [newText,   setNewText]   = useState("");
+  const dragItem    = useRef(null);
+  const dragOver    = useRef(null);
+  const timerRef    = useRef(null);
+
+  useEffect(()=>{
+    if(!user) return;
+    const load = async()=>{
+      try{
+        const {data:row} = await supabase.from("wedding_data")
+          .select("checklist_general,checklist_custom,checklist_order")
+          .eq("user_id",user.id).single();
+        setChecked(row?.checklist_general || {});
+        setCustom(row?.checklist_custom || {});
+        setOrder(row?.checklist_order || {});
+      }catch(e){ setChecked({}); setCustom({}); setOrder({}); }
+    };
+    load();
+  },[user]);
+
+  const persist = async(ch, cu, ord) => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async()=>{
+      setSaving(true);
+      try{
+        await supabase.from("wedding_data").upsert({
+          user_id:user.id,
+          checklist_general: ch ?? checked,
+          checklist_custom: cu ?? custom,
+          checklist_order: ord ?? order,
+          updated_at:new Date().toISOString()
+        },{onConflict:"user_id"});
+        setSaved(true); setTimeout(()=>setSaved(false),1500);
+      }catch(e){}
+      setSaving(false);
+    }, 500);
+  };
+
+  const toggleItem = (key, val) => {
+    const next = {...checked, [key]: val===undefined?!checked[key]:val};
+    setChecked(next); persist(next, null, null);
+  };
+
+  const addCustom = (ei) => {
+    if(!newText.trim()) return;
+    const id = "c_"+Date.now();
+    const etapaItems = [...(custom[ei]||[]), {id, texto:newText.trim(), completada:false}];
+    const next = {...custom, [ei]: etapaItems};
+    setCustom(next); setNewText(""); setAddingTo(null);
+    persist(null, next, null);
+  };
+
+  const removeCustom = (ei, id) => {
+    const next = {...custom, [ei]: (custom[ei]||[]).filter(x=>x.id!==id)};
+    setCustom(next); persist(null, next, null);
+  };
+
+  const toggleCustom = (ei, id) => {
+    const next = {...custom, [ei]: (custom[ei]||[]).map(x=>x.id===id?{...x,completada:!x.completada}:x)};
+    setCustom(next); persist(null, next, null);
+  };
+
+  // Drag reorder for predefined items
+  const getOrder = (ei) => order[ei] || CHECKLIST_GENERAL[ei].items.map((_,i)=>i);
+  
+  const handleDragStart = (ei, idx) => { dragItem.current = {ei, idx}; };
+  const handleDragEnter = (ei, idx) => { dragOver.current = {ei, idx}; };
+  const handleDrop = (ei) => {
+    if(!dragItem.current || dragItem.current.ei !== ei) return;
+    const from = dragItem.current.idx;
+    const to   = dragOver.current?.idx;
+    if(to===undefined || from===to) return;
+    const ord = [...getOrder(ei)];
+    const [moved] = ord.splice(from, 1);
+    ord.splice(to, 0, moved);
+    const next = {...order, [ei]: ord};
+    setOrder(next); persist(null, null, next);
+    dragItem.current = null; dragOver.current = null;
+  };
+
+  // Move custom item up/down
+  const moveCustom = (ei, id, dir) => {
+    const items = [...(custom[ei]||[])];
+    const idx = items.findIndex(x=>x.id===id);
+    const newIdx = idx+dir;
+    if(newIdx<0||newIdx>=items.length) return;
+    [items[idx], items[newIdx]] = [items[newIdx], items[idx]];
+    const next = {...custom, [ei]: items};
+    setCustom(next); persist(null, next, null);
+  };
+
+  if(checked===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando checklist...</p></div>;
+
+  const totalPre  = CHECKLIST_GENERAL.reduce((s,e)=>s+e.items.length,0);
+  const totalCust = Object.values(custom).flat().length;
+  const totalItems = totalPre + totalCust;
+  const donePre  = CHECKLIST_GENERAL.reduce((s,e,ei)=>s+getOrder(ei).filter(ii=>checked[`${ei}_${ii}`]).length,0);
+  const doneCust = Object.values(custom).flat().filter(x=>x.completada).length;
+  const doneItems = donePre + doneCust;
+  const pct = totalItems>0?Math.round(doneItems/totalItems*100):0;
+
+  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+    {/* Header */}
+    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+      <div style={{maxWidth:860,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>📋 Checklist de la boda</h1>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,4vw,3rem)",color:"#C9A96E",fontWeight:700,lineHeight:1}}>{pct}%</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.55)"}}>{doneItems} de {totalItems} completados</div>
+            {(saving||saved)&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(201,169,110,.8)",marginTop:2}}>{saving?"Guardando...":"✓ Guardado"}</div>}
+          </div>
+        </div>
+        <div style={{marginTop:16,height:6,background:"rgba(255,255,255,.15)",borderRadius:6,overflow:"hidden"}}>
+          <div style={{height:"100%",width:`${pct}%`,background:"#C9A96E",borderRadius:6,transition:"width .4s"}}/>
+        </div>
+      </div>
+    </div>
+
+    <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(16px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+
+      {/* ── CLIMA ── */}
+      <WeatherWidget fechaBoda={form?.fechaBoda} ciudad={form?.ciudad}/>
+
+      {/* ── BANDA SONORA ── */}
+      <div style={{background:results?"rgba(74,94,58,.06)":"rgba(201,169,110,.06)",border:`0.5px solid ${results?"rgba(74,94,58,.2)":"rgba(201,169,110,.25)"}`,borderRadius:14,padding:"16px 18px",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>🎵 Tu Banda Sonora de Boda</div>
+            {results
+              ? <><div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:"#1A1A14",marginBottom:4}}>Guion musical creado ✓</div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.5)",lineHeight:1.5}}>
+                  Recordá compartir el guion con tu DJ y fotógrafo, y confirmar la versión exacta de cada canción.
+                </div></>
+              : <><div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:"#1A1A14",marginBottom:4}}>Todavía no creaste tu guion musical</div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.5)"}}>El guion define qué suena en cada momento de tu ceremonia.</div></>
+            }
+          </div>
+          <button onClick={onGoMusic} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+            {results?"Ver guion →":"Crear guion →"}
+          </button>
+        </div>
+        {results&&<div style={{marginTop:14,paddingTop:12,borderTop:"0.5px solid rgba(74,94,58,.12)"}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:8}}>Tareas clave del guion musical</div>
+          {[
+            {k:"mx1",t:"Compartir guion con DJ y fotógrafo"},
+            {k:"mx2",t:"Confirmar versión exacta de cada canción con el DJ"},
+            {k:"mx3",t:"Definir el segundo exacto de inicio de la entrada de la novia"},
+            {k:"mx4",t:"Confirmar playlist de cóctel y cena con el DJ"},
+            {k:"mx5",t:"Hacer prueba de sonido antes de la ceremonia"},
+          ].map(item=>{
+            const done = !!checked[item.k];
+            return <div key={item.k} onClick={()=>toggleItem(item.k)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"pointer"}}>
+              <div style={{width:20,height:20,minWidth:20,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                {done&&<span style={{color:"#F5EFE0",fontSize:".6rem",fontWeight:700}}>✓</span>}
+              </div>
+              <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:done?"rgba(26,26,20,.3)":"rgba(26,26,20,.7)",textDecoration:done?"line-through":"none",lineHeight:1.45}}>{item.t}</span>
+            </div>;
+          })}
+        </div>}
+      </div>
+
+      {pct===100&&<div style={{background:"rgba(74,94,58,.1)",border:"0.5px solid rgba(74,94,58,.3)",borderRadius:14,padding:"16px 20px",marginBottom:20,textAlign:"center"}}>
+        <div style={{fontSize:"1.8rem",marginBottom:6}}>🎉</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",color:"#1A1A14"}}>¡Todo listo para el gran día!</div>
+      </div>}
+
+      {CHECKLIST_GENERAL.map((etapa,ei)=>{
+        const ord = getOrder(ei);
+        const etapaCustItems = custom[ei]||[];
+        const etapaDonePre  = ord.filter(ii=>checked[`${ei}_${ii}`]).length;
+        const etapeDoneCust = etapaCustItems.filter(x=>x.completada).length;
+        const etapaDone = etapaDonePre + etapeDoneCust;
+        const etapaTotal = etapa.items.length + etapaCustItems.length;
+        const etapaPct = Math.round(etapaDone/etapaTotal*100)||0;
+        const isOpen = openStage===ei;
+
+        return <div key={ei} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.22)",borderRadius:16,marginBottom:10,overflow:"hidden"}}>
+          {/* Stage header */}
+          <button onClick={()=>setOpenStage(isOpen?-1:ei)} style={{width:"100%",background:"transparent",border:"none",padding:"16px 18px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left"}}>
+            <div style={{width:36,height:36,minWidth:36,borderRadius:"50%",background:etapaPct===100?"#4A5E3A":"rgba(74,94,58,.1)",border:`2px solid ${etapaPct===100?"#4A5E3A":"rgba(74,94,58,.2)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              {etapaPct===100?<span style={{color:"#F5EFE0",fontSize:".85rem"}}>✓</span>:<span style={{fontFamily:"'Lora',serif",fontSize:".72rem",fontWeight:700,color:"#4A5E3A"}}>{etapaPct}%</span>}
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:"1rem",color:"#1A1A14",lineHeight:1.2}}>{etapa.etapa}</div>
+              <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.42)",marginTop:2}}>{etapaDone} de {etapaTotal} completadas{etapaCustItems.length>0?` · ${etapaCustItems.length} personalizada${etapaCustItems.length!==1?"s":""}`:""}
+              </div>
+            </div>
+            <div style={{width:60,height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",flexShrink:0}}>
+              <div style={{height:"100%",width:`${etapaPct}%`,background:"#4A5E3A",borderRadius:4,transition:"width .3s"}}/>
+            </div>
+            <span style={{color:"rgba(74,94,58,.5)",fontSize:"1rem",flexShrink:0,transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform .25s"}}>▾</span>
+          </button>
+
+          {isOpen&&<div style={{padding:"2px 18px 16px"}}>
+            {/* Predefined items — draggable */}
+            {ord.map((ii,dragIdx)=>{
+              const item = etapa.items[ii];
+              const done = !!checked[`${ei}_${ii}`];
+              return <div key={ii}
+                draggable
+                onDragStart={()=>handleDragStart(ei,dragIdx)}
+                onDragEnter={()=>handleDragEnter(ei,dragIdx)}
+                onDragEnd={()=>handleDrop(ei)}
+                onDragOver={e=>e.preventDefault()}
+                style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"default",userSelect:"none"}}>
+                <span style={{color:"rgba(74,94,58,.25)",cursor:"grab",fontSize:"1rem",marginTop:2,flexShrink:0}} title="Arrastrar para reordenar">⠿</span>
+                <div onClick={()=>toggleItem(`${ei}_${ii}`)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
+                  <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
+                    {done&&<span style={{color:"#F5EFE0",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                  </div>
+                  <span style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:done?"rgba(26,26,20,.3)":"rgba(26,26,20,.75)",textDecoration:done?"line-through":"none",lineHeight:1.5}}>{item}</span>
+                </div>
+              </div>;
+            })}
+
+            {/* Custom items */}
+            {etapaCustItems.map((item,ci)=>{
+              return <div key={item.id} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"10px 0",borderBottom:"0.5px solid rgba(201,169,110,.1)"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2,flexShrink:0,marginTop:1}}>
+                  <button onClick={()=>moveCustom(ei,item.id,-1)} disabled={ci===0} style={{background:"transparent",border:"none",cursor:ci===0?"default":"pointer",color:"rgba(74,94,58,.3)",fontSize:".75rem",padding:"0 2px",lineHeight:1}}>▲</button>
+                  <button onClick={()=>moveCustom(ei,item.id,1)} disabled={ci===etapaCustItems.length-1} style={{background:"transparent",border:"none",cursor:ci===etapaCustItems.length-1?"default":"pointer",color:"rgba(74,94,58,.3)",fontSize:".75rem",padding:"0 2px",lineHeight:1}}>▼</button>
+                </div>
+                <div onClick={()=>toggleCustom(ei,item.id)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
+                  <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${item.completada?"#C9A96E":"rgba(201,169,110,.4)"}`,background:item.completada?"#C9A96E":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
+                    {item.completada&&<span style={{color:"#1A1A14",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                  </div>
+                  <span style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:item.completada?"rgba(26,26,20,.3)":"rgba(26,26,20,.75)",textDecoration:item.completada?"line-through":"none",lineHeight:1.5}}>
+                    {item.texto} <span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",color:"rgba(201,169,110,.6)",marginLeft:4}}>personalizada</span>
+                  </span>
+                </div>
+                <button onClick={()=>removeCustom(ei,item.id)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.2)",fontSize:"1rem",cursor:"pointer",padding:"0 4px",flexShrink:0,marginTop:2}}>×</button>
+              </div>;
+            })}
+
+            {/* Add custom item */}
+            {addingTo===ei
+              ? <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
+                  <input autoFocus type="text" value={newText} onChange={e=>setNewText(e.target.value)}
+                    onKeyDown={e=>{if(e.key==="Enter")addCustom(ei);if(e.key==="Escape"){setAddingTo(null);setNewText("");}}}
+                    placeholder="Escribí la tarea y presioná Enter..."
+                    style={{flex:1,fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 12px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                  <button onClick={()=>addCustom(ei)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer"}}>+ Agregar</button>
+                  <button onClick={()=>{setAddingTo(null);setNewText("");}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1.1rem",cursor:"pointer"}}>×</button>
+                </div>
+              : <button onClick={()=>{setAddingTo(ei);setOpenStage(ei);}} style={{marginTop:10,background:"transparent",border:"0.5px dashed rgba(74,94,58,.3)",borderRadius:8,padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(74,94,58,.6)",cursor:"pointer",width:"100%",textAlign:"left"}}>
+                  + Agregar tarea personalizada a esta etapa
+                </button>
+            }
+          </div>}
+        </div>;
+      })}
+
+      <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:12,padding:"14px 18px",marginTop:20,display:"flex",gap:10}}>
+        <span>⠿</span>
+        <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,margin:0}}>
+          Arrastrá los ítems por el ícono ⠿ para reordenarlos. Las tareas personalizadas tienen botones ▲▼ para moverlas.
+        </p>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── GLOBAL NAV BAR ───────────────────────────────────────────────────────────
+function GlobalNav({view, setView, hasResults}){
+  const items = [
+    {id:"home",          icon:"🏠", label:"Inicio"},
+    {id:"results",       icon:"🎵", label:"Música",    disabled:!hasResults},
+    {id:"budget",        icon:"💰", label:"Presupuesto"},
+    {id:"guests",        icon:"👥", label:"Invitados"},
+    {id:"checklist-boda",icon:"📋", label:"Checklist"},
+  ];
+  return <nav style={{
+    position:"fixed",bottom:0,left:0,right:0,zIndex:100,
+    background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",
+    borderTop:"0.5px solid rgba(201,169,110,.25)",
+    display:"flex",alignItems:"center",justifyContent:"space-around",
+    padding:"8px 0 max(8px,env(safe-area-inset-bottom))",
+    boxShadow:"0 -4px 24px rgba(26,20,14,.06)"
+  }} className="no-print">
+    {items.map(item=>{
+      const active = view===item.id;
+      return <button key={item.id} onClick={()=>!item.disabled&&setView(item.id)} disabled={item.disabled} style={{
+        display:"flex",flexDirection:"column",alignItems:"center",gap:2,
+        background:"transparent",border:"none",cursor:item.disabled?"default":"pointer",
+        padding:"4px 8px",minWidth:56,opacity:item.disabled?.35:1,
+        transition:"all .15s"
+      }}>
+        <span style={{fontSize:"1.25rem",lineHeight:1}}>{item.icon}</span>
+        <span style={{
+          fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".08em",
+          textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",
+          fontWeight:active?700:400,transition:"color .15s"
+        }}>{item.label}</span>
+        {active&&<div style={{width:14,height:2,background:"#4A5E3A",borderRadius:1,marginTop:1}}/>}
+      </button>;
+    })}
+  </nav>;
+}
 
 export default function App(){
   const [view,setView]=useState("auth");
@@ -2098,14 +3647,14 @@ export default function App(){
   },[]);
 
   // ─── Cargar resultado del usuario cuando inicia sesión ────────────────────
-  const hydrateFromSession = (remote, email, tokenFromUrl=null) => {
+  const hydrateFromSession = (remote, email, tokenFromUrl=null, goToResults=false) => {
     const safeForm = {...EMPTY_FORM, ...(remote.form || {}), email: remote.email || email || remote.form?.email || ""};
     setResults(remote.results);
     setForm(safeForm);
     setArquetipo(remote.arquetipo || null);
     setChecked(remote.checked || {});
     setResultToken(remote.result_token || tokenFromUrl || null);
-    setView("results");
+    setView(goToResults ? "results" : "home");
 
     try{
       localStorage.setItem("bsb_session", JSON.stringify({
@@ -2135,6 +3684,9 @@ export default function App(){
         setView("auth");
         return;
       }
+      // Already hydrated — don't interrupt current navigation (e.g. tab switching)
+      if(hasHydrated.current) return;
+      hasHydrated.current = true;
 
       const email = user.email || "";
       setForm(f=>({...f,email}));
@@ -2160,7 +3712,7 @@ export default function App(){
         }
 
         if(remote?.results){
-          hydrateFromSession(remote, email, token);
+          hydrateFromSession(remote, email, token, !!token);
           return;
         }
 
@@ -2177,7 +3729,7 @@ export default function App(){
               setArquetipo(s.arquetipo || null);
               setChecked(s.checked || {});
               setResultToken(s.result_token || null);
-              setView("results");
+              setView("home"); // returning users go to dashboard
               return;
             }
           }
@@ -2221,6 +3773,7 @@ export default function App(){
 
   // ─── Sincronizar checklist en Supabase ────────────────────────────────────
   const checkedTimer = useRef(null);
+  const hasHydrated = useRef(false);
   const syncChecked = (newChecked) => {
     if(!user?.id) return;
     clearTimeout(checkedTimer.current);
@@ -2231,6 +3784,7 @@ export default function App(){
   };
 
   const logout = async()=>{
+    hasHydrated.current = false;
     try{localStorage.removeItem("bsb_session");}catch(e){}
     await supabase.auth.signOut();
     window.history.replaceState({}, "", window.location.pathname);
@@ -2419,12 +3973,15 @@ export default function App(){
     setView("auth");
     window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
   }}/>;
+  const showNav = !!user && !['auth','landing','form','generating'].includes(view);
+
   if(!user || view==="auth") return <AuthScreen initialMode="signup" initialError={authNotice}/>;
-  if(view==="home") return <HomeScreen
+  if(view==="home") return <><HomeScreen
     user={user}
     hasResults={!!results}
     form={form}
     resultToken={resultToken}
+    onGoModule={(m)=>setView(m)}
     onViewResults={()=>setView("results")}
     onStartNew={()=>{
       try{localStorage.removeItem("bsb_session");}catch(e){}
@@ -2438,16 +3995,21 @@ export default function App(){
       setView("guia");
     }}
     onLogout={logout}
-  />;
+  />{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="landing") return <Landing onStart={()=>setView("guia")}/>;
-  if(view==="guia") return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>;
+  if(view==="guia") return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>
+  if(view==="budget") return <><BudgetModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
+  if(view==="vendors") return <><VendorsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
+  if(view==="guests") return <><GuestsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
+  if(view==="timeline") return <><TimelineModule user={user} form={form} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
+  if(view==="checklist-boda") return <><ChecklistModule user={user} form={form} results={results} onGoMusic={()=>setView("results")} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error}/>;
   if(view==="generating") return <Generating names={`${form.nombre1} & ${form.nombre2}`} phase={phase}/>;
-  if(view==="results") return <Results results={results} form={form} checked={checked} setChecked={(fn)=>{ const next=typeof fn==='function'?fn(checked):fn; setChecked(next); syncChecked(next); }} arquetipo={arquetipo} resultToken={resultToken} onLogout={logout} onRestart={()=>{
+  if(view==="results") return <><Results results={results} form={form} checked={checked} setChecked={(fn)=>{ const next=typeof fn==='function'?fn(checked):fn; setChecked(next); syncChecked(next); }} arquetipo={arquetipo} resultToken={resultToken} onGoHome={()=>setView("home")} onLogout={logout} onRestart={()=>{
     try{localStorage.removeItem("bsb_session");}catch(e){}
     window.history.replaceState({}, "", window.location.pathname);
     setView("guia");setStep(1);setResults(null);setChecked({});setForm({...EMPTY_FORM,email:user.email||""});setArquetipo(null);setResultToken(null);
-  }}/>;
+  }}/><GlobalNav view={view} setView={setView} hasResults={!!results}/></>;
 
-  return <HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/>;
+  return <><HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onGoModule={(m)=>setView(m)} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/><GlobalNav view={view} setView={setView} hasResults={!!results}/></>;
 }
