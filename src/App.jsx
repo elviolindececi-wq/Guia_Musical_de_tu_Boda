@@ -223,11 +223,11 @@ input[type=date]{color-scheme:dark}
   .lbtn{font-size:.88rem;padding:7px 13px}
 }
 
-.brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#D9B86F;font-weight:500}
-.brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#F8F2E6;letter-spacing:.04em;line-height:1.15;text-wrap:balance}
+.brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#4A5E3A;font-weight:500}
+.brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#1A1A14;letter-spacing:.02em;line-height:1.15;text-wrap:balance}
 .brand-title .gold{color:#D9B86F}
 .brand-subtitle{font-family:'Lora',serif;color:rgba(26,26,20,.75);font-weight:600;text-wrap:balance}
-.brand-copy{font-family:'Lora',serif;color:rgba(26,26,20,.62);line-height:1.75}
+.brand-copy{font-family:'Lora',serif;color:rgba(26,26,20,.68);line-height:1.75}
 .responsive-shell{width:100%;max-width:1120px;margin:0 auto;padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)}
 .auth-floral-bg{
   background: url('/bg-mobile.jpg') center center / cover no-repeat, #F5EFE0;
@@ -1915,7 +1915,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
         </p>
 
         {pareja&&<div style={{background:BG2,border:`0.5px solid ${BORDER}`,borderRadius:14,padding:"16px 18px",marginBottom:14,textAlign:"left"}}>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(201,169,110,.6)",marginBottom:6}}>Resultado guardado</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Resultado guardado</div>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.25rem",color:C}}>{pareja}</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:DIM,marginTop:3}}>{user?.email}</div>
         </div>}
@@ -1956,7 +1956,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
         </div>
 
         <div style={{background:BG2,border:`1px solid ${BORDER}`,borderRadius:16,padding:"16px 20px",marginBottom:24,textAlign:"left"}}>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"rgba(201,169,110,.6)",marginBottom:6}}>Cuenta activa</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Cuenta activa</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:"1.05rem",color:C}}>{user?.email}</div>
         </div>
 
