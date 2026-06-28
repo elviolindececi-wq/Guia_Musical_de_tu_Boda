@@ -148,12 +148,13 @@ const actualizarChecked = async ({ user_id, email, checked }) => {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Great+Vibes&display=swap');
 *,*::before,*::after{box-sizing:border-box}
-html{font-size:clamp(17px,1.15vw,20px);scroll-behavior:smooth;-webkit-text-size-adjust:100%;background:#F5EFE0}
-body{margin:0;background:#F5EFE0;color:#1A1A14;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden;font-size:18px;font-weight:500}
+html{font-size:clamp(17px,1.15vw,20px);scroll-behavior:smooth;-webkit-text-size-adjust:100%;background:#F5EFE0;background-image:url('/bg-mobile.jpg');background-size:cover;background-position:center;background-attachment:fixed}
+body{margin:0;background:transparent;color:#1A1A14;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden;font-size:18px;font-weight:500}
 button,input,textarea{font:inherit}
 button{-webkit-tap-highlight-color:transparent}
-#root{min-height:100vh;background:#F5EFE0}
-@media(max-width:480px){html{font-size:17px;background:#F5EFE0} body{min-width:320px}}
+#root{min-height:100vh;background:transparent}
+@media(max-width:480px){html{font-size:17px} body{min-width:320px}}
+@media(min-width:601px){html{background-image:url('/bg-desktop.jpg') !important}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
@@ -435,10 +436,10 @@ function GuiaCanciones({onStart,onBack}){
     if(el) el.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
   };
 
-  return <div style={{width:"100%",minHeight:"100vh",background:"#F5EFE0",paddingBottom:60}}>
+  return <div style={{width:"100%",minHeight:"100vh",background:"rgba(245,239,224,.9)",paddingBottom:60}}>
 
     {/* Header */}
-    <div style={{textAlign:"center",padding:"clamp(28px,5vw,56px) clamp(16px,5vw,48px) clamp(18px,3vw,32px)",borderBottom:"0.5px solid rgba(201,169,110,.2)"}}>
+    <div style={{textAlign:"center",padding:"clamp(28px,5vw,56px) clamp(16px,5vw,48px) clamp(18px,3vw,32px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",background:"rgba(245,239,224,.5)"}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.72rem,.9vw,.86rem)",letterSpacing:".24em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>El Violín de Ceci</div>
       <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2.2rem,5vw,5rem)",fontWeight:700,color:"#1A1A14",margin:"0 auto 10px",lineHeight:1.05,letterSpacing:"-.01em",maxWidth:720}}>
         La Banda Sonora<br/><span style={{color:"#C9A96E"}}>de tu Boda</span>
@@ -447,7 +448,7 @@ function GuiaCanciones({onStart,onBack}){
     </div>
 
     {/* Tab bar — horizontal scroll en mobile, centrado en desktop */}
-    <div style={{position:"sticky",top:0,zIndex:10,background:"#F5EFE0",borderBottom:"0.5px solid rgba(201,169,110,.2)",paddingBottom:0}}>
+    <div style={{position:"sticky",top:0,zIndex:10,background:"rgba(245,239,224,.96)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",paddingBottom:0}}>
       <div ref={tabRef} className="tabs-scroll-container" style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",padding:"0 12px",justifyContent:"flex-start",flexWrap:"nowrap"}}>
         {tabs.map(k=>{
           const m=CANCIONES_POR_MOMENTO[k];
@@ -836,7 +837,7 @@ function Progress({step}){
 }
 
 function Landing({onStart}){
-  return <div style={{background:"#F5EFE0",minHeight:"100vh",overflow:"hidden"}}>
+  return <div style={{background:"rgba(245,239,224,.88)",minHeight:"100vh",overflow:"hidden"}}>
     <section className="responsive-shell hero-grid" style={{position:"relative"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 18%, rgba(74,94,58,.08), transparent 38%), radial-gradient(circle at 50% 100%, rgba(74,94,58,.025), transparent 48%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",zIndex:1}}>
@@ -920,7 +921,7 @@ function EmailCapture({form,setForm,onContinue,onRecover}){
     setRecovering(false);
   };
 
-  return <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#F5EFE0",padding:"32px 24px"}}>
+  return <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(245,239,224,.88)",padding:"32px 24px"}}>
     <div style={{maxWidth:440,width:"100%",textAlign:"center"}} className="fu">
       <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",letterSpacing:".2em",textTransform:"uppercase",color:G,marginBottom:18}}>El Violín de Ceci</div>
       <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.85rem",fontWeight:700,color:C,margin:"0 0 12px"}}>Tu guion musical está listo.</h2>
@@ -956,7 +957,7 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
   };
   const isCatolica=(form.tipoCeremonia.includes("Religiosa")&&form.denominacionReligiosa==="Católica")||form.tipoCeremonia.includes("Religiosa católica");
   const momentosDisponibles=isCatolica?MOMENTOS_CATOLICA:MOMENTOS_CIVIL_SIMBOLICA;
-  const wrap=ch=><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#F5EFE0",padding:"24px 22px",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
+  const wrap=ch=><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"rgba(245,239,224,.88)",padding:"24px 22px",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
     <Progress step={step}/>
     <div style={{flex:1}} className="fu">{ch}</div>
     <div style={{display:"flex",gap:10,paddingTop:28,paddingBottom:8}}>
@@ -1198,7 +1199,7 @@ function Generating({names,phase}){
   useEffect(()=>{const t=setInterval(()=>setI(x=>(x+1)%pool.length),2600);return()=>clearInterval(t);},[pool.length]);
   useEffect(()=>{const t=setInterval(()=>setSeconds(x=>x+1),1000);return()=>clearInterval(t);},[]);
   const progress=Math.min(92,18+(phase*27)+(i*6));
-  return <div style={{minHeight:"100vh",background:"#F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
+  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
     <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,#FBF7EF,#F5EFE0)",border:"1px solid rgba(201,169,110,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".24em",textTransform:"uppercase",color:G,marginBottom:20}}>El Violín de Ceci</div>
       <div style={{position:"relative",width:92,height:92,margin:"0 auto 28px"}}>
@@ -1601,7 +1602,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
   const doneItems=Object.entries(checklistFull).flatMap(([k,items])=>items.map((_,i)=>checked[`${k}_${i}`])).filter(Boolean).length;
   const pct=totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{maxWidth:860,margin:"0 auto",background:"#F5EFE0",minHeight:"100vh",padding:"0 0 100px"}}>
+  return <div style={{maxWidth:860,margin:"0 auto",background:"rgba(245,239,224,.88)",minHeight:"100vh",padding:"0 0 100px"}}>
 
     {/* ══ PORTADA ══ */}
     <div className="pdf-cover" style={{padding:"clamp(36px,6vw,64px) clamp(20px,4vw,48px)",textAlign:"center",borderBottom:"0.5px solid rgba(201,169,110,.25)",position:"relative",overflow:"hidden",background:"#4A5E3A"}}>
@@ -1891,7 +1892,7 @@ function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }
   const title = mode==="signup" ? "Crear mi cuenta" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Entrar a mi producto";
   const subtitle = mode==="signup" ? "Usá el mismo email con el que compraste el producto." : mode==="forgot" ? "Te enviaremos un link para crear una nueva contraseña." : mode==="update" ? "Definí una nueva contraseña para volver a entrar." : "Iniciá sesión para ver o crear tu guion musical.";
 
-  return <div className="auth-floral-bg" style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(18px,4vw,42px)",position:"relative",overflow:"hidden"}}>
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(18px,4vw,42px)"}}>
     <div className="fu auth-card" style={{textAlign:"center",position:"relative",zIndex:1}}>
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.85rem,6vw,2.35rem)",fontWeight:600,color:"#1A1A14",margin:"0 0 8px",lineHeight:1.15}}>{title}</h1>
@@ -1935,7 +1936,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
     }catch(e){}
   };
 
-  return <div className="home-floral-bg" style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
     <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(680px,calc(100vw - 32px))",textAlign:"center"}}>
 
       <div className="brand-logo" style={{marginBottom:20}}>El Violín de Ceci</div>
@@ -2410,7 +2411,7 @@ export default function App(){
     }
   };
 
-  if(authLoading) return <div style={{minHeight:"100vh",background:"#F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
+  if(authLoading) return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
   if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onPasswordUpdated={()=>{
     setRecoveryMode(false);
     setAuthNotice("");
