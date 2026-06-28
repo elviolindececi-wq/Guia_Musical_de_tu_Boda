@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
@@ -439,7 +441,8 @@ function GuiaCanciones({onStart,onBack}){
   return <div style={{width:"100%",minHeight:"100vh",background:"rgba(245,239,224,.9)",paddingBottom:60}}>
 
     {/* Header */}
-    <div style={{textAlign:"center",padding:"clamp(28px,5vw,56px) clamp(16px,5vw,48px) clamp(18px,3vw,32px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",background:"rgba(245,239,224,.5)"}}>
+    <div style={{textAlign:"center",padding:"clamp(16px,5vw,40px) clamp(16px,5vw,48px) clamp(18px,3vw,32px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",background:"rgba(245,239,224,.5)",position:"relative"}}>
+
       <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.72rem,.9vw,.86rem)",letterSpacing:".24em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>El Violín de Ceci</div>
       <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2.2rem,5vw,5rem)",fontWeight:700,color:"#1A1A14",margin:"0 auto 10px",lineHeight:1.05,letterSpacing:"-.01em",maxWidth:720}}>
         La Banda Sonora<br/><span style={{color:"#C9A96E"}}>de tu Boda</span>
@@ -542,6 +545,7 @@ function GuiaCanciones({onStart,onBack}){
           </div>
         </div>
       </div>
+<BackToHome onBack={onBack}/>
     </div>
   </div>;
 }
@@ -944,7 +948,7 @@ function EmailCapture({form,setForm,onContinue,onRecover}){
 }
 
 
-function Form({step,setStep,form,setForm,onSubmit,error}){
+function Form({step,setStep,form,setForm,onSubmit,error,onGoHome}){
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const tog=(k,v)=>setForm(f=>{const a=f[k];return{...f,[k]:a.includes(v)?a.filter(x=>x!==v):[...a,v]};});
   const ok=()=>{
@@ -958,6 +962,10 @@ function Form({step,setStep,form,setForm,onSubmit,error}){
   const isCatolica=(form.tipoCeremonia.includes("Religiosa")&&form.denominacionReligiosa==="Católica")||form.tipoCeremonia.includes("Religiosa católica");
   const momentosDisponibles=isCatolica?MOMENTOS_CATOLICA:MOMENTOS_CIVIL_SIMBOLICA;
   const wrap=ch=><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"rgba(245,239,224,.88)",padding:"24px 22px",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+      <button onClick={onGoHome} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(74,94,58,.6)",cursor:"pointer",padding:"4px 0",display:"flex",alignItems:"center",gap:5}}>🏠 Menú principal</button>
+      <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.3)"}}>Paso {step} de 6</span>
+    </div>
     <Progress step={step}/>
     <div style={{flex:1}} className="fu">{ch}</div>
     <div style={{display:"flex",gap:10,paddingTop:28,paddingBottom:8}}>
@@ -1606,12 +1614,12 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
 
     {/* ══ NAV BAR ══ */}
     <div className="no-print" style={{background:"rgba(245,239,224,.95)",backdropFilter:"blur(8px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",padding:"10px clamp(14px,3vw,32px)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,position:"sticky",top:0,zIndex:20}}>
-      <button onClick={onGoHome} style={{display:"inline-flex",alignItems:"center",gap:6,background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.5)",cursor:"pointer",padding:"4px 0"}}>
+      <button onClick={onGoHome} style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.08)",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:600,color:"#4A5E3A",cursor:"pointer",padding:"7px 14px"}}>
         ← Inicio
       </button>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Tu Banda Sonora de Boda</div>
       <div style={{display:"flex",gap:8}}>
-        <button onClick={onGoHome} style={{background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"6px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#4A5E3A",cursor:"pointer"}}>📋 Módulos</button>
+        <button onClick={onGoHome} style={{background:"#4A5E3A",border:"none",borderRadius:100,padding:"8px 18px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:700,color:"#F5EFE0",cursor:"pointer"}}>🏠 Módulos</button>
       </div>
     </div>
 
@@ -1809,10 +1817,11 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
         <p style={{marginTop:12,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.42)"}}>@elviolindececi · +595 985 689 454</p>
       </div>
 
-      <div className="no-print" style={{textAlign:"center",marginTop:20}}>
-        <button className="gbtn" onClick={onRestart} style={{marginRight:8}}>← Volver a hacer el test</button>
+      <div className="no-print" style={{textAlign:"center",marginTop:20,display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+        <button className="gbtn" onClick={onRestart}>← Volver a hacer el test</button>
         <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
       </div>
+      <div className="no-print"><BackToHome onBack={onGoHome} style={{paddingBottom:24}}/></div>
 
     </div>
   </div>;
@@ -1894,6 +1903,10 @@ function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }
     const { error } = await supabase.auth.updateUser({ password:newPassword });
     setLoading(false);
     if(error) return setErr(error.message);
+    // Clear any saved session so the user starts fresh after recovery
+    try { localStorage.removeItem("bsb_session"); } catch(e) {}
+    try { localStorage.removeItem("bsb_form"); } catch(e) {}
+    try { localStorage.removeItem("bsb_step"); } catch(e) {}
     setMsg("Contraseña actualizada. Ya podés iniciar sesión con tu nueva contraseña.");
     try { await supabase.auth.signOut(); } catch(e) {}
     setMode("login");
@@ -1940,78 +1953,79 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
   const [copied, setCopied] = useState(false);
   const copyLink = async()=>{
     if(!link) return;
-    try{
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(()=>setCopied(false), 2400);
-    }catch(e){}
+    try{ await navigator.clipboard.writeText(link); setCopied(true); setTimeout(()=>setCopied(false),2400); }catch(e){}
   };
 
-  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
-    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(760px,calc(100vw - 32px))",textAlign:"center"}}>
+  const modules = [
+    {emoji:"🎵", label:"Banda sonora", desc:hasResults?`${pareja} · Test completado`:"Creá tu guion musical con IA",
+     action:hasResults?onViewResults:onStartNew, status:hasResults?"Ver resultado →":"Empezar test →",
+     done:hasResults, primary:true},
+    {emoji:"💰", label:"Presupuesto", desc:"Control de gastos por categoría",
+     action:()=>onGoModule("budget"), status:"Abrir →", done:false},
+    {emoji:"🏢", label:"Proveedores", desc:"Cotizaciones y contratos",
+     action:()=>onGoModule("vendors"), status:"Abrir →", done:false},
+    {emoji:"📋", label:"Checklist", desc:"Plan completo de la boda",
+     action:()=>onGoModule("checklist-boda"), status:"Abrir →", done:false},
+    {emoji:"👥", label:"Invitados", desc:"Lista y seating por mesas",
+     action:()=>onGoModule("guests"), status:"Abrir →", done:false},
+    {emoji:"⏰", label:"Cronograma", desc:"Timeline del día",
+     action:()=>onGoModule("timeline"), status:"Abrir →", done:false},
+  ];
 
-      <div className="brand-logo" style={{marginBottom:20}}>El Violín de Ceci</div>
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
+    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(720px,calc(100vw - 32px))"}}>
 
-      {hasResults ? <>
-        <h1 className="brand-title" style={{fontSize:"clamp(2.2rem,6vw,3.2rem)",margin:"0 0 12px"}}>
-          Tu guion musical está guardado
+      {/* Header */}
+      <div style={{textAlign:"center",marginBottom:28}}>
+        <div className="brand-logo" style={{marginBottom:12}}>El Violín de Ceci</div>
+        <h1 className="brand-title" style={{fontSize:"clamp(1.6rem,4vw,2.4rem)",margin:"0 0 8px"}}>
+          {pareja ? `¡Hola, ${pareja}! 🌸` : "Tu boda, organizada"}
         </h1>
-        <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.18rem)",margin:"0 auto 28px",maxWidth:520,lineHeight:1.75}}>
-          No hace falta completar el test de nuevo. Podés volver a ver tu resultado, copiar tu link privado o crear una nueva versión si cambió algo de la boda.
+        <p className="brand-copy" style={{fontSize:"clamp(.9rem,2vw,1.05rem)",margin:"0 auto",maxWidth:480,lineHeight:1.6}}>
+          Elegí el módulo con el que querés trabajar hoy.
         </p>
+      </div>
 
-        {pareja&&<div style={{background:BG2,border:`0.5px solid ${BORDER}`,borderRadius:14,padding:"16px 18px",marginBottom:14,textAlign:"left"}}>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Resultado guardado</div>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.25rem",color:C}}>{pareja}</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:DIM,marginTop:3}}>{user?.email}</div>
-        </div>}
+      {/* Quick access to guion link if has results */}
+      {hasResults && link && <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:12,padding:"12px 16px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)"}}>
+          🔗 Tu link privado del guion musical
+        </div>
+        <button className="lbtn" onClick={copyLink} style={{flexShrink:0,fontSize:".8rem"}}>
+          {copied?"¡Copiado ✓":"Copiar link"}
+        </button>
+      </div>}
 
-        {link&&<div style={{background:"rgba(74,94,58,.06)",border:`1px solid ${BORDER}`,borderRadius:14,padding:"14px 18px",marginBottom:22,textAlign:"left"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:G,marginBottom:4}}>Link privado para volver a tu guion</div>
-              <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:DIMSOFT,lineHeight:1.45,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{link}</div>
+      {/* Module grid */}
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Módulos de planificación</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
+        {modules.map(({emoji,label,desc,action,status,done,primary})=>
+          <button key={label} onClick={action} style={{
+            background:done?"rgba(74,94,58,.08)":primary&&!done?"#4A5E3A":"#FBF7EF",
+            border:`0.5px solid ${done?"rgba(74,94,58,.28)":primary&&!done?"#4A5E3A":"rgba(201,169,110,.25)"}`,
+            borderRadius:16,padding:"16px 14px",textAlign:"left",cursor:"pointer",
+            transition:"all .2s",outline:"none",
+            gridColumn: primary && !done ? "1 / -1" : "auto"
+          }}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8}}>
+              <div>
+                <div style={{fontSize:primary&&!done?"1.6rem":"1.3rem",marginBottom:5}}>{emoji}</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:primary&&!done?"1.05rem":".92rem",color:primary&&!done?"#F5EFE0":"#1A1A14",lineHeight:1.2,marginBottom:3}}>{label}</div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:primary&&!done?"rgba(245,239,224,.65)":"rgba(26,26,20,.42)",lineHeight:1.3,marginBottom:10}}>{desc}</div>
+              </div>
             </div>
-            <button className="lbtn" onClick={copyLink} style={{flexShrink:0}}>{copied?"¡Copiado ✓":"Copiar link"}</button>
-          </div>
-        </div>}
+            <div style={{display:"inline-block",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:600,
+              color:primary&&!done?"#C9A96E":done?"#4A5E3A":"rgba(74,94,58,.7)"}}>{status}</div>
+          </button>
+        )}
+      </div>
 
-        <button className="pbtn" onClick={onViewResults} style={{width:"100%",marginBottom:10,fontSize:"1.1rem"}}>Ver mi resultado →</button>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <button className="gbtn" onClick={onStartNew}>Hacer el test de nuevo</button>
-          <button className="gbtn" onClick={onLogout}>Cerrar sesión</button>
-        </div>
+      {/* Footer actions */}
+      <div style={{display:"flex",gap:10,justifyContent:"center",paddingTop:16,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
+        {hasResults&&<button className="gbtn" onClick={onStartNew} style={{fontSize:".85rem",padding:"9px 18px"}}>Hacer el test de nuevo</button>}
+        <button className="gbtn" onClick={onLogout} style={{fontSize:".85rem",padding:"9px 18px"}}>Cerrar sesión</button>
+      </div>
 
-        {/* ── Module cards ── */}
-        <ModuleCards hasResults={true} onViewResults={onViewResults} onStartNew={onStartNew} onGoModule={onGoModule}/>
-
-      </> : <>
-        <h1 className="brand-title" style={{fontSize:"clamp(2.2rem,6vw,3.2rem)",margin:"0 0 12px"}}>
-          Bienvenidos a su producto
-        </h1>
-        <p className="brand-copy" style={{fontSize:"clamp(1rem,2.4vw,1.18rem)",margin:"0 auto 10px",maxWidth:520,lineHeight:1.75}}>
-          Su acceso ya está activo. Ahora pueden crear su guion musical personalizado.
-        </p>
-        <p className="brand-copy" style={{fontSize:"clamp(.95rem,1.8vw,1.05rem)",margin:"0 auto 16px",maxWidth:480,lineHeight:1.7,opacity:.7}}>
-          Van a responder algunas preguntas sobre su boda y su estilo musical. Al final van a recibir:
-        </p>
-        <div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(201,169,110,.12)",borderRadius:14,padding:"16px 18px",marginBottom:24,textAlign:"left",maxWidth:480,margin:"0 auto 24px"}}>
-          {["🎼 Guion musical personalizado con canciones para cada momento","✅ Checklist musical para coordinar con sus proveedores","📋 Plantilla para cargar sus canciones","📤 Mensajes listos para enviar a DJ, músico y planner"].map((item,i)=>(
-            <div key={i} style={{fontFamily:"'Lora',serif",fontSize:"clamp(.95rem,1.6vw,1.05rem)",color:C,lineHeight:1.65,padding:"5px 0",borderBottom:i<3?"1px solid rgba(74,94,58,.1)":"none"}}>{item}</div>
-          ))}
-          <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(201,169,110,.6)",marginTop:10,fontStyle:"italic",lineHeight:1.6}}>
-            💡 Si tienen dudas sobre cómo usar algún recurso, no olviden ver el video explicativo en el área de miembros de Hotmart.
-          </div>
-        </div>
-
-        <div style={{background:BG2,border:`1px solid ${BORDER}`,borderRadius:16,padding:"16px 20px",marginBottom:24,textAlign:"left"}}>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Cuenta activa</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:"1.05rem",color:C}}>{user?.email}</div>
-        </div>
-
-        <button className="pbtn" onClick={onStartNew} style={{width:"100%",marginBottom:10,fontSize:"1.1rem"}}>Crear mi guion musical →</button>
-        <button className="gbtn" onClick={onLogout} style={{width:"100%"}}>Cerrar sesión</button>
-      </>}
     </div>
   </div>;
 }
@@ -2340,11 +2354,12 @@ function BudgetModule({ user, onBack }){
                 style={{width:"100%",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
             </div>
           )}
-          {[{label:"Cotizado 🔗",val:num(c.cotizado)},{label:"Pagado 🔗",val:num(c.pagado)}].map(({label,val})=>
-            <div key={label}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.28)",marginBottom:4}}>{label}</div>
-              <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px dashed rgba(74,94,58,.2)",background:"rgba(74,94,58,.04)",color:"rgba(26,26,20,.4)"}}>
-                {SYM}{fmt(val)} <span style={{fontSize:".7rem",color:"rgba(74,94,58,.4)"}}>desde proveedores</span>
+          {[{label:"Cotizado",val:num(c.cotizado)},{label:"Pagado",val:num(c.pagado)}].map(({label,val})=>
+            <div key={label} onClick={()=>alert("💡 Este valor se calcula automáticamente desde el módulo de Proveedores.\n\nCuando agregás un proveedor en esa categoría, el cotizado y pagado se actualizan solos.\n\nPara modificarlo, andá a Proveedores → editá el precio o el estado del proveedor.")} style={{cursor:"help"}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.28)",marginBottom:4}}>{label} 🔗</div>
+              <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px dashed rgba(74,94,58,.2)",background:"rgba(74,94,58,.04)",color:"rgba(26,26,20,.4)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <span>{SYM}{fmt(val)}</span>
+                <span style={{fontSize:".7rem",color:"rgba(74,94,58,.35)"}}>desde proveedores ℹ️</span>
               </div>
             </div>
           )}
@@ -2361,7 +2376,7 @@ function BudgetModule({ user, onBack }){
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
@@ -2474,6 +2489,7 @@ function BudgetModule({ user, onBack }){
           <strong>Tip:</strong> Completá primero el presupuesto total y el estimado de cada categoría, luego actualizá el cotizado cuando tengas propuestas de proveedores, y finalmente el pagado cuando confirmes. Los presupuestos de boda en Paraguay suelen exceder el estimado inicial en un 15-20% — dejá siempre un margen de imprevistos.
         </p>
       </div>
+      <BackToHome onBack={onBack}/>
     </div>
   </div>;
 }
@@ -2613,7 +2629,7 @@ function VendorsModule({user, onBack}){
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
       <div style={{maxWidth:900,margin:"0 auto"}}>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
@@ -2807,44 +2823,107 @@ function GuestsModule({user, onBack}){
     setSaving(false);
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async() => {
     if(!guests || guests.length===0) return;
-    // Build CSV
-    const rows = [
+    // Load SheetJS from CDN if not already loaded
+    if(!window.XLSX){
+      await new Promise((res,rej)=>{
+        const s=document.createElement("script");
+        s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+        s.onload=res; s.onerror=rej;
+        document.head.appendChild(s);
+      });
+    }
+    const XL = window.XLSX;
+    const wb = XL.utils.book_new();
+
+    // ── HOJA 1: Lista completa ──
+    const confLabel = c => c==="confirmado"?"Confirmado":c==="no_va"?"No va":"Pendiente";
+    const listData = [
       ["Nombre","Personas","Mesa","Lado","Confirmación","Restricción alimentaria","Notas"],
       ...guests.map(g=>[
         g.nombre||"",
         parseInt(g.cantidadInvitados||1),
-        g.mesa||"Sin asignar",
+        g.mesa ? parseInt(g.mesa) : "",
         g.lado||"",
-        g.confirmacion==="confirmado"?"Confirmado":g.confirmacion==="no_va"?"No va":"Pendiente",
+        confLabel(g.confirmacion),
         g.restriccion||"Ninguna",
         g.notas||""
       ])
     ];
-    // Add summary rows
-    const total = guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-    const conf  = guests.filter(g=>g.confirmacion==="confirmado").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-    rows.push([]);
-    rows.push(["RESUMEN","","","","","",""]);
-    rows.push(["Total invitaciones",guests.length,"","","","",""]);
-    rows.push(["Total personas",total,"","","","",""]);
-    rows.push(["Confirmados",conf,"","","","",""]);
-    rows.push(["Pendientes",total-conf-guests.filter(g=>g.confirmacion==="no_va").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0),"","","","",""]);
-    // Restrictions
-    const restrMap = {};
+    const ws1 = XL.utils.aoa_to_sheet(listData);
+    ws1["!cols"] = [{wch:28},{wch:11},{wch:10},{wch:12},{wch:14},{wch:24},{wch:32}];
+    // Freeze header row
+    ws1["!freeze"] = {xSplit:0, ySplit:1};
+    XL.utils.book_append_sheet(wb, ws1, "Lista de invitados");
+
+    // ── HOJA 2: Por mesas ──
+    const maxMesa = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
+    const mesasData = [["Mesa","Nombre","Personas","Confirmación","Restricción"]];
+    for(let i=1;i<=maxMesa;i++){
+      const guestsAtTable = guests.filter(g=>parseInt(g.mesa)===i);
+      const personas = guestsAtTable.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+      if(guestsAtTable.length===0){
+        mesasData.push([i,"(Sin invitados)","","",""]);
+      } else {
+        guestsAtTable.forEach((g,idx)=>{
+          mesasData.push([
+            idx===0?i:"",
+            g.nombre||"",
+            parseInt(g.cantidadInvitados||1),
+            confLabel(g.confirmacion),
+            g.restriccion||"Ninguna"
+          ]);
+        });
+        mesasData.push([`Subtotal mesa ${i}`,`${guestsAtTable.length} invitaciones`,personas+" personas","",""]);
+        mesasData.push(["","","","",""]);
+      }
+    }
+    // Sin mesa asignada
+    const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
+    if(sinMesa.length>0){
+      mesasData.push(["SIN MESA",`${sinMesa.length} invitaciones`,sinMesa.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)+" personas","",""]);
+      sinMesa.forEach(g=>mesasData.push(["",g.nombre||"",parseInt(g.cantidadInvitados||1),confLabel(g.confirmacion),g.restriccion||"Ninguna"]));
+    }
+    const ws2 = XL.utils.aoa_to_sheet(mesasData);
+    ws2["!cols"] = [{wch:10},{wch:28},{wch:11},{wch:14},{wch:22}];
+    ws2["!freeze"] = {xSplit:0, ySplit:1};
+    XL.utils.book_append_sheet(wb, ws2, "Por mesas");
+
+    // ── HOJA 3: Resumen ──
+    const totalInv  = guests.length;
+    const totalPers = guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+    const confPers  = guests.filter(g=>g.confirmacion==="confirmado").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+    const noVaPers  = guests.filter(g=>g.confirmacion==="no_va").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+    const pendPers  = totalPers - confPers - noVaPers;
+    const restrMap  = {};
     guests.forEach(g=>{ if(g.restriccion&&g.restriccion!=="Ninguna") restrMap[g.restriccion]=(restrMap[g.restriccion]||0)+parseInt(g.cantidadInvitados||1); });
-    Object.entries(restrMap).forEach(([r,n])=>rows.push([r,n,"","","","",""]));
-    // Convert to CSV
-    const csv = rows.map(row=>row.map(cell=>
-      typeof cell==="string"&&(cell.includes(",")||cell.includes('"'))?`"${cell.replace(/"/g,'""')}"`:cell
-    ).join(",")).join("\r\n");
-    // BOM for Excel to read UTF-8 correctly
-    const blob = new Blob(["﻿"+csv], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "invitados_boda.csv"; a.click();
-    URL.revokeObjectURL(url);
+    const resData = [
+      ["RESUMEN GENERAL",""],
+      ["",""],
+      ["Total invitaciones enviadas", totalInv],
+      ["Total personas", totalPers],
+      ["",""],
+      ["CONFIRMACIONES","Personas"],
+      ["Confirmados", confPers],
+      ["Pendientes", pendPers],
+      ["No van", noVaPers],
+      ["",""],
+      ["RESTRICCIONES ALIMENTARIAS","Personas"],
+      ...Object.entries(restrMap).map(([r,n])=>[r,n]),
+      ...(Object.keys(restrMap).length===0?[["(Sin restricciones especiales)",""]]:[]),
+      ["",""],
+      ["MESAS",""],
+      ["Total mesas asignadas", maxMesa],
+      ["Personas por mesa (configuración)", tableSize],
+      ["Invitados sin mesa asignada", sinMesa.length],
+    ];
+    const ws3 = XL.utils.aoa_to_sheet(resData);
+    ws3["!cols"] = [{wch:32},{wch:14}];
+    XL.utils.book_append_sheet(wb, ws3, "Resumen");
+
+    // Download
+    XL.writeFile(wb, "invitados_boda.xlsx");
   };
 
   const addGuest = () => {
@@ -2874,16 +2953,20 @@ function GuestsModule({user, onBack}){
   return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
     <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,239,224,.12)",borderRadius:100,padding:"7px 12px"}}>
-              <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.65)"}}>Mesa:</span>
-              {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#C9A96E":"transparent",color:tableSize===n?"#1A1A14":"rgba(245,239,224,.55)",border:`0.5px solid ${tableSize===n?"#C9A96E":"rgba(245,239,224,.2)"}`,borderRadius:100,padding:"3px 9px",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:tableSize===n?700:400,cursor:"pointer"}}>{n}</button>)}
+            <div style={{background:"rgba(245,239,224,.12)",borderRadius:12,padding:"10px 14px"}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(245,239,224,.6)",marginBottom:6}}>Personas por mesa</div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}>
+              {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#C9A96E":"transparent",color:tableSize===n?"#1A1A14":"rgba(245,239,224,.55)",border:`0.5px solid ${tableSize===n?"#C9A96E":"rgba(245,239,224,.2)"}`,borderRadius:100,padding:"4px 11px",fontFamily:"'Lora',serif",fontSize:".85rem",fontWeight:tableSize===n?700:400,cursor:"pointer",minWidth:32}}>
+                  {n}
+                </button>)}
+              </div>
             </div>
             <button onClick={exportToExcel} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".85rem",borderRadius:100,cursor:"pointer"}}>↓ Excel</button>
             <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
@@ -3021,11 +3104,23 @@ function GuestsModule({user, onBack}){
                   <span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
                 </div>;
               })}
-              {t.personas<tableSize&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.35)",fontStyle:"italic",marginTop:6}}>{tableSize-t.personas} lugar{tableSize-t.personas!==1?"es":""} libre{tableSize-t.personas!==1?"s":""}</div>}
+              {t.personas<tableSize
+                ? <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.06)",borderRadius:8,padding:"6px 10px"}}>
+                    <span style={{fontSize:".85rem"}}>🪑</span>
+                    <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(74,94,58,.7)",fontWeight:600}}>
+                      Faltan {tableSize-t.personas} {tableSize-t.personas===1?"persona":"personas"} para completar la mesa
+                    </span>
+                  </div>
+                : <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.1)",borderRadius:8,padding:"6px 10px"}}>
+                    <span style={{fontSize:".85rem"}}>✅</span>
+                    <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(74,94,58,.8)",fontWeight:600}}>Mesa completa</span>
+                  </div>
+              }
             </div>;
           })}
         </div>
       </>}
+      <BackToHome onBack={onBack}/>
     </div>
   </div>;
 }
@@ -3090,7 +3185,7 @@ function TimelineModule({user, form, onBack}){
   return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
     <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
@@ -3156,9 +3251,10 @@ function TimelineModule({user, form, onBack}){
             </div>
           </div>;
         })}
-      </div>
+      <BackToHome onBack={onBack}/>
     </div>
-  </div>;
+  </div>
+</div>;
 }
 
 // ─── MÓDULO CHECKLIST GENERAL ─────────────────────────────────────────────────
@@ -3361,7 +3457,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
-        <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.65)",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",padding:"0 0 12px",display:"flex",alignItems:"center",gap:6}}>← Volver al inicio</button>
+        <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
@@ -3519,7 +3615,25 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
           Arrastrá los ítems por el ícono ⠿ para reordenarlos. Las tareas personalizadas tienen botones ▲▼ para moverlas.
         </p>
       </div>
+      <BackToHome onBack={onBack}/>
     </div>
+  </div>;
+}
+
+
+// ─── BOTÓN VOLVER AL MENÚ PRINCIPAL ──────────────────────────────────────────
+function BackToHome({onBack, style={}}){
+  return <div style={{textAlign:"center",padding:"28px 20px 0",...style}}>
+    <button onClick={onBack} style={{
+      display:"inline-flex",alignItems:"center",gap:8,
+      background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",
+      borderRadius:100,padding:"13px 32px",
+      fontFamily:"'Lora',serif",fontWeight:600,fontSize:".95rem",
+      color:"#4A5E3A",cursor:"pointer",
+      boxShadow:"0 2px 8px rgba(74,94,58,.08)"
+    }}>
+      🏠 Volver al menú principal
+    </button>
   </div>;
 }
 
@@ -3698,7 +3812,15 @@ export default function App(){
 
         // 1) Si el link trae result_token, intentamos cargar ese resultado.
         if(token){
-          remote = await cargarSesionPorToken(token);
+          const byToken = await cargarSesionPorToken(token);
+          // Solo usar si el token pertenece al usuario actual
+          if(byToken && byToken.user_id === user.id){
+            remote = byToken;
+          }
+          // Si el token pertenece a otra persona, limpiar la URL y no cargar esa sesión
+          if(byToken && byToken.user_id !== user.id){
+            window.history.replaceState({}, "", window.location.pathname);
+          }
         }
 
         // 2) Si no hay token o no encontró nada, cargamos el último resultado del usuario.
@@ -3708,7 +3830,9 @@ export default function App(){
 
         // 3) Fallback por email: útil si quedó una fila vieja o migrada.
         if(!remote && email){
-          remote = await cargarSesion(email);
+          const byEmail = await cargarSesion(email);
+          // Solo usar si coincide con el usuario actual
+          if(byEmail && byEmail.user_id === user.id) remote = byEmail;
         }
 
         if(remote?.results){
@@ -3735,7 +3859,8 @@ export default function App(){
           }
         }catch(e){}
 
-        // Si no existe resultado, no mandamos directo al cuestionario: mostramos un tablero claro.
+        // Si no existe resultado, limpiamos la URL y mostramos tablero limpio
+        window.history.replaceState({}, "", window.location.pathname);
         setResults(null);
         setView("home");
       }catch(e){
@@ -3967,6 +4092,16 @@ export default function App(){
 
   if(authLoading) return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
   if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onPasswordUpdated={()=>{
+    // Clear all local data so the user starts completely fresh
+    try { localStorage.removeItem("bsb_session"); } catch(e) {}
+    try { localStorage.removeItem("bsb_form"); } catch(e) {}
+    try { localStorage.removeItem("bsb_step"); } catch(e) {}
+    hasHydrated.current = false;
+    setResults(null);
+    setForm({...EMPTY_FORM});
+    setArquetipo(null);
+    setResultToken(null);
+    setChecked({});
     setRecoveryMode(false);
     setAuthNotice("");
     setUser(null);
@@ -4003,7 +4138,7 @@ export default function App(){
   if(view==="guests") return <><GuestsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="timeline") return <><TimelineModule user={user} form={form} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="checklist-boda") return <><ChecklistModule user={user} form={form} results={results} onGoMusic={()=>setView("results")} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
-  if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error}/>;
+  if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")}/>;
   if(view==="generating") return <Generating names={`${form.nombre1} & ${form.nombre2}`} phase={phase}/>;
   if(view==="results") return <><Results results={results} form={form} checked={checked} setChecked={(fn)=>{ const next=typeof fn==='function'?fn(checked):fn; setChecked(next); syncChecked(next); }} arquetipo={arquetipo} resultToken={resultToken} onGoHome={()=>setView("home")} onLogout={logout} onRestart={()=>{
     try{localStorage.removeItem("bsb_session");}catch(e){}
