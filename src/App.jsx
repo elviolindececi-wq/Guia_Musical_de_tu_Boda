@@ -2666,7 +2666,8 @@ function BudgetModule({ user, onBack }){
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
             <div>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Gasto por invitado</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalBudget/parseInt(invitados)))}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round((totalCotizado||totalBudget)/parseInt(invitados)))}</div>
+              <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)",marginTop:2}}>{totalCotizado>0?"Basado en cotizado":"Basado en presupuesto total"}</div>
             </div>
             {totalCotizado>0&&(()=>{
               const ahorroTotal = cats.filter(c=>num(c.cotizado)>0).reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
