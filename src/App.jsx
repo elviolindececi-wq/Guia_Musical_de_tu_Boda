@@ -4514,39 +4514,37 @@ function InstallPrompt(){
   const [show, setShow] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isIOS, setIsIOS] = useState(false);
+  const [instalado, setInstalado] = useState(false);
 
   useEffect(()=>{
-    // No mostrar si ya está instalada o si ya la rechazó antes
     if(window.matchMedia('(display-mode: standalone)').matches) return;
     if(localStorage.getItem('pwa_dismissed')) return;
 
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent);
     setIsIOS(ios);
 
-    // Android/Chrome: capturar el evento beforeinstallprompt
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', ()=>setInstalado(true));
 
-    // Mostrar popup después de 5 segundos
     const timer = setTimeout(()=>setShow(true), 5000);
-
-    return()=>{
-      clearTimeout(timer);
-      window.removeEventListener('beforeinstallprompt', handler);
-    };
+    return()=>{ clearTimeout(timer); window.removeEventListener('beforeinstallprompt', handler); };
   },[]);
 
   const instalar = async()=>{
     if(deferredPrompt){
-      deferredPrompt.prompt();
-      const {outcome} = await deferredPrompt.userChoice;
-      if(outcome==='accepted') setShow(false);
+      try{
+        await deferredPrompt.prompt();
+        const {outcome} = await deferredPrompt.userChoice;
+        if(outcome==='accepted'){ setShow(false); return; }
+      }catch(e){}
       setDeferredPrompt(null);
     }
-    setShow(false);
+    // Si no hay prompt nativo, mostrar instrucciones manuales Android
+    setDeferredPrompt(null);
   };
 
   const rechazar = ()=>{
@@ -4554,34 +4552,44 @@ function InstallPrompt(){
     setShow(false);
   };
 
-  if(!show) return null;
+  if(!show || instalado) return null;
+
+  // Instrucciones según plataforma
+  const esAndroid = !isIOS;
+  const tienePromptNativo = !!deferredPrompt;
 
   return <div style={{
-    position:"fixed",bottom:"max(80px,calc(80px + env(safe-area-inset-bottom)))",
+    position:"fixed",bottom:"max(84px,calc(84px + env(safe-area-inset-bottom)))",
     left:16,right:16,zIndex:200,
     background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.4)",
     borderRadius:18,padding:"18px 20px",
-    boxShadow:"0 8px 32px rgba(26,20,14,.18)",
+    boxShadow:"0 8px 32px rgba(26,20,14,.2)",
     animation:"fadeUp .4s ease both"
   }}>
-    <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
-      <div style={{fontSize:"2rem",flexShrink:0}}>💍</div>
+    <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+      <div style={{fontSize:"1.8rem",flexShrink:0}}>💍</div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",marginBottom:4}}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",marginBottom:6}}>
           Instalá la app en tu celular
         </div>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)",lineHeight:1.5,marginBottom:12}}>
-          {isIOS
-            ? <>Tocá <strong>Compartir</strong> → <strong>"Agregar a pantalla de inicio"</strong> para tener Mi Boda siempre a mano.</>
-            : <>Accedé a tu planificación de boda directamente desde la pantalla de inicio, sin abrir el browser.</>
-          }
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          {!isIOS&&<button onClick={instalar} style={{
+        {isIOS
+          ? <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,marginBottom:12}}>
+              Tocá el botón <strong>Compartir</strong> <span style={{fontSize:"1rem"}}>⎋</span> en la barra de Safari → <strong>"Agregar a pantalla de inicio"</strong>
+            </div>
+          : tienePromptNativo
+            ? <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,marginBottom:12}}>
+                Accedé a tu planificación directamente desde la pantalla de inicio, sin abrir el browser.
+              </div>
+            : <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,marginBottom:12}}>
+                Tocá los <strong>3 puntos</strong> ⋮ del navegador → <strong>"Agregar a pantalla de inicio"</strong> o <strong>"Instalar app"</strong>
+              </div>
+        }
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {!isIOS && tienePromptNativo && <button onClick={instalar} style={{
             background:"#4A5E3A",color:"#F5EFE0",border:"none",
             borderRadius:100,padding:"9px 20px",
             fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",cursor:"pointer"
-          }}>Instalar</button>}
+          }}>📲 Instalar</button>}
           <button onClick={rechazar} style={{
             background:"transparent",color:"rgba(26,26,20,.45)",
             border:"1px solid rgba(26,26,20,.15)",
@@ -4592,8 +4600,8 @@ function InstallPrompt(){
       </div>
       <button onClick={rechazar} style={{
         background:"transparent",border:"none",
-        color:"rgba(26,26,20,.3)",fontSize:"1.2rem",
-        cursor:"pointer",padding:0,flexShrink:0,lineHeight:1
+        color:"rgba(26,26,20,.3)",fontSize:"1.3rem",
+        cursor:"pointer",padding:"0 0 0 4px",flexShrink:0,lineHeight:1
       }}>×</button>
     </div>
   </div>;
