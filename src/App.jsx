@@ -4309,42 +4309,42 @@ function GlobalNav({view, setView, hasResults}){
   const items = [
     {id:"home",          icon:"🏠", label:"Inicio"},
     {id:"results",       icon:"🎵", label:"Música",       disabled:!hasResults},
-    {id:"budget",        icon:"💰", label:"Pres."},
-    {id:"vendors",       icon:"🏢", label:"Proveed."},
-    {id:"checklist-boda",icon:"📋", label:"Check"},
+    {id:"budget",        icon:"💰", label:"Presupuesto"},
+    {id:"vendors",       icon:"🏢", label:"Proveedores"},
+    {id:"checklist-boda",icon:"📋", label:"Checklist"},
     {id:"guests",        icon:"👥", label:"Invitados"},
     {id:"timeline",      icon:"⏰", label:"Cronograma"},
   ];
-  const PB = "max(6px,env(safe-area-inset-bottom))";
   return <nav style={{
     position:"fixed",bottom:0,left:0,right:0,zIndex:100,
     background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",
     borderTop:"0.5px solid rgba(201,169,110,.25)",
-    boxShadow:"0 -4px 24px rgba(26,20,14,.06)"
+    boxShadow:"0 -4px 24px rgba(26,20,14,.06)",
+    overflowX:"auto",overflowY:"visible",
+    scrollbarWidth:"none",WebkitOverflowScrolling:"touch",
   }} className="no-print">
     <div style={{
-      display:"flex",alignItems:"stretch",
-      overflowX:"auto",overflowY:"hidden",
-      scrollbarWidth:"none",WebkitOverflowScrolling:"touch",
-      width:"100%",
+      display:"inline-flex",alignItems:"stretch",
+      minWidth:"100%",
+      paddingBottom:"max(4px,env(safe-area-inset-bottom))",
     }}>
       {items.map(item=>{
         const active = view===item.id;
         return <button key={item.id} onClick={()=>!item.disabled&&setView(item.id)} disabled={item.disabled} style={{
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          gap:3,background:"transparent",border:"none",
+          gap:2,background:"transparent",border:"none",
           cursor:item.disabled?"default":"pointer",
-          paddingTop:8,paddingBottom:10,paddingLeft:8,paddingRight:8,
-          width:52,minWidth:52,flexShrink:0,flexGrow:0,
+          padding:"8px 12px 6px",
+          flexShrink:0,flexGrow:1,
           opacity:item.disabled?.35:1,
           borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent",
+          minWidth:64,
         }}>
-          <span style={{fontSize:"1.15rem",lineHeight:1,display:"block"}}>{item.icon}</span>
+          <span style={{fontSize:"1.2rem",lineHeight:1}}>{item.icon}</span>
           <span style={{
-            fontFamily:"'Cinzel',serif",fontSize:"8px",letterSpacing:".02em",
-            textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.38)",
-            fontWeight:active?700:400,whiteSpace:"nowrap",display:"block",
-            marginTop:3,lineHeight:1
+            fontFamily:"'Cinzel',serif",fontSize:".5rem",letterSpacing:".06em",
+            textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",
+            fontWeight:active?700:400,whiteSpace:"nowrap",marginTop:3,lineHeight:1
           }}>{item.label}</span>
         </button>;
       })}
