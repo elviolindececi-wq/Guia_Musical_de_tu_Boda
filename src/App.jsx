@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -2927,34 +2927,7 @@ function GuestsModule({user, onBack}){
   };
 
   // ── Descargar plantilla CSV ──
-  const downloadTemplate = async() => {
-    if(!window.XLSX){
-      await new Promise(function(res,rej){
-        var s=document.createElement("script");
-        s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-        s.onload=res; s.onerror=rej; document.head.appendChild(s);
-      });
-    }
-    var XL = window.XLSX;
-    var wb = XL.utils.book_new();
-    var data = [
-      ["INSTRUCCIONES - Borrar estas filas antes de importar","","","","","",""],
-      ["Lado: Novio / Novia / Ambos","","","","","",""],
-      ["Confirmacion: Pendiente / Confirmado / No va","","","","","",""],
-      ["Restriccion: Ninguna / Vegetariano / Vegano / Sin gluten / Sin lactosa / Kosher / Halal / Alergia / Otra","","","","","",""],
-      ["Personas: numero entero","","","","","",""],
-      ["Mesa: numero opcional","","","","","",""],
-      ["Nombre","Personas","Mesa","Lado","Confirmacion","Restriccion","Notas"],
-      ["Garcia Juan y Maria","2","3","Novio","Confirmado","Ninguna",""],
-      ["Lopez Ana","1","","Novia","Pendiente","Vegetariano","Alergica a nueces"],
-      ["Familia Rodriguez","5","7","Ambos","Confirmado","Sin gluten",""]
-    ];
-    var ws = XL.utils.aoa_to_sheet(data);
-    ws["!cols"] = [{wch:45},{wch:10},{wch:8},{wch:12},{wch:14},{wch:22},{wch:30}];
-    XL.utils.book_append_sheet(wb, ws, "Invitados");
-    XL.writeFile(wb, "plantilla_invitados.xlsx");
-  };
-  const downloadTemplate_old = () => {
+  const downloadTemplate = () => {
     const headers = ["Nombre","Personas","Mesa","Lado","Confirmacion","Restriccion","Notas"];
     const instrucciones = [
       "INSTRUCCIONES - Borrar estas filas antes de importar",
@@ -3509,8 +3482,13 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   const [saving,    setSaving]    = useState(false);
   const [saved,     setSaved]     = useState(false);
   const [openStage, setOpenStage] = useState(0);
-  const [addingTo,  setAddingTo]  = useState(null); // etapa index being added to
+  const [addingTo,  setAddingTo]  = useState(null);
   const [newText,   setNewText]   = useState("");
+  const [notas,     setNotas]     = useState({});
+  const [resp,      setResp]      = useState({});
+  const [filtro,    setFiltro]    = useState("todas");
+  const [filtroRes, setFiltroRes] = useState("todos");
+  const [expandKey, setExpandKey] = useState(null);
   const dragItem    = useRef(null);
   const dragOver    = useRef(null);
   const timerRef    = useRef(null);
@@ -3525,6 +3503,8 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
         setChecked(row?.checklist_general || {});
         setCustom(row?.checklist_custom || {});
         setOrder(row?.checklist_order || {});
+        setNotas(row?.checklist_notas || {});
+        setResp(row?.checklist_resp || {});
       }catch(e){ setChecked({}); setCustom({}); setOrder({}); }
     };
     load();
@@ -3540,6 +3520,8 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
           checklist_general: ch ?? checked,
           checklist_custom: cu ?? custom,
           checklist_order: ord ?? order,
+          checklist_notas: notas,
+          checklist_resp: resp,
           updated_at:new Date().toISOString()
         },{onConflict:"user_id"});
         setSaved(true); setTimeout(()=>setSaved(false),1500);
@@ -3552,6 +3534,35 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
     const next = {...checked, [key]: val===undefined?!checked[key]:val};
     setChecked(next); persist(next, null, null);
   };
+
+  const setNota = (key, text) => {
+    const next = {...notas, [key]: text};
+    setNotas(next);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async function() {
+      try {
+        await supabase.from("wedding_data").upsert({
+          user_id:user.id, checklist_notas:next, updated_at:new Date().toISOString()
+        },{onConflict:"user_id"});
+      } catch(e) {}
+    }, 800);
+  };
+
+  const setResponsable = (key, value) => {
+    const next = {...resp, [key]: value};
+    setResp(next);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async function() {
+      try {
+        await supabase.from("wedding_data").upsert({
+          user_id:user.id, checklist_resp:next, updated_at:new Date().toISOString()
+        },{onConflict:"user_id"});
+      } catch(e) {}
+    }, 800);
+  };
+
+  const RESPONSABLES = ["Novio","Novia","Ambos","Coordinadora"];
+  const RESP_COLORS = {"Novio":"rgba(74,94,58,.7)","Novia":"rgba(201,169,110,.8)","Ambos":"rgba(26,26,20,.5)","Coordinadora":"rgba(100,80,160,.7)"};
 
   const addCustom = (ei) => {
     if(!newText.trim()) return;
@@ -3676,6 +3687,20 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
         </div>}
       </div>
 
+      {/* ── FILTROS ── */}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16,alignItems:"center"}}>
+        <div style={{display:"flex",background:"#FBF7EF",borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
+          {[["todas","Todas"],["pendientes","Pendientes"],["completadas","Completadas"]].map(([id,label])=>
+            <button key={id} onClick={()=>setFiltro(id)} style={{padding:"6px 14px",borderRadius:100,border:"none",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer",background:filtro===id?"#4A5E3A":"transparent",color:filtro===id?"#F5EFE0":"rgba(26,26,20,.45)",transition:"all .2s"}}>{label}</button>
+          )}
+        </div>
+        <select value={filtroRes} onChange={e=>setFiltroRes(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"6px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+          <option value="todos">Todos los responsables</option>
+          {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
+        </select>
+        {(filtro!=="todas"||filtroRes!=="todos")&&<button onClick={()=>{setFiltro("todas");setFiltroRes("todos");}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.4)",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>Limpiar filtros</button>}
+      </div>
+
       {pct===100&&<div style={{background:"rgba(74,94,58,.1)",border:"0.5px solid rgba(74,94,58,.3)",borderRadius:14,padding:"16px 20px",marginBottom:20,textAlign:"center"}}>
         <div style={{fontSize:"1.8rem",marginBottom:6}}>🎉</div>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",color:"#1A1A14"}}>¡Todo listo para el gran día!</div>
@@ -3710,7 +3735,14 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
 
           {isOpen&&<div style={{padding:"2px 18px 16px"}}>
             {/* Predefined items — draggable */}
-            {ord.map((ii,dragIdx)=>{
+            {ord.filter(function(ii){
+              var done = !!checked[`${ei}_${ii}`];
+              var r = resp[`${ei}_${ii}`] || "";
+              if(filtro==="pendientes" && done) return false;
+              if(filtro==="completadas" && !done) return false;
+              if(filtroRes!=="todos" && r !== filtroRes) return false;
+              return true;
+            }).map((ii,dragIdx)=>{
               const item = etapa.items[ii];
               const done = !!checked[`${ei}_${ii}`];
               return <div key={ii}
@@ -3719,14 +3751,30 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                 onDragEnter={()=>handleDragEnter(ei,dragIdx)}
                 onDragEnd={()=>handleDrop(ei)}
                 onDragOver={e=>e.preventDefault()}
-                style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"default",userSelect:"none"}}>
-                <span style={{color:"rgba(74,94,58,.25)",cursor:"grab",fontSize:"1rem",marginTop:2,flexShrink:0}} title="Arrastrar para reordenar">⠿</span>
-                <div onClick={()=>toggleItem(`${ei}_${ii}`)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
-                  <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
-                    {done&&<span style={{color:"#F5EFE0",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"default",userSelect:"none",flexDirection:"column"}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:10,width:"100%"}}>
+                  <span style={{color:"rgba(74,94,58,.25)",cursor:"grab",fontSize:"1rem",marginTop:2,flexShrink:0}} title="Arrastrar para reordenar">⠿</span>
+                  <div onClick={()=>toggleItem(`${ei}_${ii}`)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
+                    <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
+                      {done&&<span style={{color:"#F5EFE0",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                    </div>
+                    <div style={{flex:1}}>
+                      <span style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:done?"rgba(26,26,20,.3)":"rgba(26,26,20,.75)",textDecoration:done?"line-through":"none",lineHeight:1.5}}>{item}</span>
+                      {notas[`${ei}_${ii}`]&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(74,94,58,.6)",fontStyle:"italic",marginTop:3}}>📝 {notas[`${ei}_${ii}`]}</div>}
+                    </div>
                   </div>
-                  <span style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:done?"rgba(26,26,20,.3)":"rgba(26,26,20,.75)",textDecoration:done?"line-through":"none",lineHeight:1.5}}>{item}</span>
+                  <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
+                    {resp[`${ei}_${ii}`]&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".08em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.08)",color:RESP_COLORS[resp[`${ei}_${ii}`]]||"rgba(26,26,20,.5)"}}>{resp[`${ei}_${ii}`]}</span>}
+                    <button onClick={()=>setExpandKey(expandKey===`${ei}_${ii}`?null:`${ei}_${ii}`)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"2px 8px",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.5)",cursor:"pointer"}}>+</button>
+                  </div>
                 </div>
+                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:8,paddingLeft:31,width:"100%",flexWrap:"wrap"}}>
+                  <select value={resp[`${ei}_${ii}`]||""} onChange={e=>setResponsable(`${ei}_${ii}`,e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+                    <option value="">Sin responsable</option>
+                    {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <input type="text" value={notas[`${ei}_${ii}`]||""} onChange={e=>setNota(`${ei}_${ii}`,e.target.value)} placeholder="Nota (proveedor, recordatorio...)" style={{flex:1,minWidth:160,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                </div>}
               </div>;
             })}
 
