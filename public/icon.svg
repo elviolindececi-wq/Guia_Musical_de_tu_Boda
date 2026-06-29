@@ -1,107 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Fondo crema -->
-  <rect width="512" height="512" rx="80" fill="#F5EFE0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="112.64" fill="#3A4E2C"/>
   
-  <!-- Marco decorativo dorado -->
-  <rect x="32" y="32" width="448" height="448" rx="60" fill="none" stroke="#C9A96E" stroke-width="6" opacity="0.5"/>
-  <rect x="44" y="44" width="424" height="424" rx="52" fill="none" stroke="#C9A96E" stroke-width="2" opacity="0.3"/>
+  <g transform="translate(0, 12)">
+    <circle cx="256" cy="315" r="92" fill="none" stroke="#C9A96E" stroke-width="26"/>
+    
+    <path d="M 226,224 L 286,224 L 270,210 L 242,210 Z" fill="#C9A96E" stroke="#3A4E2C" stroke-width="2" stroke-linejoin="round"/>
 
-  <!-- Flor esquina sup izq -->
-  <g transform="translate(60,60) scale(0.9)">
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#E8A598" opacity="0.85" transform="rotate(-30)"/>
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#EDBBAF" opacity="0.8" transform="rotate(10)"/>
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#E8A598" opacity="0.75" transform="rotate(50)"/>
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#EDBBAF" opacity="0.7" transform="rotate(90)"/>
-    <circle cx="0" cy="0" r="10" fill="#D4897A"/>
-    <!-- Hoja -->
-    <ellipse cx="35" cy="-20" rx="16" ry="8" fill="#4A5E3A" opacity="0.7" transform="rotate(-40,35,-20)"/>
-    <ellipse cx="-30" cy="30" rx="14" ry="7" fill="#4A5E3A" opacity="0.6" transform="rotate(20,-30,30)"/>
+    <g stroke="#3A4E2C" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M 210,115 L 302,115 L 282,155 L 230,155 Z" fill="#FFFFFF"/>
+      <path d="M 170,155 L 210,115 L 230,155 Z" fill="#FFFFFF"/>
+      <path d="M 302,115 L 342,155 L 282,155 Z" fill="#FFFFFF"/>
+      
+      <path d="M 170,155 L 230,155 L 256,235 Z" fill="#FFFFFF"/>
+      <path d="M 230,155 L 256,155 L 256,235 Z" fill="#FFFFFF"/>
+      <path d="M 256,155 L 282,155 L 256,235 Z" fill="#FFFFFF"/>
+      <path d="M 282,155 L 342,155 L 256,235 Z" fill="#FFFFFF"/>
+    </g>
+
+    <path d="M 290,120 Q 290,138 308,138 Q 290,138 290,156 Q 290,138 272,138 Q 290,138 290,120 Z" fill="#C9A96E"/>
   </g>
-
-  <!-- Flor esquina sup der -->
-  <g transform="translate(452,60) scale(0.8)">
-    <ellipse cx="0" cy="0" rx="26" ry="17" fill="#D4897A" opacity="0.8" transform="rotate(20)"/>
-    <ellipse cx="0" cy="0" rx="26" ry="17" fill="#EDBBAF" opacity="0.75" transform="rotate(60)"/>
-    <ellipse cx="0" cy="0" rx="26" ry="17" fill="#E8A598" opacity="0.7" transform="rotate(100)"/>
-    <ellipse cx="0" cy="0" rx="26" ry="17" fill="#EDBBAF" opacity="0.65" transform="rotate(140)"/>
-    <circle cx="0" cy="0" r="9" fill="#C9A96E"/>
-    <ellipse cx="-35" cy="-15" rx="14" ry="7" fill="#4A5E3A" opacity="0.65" transform="rotate(30,-35,-15)"/>
-    <ellipse cx="28" cy="28" rx="13" ry="6" fill="#4A5E3A" opacity="0.6" transform="rotate(-20,28,28)"/>
-  </g>
-
-  <!-- Flor esquina inf izq -->
-  <g transform="translate(65,452) scale(0.85)">
-    <ellipse cx="0" cy="0" rx="30" ry="19" fill="#EDBBAF" opacity="0.8" transform="rotate(-10)"/>
-    <ellipse cx="0" cy="0" rx="30" ry="19" fill="#E8A598" opacity="0.75" transform="rotate(30)"/>
-    <ellipse cx="0" cy="0" rx="30" ry="19" fill="#D4897A" opacity="0.7" transform="rotate(70)"/>
-    <ellipse cx="0" cy="0" rx="30" ry="19" fill="#EDBBAF" opacity="0.65" transform="rotate(110)"/>
-    <circle cx="0" cy="0" r="11" fill="#C9A96E"/>
-    <ellipse cx="38" cy="-18" rx="15" ry="7" fill="#4A5E3A" opacity="0.65" transform="rotate(-35,38,-18)"/>
-  </g>
-
-  <!-- Flor esquina inf der -->
-  <g transform="translate(448,448) scale(0.9)">
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#E8A598" opacity="0.85" transform="rotate(15)"/>
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#EDBBAF" opacity="0.8" transform="rotate(55)"/>
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#D4897A" opacity="0.75" transform="rotate(95)"/>
-    <ellipse cx="0" cy="0" rx="28" ry="18" fill="#E8A598" opacity="0.7" transform="rotate(135)"/>
-    <circle cx="0" cy="0" r="10" fill="#D4897A"/>
-    <ellipse cx="-36" cy="-14" rx="14" ry="7" fill="#4A5E3A" opacity="0.65" transform="rotate(25,-36,-14)"/>
-    <ellipse cx="30" cy="30" rx="13" ry="6" fill="#4A5E3A" opacity="0.6" transform="rotate(-15,30,30)"/>
-  </g>
-
-  <!-- Detalles dorados puntos -->
-  <circle cx="140" cy="85" r="3" fill="#C9A96E" opacity="0.6"/>
-  <circle cx="155" cy="72" r="2" fill="#C9A96E" opacity="0.5"/>
-  <circle cx="370" cy="80" r="3" fill="#C9A96E" opacity="0.6"/>
-  <circle cx="385" cy="95" r="2" fill="#C9A96E" opacity="0.4"/>
-  <circle cx="100" cy="390" r="3" fill="#C9A96E" opacity="0.5"/>
-  <circle cx="420" cy="400" r="2.5" fill="#C9A96E" opacity="0.55"/>
-
-  <!-- Marco interior suave -->
-  <rect x="110" y="160" width="292" height="210" rx="24" fill="#EAE0CC" opacity="0.55"/>
-  <rect x="114" y="164" width="284" height="202" rx="21" fill="none" stroke="#C9A96E" stroke-width="1.5" opacity="0.4"/>
-
-  <!-- Texto "Tu Boda" -->
-  <text x="256" y="230" 
-    font-family="Georgia, serif" 
-    font-size="62" 
-    font-weight="700"
-    font-style="italic"
-    fill="#3A4E2C" 
-    text-anchor="middle"
-    opacity="0.95">Tu Boda</text>
-
-  <!-- Texto "Organizada" -->
-  <text x="256" y="308" 
-    font-family="Georgia, serif" 
-    font-size="52" 
-    font-weight="700"
-    font-style="italic"
-    fill="#3A4E2C" 
-    text-anchor="middle"
-    opacity="0.95">Organizada</text>
-
-  <!-- Línea decorativa dorada -->
-  <line x1="156" y1="325" x2="356" y2="325" stroke="#C9A96E" stroke-width="1.5" opacity="0.6"/>
-  <circle cx="256" cy="325" r="3.5" fill="#C9A96E" opacity="0.8"/>
-
-  <!-- Texto "Sistema Ceci" pequeño -->
-  <text x="256" y="358" 
-    font-family="Arial, sans-serif" 
-    font-size="22" 
-    font-weight="600"
-    letter-spacing="4"
-    fill="#4A5E3A" 
-    text-anchor="middle"
-    opacity="0.7">SISTEMA CECI</text>
-
-  <!-- Pequeño adorno superior al texto -->
-  <text x="256" y="185" 
-    font-family="Arial, sans-serif" 
-    font-size="16" 
-    letter-spacing="3"
-    fill="#C9A96E" 
-    text-anchor="middle"
-    opacity="0.8">Planificador</text>
 </svg>
