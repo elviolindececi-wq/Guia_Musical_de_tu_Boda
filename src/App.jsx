@@ -2668,22 +2668,31 @@ function BudgetModule({ user, onBack }){
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Gasto por invitado</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalBudget/parseInt(invitados)))}</div>
             </div>
-            {totalCotizado>0&&<div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Cotizado por invitado</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"rgba(201,169,110,.85)"}}>{SYM}{fmt(Math.round(totalCotizado/parseInt(invitados)))}</div>
-            </div>}
+            {totalCotizado>0&&(()=>{
+              const ahorroTotal = cats.filter(c=>num(c.cotizado)>0).reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
+              const positivo = ahorroTotal>=0;
+              return <div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Ahorro total</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:positivo?"#4A5E3A":"rgba(200,60,60,.8)"}}>
+                  {positivo?"▼ ":"▲ "}{SYM}{fmt(Math.abs(ahorroTotal))}
+                </div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:positivo?"rgba(74,94,58,.55)":"rgba(200,60,60,.55)",marginTop:2}}>
+                  {positivo?"Por debajo del estimado":"Por encima del estimado"}
+                </div>
+              </div>;
+            })()}
           </div>
         </div>}
 
         {/* Ahorros: solo en categorías que ya tienen cotización o pago */}
         {(()=>{
-          // Solo categorías donde hay estimado Y cotizado (para comparar)
-          const catsCotizadas = cats.filter(c=>num(c.estimado)>0 && num(c.cotizado)>0);
-          const catsPagadas   = cats.filter(c=>num(c.estimado)>0 && num(c.pagado)>0);
+          // Todas las categorías con cotizado>0 (estimado puede ser 0)
+          const catsCotizadas = cats.filter(c=>num(c.cotizado)>0);
+          const catsPagadas   = cats.filter(c=>num(c.pagado)>0);
           const ahorroCot = catsCotizadas.reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
           const ahorroPag = catsPagadas.reduce((s,c)=>s+(num(c.estimado)-num(c.pagado)),0);
-          const baseCot   = catsCotizadas.reduce((s,c)=>s+num(c.estimado),0);
-          const basePag   = catsPagadas.reduce((s,c)=>s+num(c.estimado),0);
+          const baseCot   = catsCotizadas.reduce((s,c)=>s+Math.max(num(c.estimado),num(c.cotizado)),0);
+          const basePag   = catsPagadas.reduce((s,c)=>s+Math.max(num(c.estimado),num(c.pagado)),0);
           if(catsCotizadas.length===0 && catsPagadas.length===0) return null;
           return <div style={{marginTop:16,paddingTop:14,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:10}}>Ahorros por categoría</div>
