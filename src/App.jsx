@@ -4309,40 +4309,46 @@ function GlobalNav({view, setView, hasResults}){
   const items = [
     {id:"home",          icon:"🏠", label:"Inicio"},
     {id:"results",       icon:"🎵", label:"Música",       disabled:!hasResults},
-    {id:"budget",        icon:"💰", label:"Presupuesto"},
-    {id:"vendors",       icon:"🏢", label:"Proveedores"},
-    {id:"checklist-boda",icon:"📋", label:"Checklist"},
+    {id:"budget",        icon:"💰", label:"Pres."},
+    {id:"vendors",       icon:"🏢", label:"Proveed."},
+    {id:"checklist-boda",icon:"📋", label:"Check"},
     {id:"guests",        icon:"👥", label:"Invitados"},
     {id:"timeline",      icon:"⏰", label:"Cronograma"},
   ];
-  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+  const PB = "max(6px,env(safe-area-inset-bottom))";
   return <nav style={{
     position:"fixed",bottom:0,left:0,right:0,zIndex:100,
     background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",
     borderTop:"0.5px solid rgba(201,169,110,.25)",
-    display:"flex",alignItems:"center",
-    justifyContent:isDesktop?"center":"flex-start",
-    overflowX:"auto",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch",
-    padding:"8px 0 max(8px,env(safe-area-inset-bottom))",
     boxShadow:"0 -4px 24px rgba(26,20,14,.06)"
   }} className="no-print">
-    {items.map(item=>{
-      const active = view===item.id;
-      return <button key={item.id} onClick={()=>!item.disabled&&setView(item.id)} disabled={item.disabled} style={{
-        display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-        background:"transparent",border:"none",cursor:item.disabled?"default":"pointer",
-        padding:"4px 8px",minWidth:56,opacity:item.disabled?.35:1,
-        transition:"all .15s"
-      }}>
-        <span style={{fontSize:"1.25rem",lineHeight:1}}>{item.icon}</span>
-        <span style={{
-          fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".08em",
-          textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",
-          fontWeight:active?700:400,transition:"color .15s"
-        }}>{item.label}</span>
-        {active&&<div style={{width:14,height:2,background:"#4A5E3A",borderRadius:1,marginTop:1}}/>}
-      </button>;
-    })}
+    <div style={{
+      display:"flex",alignItems:"stretch",
+      overflowX:"auto",overflowY:"hidden",
+      scrollbarWidth:"none",WebkitOverflowScrolling:"touch",
+      width:"100%",
+    }}>
+      {items.map(item=>{
+        const active = view===item.id;
+        return <button key={item.id} onClick={()=>!item.disabled&&setView(item.id)} disabled={item.disabled} style={{
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+          gap:3,background:"transparent",border:"none",
+          cursor:item.disabled?"default":"pointer",
+          paddingTop:8,paddingBottom:10,paddingLeft:8,paddingRight:8,
+          width:52,minWidth:52,flexShrink:0,flexGrow:0,
+          opacity:item.disabled?.35:1,
+          borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent",
+        }}>
+          <span style={{fontSize:"1.15rem",lineHeight:1,display:"block"}}>{item.icon}</span>
+          <span style={{
+            fontFamily:"'Cinzel',serif",fontSize:"8px",letterSpacing:".02em",
+            textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.38)",
+            fontWeight:active?700:400,whiteSpace:"nowrap",display:"block",
+            marginTop:3,lineHeight:1
+          }}>{item.label}</span>
+        </button>;
+      })}
+    </div>
   </nav>;
 }
 
