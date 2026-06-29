@@ -4509,6 +4509,96 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
 }
 
 
+// ─── PWA INSTALL PROMPT ──────────────────────────────────────────────────────
+function InstallPrompt(){
+  const [show, setShow] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(()=>{
+    // No mostrar si ya está instalada o si ya la rechazó antes
+    if(window.matchMedia('(display-mode: standalone)').matches) return;
+    if(localStorage.getItem('pwa_dismissed')) return;
+
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    setIsIOS(ios);
+
+    // Android/Chrome: capturar el evento beforeinstallprompt
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // Mostrar popup después de 5 segundos
+    const timer = setTimeout(()=>setShow(true), 5000);
+
+    return()=>{
+      clearTimeout(timer);
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  },[]);
+
+  const instalar = async()=>{
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      const {outcome} = await deferredPrompt.userChoice;
+      if(outcome==='accepted') setShow(false);
+      setDeferredPrompt(null);
+    }
+    setShow(false);
+  };
+
+  const rechazar = ()=>{
+    localStorage.setItem('pwa_dismissed','1');
+    setShow(false);
+  };
+
+  if(!show) return null;
+
+  return <div style={{
+    position:"fixed",bottom:"max(80px,calc(80px + env(safe-area-inset-bottom)))",
+    left:16,right:16,zIndex:200,
+    background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.4)",
+    borderRadius:18,padding:"18px 20px",
+    boxShadow:"0 8px 32px rgba(26,20,14,.18)",
+    animation:"fadeUp .4s ease both"
+  }}>
+    <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+      <div style={{fontSize:"2rem",flexShrink:0}}>💍</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",marginBottom:4}}>
+          Instalá la app en tu celular
+        </div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)",lineHeight:1.5,marginBottom:12}}>
+          {isIOS
+            ? <>Tocá <strong>Compartir</strong> → <strong>"Agregar a pantalla de inicio"</strong> para tener Mi Boda siempre a mano.</>
+            : <>Accedé a tu planificación de boda directamente desde la pantalla de inicio, sin abrir el browser.</>
+          }
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          {!isIOS&&<button onClick={instalar} style={{
+            background:"#4A5E3A",color:"#F5EFE0",border:"none",
+            borderRadius:100,padding:"9px 20px",
+            fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",cursor:"pointer"
+          }}>Instalar</button>}
+          <button onClick={rechazar} style={{
+            background:"transparent",color:"rgba(26,26,20,.45)",
+            border:"1px solid rgba(26,26,20,.15)",
+            borderRadius:100,padding:"9px 16px",
+            fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer"
+          }}>Ahora no</button>
+        </div>
+      </div>
+      <button onClick={rechazar} style={{
+        background:"transparent",border:"none",
+        color:"rgba(26,26,20,.3)",fontSize:"1.2rem",
+        cursor:"pointer",padding:0,flexShrink:0,lineHeight:1
+      }}>×</button>
+    </div>
+  </div>;
+}
+
 // ─── BOTÓN VOLVER AL MENÚ PRINCIPAL ──────────────────────────────────────────
 function BackToHome({onBack, style={}}){
   return <div style={{textAlign:"center",padding:"28px 20px 0",...style}}>
@@ -5043,7 +5133,7 @@ export default function App(){
     try{localStorage.removeItem("bsb_session");}catch(e){}
     window.history.replaceState({}, "", window.location.pathname);
     setView("guia");setStep(1);setResults(null);setChecked({});setForm({...EMPTY_FORM,email:user.email||""});setArquetipo(null);setResultToken(null);
-  }}/><GlobalNav view={view} setView={setView} hasResults={!!results}/></>;
+  }}/><GlobalNav view={view} setView={setView} hasResults={!!results}/><InstallPrompt/></>;
 
-  return <><HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onGoModule={(m)=>setView(m)} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/><GlobalNav view={view} setView={setView} hasResults={!!results}/></>;
+  return <><HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onGoModule={(m)=>setView(m)} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/><GlobalNav view={view} setView={setView} hasResults={!!results}/><InstallPrompt/></>;
 }
