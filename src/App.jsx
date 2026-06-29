@@ -2637,55 +2637,68 @@ function BudgetModule({ user, onBack }){
           </div>}
         </div>}
 
-        {/* Summary bars */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:20}}>
-          {[{label:"Presupuestado",val:totalEstimado,color:"rgba(26,26,20,.55)"},
-            {label:"Cotizado",val:totalCotizado,color:"rgba(201,169,110,.85)"},
-            {label:"Pagado",val:totalPagado,color:"#4A5E3A"},
-            {label:"Disponible",val:Math.max(0,restante),color:restante<0?"rgba(200,80,60,.8)":"rgba(74,94,58,.6)"}
-          ].map(({label,val,color})=><div key={label} style={{textAlign:"center",background:"rgba(245,239,224,.6)",borderRadius:10,padding:"12px 8px"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>{label}</div>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1rem,2vw,1.3rem)",fontWeight:700,color}}>{SYM}{fmt(val)}</div>
-          </div>)}
+        {/* ── ESTADO GENERAL ── */}
+        {totalBudget>0&&(()=>{
+          const ahorroTotal = cats.filter(c=>num(c.cotizado)>0).reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
+          const pctUsado = totalEstimado>0?Math.round(totalEstimado/totalBudget*100):0;
+          const estadoColor = pctUsado>100?"rgba(200,60,60,.85)":pctUsado>85?"rgba(200,120,0,.85)":"#4A5E3A";
+          const estadoLabel = pctUsado>100?"⚠️ Superaste el presupuesto":pctUsado>85?"⚡ Casi al límite":"✓ Vas bien";
+          return <div style={{background:pctUsado>100?"rgba(200,60,60,.06)":pctUsado>85?"rgba(255,200,0,.06)":"rgba(74,94,58,.06)",border:`0.5px solid ${pctUsado>100?"rgba(200,60,60,.25)":pctUsado>85?"rgba(200,120,0,.2)":"rgba(74,94,58,.2)"}`,borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
+            <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",fontWeight:600,color:estadoColor}}>{estadoLabel}</span>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".1em",color:estadoColor}}>{pctUsado}% del presupuesto distribuido</span>
+          </div>;
+        })()}
+
+        {/* ── TRES DATOS CLAVE ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+          {[
+            {label:"Lo que planeé",val:totalEstimado,color:"rgba(26,26,20,.6)",sub:totalBudget>0&&totalEstimado>0?`${Math.round(totalEstimado/totalBudget*100)}% del total`:null},
+            {label:"Lo que cotizé",val:totalCotizado,color:"rgba(201,169,110,.9)",sub:totalCotizado>0&&totalEstimado>0?(totalCotizado<=totalEstimado?`▼ ${fmt(totalEstimado-totalCotizado)} menos`:`▲ ${fmt(totalCotizado-totalEstimado)} más`):null,subColor:totalCotizado>totalEstimado?"rgba(200,60,60,.7)":"rgba(74,94,58,.6)"},
+            {label:"Lo que pagué",val:totalPagado,color:"#4A5E3A",sub:totalPagado>0&&totalCotizado>0?`${Math.round(totalPagado/totalCotizado*100)}% de lo cotizado`:null},
+          ].map(({label,val,color,sub,subColor})=>
+            <div key={label} style={{background:"rgba(245,239,224,.7)",borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".56rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5,lineHeight:1.3}}>{label}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(.95rem,2vw,1.15rem)",fontWeight:700,color}}>{SYM}{fmt(val)}</div>
+              {sub&&<div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:subColor||"rgba(26,26,20,.35)",marginTop:3,lineHeight:1.2}}>{sub}</div>}
+            </div>
+          )}
         </div>
 
-        {/* Master progress bar */}
-        {totalBudget > 0 && <div>
-          <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.45)",marginBottom:6}}>
-            <span>Pagado: {pctPagado}%</span>
-            <span>Cotizado: {pctCotizado}%</span>
+        {/* ── BARRA PROGRESO PAGO ── */}
+        {totalEstimado>0&&<div style={{marginBottom:16}}>
+          <div style={{height:8,background:"rgba(74,94,58,.08)",borderRadius:8,overflow:"hidden",position:"relative"}}>
+            <div style={{position:"absolute",height:"100%",width:`${Math.min(100,pctCotizado)}%`,background:"rgba(201,169,110,.35)",borderRadius:8,transition:"width .4s"}}/>
+            <div style={{position:"absolute",height:"100%",width:`${Math.min(100,pctPagado)}%`,background:"#4A5E3A",borderRadius:8,transition:"width .4s"}}/>
           </div>
-          <div style={{height:10,background:"rgba(74,94,58,.1)",borderRadius:10,overflow:"hidden",position:"relative"}}>
-            <div style={{position:"absolute",height:"100%",width:`${pctCotizado}%`,background:"rgba(201,169,110,.4)",borderRadius:10,transition:"width .4s"}}/>
-            <div style={{position:"absolute",height:"100%",width:`${pctPagado}%`,background:"#4A5E3A",borderRadius:10,transition:"width .4s"}}/>
-          </div>
-        </div>}
-
-        {/* Gasto por invitado */}
-        {totalBudget>0 && invitados && parseInt(invitados)>0 && <div style={{marginTop:16,paddingTop:14,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-            <div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Gasto por invitado</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalBudget/parseInt(invitados)))}</div>
-              <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)",marginTop:2}}>Basado en presupuesto total</div>
-            </div>
-            {totalCotizado>0&&(()=>{
-              const ahorroTotal = cats.filter(c=>num(c.cotizado)>0).reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
-              const positivo = ahorroTotal>=0;
-              return <div>
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Ahorro total</div>
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:positivo?"#4A5E3A":"rgba(200,60,60,.8)"}}>
-                  {positivo?"▼ ":"▲ "}{SYM}{fmt(Math.abs(ahorroTotal))}
-                </div>
-                <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:positivo?"rgba(74,94,58,.55)":"rgba(200,60,60,.55)",marginTop:2}}>
-                  {positivo?"Por debajo del estimado":"Por encima del estimado"}
-                </div>
-              </div>;
-            })()}
+          <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)",marginTop:5}}>
+            <span>🟢 Pagado {pctPagado}%</span>
+            <span>🟡 Cotizado {pctCotizado}%</span>
           </div>
         </div>}
 
-                {/* Warning invitados reales vs presupuestados */}
+        {/* ── INSIGHTS ── */}
+        {(invitados&&parseInt(invitados)>0||totalCotizado>0)&&<div style={{display:"flex",gap:10,flexWrap:"wrap",paddingTop:12,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
+          {invitados&&parseInt(invitados)>0&&totalEstimado>0&&<div style={{flex:1,minWidth:130,background:"rgba(74,94,58,.06)",borderRadius:10,padding:"10px 12px"}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>💡 Por invitado</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalEstimado/parseInt(invitados)))}</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(26,26,20,.35)",marginTop:2}}>Basado en presupuestado</div>
+          </div>}
+          {totalCotizado>0&&(()=>{
+            const ahorro = cats.filter(c=>num(c.cotizado)>0).reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
+            const pos = ahorro>=0;
+            return <div style={{flex:1,minWidth:130,background:pos?"rgba(74,94,58,.06)":"rgba(200,60,60,.06)",borderRadius:10,padding:"10px 12px",border:`0.5px solid ${pos?"rgba(74,94,58,.15)":"rgba(200,60,60,.2)"}`}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>{pos?"🟢 Ahorro total":"🔴 Exceso total"}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,color:pos?"#4A5E3A":"rgba(200,60,60,.8)"}}>
+                {pos?"▼ ":"▲ "}{SYM}{fmt(Math.abs(ahorro))}
+              </div>
+              <div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:pos?"rgba(74,94,58,.5)":"rgba(200,60,60,.55)",marginTop:2}}>
+                {pos?"Por debajo del estimado":"Por encima del estimado"}
+              </div>
+            </div>;
+          })()}
+        </div>}
+
+        {/* Warning invitados reales vs presupuestados */}
         {invitadosReales>0 && parseInt(invitados)>0 && invitadosReales > parseInt(invitados) && <div style={{marginTop:12,background:"rgba(200,80,60,.06)",border:"0.5px solid rgba(200,80,60,.3)",borderRadius:10,padding:"12px 14px",display:"flex",gap:10,alignItems:"flex-start"}}>
           <span style={{flexShrink:0,fontSize:"1rem"}}>⚠️</span>
           <div>
@@ -2693,7 +2706,7 @@ function BudgetModule({ user, onBack }){
               Tenés más invitados de los presupuestados
             </p>
             <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(200,60,60,.7)",margin:0,lineHeight:1.5}}>
-              Tu lista tiene <strong>{invitadosReales} personas</strong> pero el presupuesto está calculado para <strong>{invitados}</strong>. El gasto real por invitado sería {SYM}{fmt(Math.round(totalBudget/invitadosReales))} — revisá el catering y la torta.
+              Tu lista tiene <strong>{invitadosReales} personas</strong> pero el presupuesto está calculado para <strong>{invitados}</strong>. El gasto real por invitado sería {SYM}{fmt(Math.round(totalEstimado/invitadosReales))} — revisá el catering y la torta.
             </p>
           </div>
         </div>}
