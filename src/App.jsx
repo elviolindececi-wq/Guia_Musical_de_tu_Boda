@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -2926,7 +2926,155 @@ function GuestsModule({user, onBack}){
     XL.writeFile(wb, "invitados_boda.xlsx");
   };
 
-  const addGuest = () => {
+  // ── Descargar plantilla CSV ──
+  const downloadTemplate = async() => {
+    if(!window.XLSX){
+      await new Promise(function(res,rej){
+        var s=document.createElement("script");
+        s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+        s.onload=res; s.onerror=rej; document.head.appendChild(s);
+      });
+    }
+    var XL = window.XLSX;
+    var wb = XL.utils.book_new();
+    var data = [
+      ["INSTRUCCIONES - Borrar estas filas antes de importar","","","","","",""],
+      ["Lado: Novio / Novia / Ambos","","","","","",""],
+      ["Confirmacion: Pendiente / Confirmado / No va","","","","","",""],
+      ["Restriccion: Ninguna / Vegetariano / Vegano / Sin gluten / Sin lactosa / Kosher / Halal / Alergia / Otra","","","","","",""],
+      ["Personas: numero entero","","","","","",""],
+      ["Mesa: numero opcional","","","","","",""],
+      ["Nombre","Personas","Mesa","Lado","Confirmacion","Restriccion","Notas"],
+      ["Garcia Juan y Maria","2","3","Novio","Confirmado","Ninguna",""],
+      ["Lopez Ana","1","","Novia","Pendiente","Vegetariano","Alergica a nueces"],
+      ["Familia Rodriguez","5","7","Ambos","Confirmado","Sin gluten",""]
+    ];
+    var ws = XL.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{wch:45},{wch:10},{wch:8},{wch:12},{wch:14},{wch:22},{wch:30}];
+    XL.utils.book_append_sheet(wb, ws, "Invitados");
+    XL.writeFile(wb, "plantilla_invitados.xlsx");
+  };
+  const downloadTemplate_old = () => {
+    const headers = ["Nombre","Personas","Mesa","Lado","Confirmacion","Restriccion","Notas"];
+    const instrucciones = [
+      "INSTRUCCIONES - Borrar estas filas antes de importar",
+      "Lado: Novio / Novia / Ambos",
+      "Confirmacion: Pendiente / Confirmado / No va",
+      "Restriccion: Ninguna / Vegetariano / Vegano / Sin gluten / Sin lactosa / Kosher / Halal / Alergia / Otra",
+      "Personas: numero entero - cuantas personas por invitacion",
+      "Mesa: numero opcional"
+    ];
+    const ejemplos = [
+      ["Garcia Juan y Maria","2","3","Novio","Confirmado","Ninguna",""],
+      ["Lopez Ana","1","","Novia","Pendiente","Vegetariano","Alergica a nueces"],
+      ["Familia Rodriguez","5","7","Ambos","Confirmado","Sin gluten",""]
+    ];
+    const toCSV = (row) => row.map(c => String(c).includes(",") ? '"'+c+'"' : c).join(",");
+    const lines = [
+      ...instrucciones.map(i => [i,"","","","","",""].map(c=>c).join(",")),
+      toCSV(headers),
+      ...ejemplos.map(toCSV)
+    ];
+    const csv = lines.join("\r\n");
+    const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "plantilla_invitados.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importFromFile = async(e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    e.target.value = "";
+    const isXLSX = file.name.slice(-5) === ".xlsx" || file.name.slice(-4) === ".xls";
+    let rows = [];
+    if(isXLSX){
+      if(!window.XLSX){
+        await new Promise(function(res,rej){
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+          s.onload = res;
+          s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      const data = await file.arrayBuffer();
+      const wb = window.XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rows = window.XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+    } else {
+      const text = await file.text();
+      rows = text.split(/[\r\n]+/).map(function(r){
+        const result = [];
+        let cur = "";
+        let inQ = false;
+        for(let i = 0; i < r.length; i++){
+          if(r[i] === '"'){ inQ = !inQ; }
+          else if(r[i] === "," && !inQ){ result.push(cur.trim()); cur = ""; }
+          else { cur += r[i]; }
+        }
+        result.push(cur.trim());
+        return result;
+      });
+    }
+    const HEADER_KEYS = ["nombre","personas","mesa","lado","confirmacion","confirmación","restriccion","restricción","notas"];
+    let headerIdx = -1;
+    for(let i = 0; i < rows.length; i++){
+      const row = rows[i].map(function(c){ return String(c).toLowerCase().trim(); });
+      if(row.some(function(c){ return HEADER_KEYS.indexOf(c) >= 0; })){ headerIdx = i; break; }
+    }
+    if(headerIdx < 0){
+      alert("No se encontro la fila de encabezados. Asegurate de tener las columnas: Nombre, Personas, Mesa, Lado, Confirmacion, Restriccion, Notas");
+      return;
+    }
+    const headers2 = rows[headerIdx].map(function(c){
+      return String(c).toLowerCase().trim().replace("confirmación","confirmacion").replace("restricción","restriccion");
+    });
+    const col = function(name){ return headers2.indexOf(name); };
+    const iN = col("nombre"), iP = col("personas"), iM = col("mesa");
+    const iL = col("lado"), iC = col("confirmacion"), iR = col("restriccion"), iNt = col("notas");
+    if(iN < 0){ alert("Falta la columna Nombre en el archivo."); return; }
+    const LADOS = ["novio","novia","ambos"];
+    const CONFS = ["pendiente","confirmado","no va"];
+    const RESTRS = ["ninguna","vegetariano","vegano","sin gluten","sin lactosa","kosher","halal","alergia","otra"];
+    const SKIP = ["instrucciones","lado:","confirmacion:","confirmación:","restriccion:","restricción:","personas:","mesa:","──","--"];
+    const newGuests = [];
+    const errs = [];
+    for(let i = headerIdx + 1; i < rows.length; i++){
+      const row = rows[i];
+      if(!row || row.every(function(c){ return !c; })) continue;
+      const first = String(row[0] || "").toLowerCase();
+      if(SKIP.some(function(s){ return first.indexOf(s) === 0; })) continue;
+      const nombre = String(row[iN] || "").trim();
+      if(!nombre) continue;
+      const personas = parseInt(row[iP] || 1) || 1;
+      const mesa = row[iM] ? String(row[iM]).trim() : "";
+      const ladoRaw = String(row[iL] || "ambos").trim().toLowerCase();
+      const confRaw = String(row[iC] || "pendiente").trim().toLowerCase();
+      const restrRaw = String(row[iR] || "ninguna").trim().toLowerCase();
+      const notas = String(row[iNt] || "").trim();
+      const lado = LADOS.indexOf(ladoRaw) >= 0 ? ladoRaw.charAt(0).toUpperCase()+ladoRaw.slice(1) : "Ambos";
+      const confirmacion = confRaw === "confirmado" ? "confirmado" : confRaw === "no va" ? "no_va" : "pendiente";
+      const restriccion = RESTRS.indexOf(restrRaw) >= 0 ? restrRaw.charAt(0).toUpperCase()+restrRaw.slice(1) : "Ninguna";
+      if(iL >= 0 && LADOS.indexOf(ladoRaw) < 0) errs.push("Fila "+(i+1)+": Lado '"+row[iL]+"' invalido, se uso Ambos");
+      newGuests.push({id:Date.now()+"-"+i, nombre:nombre, cantidadInvitados:personas, mesa:mesa, lado:lado, confirmacion:confirmacion, restriccion:restriccion, notas:notas});
+    }
+    if(newGuests.length === 0){
+      alert("No se encontraron invitados validos. Verifica que el archivo tenga la columna Nombre y datos.");
+      return;
+    }
+    const warn = errs.length > 0 ? " Advertencias: " + errs.slice(0,3).join(". ") : "";
+    alert("Se importaron " + newGuests.length + " invitados." + warn);
+    const next = (guests || []).concat(newGuests);
+    setGuests(next);
+    save(next);
+  };
+
+
+    const addGuest = () => {
     if(!newGuest.nombre.trim()) return;
     const next = [...(guests||[]), {...newGuest, id:Date.now()+""}];
     setGuests(next); save(next);
@@ -2969,6 +3117,11 @@ function GuestsModule({user, onBack}){
               </div>
             </div>
             <button onClick={exportToExcel} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".85rem",borderRadius:100,cursor:"pointer"}}>↓ Excel</button>
+            <button onClick={downloadTemplate} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer"}}>↓ Plantilla</button>
+            <label style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer"}}>
+              ↑ Importar
+              <input type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
+            </label>
             <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
           </div>
         </div>
@@ -3028,7 +3181,12 @@ function GuestsModule({user, onBack}){
       {viewMode==="lista"&&<>
         {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"40px 20px",background:"#FBF7EF",borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"2rem",marginBottom:10}}>👥</div>
-          <button onClick={()=>setAddMode(true)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"11px 22px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>+ Agregar primer invitado</button>
+          <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:"#1A1A14",margin:"0 0 6px"}}>Aún no hay invitados</p>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
+          <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+            <button onClick={()=>setAddMode(true)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"11px 22px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>+ Agregar invitado</button>
+            <button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,padding:"11px 20px",fontFamily:"'Lora',serif",fontWeight:600,color:"#4A5E3A",cursor:"pointer"}}>↓ Descargar plantilla Excel</button>
+          </div>
         </div>}
         {filtered.map(g=>{
           const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
