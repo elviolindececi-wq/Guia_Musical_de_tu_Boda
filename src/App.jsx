@@ -2276,13 +2276,18 @@ function BudgetModule({ user, onBack }){
   const [addingCat, setAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [invitados, setInvitados] = useState("");
+  const [invitadosReales, setInvitadosReales] = useState(0);
+  const [tieneMusica, setTieneMusica] = useState("si");
+  const [estiloDecoracion, setEstiloDecoracion] = useState("estandar");
+  const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
 
   // Load from Supabase
   useEffect(()=>{
     if(!user) return;
     const load = async()=>{
       try{
-        const {data:row} = await supabase.from("wedding_data").select("budget,currency,vendors").eq("user_id",user.id).maybeSingle();
+        const {data:row} = await supabase.from("wedding_data").select("budget,currency,vendors,guests").eq("user_id",user.id).maybeSingle();
         const vendors = Array.isArray(row?.vendors) ? row.vendors : [];
         let budget = (row?.budget && row.budget.categorias?.length > 0)
           ? row.budget
@@ -2291,6 +2296,17 @@ function BudgetModule({ user, onBack }){
         budget = calcBudgetFromVendors(budget, vendors);
         setData(budget);
         if(row?.currency) setCurrency(row.currency);
+        // Total real de personas confirmadas/pendientes en lista de invitados
+        if(Array.isArray(row?.guests) && row.guests.length>0){
+          const totalPersonasReal = row.guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+          setInvitadosReales(totalPersonasReal);
+        }
+        // Prellenar campo invitados del presupuesto
+        if(row?.budget?.invitados) setInvitados(row.budget.invitados);
+        else if(Array.isArray(row?.guests) && row.guests.length>0){
+          const totalPersonas = row.guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+          setInvitados(String(totalPersonas));
+        }
       }catch(e){
         setData({total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))});
       }
@@ -2311,6 +2327,78 @@ function BudgetModule({ user, onBack }){
       setTimeout(()=>setSaved(false), 2000);
     }catch(e){ console.error(e); }
     setSaving(false);
+  };
+
+  const calcularDistribucion = () => {
+    const total = num(data.total);
+    const inv = parseInt(invitados) || 100;
+    if(!total) return;
+
+    // Factor de conversión aproximado respecto a USD
+    // Permite que los topes fijos tengan sentido en cualquier moneda
+    const FX_VS_USD = {
+      USD:1, CAD:1.35, EUR:0.92, GBP:0.79,
+      PYG:7500, ARS:900, BRL:5, UYU:40,
+      BOB:6.9, CLP:920, COP:4000, PEN:3.8,
+      MXN:17, CRC:520, GTQ:7.8,
+      CHF:0.89, SEK:10.5, NOK:10.6,
+      JPY:150, CNY:7.2, KRW:1330,
+      INR:83, AUD:1.53, NZD:1.63,
+      SGD:1.34, HKD:7.8, AED:3.67,
+      SAR:3.75, BHD:0.376, KWD:0.31,
+      ZAR:18.6, EGP:30.9,
+    };
+    const fx = FX_VS_USD[currency] || 1;
+
+    // Helpers: convertir topes USD a moneda local
+    const cap = (usd) => Math.round(usd * fx);
+    const ppUSD = (total / fx) / inv; // presupuesto por persona en USD equivalente
+
+    // Costos fijos según estilo (en USD, luego convertidos)
+    const decorMinUSD = estiloDecoracion==="simple"?800:estiloDecoracion==="estandar"?2000:4000;
+    const decorMaxUSD = estiloDecoracion==="simple"?2000:estiloDecoracion==="estandar"?5000:10000;
+    const decorBaseUSD = (decorMinUSD+decorMaxUSD)/2;
+
+    const musicaBaseUSD = tieneMusica==="si" ? 3000 : 1000;
+
+    const fijos = {
+      foto:     Math.min(Math.round(total*0.08), cap(2500)),
+      video:    Math.min(Math.round(total*0.06), cap(2000)),
+      musica:   Math.min(Math.round(total*0.06), cap(musicaBaseUSD)),
+      vestuario:Math.min(Math.round(total*0.06), cap(3000)),
+      beauty:   Math.min(Math.round(total*0.025), cap(800)),
+      flores:   Math.min(cap(decorBaseUSD), Math.round(total*0.10)),
+      papel:    Math.min(Math.round(inv * cap(3)), Math.round(total*0.02)),
+      luna:     0,
+    };
+
+    // Catering: precio por persona en USD equivalente → convertir
+    const pxpUSD = ppUSD < 60 ? 25 : ppUSD < 120 ? 40 : ppUSD < 200 ? 65 : 90;
+    fijos.catering = Math.round(pxpUSD * fx * inv);
+
+    // Torta: $4–8 USD por persona
+    const tppUSD = ppUSD < 100 ? 4 : ppUSD < 200 ? 6 : 8;
+    fijos.torta = Math.round(tppUSD * fx * inv);
+
+    // Transporte
+    fijos.transport = Math.min(Math.round(total*0.015), cap(600));
+
+    // Salón: lo que queda (menos imprevistos 10%)
+    const sinSalon = Object.values(fijos).reduce((s,v)=>s+v,0);
+    const disponibleSalon = Math.round((total * 0.90) - sinSalon);
+    fijos.salon = Math.max(disponibleSalon, Math.round(total*0.08));
+
+    // Imprevistos: 10% fijo
+    fijos.imprev = Math.round(total * 0.10);
+
+    // Aplicar a categorías
+    const next = {...data, invitados: String(inv), categorias: data.categorias.map(c => ({
+      ...c,
+      estimado: fijos[c.id] !== undefined ? fijos[c.id] : c.estimado
+    }))};
+    setData(next);
+    save(next);
+    setMostrarCalculadora(false);
   };
 
   const updateTotal = (v)=>{
@@ -2457,14 +2545,76 @@ function BudgetModule({ user, onBack }){
       {/* Budget total input */}
       <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"clamp(18px,3vw,28px)",marginBottom:24}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Presupuesto total de la boda</div>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20,flexWrap:"wrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12,flexWrap:"wrap"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:200}}>
             <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1.5rem",color:"rgba(26,26,20,.4)"}}>{SYM}</span>
             <input type="number" value={data.total||""} onChange={e=>updateTotal(e.target.value)}
               onBlur={()=>save()} placeholder="0"
               style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.4rem)",fontWeight:700,color:"#1A1A14",border:"none",borderBottom:"2px solid #4A5E3A",background:"transparent",padding:"4px 0",width:"100%",outline:"none"}}/>
           </div>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+            <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.45)"}}>👥</span>
+            <input type="number" value={invitados} onChange={e=>setInvitados(e.target.value)}
+              onBlur={()=>{ const next={...data,invitados}; setData(next); save(next); }}
+              placeholder="Invitados" min="1"
+              style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",border:"none",borderBottom:"1.5px solid rgba(74,94,58,.3)",background:"transparent",padding:"4px 0",width:90,outline:"none"}}/>
+          </div>
         </div>
+        {/* Botón calculadora */}
+        {num(data.total)>0&&<div style={{marginBottom:20}}>
+          <button onClick={()=>setMostrarCalculadora(m=>!m)} style={{
+            display:"inline-flex",alignItems:"center",gap:7,
+            background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,
+            padding:"8px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:600,
+            color:"#4A5E3A",cursor:"pointer"
+          }}>
+            ✨ {mostrarCalculadora?"Cerrar calculadora":"Sugerir distribución por categoría"}
+          </button>
+          {mostrarCalculadora&&<div style={{marginTop:12,background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px"}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>Calculadora de distribución</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+              <div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🎵 Música en vivo</div>
+                <div style={{display:"flex",gap:6}}>
+                  {[{v:"si",l:"Sí"},{v:"no",l:"Solo DJ"}].map(({v,l})=>
+                    <button key={v} onClick={()=>setTieneMusica(v)} style={{
+                      flex:1,padding:"7px 0",borderRadius:8,border:`1px solid ${tieneMusica===v?"#4A5E3A":"rgba(74,94,58,.2)"}`,
+                      background:tieneMusica===v?"#4A5E3A":"transparent",
+                      color:tieneMusica===v?"#F5EFE0":"rgba(26,26,20,.55)",
+                      fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"
+                    }}>{l}</button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🌸 Decoración</div>
+                <div style={{display:"flex",gap:4}}>
+                  {[{v:"simple",l:"Simple"},{v:"estandar",l:"Estándar"},{v:"elaborada",l:"Elaborada"}].map(({v,l})=>
+                    <button key={v} onClick={()=>setEstiloDecoracion(v)} style={{
+                      flex:1,padding:"7px 4px",borderRadius:8,border:`1px solid ${estiloDecoracion===v?"#4A5E3A":"rgba(74,94,58,.2)"}`,
+                      background:estiloDecoracion===v?"#4A5E3A":"transparent",
+                      color:estiloDecoracion===v?"#F5EFE0":"rgba(26,26,20,.55)",
+                      fontFamily:"'Lora',serif",fontSize:".75rem",cursor:"pointer"
+                    }}>{l}</button>
+                  )}
+                </div>
+              </div>
+            </div>
+            {!invitados&&<p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(200,120,0,.8)",margin:"0 0 10px",fontStyle:"italic"}}>⚠️ Ingresá la cantidad de invitados arriba para un cálculo más preciso.</p>}
+            <div style={{background:"rgba(201,169,110,.08)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+              <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.55)",margin:"0 0 4px",lineHeight:1.55}}>
+                📊 Los valores son <strong>estimativos</strong> basados en datos de bodas de la región (Paraguay, Argentina, Brasil).
+              </p>
+              <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.4)",margin:0,lineHeight:1.55,fontStyle:"italic"}}>
+                Son una sugerencia de punto de partida — ajustá cada categoría según tus cotizaciones reales.
+              </p>
+            </div>
+            <button onClick={calcularDistribucion} style={{
+              background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,
+              padding:"10px 22px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",cursor:"pointer"
+            }}>Aplicar distribución sugerida</button>
+          </div>}
+        </div>}
 
         {/* Summary bars */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:20}}>
@@ -2487,6 +2637,33 @@ function BudgetModule({ user, onBack }){
           <div style={{height:10,background:"rgba(74,94,58,.1)",borderRadius:10,overflow:"hidden",position:"relative"}}>
             <div style={{position:"absolute",height:"100%",width:`${pctCotizado}%`,background:"rgba(201,169,110,.4)",borderRadius:10,transition:"width .4s"}}/>
             <div style={{position:"absolute",height:"100%",width:`${pctPagado}%`,background:"#4A5E3A",borderRadius:10,transition:"width .4s"}}/>
+          </div>
+        </div>}
+
+        {/* Gasto por invitado */}
+        {totalBudget>0 && invitados && parseInt(invitados)>0 && <div style={{marginTop:16,paddingTop:14,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+            <div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Gasto por invitado</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalBudget/parseInt(invitados)))}</div>
+            </div>
+            {totalCotizado>0&&<div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Cotizado por invitado</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.2rem",fontWeight:700,color:"rgba(201,169,110,.85)"}}>{SYM}{fmt(Math.round(totalCotizado/parseInt(invitados)))}</div>
+            </div>}
+          </div>
+        </div>}
+
+        {/* Warning invitados reales vs presupuestados */}
+        {invitadosReales>0 && parseInt(invitados)>0 && invitadosReales > parseInt(invitados) && <div style={{marginTop:12,background:"rgba(200,80,60,.06)",border:"0.5px solid rgba(200,80,60,.3)",borderRadius:10,padding:"12px 14px",display:"flex",gap:10,alignItems:"flex-start"}}>
+          <span style={{flexShrink:0,fontSize:"1rem"}}>⚠️</span>
+          <div>
+            <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(200,60,60,.85)",margin:"0 0 3px",fontWeight:600}}>
+              Tenés más invitados de los presupuestados
+            </p>
+            <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(200,60,60,.7)",margin:0,lineHeight:1.5}}>
+              Tu lista tiene <strong>{invitadosReales} personas</strong> pero el presupuesto está calculado para <strong>{invitados}</strong>. El gasto real por invitado sería {SYM}{fmt(Math.round(totalBudget/invitadosReales))} — revisá el catering y la torta.
+            </p>
           </div>
         </div>}
       </div>
