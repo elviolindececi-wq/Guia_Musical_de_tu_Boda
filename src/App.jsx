@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -3267,7 +3267,7 @@ const TIMELINE_DEFAULTS = [
   {id:"t7",hora:"16:30",titulo:"Salida y fotos en altar",duracion:30,lugar:"",notas:"",color:"#4A5E3A"},
   {id:"t8",hora:"17:00",titulo:"Cóctel",duracion:90,lugar:"",notas:"",color:"#C9A96E"},
   {id:"t9",hora:"18:30",titulo:"Ingreso al salón",duracion:15,lugar:"",notas:"",color:"#1A1A14"},
-  {id:"t10",hora:"18:45",titulo:"Primer baile",duracion:10,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t10",hora:"18:45",titulo:"Primer baile de novios",duracion:10,lugar:"",notas:"",cancion:"",esVivo:false,color:"#C9A96E"},{id:"t10b",hora:"18:55",titulo:"Vals / Baile con los padres",duracion:8,lugar:"",notas:"",cancion:"",esVivo:false,color:"#C9A96E"},
   {id:"t11",hora:"19:00",titulo:"Brindis",duracion:15,lugar:"",notas:"",color:"#C9A96E"},
   {id:"t12",hora:"19:15",titulo:"Cena",duracion:90,lugar:"",notas:"",color:"#4A5E3A"},
   {id:"t13",hora:"20:45",titulo:"Torta y baile general",duracion:30,lugar:"",notas:"",color:"#C9A96E"},
@@ -3426,7 +3426,7 @@ const CHECKLIST_GENERAL = [
     "Enviar invitaciones formales",
     "Organizar lista de mesas y seating chart",
     "Confirmar todos los proveedores contratados",
-    "Hacer segunda prueba de vestido",
+    "Hacer segunda prueba de vestido","Prueba de dulces y mesa de postres con el proveedor","Prueba de tragos y bebidas con el catering o bartender","Definir el vals y primer baile - confirmar version y si es en vivo",
     "Elegir y comprar alianzas",
     "Planificar el cronograma del día de la boda",
     "Organizar ensayo de ceremonia",
@@ -3856,7 +3856,7 @@ function GlobalNav({view, setView, hasResults}){
     position:"fixed",bottom:0,left:0,right:0,zIndex:100,
     background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",
     borderTop:"0.5px solid rgba(201,169,110,.25)",
-    display:"flex",alignItems:"center",justifyContent:"space-around",
+    display:"flex",alignItems:"center",justifyContent:"flex-start",overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",
     padding:"8px 0 max(8px,env(safe-area-inset-bottom))",
     boxShadow:"0 -4px 24px rgba(26,20,14,.06)"
   }} className="no-print">
@@ -4343,7 +4343,7 @@ export default function App(){
   if(view==="vendors") return <><VendorsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="guests") return <><GuestsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="timeline") return <><TimelineModule user={user} form={form} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
-  if(view==="checklist-boda") return <><ChecklistModule user={user} form={form} results={results} onGoMusic={()=>setView("results")} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
+  if(view==="checklist-boda") return <><ChecklistModule user={user} form={form} results={results} onGoMusic={()=>setView(results?"results":"guia")} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")}/>;
   if(view==="generating") return <Generating names={`${form.nombre1} & ${form.nombre2}`} phase={phase}/>;
   if(view==="results") return <><Results results={results} form={form} checked={checked} setChecked={(fn)=>{ const next=typeof fn==='function'?fn(checked):fn; setChecked(next); syncChecked(next); }} arquetipo={arquetipo} resultToken={resultToken} onGoHome={()=>setView("home")} onLogout={logout} onRestart={()=>{
