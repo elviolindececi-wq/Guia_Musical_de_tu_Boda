@@ -2402,8 +2402,16 @@ function BudgetModule({ user, onBack }){
   };
 
   const updateTotal = (v)=>{
-    const next = {...data, total: num(v)};
-    setData(next);
+    const valor = num(v);
+    if(valor===0){
+      // Si el total va a 0, resetear todos los estimados
+      const next = {...data, total:0, categorias:data.categorias.map(c=>({...c,estimado:0}))};
+      setData(next);
+      save(next);
+    } else {
+      const next = {...data, total:valor};
+      setData(next);
+    }
   };
 
   const updateCat = (id, field, value)=>{
@@ -2562,14 +2570,27 @@ function BudgetModule({ user, onBack }){
         </div>
         {/* Botón calculadora */}
         {num(data.total)>0&&<div style={{marginBottom:20}}>
-          <button onClick={()=>setMostrarCalculadora(m=>!m)} style={{
-            display:"inline-flex",alignItems:"center",gap:7,
-            background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,
-            padding:"8px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:600,
-            color:"#4A5E3A",cursor:"pointer"
-          }}>
-            ✨ {mostrarCalculadora?"Cerrar calculadora":"Sugerir distribución por categoría"}
-          </button>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <button onClick={()=>setMostrarCalculadora(m=>!m)} style={{
+              display:"inline-flex",alignItems:"center",gap:7,
+              background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,
+              padding:"8px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:600,
+              color:"#4A5E3A",cursor:"pointer"
+            }}>
+              ✨ {mostrarCalculadora?"Cerrar calculadora":cats.some(c=>num(c.estimado)>0)?"Recalcular distribución":"Sugerir distribución por categoría"}
+            </button>
+            {cats.some(c=>num(c.estimado)>0)&&<button onClick={()=>{
+              const next={...data,categorias:data.categorias.map(c=>({...c,estimado:0}))};
+              setData(next);save(next);
+            }} style={{
+              display:"inline-flex",alignItems:"center",gap:7,
+              background:"transparent",border:"1px solid rgba(200,80,60,.3)",borderRadius:100,
+              padding:"8px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:600,
+              color:"rgba(200,80,60,.7)",cursor:"pointer"
+            }}>
+              🗑 Limpiar estimados
+            </button>}
+          </div>
           {mostrarCalculadora&&<div style={{marginTop:12,background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>Calculadora de distribución</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
