@@ -3327,13 +3327,187 @@ const TIMELINE_DEFAULTS = [
   {id:"t15",hora:"00:00",titulo:"Cierre",duracion:0,lugar:"",notas:"",color:"#1A1A14"},
 ];
 
-function TimelineModule({user, form, onBack}){
+
+// ─── COMPARTIR CRONOGRAMA ─────────────────────────────────────────────────────
+function ShareCronograma({ events, form }){
+  const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
+  const fecha = form?.fechaBoda
+    ? new Date(form.fechaBoda+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})
+    : "";
+  const sorted = [...(events||[])].sort((a,b)=>a.hora.localeCompare(b.hora));
+
+  const imprimirPDF = () => {
+    const evRows = sorted.map(ev => {
+      const durLabel = ev.duracion>0
+        ? (ev.duracion<60 ? `${ev.duracion} min` : `${Math.floor(ev.duracion/60)}h${ev.duracion%60>0?" "+ev.duracion%60+"min":""}`)
+        : "";
+      const cancionHtml = ev.cancion
+        ? `<div class="ev-cancion">🎵 ${ev.cancion}${ev.esVivo?' <span class="badge-vivo">EN VIVO</span>':""}</div>`
+        : "";
+      const notaHtml = ev.notas
+        ? `<div class="ev-nota">📝 ${ev.notas}</div>`
+        : "";
+      const lugarHtml = ev.lugar
+        ? `<span class="ev-lugar">📍 ${ev.lugar}</span>`
+        : "";
+      return `
+        <div class="ev-row">
+          <div class="ev-hora">${ev.hora}</div>
+          <div class="ev-dot"></div>
+          <div class="ev-content">
+            <div class="ev-titulo">${ev.titulo}${durLabel?` <span class="ev-dur">${durLabel}</span>`:""}</div>
+            ${lugarHtml}
+            ${cancionHtml}
+            ${notaHtml}
+          </div>
+        </div>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Cronograma · ${pareja||"Boda"}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  @page{size:A4;margin:0}
+  html,body{width:210mm;min-height:297mm;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:'Lora',serif;color:#1A1A14}
+
+  .cover{
+    background:#4A5E3A;
+    padding:40px 48px 32px;
+    text-align:center;
+    border-bottom:3px solid #C9A96E;
+  }
+  .cover-kicker{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:rgba(201,169,110,.8);margin-bottom:14px}
+  .cover-names{font-family:'Great Vibes',cursive;font-size:52px;color:#F5EFE0;line-height:1.1;margin-bottom:6px}
+  .cover-fecha{font-family:'Lora',serif;font-size:12px;color:rgba(245,239,224,.55);letter-spacing:.06em;margin-bottom:20px;text-transform:capitalize}
+  .cover-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#C9A96E;margin-bottom:4px}
+  .cover-sub{font-family:'Lora',serif;font-size:10px;color:rgba(245,239,224,.4);font-style:italic}
+
+  .body{padding:32px 48px 40px}
+
+  .section-label{
+    font-family:'Cinzel',serif;font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(74,94,58,.5);margin-bottom:20px;padding-bottom:8px;
+    border-bottom:0.5px solid rgba(201,169,110,.25);
+  }
+
+  .timeline{position:relative;padding-left:60px}
+  .timeline::before{
+    content:'';position:absolute;left:36px;top:6px;bottom:6px;
+    width:1.5px;background:rgba(74,94,58,.15);border-radius:2px;
+  }
+
+  .ev-row{position:relative;margin-bottom:18px;display:flex;gap:0;align-items:flex-start}
+  .ev-row:last-child{margin-bottom:0}
+
+  .ev-hora{
+    position:absolute;left:-60px;width:44px;text-align:right;
+    font-family:'Cinzel',serif;font-size:10px;font-weight:600;
+    color:#4A5E3A;letter-spacing:.04em;padding-top:1px;
+  }
+  .ev-dot{
+    position:absolute;left:-18px;top:4px;
+    width:10px;height:10px;border-radius:50%;
+    background:#C9A96E;border:2px solid #fff;
+    box-shadow:0 0 0 1.5px rgba(201,169,110,.4);
+    flex-shrink:0;
+  }
+  .ev-content{flex:1;min-width:0}
+  .ev-titulo{
+    font-family:'Playfair Display',serif;font-size:13px;font-weight:600;
+    color:#1A1A14;line-height:1.25;margin-bottom:3px;
+  }
+  .ev-dur{
+    font-family:'Lora',serif;font-size:9px;font-weight:400;
+    color:rgba(26,26,20,.35);margin-left:6px;
+  }
+  .ev-lugar{
+    display:block;font-family:'Lora',serif;font-size:10px;
+    color:rgba(74,94,58,.6);margin-bottom:3px;
+  }
+  .ev-cancion{
+    font-family:'Lora',serif;font-size:10.5px;color:rgba(201,169,110,.85);
+    font-style:italic;margin-bottom:2px;display:flex;align-items:center;gap:6px;
+  }
+  .badge-vivo{
+    font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;text-transform:uppercase;
+    background:rgba(74,94,58,.12);color:#4A5E3A;padding:2px 6px;border-radius:100px;
+    font-style:normal;
+  }
+  .ev-nota{
+    font-family:'Lora',serif;font-size:9.5px;color:rgba(26,26,20,.4);
+    font-style:italic;margin-top:2px;
+  }
+
+  .footer{
+    margin-top:36px;padding-top:16px;border-top:0.5px solid rgba(201,169,110,.2);
+    text-align:center;
+  }
+  .footer-logo{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgba(74,94,58,.5)}
+  .footer-sub{font-family:'Lora',serif;font-size:8px;color:rgba(26,26,20,.3);font-style:italic;margin-top:3px}
+
+  @media print{
+    html,body{width:210mm;min-height:297mm}
+    .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="cover-kicker">El Violín de Ceci · Mi Boda Organizada</div>
+    <div class="cover-names">${pareja||"Tu Boda"}</div>
+    ${fecha?`<div class="cover-fecha">${fecha.charAt(0).toUpperCase()+fecha.slice(1)}</div>`:""}
+    <div class="cover-title">Cronograma del día</div>
+    <div class="cover-sub">Documento para coordinadora · DJ · Fotógrafo</div>
+  </div>
+  <div class="body">
+    <div class="section-label">Timeline · ${sorted.length} momentos</div>
+    <div class="timeline">${evRows}</div>
+    <div class="footer">
+      <div class="footer-logo">El Violín de Ceci</div>
+      <div class="footer-sub">Generado con Mi Boda Organizada · guia-musical-de-tu-boda.vercel.app</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const win = window.open("","_blank","width=900,height=700");
+    if(!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => {
+      setTimeout(() => {
+        win.focus();
+        win.print();
+      }, 600);
+    };
+  };
+
+  return <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:14,padding:"16px 18px",marginTop:20}}>
+    <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>📄 Exportar cronograma</div>
+    <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,margin:"0 0 14px"}}>
+      Generá un PDF listo para compartir con tu coordinadora, DJ o fotógrafo.
+    </p>
+    <button onClick={imprimirPDF} style={{display:"inline-flex",alignItems:"center",gap:8,background:"#4A5E3A",border:"none",borderRadius:100,padding:"12px 24px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",color:"#F5EFE0",cursor:"pointer"}}>
+      📄 Descargar PDF del cronograma
+    </button>
+    <p style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.3)",margin:"10px 0 0",fontStyle:"italic"}}>
+      En el diálogo de impresión elegí "Guardar como PDF"
+    </p>
+  </div>;
+}
+
+function TimelineModule({user, form, results, onBack}){
   const [events, setEvents] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
   const [editId, setEditId] = useState(null);
   const [adding, setAdding] = useState(false);
-  const [newEv, setNewEv]   = useState({id:"",hora:"",titulo:"",duracion:30,lugar:"",notas:""});
+  const [newEv, setNewEv]   = useState({id:"",hora:"",titulo:"",duracion:30,lugar:"",notas:"",cancion:"",esVivo:false});
 
   useEffect(()=>{
     if(!user) return;
@@ -3352,6 +3526,26 @@ function TimelineModule({user, form, onBack}){
   };
 
   const sorted = [...(events||[])].sort((a,b)=>a.hora.localeCompare(b.hora));
+
+  const MOMENTO_KEYWORDS = {
+    "t5":  ["llegada","invitados"],
+    "t6":  ["ceremonia","votos","alianzas","anillos","firmas","aleluya","ofertorio","comunion"],
+    "t7":  ["salida","fotos"],
+    "t8":  ["coctel","cóctel"],
+    "t10": ["primer baile","baile de novios","primer_baile"],
+    "t10b":["vals","baile con los padres"],
+    "t12": ["cena"],
+  };
+  const getSugerencia = (evId) => {
+    if(!results?.guion) return null;
+    const keys = MOMENTO_KEYWORDS[evId];
+    if(!keys) return null;
+    const match = results.guion.find(g =>
+      keys.some(k => (g.momento||"").toLowerCase().includes(k))
+    );
+    return match ? `${match.cancion} — ${match.artista}${match.version&&match.version!=="Vocal original"?" ("+match.version+")":""}` : null;
+  };
+
   const addEvent = () => {
     if(!newEv.titulo.trim()||!newEv.hora) return;
     const next = [...(events||[]),{...newEv,id:"ev_"+Date.now()}];
@@ -3393,6 +3587,14 @@ function TimelineModule({user, form, onBack}){
             </div>
           )}
         </div>
+        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+          <input type="text" value={newEv.cancion||""} onChange={e=>setNewEv(x=>({...x,cancion:e.target.value}))} placeholder="Canción (opcional)"
+            style={{flex:1,fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14"}}/>
+          <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
+            <input type="checkbox" checked={!!newEv.esVivo} onChange={e=>setNewEv(x=>({...x,esVivo:e.target.checked}))} style={{width:16,height:16,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+            En vivo
+          </label>
+        </div>
         <textarea value={newEv.notas} onChange={e=>setNewEv(x=>({...x,notas:e.target.value}))} rows={2} placeholder="Notas para proveedores..."
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box",marginBottom:10}}/>
         <div style={{display:"flex",gap:8}}>
@@ -3415,6 +3617,17 @@ function TimelineModule({user, form, onBack}){
                   </div>
                   <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14"}}>{ev.titulo}</div>
                   {ev.lugar&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(74,94,58,.55)",marginTop:2}}>📍 {ev.lugar}</div>}
+                  {ev.cancion
+                    ? <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(201,169,110,.75)",marginTop:2,display:"flex",alignItems:"center",gap:6}}>
+                        🎵 {ev.cancion}{ev.esVivo&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",textTransform:"uppercase",background:"rgba(74,94,58,.12)",color:"#4A5E3A",padding:"2px 7px",borderRadius:100}}>En vivo</span>}
+                      </div>
+                    : getSugerencia(ev.id)
+                      ? <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(74,94,58,.45)",marginTop:2,fontStyle:"italic",display:"flex",alignItems:"center",gap:5}}>
+                          💡 Sugerencia: {getSugerencia(ev.id)}
+                          <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))} style={{background:"rgba(74,94,58,.1)",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:100,padding:"1px 8px",fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",color:"#4A5E3A",cursor:"pointer",whiteSpace:"nowrap"}}>Usar</button>
+                        </div>
+                      : null
+                  }
                   {ev.notas&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.38)",fontStyle:"italic",marginTop:3}}>{ev.notas}</div>}
                 </div>
                 <div style={{display:"flex",gap:5,flexShrink:0}}>
@@ -3430,10 +3643,26 @@ function TimelineModule({user, form, onBack}){
                   <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓</button>
                 </div>
                 <input type="text" defaultValue={ev.lugar||""} onBlur={e=>updateEv(ev.id,"lugar",e.target.value)} placeholder="Lugar" style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:5}}/>
+                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5}}>
+                  <div style={{flex:1,display:"flex",flexDirection:"column",gap:3}}>
+                    <input type="text" defaultValue={ev.cancion||""} onBlur={e=>updateEv(ev.id,"cancion",e.target.value)}
+                      placeholder={getSugerencia(ev.id) ? "Sugerencia del guion abajo ↓" : "Canción (ej: Can't Help Falling in Love)"}
+                      style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+                    {!ev.cancion && getSugerencia(ev.id) && <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))}
+                      style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.6)",cursor:"pointer",textAlign:"left",padding:"0 2px"}}>
+                      💡 Usar del guion: {getSugerencia(ev.id)}
+                    </button>}
+                  </div>
+                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
+                    <input type="checkbox" defaultChecked={!!ev.esVivo} onChange={e=>updateEv(ev.id,"esVivo",e.target.checked)} style={{width:16,height:16,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+                    En vivo
+                  </label>
+                </div>
               </div>}
             </div>
           </div>;
         })}
+      <ShareCronograma events={events} form={form}/>
       <BackToHome onBack={onBack}/>
     </div>
   </div>
@@ -4399,7 +4628,7 @@ export default function App(){
   if(view==="budget") return <><BudgetModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="vendors") return <><VendorsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="guests") return <><GuestsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
-  if(view==="timeline") return <><TimelineModule user={user} form={form} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
+  if(view==="timeline") return <><TimelineModule user={user} form={form} results={results} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="checklist-boda") return <><ChecklistModule user={user} form={form} results={results} onGoMusic={()=>setView(results?"results":"guia")} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="form") return <Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")}/>;
   if(view==="generating") return <Generating names={`${form.nombre1} & ${form.nombre2}`} phase={phase}/>;
