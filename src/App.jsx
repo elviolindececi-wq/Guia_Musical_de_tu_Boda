@@ -1967,7 +1967,7 @@ function GlobalProgress({ user, hasResults }){
           .from("wedding_data")
           .select("budget,vendors,guests,checklist_general,checklist_custom")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
         row = data;
       } catch(e){}
 
@@ -1997,7 +1997,7 @@ function GlobalProgress({ user, hasResults }){
       // 6. Cronograma aprobado por ambos novios
       let cronoAprobado = false;
       try {
-        const { data: trow } = await supabase.from("wedding_data").select("timeline_aprobacion").eq("user_id", user.id).single();
+        const { data: trow } = await supabase.from("wedding_data").select("timeline_aprobacion").eq("user_id", user.id).maybeSingle();
         cronoAprobado = !!(trow?.timeline_aprobacion?.n1 && trow?.timeline_aprobacion?.n2);
       } catch(e){}
       scores.push({ label:"Cronograma", done: cronoAprobado });
@@ -2282,7 +2282,7 @@ function BudgetModule({ user, onBack }){
     if(!user) return;
     const load = async()=>{
       try{
-        const {data:row} = await supabase.from("wedding_data").select("budget,currency,vendors").eq("user_id",user.id).single();
+        const {data:row} = await supabase.from("wedding_data").select("budget,currency,vendors").eq("user_id",user.id).maybeSingle();
         const vendors = Array.isArray(row?.vendors) ? row.vendors : [];
         let budget = (row?.budget && row.budget.categorias?.length > 0)
           ? row.budget
@@ -2641,7 +2641,7 @@ function VendorsModule({user, onBack}){
     if(!user) return;
     const load = async()=>{
       try{
-        const {data:row} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).single();
+        const {data:row} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).maybeSingle();
         setVendors(Array.isArray(row?.vendors) ? row.vendors : []);
       }catch(e){ setVendors([]); }
     };
@@ -2653,7 +2653,7 @@ function VendorsModule({user, onBack}){
     try{
       const vendorList = list || vendors;
       // Load current budget to sync cotizado/pagado
-      const {data:row} = await supabase.from("wedding_data").select("budget").eq("user_id",user.id).single();
+      const {data:row} = await supabase.from("wedding_data").select("budget").eq("user_id",user.id).maybeSingle();
       const currentBudget = row?.budget || {total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))};
       const updatedBudget = calcBudgetFromVendors(currentBudget, vendorList);
       await supabase.from("wedding_data").upsert({
@@ -2865,7 +2865,7 @@ function GuestsModule({user, onBack}){
 
   useEffect(()=>{
     if(!user) return;
-    supabase.from("wedding_data").select("guests,table_size").eq("user_id",user.id).single()
+    supabase.from("wedding_data").select("guests,table_size").eq("user_id",user.id).maybeSingle()
       .then(({data:row})=>{
         setGuests(Array.isArray(row?.guests)?row.guests:[]);
         if(row?.table_size) setTableSize(row.table_size);
@@ -3525,7 +3525,7 @@ function TimelineModule({user, form, results, onBack}){
 
   useEffect(()=>{
     if(!user) return;
-    supabase.from("wedding_data").select("timeline,timeline_aprobacion,vendors").eq("user_id",user.id).single()
+    supabase.from("wedding_data").select("timeline,timeline_aprobacion,vendors").eq("user_id",user.id).maybeSingle()
       .then(({data:row})=>{
         setEvents(Array.isArray(row?.timeline)&&row.timeline.length>0?row.timeline:TIMELINE_DEFAULTS);
         if(row?.timeline_aprobacion) setAprobacion(row.timeline_aprobacion);
@@ -3901,7 +3901,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
       try{
         const {data:row} = await supabase.from("wedding_data")
           .select("checklist_general,checklist_custom,checklist_order")
-          .eq("user_id",user.id).single();
+          .eq("user_id",user.id).maybeSingle();
         setChecked(row?.checklist_general || {});
         setCustom(row?.checklist_custom || {});
         setOrder(row?.checklist_order || {});
@@ -3909,7 +3909,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
         setResp(row?.checklist_resp || {});
         // Cargar vendors para vincular tareas
         try{
-          const {data:vrow} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).single();
+          const {data:vrow} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).maybeSingle();
           if(Array.isArray(vrow?.vendors)) setVendors4Chk(vrow.vendors.filter(v=>v.estado!=="descartado"));
         }catch(e){}
       }catch(e){ setChecked({}); setCustom({}); setOrder({}); }
