@@ -2755,6 +2755,7 @@ function VendorsModule({user, onBack}){
           </div>
         </div>;
       })}
+      <BackToHome onBack={onBack}/>
     </div>
   </div>;
 }
