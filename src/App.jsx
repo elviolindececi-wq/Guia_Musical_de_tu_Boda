@@ -1947,6 +1947,87 @@ function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }
 }
 
 
+function GlobalProgress({ user, hasResults }){
+  const [pct, setPct] = useState(0);
+  const [breakdown, setBreakdown] = useState([]);
+
+  useEffect(()=>{
+    if(!user || !supabase) return;
+    let cancelled = false;
+    const compute = async () => {
+      const scores = [];
+
+      // 1. Banda Sonora (test IA completado)
+      scores.push({ label:"Banda sonora", done: !!hasResults });
+
+      // Cargamos todo de wedding_data en una sola consulta
+      let row = null;
+      try {
+        const { data } = await supabase
+          .from("wedding_data")
+          .select("budget,vendors,guests,checklist_general,checklist_custom")
+          .eq("user_id", user.id)
+          .single();
+        row = data;
+      } catch(e){}
+
+      // 2. Presupuesto: total > 0 y al menos 8 categorías con estimado > 0
+      const budget = row?.budget;
+      const catsConMonto = (budget?.categorias||[]).filter(c=>(c.estimado||0)>0).length;
+      scores.push({ label:"Presupuesto", done: (budget?.total||0)>0 && catsConMonto>=8 });
+
+      // 3. Proveedores: mín 3 contratados o pagados
+      const vendors = Array.isArray(row?.vendors) ? row.vendors : [];
+      const contratados = vendors.filter(v=>v.estado==="contratado"||v.estado==="pagado").length;
+      scores.push({ label:"Proveedores", done: contratados>=3 });
+
+      // 4. Checklist: todas las tareas default marcadas como true
+      const chkGen = row?.checklist_general || {};
+      const chkCustom = row?.checklist_custom || {};
+      const totalChk = Object.keys(chkGen).length + Object.keys(chkCustom).length;
+      const doneChk = Object.values(chkGen).filter(Boolean).length + Object.values(chkCustom).filter(v=>v===true||v?.done===true).length;
+      scores.push({ label:"Checklist", done: totalChk>0 && doneChk===totalChk });
+
+      // 5. Invitados: 5+ y 80%+ con confirmacion resuelta
+      const guests = Array.isArray(row?.guests) ? row.guests : [];
+      const totalGuests = guests.length;
+      const resueltos = guests.filter(g=>g.confirmacion==="confirmado"||g.confirmacion==="no_va").length;
+      scores.push({ label:"Invitados", done: totalGuests>=5 && totalGuests>0 && (resueltos/totalGuests)>=0.8 });
+
+      // 6. Cronograma aprobado (pendiente de implementar aprobacion doble novios)
+      scores.push({ label:"Cronograma", done: false });
+
+      if(!cancelled){
+        const doneCnt = scores.filter(s=>s.done).length;
+        setPct(Math.round((doneCnt/scores.length)*100));
+        setBreakdown(scores);
+      }
+    };
+    compute();
+    return ()=>{ cancelled=true; };
+  },[user, hasResults]);
+
+  if(!user) return null;
+  const clr = pct>=80?"#4A5E3A":pct>=40?"#C9A96E":"rgba(74,94,58,.45)";
+
+  return <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+      <span style={{fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A"}}>Progreso de tu boda</span>
+      <span style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.1rem",color:clr}}>{pct}%</span>
+    </div>
+    <div style={{background:"rgba(201,169,110,.15)",borderRadius:100,height:6,overflow:"hidden",marginBottom:10}}>
+      <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#4A5E3A,#7A9A5A)",borderRadius:100,transition:"width .6s ease"}}/>
+    </div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px"}}>
+      {breakdown.map(({label,done})=>(
+        <span key={label} style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:done?"#4A5E3A":"rgba(26,26,20,.38)",display:"flex",alignItems:"center",gap:3}}>
+          <span style={{fontSize:".7rem"}}>{done?"✓":"○"}</span>{label}
+        </span>
+      ))}
+    </div>
+  </div>;
+}
+
 function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout, onGoModule }){
   const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
   const link = resultToken && typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?r=${resultToken}` : "";
@@ -1996,6 +2077,9 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
         </button>
       </div>}
 
+      {/* Progreso global */}
+      <GlobalProgress user={user} hasResults={hasResults} />
+
       {/* Module grid */}
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Módulos de planificación</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
@@ -2040,38 +2124,6 @@ const EMPTY_FORM={
 };
 
 
-
-// ─── MODULE CARDS (shared in HomeScreen) ──────────────────────────────────────
-function ModuleCards({ hasResults, onViewResults, onStartNew, onGoModule }){
-  const modules = [
-    {emoji:"🎵",label:"Banda sonora",desc:"Guion musical de tu boda",action:hasResults?onViewResults:onStartNew,status:hasResults?"Ver resultado":"Empezar",done:hasResults},
-    {emoji:"💰",label:"Presupuesto",desc:"Control de gastos",action:()=>onGoModule("budget"),status:"Activo",done:false},
-    {emoji:"🏢",label:"Proveedores",desc:"Cotizaciones y contratos",action:()=>onGoModule("vendors"),status:"Nuevo ✦",done:false},
-    {emoji:"📋",label:"Checklist",desc:"Plan completo de la boda",action:()=>onGoModule("checklist-boda"),status:"Nuevo ✦",done:false},
-    {emoji:"👥",label:"Invitados",desc:"Lista y seating por mesas",action:()=>onGoModule("guests"),status:"Nuevo ✦",done:false},
-    {emoji:"⏰",label:"Cronograma",desc:"Timeline del día",action:()=>onGoModule("timeline"),status:"Nuevo ✦",done:false},
-  ];
-  return <div style={{marginTop:28,paddingTop:24,borderTop:"0.5px solid rgba(201,169,110,.2)",textAlign:"left"}}>
-    <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Módulos de planificación</div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-      {modules.map(({emoji,label,desc,action,status,done})=>
-        <button key={label} onClick={action||undefined} disabled={!action} style={{
-          background:done?"rgba(74,94,58,.08)":"#FBF7EF",
-          border:`0.5px solid ${done?"rgba(74,94,58,.28)":"rgba(201,169,110,.25)"}`,
-          borderRadius:14,padding:"14px 12px",textAlign:"left",cursor:action?"pointer":"default",
-          opacity:action?1:.55,transition:"all .2s",outline:"none"
-        }}>
-          <div style={{fontSize:"1.4rem",marginBottom:5}}>{emoji}</div>
-          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:".92rem",color:"#1A1A14",lineHeight:1.2,marginBottom:2}}>{label}</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.42)",marginBottom:8,lineHeight:1.3}}>{desc}</div>
-          <div style={{display:"inline-block",fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".1em",textTransform:"uppercase",padding:"3px 8px",borderRadius:100,
-            background:done?"#4A5E3A":status.includes("Nuevo")?"rgba(201,169,110,.2)":"rgba(74,94,58,.08)",
-            color:done?"#F5EFE0":status.includes("Nuevo")?"rgba(150,110,50,.9)":"rgba(74,94,58,.5)"}}>{status}</div>
-        </button>
-      )}
-    </div>
-  </div>;
-}
 
 
 const CURRENCIES = [
@@ -3847,16 +3899,21 @@ function BackToHome({onBack, style={}}){
 function GlobalNav({view, setView, hasResults}){
   const items = [
     {id:"home",          icon:"🏠", label:"Inicio"},
-    {id:"results",       icon:"🎵", label:"Música",    disabled:!hasResults},
+    {id:"results",       icon:"🎵", label:"Música",       disabled:!hasResults},
     {id:"budget",        icon:"💰", label:"Presupuesto"},
-    {id:"guests",        icon:"👥", label:"Invitados"},
+    {id:"vendors",       icon:"🏢", label:"Proveedores"},
     {id:"checklist-boda",icon:"📋", label:"Checklist"},
+    {id:"guests",        icon:"👥", label:"Invitados"},
+    {id:"timeline",      icon:"⏰", label:"Cronograma"},
   ];
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
   return <nav style={{
     position:"fixed",bottom:0,left:0,right:0,zIndex:100,
     background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",
     borderTop:"0.5px solid rgba(201,169,110,.25)",
-    display:"flex",alignItems:"center",justifyContent:"flex-start",overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",
+    display:"flex",alignItems:"center",
+    justifyContent:isDesktop?"center":"flex-start",
+    overflowX:"auto",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch",
     padding:"8px 0 max(8px,env(safe-area-inset-bottom))",
     boxShadow:"0 -4px 24px rgba(26,20,14,.06)"
   }} className="no-print">
