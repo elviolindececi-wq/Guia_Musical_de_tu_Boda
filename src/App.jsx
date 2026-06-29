@@ -1994,8 +1994,13 @@ function GlobalProgress({ user, hasResults }){
       const resueltos = guests.filter(g=>g.confirmacion==="confirmado"||g.confirmacion==="no_va").length;
       scores.push({ label:"Invitados", done: totalGuests>=5 && totalGuests>0 && (resueltos/totalGuests)>=0.8 });
 
-      // 6. Cronograma aprobado (pendiente de implementar aprobacion doble novios)
-      scores.push({ label:"Cronograma", done: false });
+      // 6. Cronograma aprobado por ambos novios
+      let cronoAprobado = false;
+      try {
+        const { data: trow } = await supabase.from("wedding_data").select("timeline_aprobacion").eq("user_id", user.id).single();
+        cronoAprobado = !!(trow?.timeline_aprobacion?.n1 && trow?.timeline_aprobacion?.n2);
+      } catch(e){}
+      scores.push({ label:"Cronograma", done: cronoAprobado });
 
       if(!cancelled){
         const doneCnt = scores.filter(s=>s.done).length;
@@ -3310,21 +3315,22 @@ function GuestsModule({user, onBack}){
 
 // ─── MÓDULO CRONOGRAMA ────────────────────────────────────────────────────────
 const TIMELINE_DEFAULTS = [
-  {id:"t1",hora:"08:00",titulo:"Peinado y maquillaje — Novia",duracion:180,lugar:"",notas:"",color:"#C9A96E"},
-  {id:"t2",hora:"11:00",titulo:"Peinado y maquillaje — Damas",duracion:90,lugar:"",notas:"",color:"#7B8C6E"},
-  {id:"t3",hora:"12:30",titulo:"Llegada del fotógrafo",duracion:0,lugar:"",notas:"",color:"#4A5E3A"},
-  {id:"t4",hora:"13:00",titulo:"Sesión de fotos previa",duracion:60,lugar:"",notas:"",color:"#4A5E3A"},
-  {id:"t5",hora:"15:00",titulo:"Llegada de invitados",duracion:30,lugar:"",notas:"",color:"#4A5E3A"},
-  {id:"t6",hora:"15:30",titulo:"Ceremonia",duracion:60,lugar:"",notas:"",color:"#1A1A14"},
-  {id:"t7",hora:"16:30",titulo:"Salida y fotos en altar",duracion:30,lugar:"",notas:"",color:"#4A5E3A"},
-  {id:"t8",hora:"17:00",titulo:"Cóctel",duracion:90,lugar:"",notas:"",color:"#C9A96E"},
-  {id:"t9",hora:"18:30",titulo:"Ingreso al salón",duracion:15,lugar:"",notas:"",color:"#1A1A14"},
-  {id:"t10",hora:"18:45",titulo:"Primer baile de novios",duracion:10,lugar:"",notas:"",cancion:"",esVivo:false,color:"#C9A96E"},{id:"t10b",hora:"18:55",titulo:"Vals / Baile con los padres",duracion:8,lugar:"",notas:"",cancion:"",esVivo:false,color:"#C9A96E"},
-  {id:"t11",hora:"19:00",titulo:"Brindis",duracion:15,lugar:"",notas:"",color:"#C9A96E"},
-  {id:"t12",hora:"19:15",titulo:"Cena",duracion:90,lugar:"",notas:"",color:"#4A5E3A"},
-  {id:"t13",hora:"20:45",titulo:"Torta y baile general",duracion:30,lugar:"",notas:"",color:"#C9A96E"},
-  {id:"t14",hora:"21:00",titulo:"Baile y fiesta",duracion:180,lugar:"",notas:"",color:"#4A5E3A"},
-  {id:"t15",hora:"00:00",titulo:"Cierre",duracion:0,lugar:"",notas:"",color:"#1A1A14"},
+  {id:"t1", hora:"08:00",titulo:"Peinado y maquillaje — Novia",  duracion:180,lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t2", hora:"11:00",titulo:"Peinado y maquillaje — Damas",  duracion:90, lugar:"",notas:"",color:"#7B8C6E"},
+  {id:"t3", hora:"12:30",titulo:"Llegada del fotógrafo",         duracion:0,  lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t4", hora:"13:00",titulo:"Sesión de fotos previa",        duracion:60, lugar:"",notas:"",color:"#4A5E3A"},
+  {id:"t5", hora:"15:00",titulo:"Llegada de invitados",          duracion:30, lugar:"",notas:"",color:"#4A5E3A",  cancion:"",esVivo:false,quienToca:""},
+  {id:"t6", hora:"15:30",titulo:"Ceremonia",                     duracion:60, lugar:"",notas:"",color:"#1A1A14", cancion:"",esVivo:false,quienToca:""},
+  {id:"t7", hora:"16:30",titulo:"Salida y fotos en altar",       duracion:30, lugar:"",notas:"",color:"#4A5E3A",  cancion:"",esVivo:false,quienToca:""},
+  {id:"t8", hora:"17:00",titulo:"Cóctel",                        duracion:90, lugar:"",notas:"",color:"#C9A96E", cancion:"",esVivo:false,quienToca:""},
+  {id:"t9", hora:"18:30",titulo:"Ingreso al salón",              duracion:15, lugar:"",notas:"",color:"#1A1A14"},
+  {id:"t10",hora:"18:45",titulo:"Primer baile de novios",        duracion:10, lugar:"",notas:"",color:"#C9A96E", cancion:"",esVivo:false,quienToca:""},
+  {id:"t10b",hora:"18:55",titulo:"Vals / Baile con los padres",  duracion:8,  lugar:"",notas:"",color:"#C9A96E", cancion:"",esVivo:false,quienToca:""},
+  {id:"t11",hora:"19:00",titulo:"Brindis",                       duracion:15, lugar:"",notas:"",color:"#C9A96E"},
+  {id:"t12",hora:"19:15",titulo:"Cena",                          duracion:90, lugar:"",notas:"",color:"#4A5E3A",  cancion:"",esVivo:false,quienToca:""},
+  {id:"t13",hora:"20:45",titulo:"Torta y baile general",         duracion:30, lugar:"",notas:"",color:"#C9A96E", cancion:"",esVivo:false,quienToca:""},
+  {id:"t14",hora:"21:00",titulo:"Baile y fiesta",                duracion:180,lugar:"",notas:"",color:"#4A5E3A",  cancion:"",esVivo:false,quienToca:""},
+  {id:"t15",hora:"00:00",titulo:"Cierre",                        duracion:0,  lugar:"",notas:"",color:"#1A1A14"},
 ];
 
 
@@ -3341,8 +3347,8 @@ function ShareCronograma({ events, form }){
       const durLabel = ev.duracion>0
         ? (ev.duracion<60 ? `${ev.duracion} min` : `${Math.floor(ev.duracion/60)}h${ev.duracion%60>0?" "+ev.duracion%60+"min":""}`)
         : "";
-      const cancionHtml = ev.cancion
-        ? `<div class="ev-cancion">🎵 ${ev.cancion}${ev.esVivo?' <span class="badge-vivo">EN VIVO</span>':""}</div>`
+      const cancionHtml = ("cancion" in ev) && ev.cancion
+        ? `<div class="ev-cancion">🎵 ${ev.cancion}${ev.esVivo?' <span class="badge-vivo">EN VIVO</span>':""}${ev.quienToca?' <span class="ev-quien">'+ev.quienToca+'</span>':""}</div>`
         : "";
       const notaHtml = ev.notas
         ? `<div class="ev-nota">📝 ${ev.notas}</div>`
@@ -3438,6 +3444,11 @@ function ShareCronograma({ events, form }){
     background:rgba(74,94,58,.12);color:#4A5E3A;padding:2px 6px;border-radius:100px;
     font-style:normal;
   }
+  .ev-quien{
+    font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;text-transform:uppercase;
+    background:rgba(201,169,110,.12);color:rgba(201,169,110,.85);padding:2px 6px;border-radius:100px;
+    font-style:normal;margin-left:4px;
+  }
   .ev-nota{
     font-family:'Lora',serif;font-size:9.5px;color:rgba(26,26,20,.4);
     font-style:italic;margin-top:2px;
@@ -3507,25 +3518,43 @@ function TimelineModule({user, form, results, onBack}){
   const [saved,  setSaved]  = useState(false);
   const [editId, setEditId] = useState(null);
   const [adding, setAdding] = useState(false);
-  const [newEv, setNewEv]   = useState({id:"",hora:"",titulo:"",duracion:30,lugar:"",notas:"",cancion:"",esVivo:false});
+  const [newEv, setNewEv]   = useState({id:"",hora:"",titulo:"",duracion:30,lugar:"",notas:"",cancion:"",esVivo:false,quienToca:""});
+  const [aprobacion, setAprobacion] = useState({n1:false, n2:false});
+  const [vendorsMusica, setVendorsMusica] = useState([]);
 
   useEffect(()=>{
     if(!user) return;
-    supabase.from("wedding_data").select("timeline").eq("user_id",user.id).single()
-      .then(({data:row})=>setEvents(Array.isArray(row?.timeline)&&row.timeline.length>0?row.timeline:TIMELINE_DEFAULTS))
+    supabase.from("wedding_data").select("timeline,timeline_aprobacion,vendors").eq("user_id",user.id).single()
+      .then(({data:row})=>{
+        setEvents(Array.isArray(row?.timeline)&&row.timeline.length>0?row.timeline:TIMELINE_DEFAULTS);
+        if(row?.timeline_aprobacion) setAprobacion(row.timeline_aprobacion);
+        // Vendors de música para selector
+        const vm = (Array.isArray(row?.vendors)?row.vendors:[])
+          .filter(v=>v.cat==="musica"&&v.estado!=="descartado");
+        setVendorsMusica(vm);
+      })
       .catch(()=>setEvents(TIMELINE_DEFAULTS));
   },[user]);
 
   const save = async(list) => {
     setSaving(true);
     try{
-      await supabase.from("wedding_data").upsert({user_id:user.id,timeline:list||events,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+      await supabase.from("wedding_data").upsert({user_id:user.id,timeline:list||events,timeline_aprobacion:aprobacion,updated_at:new Date().toISOString()},{onConflict:"user_id"});
       setSaved(true); setTimeout(()=>setSaved(false),1500);
     }catch(e){}
     setSaving(false);
   };
 
   const sorted = [...(events||[])].sort((a,b)=>a.hora.localeCompare(b.hora));
+
+  const aprobar = async (quien) => {
+    const next = {...aprobacion, [quien]: !aprobacion[quien]};
+    setAprobacion(next);
+    try{
+      await supabase.from("wedding_data").upsert({user_id:user.id,timeline_aprobacion:next,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+    }catch(e){}
+  };
+  const ambosAprobaron = aprobacion.n1 && aprobacion.n2;
 
   const MOMENTO_KEYWORDS = {
     "t5":  ["llegada","invitados"],
@@ -3587,14 +3616,40 @@ function TimelineModule({user, form, results, onBack}){
             </div>
           )}
         </div>
-        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
-          <input type="text" value={newEv.cancion||""} onChange={e=>setNewEv(x=>({...x,cancion:e.target.value}))} placeholder="Canción (opcional)"
-            style={{flex:1,fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14"}}/>
-          <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
-            <input type="checkbox" checked={!!newEv.esVivo} onChange={e=>setNewEv(x=>({...x,esVivo:e.target.checked}))} style={{width:16,height:16,accentColor:"#4A5E3A",cursor:"pointer"}}/>
-            En vivo
+        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+          <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)"}}>
+            <input type="checkbox" checked={"cancion" in newEv} onChange={e=>setNewEv(x=>{
+              if(e.target.checked)return{...x,cancion:"",esVivo:false,quienToca:""};
+              const{cancion,esVivo,quienToca,...rest}=x;return rest;
+            })} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+            🎵 Tiene música
           </label>
         </div>
+        {"cancion" in newEv && <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:6}}>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <input type="text" value={newEv.cancion||""} onChange={e=>setNewEv(x=>({...x,cancion:e.target.value}))} placeholder="Canción (opcional)"
+              style={{flex:1,fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14"}}/>
+            <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
+              <input type="checkbox" checked={!!newEv.esVivo} onChange={e=>setNewEv(x=>({...x,esVivo:e.target.checked}))} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+              En vivo
+            </label>
+          </div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
+            {vendorsMusica.length>0
+              ? <select value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
+                  style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
+                  <option value="">Sin asignar</option>
+                  {vendorsMusica.map(v=><option key={v.id} value={v.nombre||v.id}>{v.nombre||"Sin nombre"}</option>)}
+                  <option value="DJ">DJ</option>
+                  <option value="Música grabada">Música grabada</option>
+                </select>
+              : <input type="text" value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
+                  placeholder="ej: DJ, Violín de Ceci, Banda..."
+                  style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}/>
+            }
+          </div>
+        </div>}
         <textarea value={newEv.notas} onChange={e=>setNewEv(x=>({...x,notas:e.target.value}))} rows={2} placeholder="Notas para proveedores..."
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box",marginBottom:10}}/>
         <div style={{display:"flex",gap:8}}>
@@ -3617,17 +3672,21 @@ function TimelineModule({user, form, results, onBack}){
                   </div>
                   <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14"}}>{ev.titulo}</div>
                   {ev.lugar&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(74,94,58,.55)",marginTop:2}}>📍 {ev.lugar}</div>}
-                  {ev.cancion
-                    ? <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(201,169,110,.75)",marginTop:2,display:"flex",alignItems:"center",gap:6}}>
-                        🎵 {ev.cancion}{ev.esVivo&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",textTransform:"uppercase",background:"rgba(74,94,58,.12)",color:"#4A5E3A",padding:"2px 7px",borderRadius:100}}>En vivo</span>}
+                  {/* Solo mostrar bloque musical si el evento tiene habilitada la música */}
+                  {"cancion" in ev && (ev.cancion
+                    ? <div style={{marginTop:4,display:"flex",flexDirection:"column",gap:3}}>
+                        <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(201,169,110,.75)",display:"flex",alignItems:"center",gap:6}}>
+                          🎵 {ev.cancion}{ev.esVivo&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",textTransform:"uppercase",background:"rgba(74,94,58,.12)",color:"#4A5E3A",padding:"2px 7px",borderRadius:100}}>En vivo</span>}
+                        </div>
+                        {ev.quienToca&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.55)",display:"flex",alignItems:"center",gap:4}}>🎻 {ev.quienToca}</div>}
                       </div>
                     : getSugerencia(ev.id)
                       ? <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(74,94,58,.45)",marginTop:2,fontStyle:"italic",display:"flex",alignItems:"center",gap:5}}>
                           💡 Sugerencia: {getSugerencia(ev.id)}
                           <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))} style={{background:"rgba(74,94,58,.1)",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:100,padding:"1px 8px",fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",color:"#4A5E3A",cursor:"pointer",whiteSpace:"nowrap"}}>Usar</button>
                         </div>
-                      : null
-                  }
+                      : <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.3)",marginTop:2,fontStyle:"italic"}}>🎵 Sin canción asignada</div>
+                  )}
                   {ev.notas&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.38)",fontStyle:"italic",marginTop:3}}>{ev.notas}</div>}
                 </div>
                 <div style={{display:"flex",gap:5,flexShrink:0}}>
@@ -3643,25 +3702,85 @@ function TimelineModule({user, form, results, onBack}){
                   <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓</button>
                 </div>
                 <input type="text" defaultValue={ev.lugar||""} onBlur={e=>updateEv(ev.id,"lugar",e.target.value)} placeholder="Lugar" style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:5}}/>
-                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5}}>
-                  <div style={{flex:1,display:"flex",flexDirection:"column",gap:3}}>
-                    <input type="text" defaultValue={ev.cancion||""} onBlur={e=>updateEv(ev.id,"cancion",e.target.value)}
-                      placeholder={getSugerencia(ev.id) ? "Sugerencia del guion abajo ↓" : "Canción (ej: Can't Help Falling in Love)"}
-                      style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
-                    {!ev.cancion && getSugerencia(ev.id) && <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))}
-                      style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.6)",cursor:"pointer",textAlign:"left",padding:"0 2px"}}>
-                      💡 Usar del guion: {getSugerencia(ev.id)}
-                    </button>}
-                  </div>
-                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
-                    <input type="checkbox" defaultChecked={!!ev.esVivo} onChange={e=>updateEv(ev.id,"esVivo",e.target.checked)} style={{width:16,height:16,accentColor:"#4A5E3A",cursor:"pointer"}}/>
-                    En vivo
+                {/* Toggle música */}
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)"}}>
+                    <input type="checkbox" checked={"cancion" in ev} onChange={e=>{
+                      if(e.target.checked) updateEv(ev.id,"cancion","");
+                      else {
+                        const next=events.map(x=>{if(x.id!==ev.id)return x;const{cancion,esVivo,quienToca,...rest}=x;return rest;});
+                        setEvents(next);save(next);
+                      }
+                    }} style={{width:16,height:16,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+                    🎵 Este momento tiene música
                   </label>
                 </div>
+                {"cancion" in ev && <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:5}}>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:3}}>
+                      <input type="text" defaultValue={ev.cancion||""} onBlur={e=>updateEv(ev.id,"cancion",e.target.value)}
+                        placeholder={getSugerencia(ev.id) ? "Sugerencia del guion abajo ↓" : "Canción (ej: Can't Help Falling in Love)"}
+                        style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+                      {!ev.cancion && getSugerencia(ev.id) && <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))}
+                        style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.6)",cursor:"pointer",textAlign:"left",padding:"0 2px"}}>
+                        💡 Usar del guion: {getSugerencia(ev.id)}
+                      </button>}
+                    </div>
+                    <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
+                      <input type="checkbox" defaultChecked={!!ev.esVivo} onChange={e=>updateEv(ev.id,"esVivo",e.target.checked)} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+                      En vivo
+                    </label>
+                  </div>
+                  {/* Quién toca */}
+                  <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
+                    {vendorsMusica.length>0
+                      ? <select defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
+                          style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
+                          <option value="">Sin asignar</option>
+                          {vendorsMusica.map(v=><option key={v.id} value={v.nombre||v.id}>{v.nombre||"Proveedor sin nombre"}</option>)}
+                          <option value="DJ">DJ</option>
+                          <option value="Música grabada">Música grabada</option>
+                        </select>
+                      : <input type="text" defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
+                          placeholder="ej: DJ, Violín de Ceci, Banda..."
+                          style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                    }
+                  </div>
+                </div>}
               </div>}
             </div>
           </div>;
         })}
+      {/* ── APROBACIÓN DEL CRONOGRAMA ── */}
+      <div style={{background:ambosAprobaron?"rgba(74,94,58,.08)":"rgba(201,169,110,.05)",border:`0.5px solid ${ambosAprobaron?"rgba(74,94,58,.3)":"rgba(201,169,110,.25)"}`,borderRadius:14,padding:"16px 18px",marginTop:16}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>
+          {ambosAprobaron?"✓ Cronograma aprobado por ambos":"✓ Aprobar el cronograma"}
+        </div>
+        {ambosAprobaron
+          ? <p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(74,94,58,.7)",margin:"0 0 10px",lineHeight:1.5}}>Los dos confirmaron el cronograma. ¡Listo para compartir con los proveedores!</p>
+          : <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.5)",margin:"0 0 14px",lineHeight:1.5}}>Cuando ambos estén conformes con el cronograma, apruébenlo para darlo por cerrado.</p>
+        }
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          {[
+            {key:"n1", nombre:form?.nombre1||"Novio/a 1"},
+            {key:"n2", nombre:form?.nombre2||"Novio/a 2"},
+          ].map(({key,nombre})=>{
+            const aprobado = aprobacion[key];
+            return <button key={key} onClick={()=>aprobar(key)} style={{
+              display:"inline-flex",alignItems:"center",gap:8,
+              background:aprobado?"#4A5E3A":"transparent",
+              border:`1px solid ${aprobado?"#4A5E3A":"rgba(74,94,58,.3)"}`,
+              borderRadius:100,padding:"10px 20px",
+              fontFamily:"'Lora',serif",fontWeight:600,fontSize:".88rem",
+              color:aprobado?"#F5EFE0":"rgba(74,94,58,.7)",cursor:"pointer",transition:"all .2s"
+            }}>
+              <span style={{fontSize:"1rem"}}>{aprobado?"✓":"○"}</span>
+              {nombre} {aprobado?"aprobó":"aprobar"}
+            </button>;
+          })}
+        </div>
+      </div>
       <ShareCronograma events={events} form={form}/>
       <BackToHome onBack={onBack}/>
     </div>
@@ -3770,6 +3889,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   const [filtro,    setFiltro]    = useState("todas");
   const [filtroRes, setFiltroRes] = useState("todos");
   const [expandKey, setExpandKey] = useState(null);
+  const [vendors4Chk, setVendors4Chk] = useState([]);
   const dragItem    = useRef(null);
   const dragOver    = useRef(null);
   const timerRef    = useRef(null);
@@ -3786,6 +3906,11 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
         setOrder(row?.checklist_order || {});
         setNotas(row?.checklist_notas || {});
         setResp(row?.checklist_resp || {});
+        // Cargar vendors para vincular tareas
+        try{
+          const {data:vrow} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).single();
+          if(Array.isArray(vrow?.vendors)) setVendors4Chk(vrow.vendors.filter(v=>v.estado!=="descartado"));
+        }catch(e){}
       }catch(e){ setChecked({}); setCustom({}); setOrder({}); }
     };
     load();
@@ -3844,6 +3969,44 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
 
   const RESPONSABLES = ["Novio","Novia","Ambos","Coordinadora"];
   const RESP_COLORS = {"Novio":"rgba(74,94,58,.7)","Novia":"rgba(201,169,110,.8)","Ambos":"rgba(26,26,20,.5)","Coordinadora":"rgba(100,80,160,.7)"};
+
+  // Vendor link helpers
+  const getVendorId = (key) => notas[key+"__vendor"] || "";
+  const setVendorId = (key, val) => {
+    const next = {...notas, [key+"__vendor"]: val};
+    setNotas(next);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      try { await supabase.from("wedding_data").upsert({user_id:user.id,checklist_notas:next,updated_at:new Date().toISOString()},{onConflict:"user_id"}); } catch(e){}
+    }, 800);
+  };
+  const getVendorLabel = (key) => {
+    const vid = getVendorId(key);
+    if(!vid) return null;
+    const v = vendors4Chk.find(x=>x.id===vid);
+    return v ? (v.nombre||"Proveedor") : null;
+  };
+
+  // Fecha límite helpers
+  const getFecha = (key) => notas[key+"__fecha"] || "";
+  const setFecha = (key, val) => {
+    const next = {...notas, [key+"__fecha"]: val};
+    setNotas(next);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      try { await supabase.from("wedding_data").upsert({user_id:user.id,checklist_notas:next,updated_at:new Date().toISOString()},{onConflict:"user_id"}); } catch(e){}
+    }, 800);
+  };
+  const badgeFecha = (key) => {
+    const f = getFecha(key);
+    if(!f) return null;
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const limite = new Date(f+"T12:00:00");
+    const diff = Math.round((limite-hoy)/(1000*60*60*24));
+    if(diff < 0)  return {label:"Vencida", color:"rgba(200,60,60,.85)", bg:"rgba(200,60,60,.1)", border:"rgba(200,60,60,.3)"};
+    if(diff <= 7) return {label:`${diff===0?"Hoy":diff===1?"Mañana":"En "+diff+" días"}`, color:"rgba(180,120,0,.85)", bg:"rgba(255,200,0,.1)", border:"rgba(180,120,0,.3)"};
+    return {label:`${diff} días`, color:"rgba(74,94,58,.7)", bg:"rgba(74,94,58,.07)", border:"rgba(74,94,58,.25)"};
+  };
 
   const addCustom = (ei) => {
     if(!newText.trim()) return;
@@ -4044,17 +4207,33 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                       {notas[`${ei}_${ii}`]&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(74,94,58,.6)",fontStyle:"italic",marginTop:3}}>📝 {notas[`${ei}_${ii}`]}</div>}
                     </div>
                   </div>
-                  <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
+                  <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center",flexWrap:"wrap"}}>
                     {resp[`${ei}_${ii}`]&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".08em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.08)",color:RESP_COLORS[resp[`${ei}_${ii}`]]||"rgba(26,26,20,.5)"}}>{resp[`${ei}_${ii}`]}</span>}
+                    {(()=>{const b=badgeFecha(`${ei}_${ii}`);return b?<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 7px",borderRadius:100,background:b.bg,color:b.color,border:`0.5px solid ${b.border}`,whiteSpace:"nowrap"}}>📅 {b.label}</span>:null;})()}
+                    {getVendorLabel(`${ei}_${ii}`)&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.07)",color:"rgba(74,94,58,.65)",border:"0.5px solid rgba(74,94,58,.2)",whiteSpace:"nowrap"}}>🏢 {getVendorLabel(`${ei}_${ii}`)}</span>}
                     <button onClick={()=>setExpandKey(expandKey===`${ei}_${ii}`?null:`${ei}_${ii}`)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"2px 8px",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.5)",cursor:"pointer"}}>+</button>
                   </div>
                 </div>
-                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:8,paddingLeft:31,width:"100%",flexWrap:"wrap"}}>
+                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:8,paddingLeft:31,width:"100%",flexWrap:"wrap",alignItems:"center"}}>
                   <select value={resp[`${ei}_${ii}`]||""} onChange={e=>setResponsable(`${ei}_${ii}`,e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
                     <option value="">Sin responsable</option>
                     {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
                   </select>
-                  <input type="text" value={notas[`${ei}_${ii}`]||""} onChange={e=>setNota(`${ei}_${ii}`,e.target.value)} placeholder="Nota (proveedor, recordatorio...)" style={{flex:1,minWidth:160,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                  <input type="text" value={notas[`${ei}_${ii}`]||""} onChange={e=>setNota(`${ei}_${ii}`,e.target.value)} placeholder="Nota (proveedor, recordatorio...)" style={{flex:1,minWidth:120,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Límite:</span>
+                    <input type="date" value={getFecha(`${ei}_${ii}`)} onChange={e=>setFecha(`${ei}_${ii}`,e.target.value)}
+                      style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",width:130}}/>
+                    {getFecha(`${ei}_${ii}`)&&<button onClick={()=>setFecha(`${ei}_${ii}`,"")} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",cursor:"pointer",fontSize:".9rem",padding:"0 2px",lineHeight:1}}>×</button>}
+                  </div>
+                  {vendors4Chk.length>0&&<div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Proveedor:</span>
+                    <select value={getVendorId(`${ei}_${ii}`)} onChange={e=>setVendorId(`${ei}_${ii}`,e.target.value)}
+                      style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",maxWidth:140}}>
+                      <option value="">Ninguno</option>
+                      {vendors4Chk.map(v=><option key={v.id} value={v.id}>{v.nombre||"Sin nombre"}</option>)}
+                    </select>
+                  </div>}
                 </div>}
               </div>;
             })}
