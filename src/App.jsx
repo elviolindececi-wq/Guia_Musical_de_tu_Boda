@@ -2675,6 +2675,41 @@ function BudgetModule({ user, onBack }){
           </div>
         </div>}
 
+        {/* Ahorros: estimado vs cotizado y estimado vs pagado */}
+        {totalEstimado>0 && (totalCotizado>0||totalPagado>0) && <div style={{marginTop:16,paddingTop:14,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:10}}>Ahorros</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+            {totalCotizado>0&&(()=>{
+              const ahorro = totalEstimado - totalCotizado;
+              const pct = Math.round(Math.abs(ahorro)/totalEstimado*100);
+              const positivo = ahorro>0;
+              return <div style={{background:positivo?"rgba(74,94,58,.07)":"rgba(200,80,60,.06)",border:`0.5px solid ${positivo?"rgba(74,94,58,.25)":"rgba(200,80,60,.25)"}`,borderRadius:10,padding:"12px 14px"}}>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>Estimado vs Cotizado</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",fontWeight:700,color:positivo?"#4A5E3A":"rgba(200,60,60,.8)"}}>
+                  {positivo?"▼ ":"▲ "}{SYM}{fmt(Math.abs(ahorro))}
+                </div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:positivo?"rgba(74,94,58,.6)":"rgba(200,60,60,.6)",marginTop:3}}>
+                  {positivo?`Ahorrás un ${pct}% vs lo estimado`:`Superás el estimado en un ${pct}%`}
+                </div>
+              </div>;
+            })()}
+            {totalPagado>0&&(()=>{
+              const ahorro = totalEstimado - totalPagado;
+              const pct = Math.round(Math.abs(ahorro)/totalEstimado*100);
+              const positivo = ahorro>0;
+              return <div style={{background:positivo?"rgba(74,94,58,.07)":"rgba(200,80,60,.06)",border:`0.5px solid ${positivo?"rgba(74,94,58,.25)":"rgba(200,80,60,.25)"}`,borderRadius:10,padding:"12px 14px"}}>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>Estimado vs Pagado</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",fontWeight:700,color:positivo?"#4A5E3A":"rgba(200,60,60,.8)"}}>
+                  {positivo?"▼ ":"▲ "}{SYM}{fmt(Math.abs(ahorro))}
+                </div>
+                <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:positivo?"rgba(74,94,58,.6)":"rgba(200,60,60,.6)",marginTop:3}}>
+                  {positivo?`Pagaste un ${pct}% menos de lo estimado`:`Pagaste un ${pct}% más de lo estimado`}
+                </div>
+              </div>;
+            })()}
+          </div>
+        </div>}
+
         {/* Warning invitados reales vs presupuestados */}
         {invitadosReales>0 && parseInt(invitados)>0 && invitadosReales > parseInt(invitados) && <div style={{marginTop:12,background:"rgba(200,80,60,.06)",border:"0.5px solid rgba(200,80,60,.3)",borderRadius:10,padding:"12px 14px",display:"flex",gap:10,alignItems:"flex-start"}}>
           <span style={{flexShrink:0,fontSize:"1rem"}}>⚠️</span>
