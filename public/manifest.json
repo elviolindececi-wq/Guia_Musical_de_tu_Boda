@@ -1,0 +1,18 @@
+{
+  "name": "Mi Boda Organizada",
+  "short_name": "Mi Boda",
+  "description": "Organizá la música y planificación de tu boda",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5EFE0",
+  "theme_color": "#4A5E3A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
