@@ -3607,8 +3607,8 @@ function GuestsModule({user, onBack}){
 
 // ─── SALON VIEW (canvas drag & drop de mesas en el salón) ───────────────────
 function SalonView({ guests, tableSize, onAssign, onRemove }){
-  const canvasRef = React.useRef(null);
-  const [mesas, setMesas] = React.useState(()=>{
+  const canvasRef = useRef(null);
+  const [mesas, setMesas] = useState(()=>{
     // Calcular mesas existentes y posicionarlas en grid
     const guestList = guests || [];
     const maxMesa = Math.max(0, ...guestList.filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
@@ -3620,11 +3620,11 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
       y: 60 + Math.floor(i / cols) * 160,
     }));
   });
-  const [draggingMesa, setDraggingMesa] = React.useState(null);
-  const [draggingGuest, setDraggingGuest] = React.useState(null);
-  const [dragOffset, setDragOffset] = React.useState({x:0,y:0});
-  const [hoveredMesa, setHoveredMesa] = React.useState(null);
-  const containerRef = React.useRef(null);
+  const [draggingMesa, setDraggingMesa] = useState(null);
+  const [draggingGuest, setDraggingGuest] = useState(null);
+  const [dragOffset, setDragOffset] = useState({x:0,y:0});
+  const [hoveredMesa, setHoveredMesa] = useState(null);
+  const containerRef = useRef(null);
 
   const personas = [];
   (guests||[]).forEach(g=>{
