@@ -3452,7 +3452,7 @@ function GuestsModule({user, onBack}){
 
       <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
         <div style={{display:"flex",background:"#FBF7EF",borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
-          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Por mesas"},{id:"circulo",label:"⭕ Visual"},{id:"salon",label:"🏛️ Salón"}].map(v=>
+          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Por mesas"},{id:"salon",label:"🏛️ Salón"}].map(v=>
             <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:"7px 12px",borderRadius:100,border:"none",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer",background:viewMode===v.id?"#4A5E3A":"transparent",color:viewMode===v.id?"#F5EFE0":"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
           )}
         </div>
@@ -3581,48 +3581,52 @@ function GuestsModule({user, onBack}){
         }}
       />}
 
-      {/* ── VISTA CÍRCULO ── */}
-      {viewMode==="circulo"&&<SeatingCircleView
-        guests={guests}
-        tableSize={tableSize}
-        onAssign={(guestId, mesa)=>{
-          const next = guests.map(g=>g.id===guestId?{...g,mesa:String(mesa)}:g);
-          setGuests(next); save(next);
-        }}
-        onRemove={(guestId)=>{
-          const next = guests.map(g=>g.id===guestId?{...g,mesa:""}:g);
-          setGuests(next); save(next);
-        }}
-        onAddTable={()=>{
-          // calcular max mesa actual
-          const maxT = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
-          // no hace nada, solo como placeholder — la mesa nueva aparece al asignar
-        }}
-      />}
-
       <BackToHome onBack={onBack}/>
     </div>
   </div>;
 }
 
-// ─── SALON VIEW (canvas drag & drop de mesas en el salón) ───────────────────
+// ─── SALON VIEW ──────────────────────────────────────────────────────────────
+const SALON_SHAPES = {
+  cuadrado:   { label:"Cuadrado",   path:(w,h)=>`M0,0 L${w},0 L${w},${h} L0,${h} Z` },
+  rectangulo: { label:"Rectángulo", path:(w,h)=>`M0,0 L${w},0 L${w},${h} L0,${h} Z` },
+  L:          { label:"Forma L",    path:(w,h)=>`M0,0 L${w},0 L${w},${h*0.5} L${w*0.5},${h*0.5} L${w*0.5},${h} L0,${h} Z` },
+  U:          { label:"Forma U",    path:(w,h)=>`M0,0 L${w*0.35},0 L${w*0.35},${h*0.6} L${w*0.65},${h*0.6} L${w*0.65},0 L${w},0 L${w},${h} L0,${h} Z` },
+  oval:       { label:"Oval",       path:(w,h)=>`M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z` },
+};
+
+const ELEMENTOS_FIJOS = [
+  {id:"novios",    label:"Mesa de novios",    emoji:"💍", color:"#4A5E3A", w:100, h:40},
+  {id:"pista",     label:"Pista de baile",    emoji:"💃", color:"#C9A96E", w:120, h:100},
+  {id:"escenario", label:"DJ / Escenario",    emoji:"🎧", color:"#7B5E3A", w:80,  h:50},
+  {id:"bar",       label:"Bar",               emoji:"🍹", color:"#5E7A8C", w:60,  h:40},
+  {id:"entrada",   label:"Entrada",           emoji:"🚪", color:"#8C7A5E", w:50,  h:20},
+  {id:"banios",    label:"Baños",             emoji:"🚻", color:"#6E8C7A", w:50,  h:40},
+  {id:"cocina",    label:"Cocina / Servicio", emoji:"🍽️", color:"#7A6E5E", w:70,  h:50},
+  {id:"altar",     label:"Altar / Ceremonia", emoji:"🌸", color:"#8C5E7A", w:80,  h:60},
+];
+
 function SalonView({ guests, tableSize, onAssign, onRemove }){
-  const canvasRef = useRef(null);
+  const CANVAS_W = 700;
+  const CANVAS_H = 500;
+  const [salonShape, setSalonShape] = useState("cuadrado");
+  const [showShapePicker, setShowShapePicker] = useState(false);
   const [mesas, setMesas] = useState(()=>{
-    // Calcular mesas existentes y posicionarlas en grid
-    const guestList = guests || [];
-    const maxMesa = Math.max(0, ...guestList.filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
-    const numMesas = Math.max(maxMesa, 1);
-    const cols = Math.ceil(Math.sqrt(numMesas));
+    const maxMesa = Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
+    const numMesas = Math.max(maxMesa,1);
+    const cols = Math.ceil(Math.sqrt(numMesas+1));
     return Array.from({length:numMesas},(_,i)=>({
-      id: i+1,
-      x: 60 + (i % cols) * 160,
-      y: 60 + Math.floor(i / cols) * 160,
+      id:i+1, x:100+(i%cols)*140, y:130+Math.floor(i/cols)*140,
     }));
   });
-  const [draggingMesa, setDraggingMesa] = useState(null);
+  const [elementos, setElementos] = useState([
+    {id:"novios-1",  tipo:"novios",  x:280, y:30},
+    {id:"pista-1",   tipo:"pista",   x:255, y:330},
+    {id:"entrada-1", tipo:"entrada", x:320, y:465},
+  ]);
+  const [selectedMesa, setSelectedMesa] = useState(null);
   const [draggingGuest, setDraggingGuest] = useState(null);
-  const [dragOffset, setDragOffset] = useState({x:0,y:0});
+  const [dragging, setDragging] = useState(null);
   const [hoveredMesa, setHoveredMesa] = useState(null);
   const containerRef = useRef(null);
 
@@ -3631,171 +3635,255 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
     const cant = parseInt(g.cantidadInvitados||1);
     for(let i=0;i<cant;i++){
       personas.push({
-        guestId: g.id,
-        personIdx: i,
-        nombre: cant>1 ? `${g.nombre} ${i+1}` : g.nombre,
-        mesa: g.mesa ? parseInt(g.mesa) : null,
-        confirmacion: g.confirmacion,
+        guestId:g.id, personIdx:i,
+        nombre:cant>1?`${g.nombre} ${i+1}`:g.nombre,
+        mesa:g.mesa?parseInt(g.mesa):null,
+        confirmacion:g.confirmacion,
       });
     }
   });
-
   const sinMesa = personas.filter(p=>!p.mesa);
-  const CONF_COLORS = {confirmado:"#4A5E3A", pendiente:"#C9A96E", no_va:"rgba(26,26,20,.3)"};
+  const CONF_COLORS = {confirmado:"#4A5E3A",pendiente:"#C9A96E",no_va:"rgba(26,26,20,.3)"};
+  const circlePts = (n,r)=>Array.from({length:n},(_,i)=>{
+    const a=(i/n)*2*Math.PI-Math.PI/2;
+    return {x:Math.cos(a)*r,y:Math.sin(a)*r};
+  });
 
-  const getRect = () => containerRef.current?.getBoundingClientRect() || {left:0,top:0};
+  const getRect = ()=>containerRef.current?.getBoundingClientRect()||{left:0,top:0};
 
-  // Drag mesa
-  const startDragMesa = (e, id) => {
-    e.preventDefault();
-    const mesa = mesas.find(m=>m.id===id);
+  const startDrag = (e,type,id)=>{
+    e.preventDefault(); e.stopPropagation();
     const rect = getRect();
-    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
-    setDragOffset({x: clientX - rect.left - mesa.x, y: clientY - rect.top - mesa.y});
-    setDraggingMesa(id);
+    const cx = e.touches?.[0]?.clientX??e.clientX;
+    const cy = e.touches?.[0]?.clientY??e.clientY;
+    const item = type==="mesa"
+      ? mesas.find(m=>m.id===id)
+      : elementos.find(el=>el.id===id);
+    if(!item) return;
+    setDragging({type,id,ox:cx-rect.left-item.x,oy:cy-rect.top-item.y});
   };
 
-  const onMouseMove = (e) => {
-    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
-    if(draggingMesa !== null){
-      const rect = getRect();
-      const x = Math.max(10, clientX - rect.left - dragOffset.x);
-      const y = Math.max(10, clientY - rect.top - dragOffset.y);
-      setMesas(ms=>ms.map(m=>m.id===draggingMesa?{...m,x,y}:m));
-    }
+  const onMove = (e)=>{
+    if(!dragging) return;
+    const rect = getRect();
+    const cx = e.touches?.[0]?.clientX??e.clientX;
+    const cy = e.touches?.[0]?.clientY??e.clientY;
+    const x = Math.max(10,cx-rect.left-dragging.ox);
+    const y = Math.max(10,cy-rect.top-dragging.oy);
+    if(dragging.type==="mesa") setMesas(ms=>ms.map(m=>m.id===dragging.id?{...m,x,y}:m));
+    else setElementos(es=>es.map(el=>el.id===dragging.id?{...el,x,y}:el));
   };
-  const onMouseUp = () => { setDraggingMesa(null); };
+  const onUp = ()=>setDragging(null);
 
-  // Drag guest → mesa
-  const startDragGuest = (guestId) => setDraggingGuest(guestId);
-  const dropOnMesa = (mesaNum) => {
-    if(draggingGuest) onAssign(draggingGuest, mesaNum);
-    setDraggingGuest(null); setHoveredMesa(null);
-  };
-  const dropOnSinMesa = () => {
-    if(draggingGuest) onRemove(draggingGuest);
-    setDraggingGuest(null); setHoveredMesa(null);
-  };
-
-  const addMesa = () => {
+  const addMesa = ()=>{
     const newId = Math.max(0,...mesas.map(m=>m.id))+1;
-    setMesas(ms=>[...ms,{id:newId, x:60+(ms.length%4)*160, y:60+Math.floor(ms.length/4)*160}]);
+    const i = mesas.length;
+    const cols = Math.ceil(Math.sqrt(i+2));
+    setMesas(ms=>[...ms,{id:newId,x:80+(i%cols)*140,y:130+Math.floor(i/cols)*140}]);
   };
-
-  const removeMesa = (id) => {
-    // Desasignar invitados de esa mesa
+  const removeMesa = (id)=>{
     (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>onRemove(g.id));
     setMesas(ms=>ms.filter(m=>m.id!==id));
+    if(selectedMesa===id) setSelectedMesa(null);
   };
+  const addElemento = (tipo)=>{
+    setElementos(es=>[...es,{id:`${tipo}-${Date.now()}`,tipo,x:200,y:180}]);
+  };
+  const removeElemento = (id)=>setElementos(es=>es.filter(el=>el.id!==id));
 
-  const canvasW = Math.max(600, ...mesas.map(m=>m.x+140));
-  const canvasH = Math.max(400, ...mesas.map(m=>m.y+140));
+  const mesaPersonas = (id)=>personas.filter(p=>p.mesa===id);
+  const selectedPersonas = selectedMesa?mesaPersonas(selectedMesa):[];
+  const shape = SALON_SHAPES[salonShape];
+  const shapePath = shape.path(CANVAS_W,CANVAS_H);
 
-  return <div>
-    {/* Panel izquierdo: sin mesa */}
-    <div style={{display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
-      <div style={{minWidth:160,maxWidth:200,flexShrink:0}}>
-        <div
-          onDragOver={e=>{e.preventDefault();setHoveredMesa("sin");}}
-          onDrop={dropOnSinMesa}
-          onDragLeave={()=>setHoveredMesa(null)}
-          style={{background:hoveredMesa==="sin"?"rgba(200,60,60,.08)":"rgba(201,169,110,.06)",border:`1px dashed ${hoveredMesa==="sin"?"rgba(200,60,60,.4)":"rgba(201,169,110,.3)"}`,borderRadius:12,padding:"12px",marginBottom:12,minHeight:80,transition:"all .2s"}}
-        >
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:8}}>Sin mesa ({sinMesa.length})</div>
-          <div style={{display:"flex",flexDirection:"column",gap:5}}>
-            {sinMesa.map(p=><div key={`${p.guestId}-${p.personIdx}`}
-              draggable
-              onDragStart={()=>startDragGuest(p.guestId)}
-              onDragEnd={()=>{setDraggingGuest(null);setHoveredMesa(null);}}
-              style={{display:"flex",alignItems:"center",gap:6,background:"#FBF7EF",borderRadius:8,padding:"5px 8px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.2)"}}>
-              <div style={{width:20,height:20,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <span style={{fontSize:"9px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
-              </div>
-              <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"#1A1A14",lineHeight:1.2,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-            </div>)}
-          </div>
+  return <div style={{display:"flex",gap:12,alignItems:"flex-start",flexWrap:"wrap"}}>
+
+    {/* ── CANVAS ── */}
+    <div style={{flex:1,minWidth:280}}>
+      {/* Toolbar */}
+      <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{position:"relative"}}>
+          <button onClick={()=>setShowShapePicker(s=>!s)} style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:8,padding:"6px 12px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#4A5E3A",cursor:"pointer"}}>
+            🏛️ {SALON_SHAPES[salonShape].label} ▾
+          </button>
+          {showShapePicker&&<div style={{position:"absolute",top:"calc(100% + 4px)",left:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.2)",borderRadius:10,padding:6,zIndex:50,display:"flex",flexDirection:"column",gap:4,minWidth:140,boxShadow:"0 4px 16px rgba(0,0,0,.1)"}}>
+            {Object.entries(SALON_SHAPES).map(([k,v])=>(
+              <button key={k} onClick={()=>{setSalonShape(k);setShowShapePicker(false);}} style={{background:salonShape===k?"rgba(74,94,58,.1)":"transparent",border:"none",borderRadius:6,padding:"6px 10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{v.label}</button>
+            ))}
+          </div>}
         </div>
-        <button onClick={addMesa} style={{width:"100%",background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"8px",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:600,cursor:"pointer"}}>+ Mesa nueva</button>
-        <p style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)",marginTop:8,lineHeight:1.4,fontStyle:"italic"}}>Arrastrá personas a las mesas. Arrastrá las mesas para reorganizarlas.</p>
+        <select onChange={e=>{if(e.target.value){addElemento(e.target.value);e.target.value="";}}} defaultValue="" style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"6px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+          <option value="">+ Agregar elemento...</option>
+          {ELEMENTOS_FIJOS.map(e=><option key={e.id} value={e.id}>{e.emoji} {e.label}</option>)}
+        </select>
+        <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
       </div>
 
-      {/* Canvas del salón */}
-      <div style={{flex:1,overflowX:"auto",overflowY:"auto",maxHeight:"70vh",border:"1px solid rgba(74,94,58,.15)",borderRadius:14,background:"rgba(245,239,224,.5)"}}>
-        <div
-          ref={containerRef}
-          style={{position:"relative",width:canvasW,height:canvasH,minWidth:"100%",minHeight:400}}
-          onMouseMove={onMouseMove}
-          onTouchMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onTouchEnd={onMouseUp}
+      {/* Canvas */}
+      <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"65vh",border:"1px solid rgba(74,94,58,.2)",borderRadius:14,background:"#d4c8b0"}}>
+        <div ref={containerRef} style={{position:"relative",width:CANVAS_W,height:CANVAS_H,minWidth:CANVAS_W,userSelect:"none"}}
+          onMouseMove={onMove} onTouchMove={onMove}
+          onMouseUp={onUp} onTouchEnd={onUp} onMouseLeave={onUp}
         >
-          {/* Grid de fondo */}
-          <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}} xmlns="http://www.w3.org/2000/svg">
+          {/* Piso del salón */}
+          <svg style={{position:"absolute",inset:0,width:CANVAS_W,height:CANVAS_H,pointerEvents:"none"}}>
             <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(74,94,58,.08)" strokeWidth="1"/>
+              <pattern id="parquet" width="20" height="20" patternUnits="userSpaceOnUse">
+                <rect width="10" height="10" fill="rgba(245,239,224,.9)"/>
+                <rect x="10" width="10" height="10" fill="rgba(238,230,210,.9)"/>
+                <rect y="10" width="10" height="10" fill="rgba(238,230,210,.9)"/>
+                <rect x="10" y="10" width="10" height="10" fill="rgba(245,239,224,.9)"/>
               </pattern>
+              <clipPath id="salonClip"><path d={shapePath}/></clipPath>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)"/>
+            <path d={shapePath} fill="url(#parquet)" stroke="rgba(74,94,58,.5)" strokeWidth="3"/>
+            <g clipPath="url(#salonClip)">
+              {Array.from({length:14},(_,i)=><line key={"h"+i} x1="0" y1={i*40} x2={CANVAS_W} y2={i*40} stroke="rgba(74,94,58,.05)" strokeWidth="1"/>)}
+              {Array.from({length:18},(_,i)=><line key={"v"+i} x1={i*40} y1="0" x2={i*40} y2={CANVAS_H} stroke="rgba(74,94,58,.05)" strokeWidth="1"/>)}
+            </g>
           </svg>
 
-          {/* Mesas */}
-          {mesas.map(mesa=>{
-            const personasMesa = personas.filter(p=>p.mesa===mesa.id);
-            const over = personasMesa.length > tableSize;
-            const isHovered = hoveredMesa === mesa.id;
-            const pct = Math.min(100, Math.round(personasMesa.length/tableSize*100));
-            return <div key={mesa.id}
-              style={{
-                position:"absolute",left:mesa.x,top:mesa.y,
-                width:130,
-                background: isHovered?"rgba(74,94,58,.15)":"#FBF7EF",
-                border:`1.5px solid ${over?"rgba(200,60,60,.5)":isHovered?"rgba(74,94,58,.5)":"rgba(201,169,110,.3)"}`,
-                borderRadius:14,padding:"10px",
-                boxShadow: draggingMesa===mesa.id?"0 8px 24px rgba(0,0,0,.15)":"0 2px 8px rgba(0,0,0,.06)",
-                cursor:draggingMesa===mesa.id?"grabbing":"default",
-                userSelect:"none",zIndex:draggingMesa===mesa.id?10:1,
-                transition:"box-shadow .15s",
-              }}
-              onDragOver={e=>{e.preventDefault();setHoveredMesa(mesa.id);}}
-              onDrop={()=>dropOnMesa(mesa.id)}
-              onDragLeave={()=>setHoveredMesa(null)}
+          {/* Elementos fijos */}
+          {elementos.map(el=>{
+            const def = ELEMENTOS_FIJOS.find(e=>e.id===el.tipo)||{label:el.tipo,emoji:"📌",color:"#888",w:60,h:40};
+            return <div key={el.id}
+              style={{position:"absolute",left:el.x,top:el.y,width:def.w,height:def.h,
+                background:`${def.color}20`,border:`2px solid ${def.color}90`,
+                borderRadius:8,display:"flex",flexDirection:"column",alignItems:"center",
+                justifyContent:"center",cursor:"grab",zIndex:3}}
+              onMouseDown={e=>startDrag(e,"elem",el.id)}
+              onTouchStart={e=>startDrag(e,"elem",el.id)}
             >
-              {/* Header mesa — draggable */}
-              <div
-                onMouseDown={e=>startDragMesa(e,mesa.id)}
-                onTouchStart={e=>startDragMesa(e,mesa.id)}
-                style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,cursor:"grab"}}
-              >
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:".9rem",fontWeight:700,color:"#1A1A14"}}>Mesa {mesa.id}</div>
-                <button onClick={()=>removeMesa(mesa.id)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.25)",fontSize:".9rem",cursor:"pointer",padding:0,lineHeight:1}}>×</button>
-              </div>
-              {/* Barra capacidad */}
-              <div style={{height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",marginBottom:6}}>
-                <div style={{height:"100%",width:`${pct}%`,background:over?"rgba(200,60,60,.6)":pct>=80?"#C9A96E":"#4A5E3A",borderRadius:4,transition:"width .3s"}}/>
-              </div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",color:"rgba(26,26,20,.35)",marginBottom:6}}>{personasMesa.length}/{tableSize} personas</div>
-              {/* Personas */}
-              <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
-                {personasMesa.slice(0,8).map(p=><div key={`${p.guestId}-${p.personIdx}`}
-                  title={p.nombre}
-                  style={{width:22,height:22,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",display:"flex",alignItems:"center",justifyContent:"center",border:"1.5px solid #FBF7EF"}}>
-                  <span style={{fontSize:"8px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
-                </div>)}
-                {personasMesa.length>8&&<div style={{width:22,height:22,borderRadius:"50%",background:"rgba(26,26,20,.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <span style={{fontSize:"8px",color:"rgba(26,26,20,.5)"}}>+{personasMesa.length-8}</span>
-                </div>}
-                {personasMesa.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.3)",fontStyle:"italic",width:"100%"}}>Arrastrá invitados acá</div>}
-              </div>
+              <span style={{fontSize:"1rem"}}>{def.emoji}</span>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".48rem",letterSpacing:".06em",textTransform:"uppercase",color:def.color,textAlign:"center",lineHeight:1.2,padding:"0 2px"}}>{def.label}</span>
+              <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-6,right:-6,background:"rgba(200,60,60,.85)",border:"none",borderRadius:"50%",width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"9px"}}>×</button>
+            </div>;
+          })}
+
+          {/* Mesas en círculo */}
+          {mesas.map(mesa=>{
+            const ps = mesaPersonas(mesa.id);
+            const libres = Math.max(0,tableSize-ps.length);
+            const over = ps.length>tableSize;
+            const isSelected = selectedMesa===mesa.id;
+            const isHovered = hoveredMesa===mesa.id;
+            const R = Math.max(34,10+tableSize*4);
+            const svgSize = (R+16)*2;
+            const cx=svgSize/2, cy=svgSize/2;
+            const totalSeats = Math.max(ps.length,tableSize);
+            const pts = circlePts(totalSeats,R);
+            return <div key={mesa.id}
+              style={{position:"absolute",left:mesa.x-svgSize/2,top:mesa.y-svgSize/2,
+                width:svgSize,height:svgSize,
+                zIndex:dragging?.id===mesa.id?10:isSelected?5:2,cursor:"pointer"}}
+              onDragOver={e=>{e.preventDefault();setHoveredMesa(mesa.id);}}
+              onDrop={()=>{if(draggingGuest)onAssign(draggingGuest,mesa.id);setDraggingGuest(null);setHoveredMesa(null);}}
+              onDragLeave={()=>setHoveredMesa(null)}
+              onClick={e=>{if(!dragging)setSelectedMesa(isSelected?null:mesa.id);}}
+            >
+              <svg width={svgSize} height={svgSize} style={{overflow:"visible",display:"block"}}>
+                <g onMouseDown={e=>startDrag(e,"mesa",mesa.id)} onTouchStart={e=>startDrag(e,"mesa",mesa.id)} style={{cursor:"grab"}}>
+                  <circle cx={cx} cy={cy} r={18}
+                    fill={isSelected?"#4A5E3A":isHovered?"rgba(74,94,58,.25)":"rgba(245,239,224,.95)"}
+                    stroke={isSelected?"#4A5E3A":over?"rgba(200,60,60,.7)":"rgba(74,94,58,.5)"}
+                    strokeWidth={isSelected?2.5:1.5}/>
+                  <text x={cx} y={cy-2} textAnchor="middle" fontSize="7" fill={isSelected?"#F5EFE0":"#4A5E3A"} fontFamily="'Cinzel',serif">Mesa</text>
+                  <text x={cx} y={cy+9} textAnchor="middle" fontSize="11" fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700">{mesa.id}</text>
+                </g>
+                {pts.map((pt,i)=>{
+                  const p=ps[i];
+                  return <g key={i}>
+                    <circle cx={cx+pt.x} cy={cy+pt.y} r={10}
+                      fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.8)"}
+                      stroke={p?"rgba(255,255,255,.9)":"rgba(74,94,58,.25)"} strokeWidth="1.5"/>
+                    {p
+                      ?<text x={cx+pt.x} y={cy+pt.y+3} textAnchor="middle" fontSize="7" fill="#fff" fontWeight="700">{p.nombre.charAt(0)}</text>
+                      :<text x={cx+pt.x} y={cy+pt.y+4} textAnchor="middle" fontSize="9" fill="rgba(74,94,58,.3)">+</text>
+                    }
+                    {p&&<title>{p.nombre}</title>}
+                  </g>;
+                })}
+              </svg>
+              <button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}} style={{position:"absolute",top:0,right:0,background:"rgba(200,60,60,.8)",border:"none",borderRadius:"50%",width:15,height:15,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"9px",lineHeight:1}}>×</button>
             </div>;
           })}
         </div>
       </div>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(26,26,20,.35)",margin:"6px 0 0",fontStyle:"italic"}}>
+        Arrastrá el centro de cada mesa para moverla. Click para seleccionarla y ver sus invitados.
+      </p>
+    </div>
+
+    {/* ── PANEL LATERAL ── */}
+    <div style={{width:205,flexShrink:0,display:"flex",flexDirection:"column",gap:10}}>
+      {/* Sin mesa */}
+      <div
+        onDragOver={e=>{e.preventDefault();setHoveredMesa("sin");}}
+        onDrop={()=>{if(draggingGuest)onRemove(draggingGuest);setDraggingGuest(null);setHoveredMesa(null);}}
+        onDragLeave={()=>setHoveredMesa(null)}
+        style={{background:hoveredMesa==="sin"?"rgba(200,60,60,.08)":"rgba(201,169,110,.06)",border:`1px dashed ${hoveredMesa==="sin"?"rgba(200,60,60,.4)":"rgba(201,169,110,.3)"}`,borderRadius:10,padding:"10px",transition:"all .2s"}}
+      >
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".56rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:6}}>Sin mesa ({sinMesa.length})</div>
+        {sinMesa.length===0
+          ?<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
+          :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:120,overflowY:"auto"}}>
+            {sinMesa.map(p=>(
+              <div key={`${p.guestId}-${p.personIdx}`}
+                draggable
+                onDragStart={()=>setDraggingGuest(p.guestId)}
+                onDragEnd={()=>{setDraggingGuest(null);setHoveredMesa(null);}}
+                style={{display:"flex",alignItems:"center",gap:5,background:"#FBF7EF",borderRadius:6,padding:"4px 7px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.2)"}}>
+                <div style={{width:16,height:16,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+                </div>
+                <span style={{fontFamily:"'Lora',serif",fontSize:".73rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+              </div>
+            ))}
+          </div>
+        }
+      </div>
+
+      {/* Mesa seleccionada */}
+      {selectedMesa
+        ?<div style={{background:"#FBF7EF",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:10,padding:"12px",flex:1}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:700,color:"#1A1A14",marginBottom:3}}>Mesa {selectedMesa}</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.35)",marginBottom:8}}>
+            {selectedPersonas.length}/{tableSize} · {Math.max(0,tableSize-selectedPersonas.length)} libre{Math.max(0,tableSize-selectedPersonas.length)!==1?"s":""}
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:220,overflowY:"auto"}}>
+            {selectedPersonas.map(p=>(
+              <div key={`${p.guestId}-${p.personIdx}`}
+                draggable
+                onDragStart={()=>setDraggingGuest(p.guestId)}
+                onDragEnd={()=>{setDraggingGuest(null);setHoveredMesa(null);}}
+                style={{display:"flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.06)",borderRadius:7,padding:"5px 7px",cursor:"grab",border:"0.5px solid rgba(74,94,58,.12)"}}>
+                <div style={{width:20,height:20,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <span style={{fontSize:"8px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+                </div>
+                <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.5)",cursor:"pointer",fontSize:".82rem",padding:0,flexShrink:0}}>×</button>
+              </div>
+            ))}
+            {selectedPersonas.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas desde "Sin mesa" al círculo de esta mesa</div>}
+          </div>
+        </div>
+        :<div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.2)",borderRadius:10,padding:"16px 10px",textAlign:"center"}}>
+          <div style={{fontSize:"1.3rem",marginBottom:5}}>👆</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(26,26,20,.4)",lineHeight:1.5}}>Tocá una mesa para ver sus invitados y moverlos</div>
+        </div>
+      }
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+        <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"8px 4px",fontFamily:"'Lora',serif",fontSize:".74rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
+        <select onChange={e=>{if(e.target.value){addElemento(e.target.value);e.target.value="";}}} defaultValue="" style={{fontFamily:"'Lora',serif",fontSize:".7rem",padding:"6px 4px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+          <option value="">+ Elemento</option>
+          {ELEMENTOS_FIJOS.map(e=><option key={e.id} value={e.id}>{e.emoji} {e.label}</option>)}
+        </select>
+      </div>
     </div>
   </div>;
 }
+
 
 // ─── SEATING CIRCLE VIEW ─────────────────────────────────────────────────────
 function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
