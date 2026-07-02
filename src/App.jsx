@@ -2087,7 +2087,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
 
       {/* Module grid */}
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Módulos de planificación</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12,marginBottom:24}}>
         {modules.map(({emoji,label,desc,action,status,done,primary})=>
           <button key={label} onClick={action} style={{
             background:done?"rgba(74,94,58,.08)":primary&&!done?"#4A5E3A":"#FBF7EF",
@@ -2536,8 +2536,8 @@ function BudgetModule({ user, onBack }){
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
             <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se sincronizan automáticamente desde Proveedores</div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <select value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+            <select value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer",maxWidth:"min(220px,60vw)"}}>
               {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
             </select>
             <button onClick={()=>save()} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"9px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",minWidth:90}}>
@@ -2593,7 +2593,7 @@ function BudgetModule({ user, onBack }){
           </div>
           {mostrarCalculadora&&<div style={{marginTop:12,background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>Calculadora de distribución</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:14}}>
               <div>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🎵 Música en vivo</div>
                 <div style={{display:"flex",gap:6}}>
@@ -2610,9 +2610,9 @@ function BudgetModule({ user, onBack }){
               <div>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🌸 Decoración</div>
                 <div style={{display:"flex",gap:4}}>
-                  {[{v:"simple",l:"Simple"},{v:"estandar",l:"Estándar"},{v:"elaborada",l:"Elaborada"}].map(({v,l})=>
+                  {[{v:"simple",l:"Simple"},{v:"estandar",l:"Estándar"},{v:"elaborada",l:"Elab."}].map(({v,l})=>
                     <button key={v} onClick={()=>setEstiloDecoracion(v)} style={{
-                      flex:1,padding:"7px 4px",borderRadius:8,border:`1px solid ${estiloDecoracion===v?"#4A5E3A":"rgba(74,94,58,.2)"}`,
+                      flex:1,padding:"7px 2px",borderRadius:8,border:`1px solid ${estiloDecoracion===v?"#4A5E3A":"rgba(74,94,58,.2)"}`,
                       background:estiloDecoracion===v?"#4A5E3A":"transparent",
                       color:estiloDecoracion===v?"#F5EFE0":"rgba(26,26,20,.55)",
                       fontFamily:"'Lora',serif",fontSize:".75rem",cursor:"pointer"
@@ -2656,10 +2656,10 @@ function BudgetModule({ user, onBack }){
             {label:"Lo que cotizé",val:totalCotizado,color:"rgba(201,169,110,.9)",sub:totalCotizado>0&&totalEstimado>0?(totalCotizado<=totalEstimado?`▼ ${fmt(totalEstimado-totalCotizado)} menos`:`▲ ${fmt(totalCotizado-totalEstimado)} más`):null,subColor:totalCotizado>totalEstimado?"rgba(200,60,60,.7)":"rgba(74,94,58,.6)"},
             {label:"Lo que pagué",val:totalPagado,color:"#4A5E3A",sub:totalPagado>0&&totalCotizado>0?`${Math.round(totalPagado/totalCotizado*100)}% de lo cotizado`:null},
           ].map(({label,val,color,sub,subColor})=>
-            <div key={label} style={{background:"rgba(245,239,224,.7)",borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".56rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5,lineHeight:1.3}}>{label}</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(.95rem,2vw,1.15rem)",fontWeight:700,color}}>{SYM}{fmt(val)}</div>
-              {sub&&<div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:subColor||"rgba(26,26,20,.35)",marginTop:3,lineHeight:1.2}}>{sub}</div>}
+            <div key={label} style={{background:"rgba(245,239,224,.7)",borderRadius:12,padding:"clamp(10px,2vw,14px) clamp(8px,2vw,12px)",textAlign:"center"}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.58rem,.7vw,.72rem)",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5,lineHeight:1.3}}>{label}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1rem,2.5vw,1.2rem)",fontWeight:700,color}}>{SYM}{fmt(val)}</div>
+              {sub&&<div style={{fontFamily:"'Lora',serif",fontSize:"clamp(.7rem,.9vw,.82rem)",color:subColor||"rgba(26,26,20,.35)",marginTop:3,lineHeight:1.2}}>{sub}</div>}
             </div>
           )}
         </div>
@@ -2678,7 +2678,7 @@ function BudgetModule({ user, onBack }){
 
         {/* ── INSIGHTS ── */}
         {(invitados&&parseInt(invitados)>0||totalCotizado>0)&&<div style={{display:"flex",gap:10,flexWrap:"wrap",paddingTop:12,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
-          {invitados&&parseInt(invitados)>0&&totalEstimado>0&&<div style={{flex:1,minWidth:130,background:"rgba(74,94,58,.06)",borderRadius:10,padding:"10px 12px"}}>
+          {invitados&&parseInt(invitados)>0&&totalEstimado>0&&<div style={{flex:1,minWidth:"calc(50% - 5px)",background:"rgba(74,94,58,.06)",borderRadius:10,padding:"10px 12px"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>💡 Por invitado</div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalEstimado/parseInt(invitados)))}</div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(26,26,20,.35)",marginTop:2}}>Basado en presupuestado</div>
@@ -3377,7 +3377,7 @@ function GuestsModule({user, onBack}){
             <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
           </div>
         </div>
-        <div style={{display:"flex",gap:14,marginTop:12,flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:10,marginTop:12,flexWrap:"wrap",rowGap:6}}>
           {[{v:inv,l:"Invitaciones"},{v:total,l:"Personas"},{v:conf,l:"Confirmados",c:"rgba(201,169,110,.9)"},{v:pend,l:"Pendientes",c:"rgba(245,239,224,.5)"},{v:noVa,l:"No van",c:"rgba(245,239,224,.3)"}].map(s=>
             <div key={s.l} style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:s.c||"rgba(245,239,224,.8)"}}><strong>{s.v}</strong> {s.l}</div>
           )}
@@ -3390,7 +3390,7 @@ function GuestsModule({user, onBack}){
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
       {addMode&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"18px",marginBottom:14}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>Nuevo invitado</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:8}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginBottom:8}}>
           {[{label:"Nombre",key:"nombre",type:"text",placeholder:"Nombre completo"},{label:"Mesa Nº",key:"mesa",type:"number",placeholder:"Nº"},{label:"Personas",key:"cantidadInvitados",type:"number",placeholder:"1"}].map(f=>
             <div key={f.key}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.6)",marginBottom:4}}>{f.label}</div>
@@ -3415,7 +3415,7 @@ function GuestsModule({user, onBack}){
 
       <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
         <div style={{display:"flex",background:"#FBF7EF",borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
-          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Por mesas"}].map(v=>
+          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Por mesas"},{id:"circulo",label:"⭕ Visual"}].map(v=>
             <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:"7px 14px",borderRadius:100,border:"none",fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer",background:viewMode===v.id?"#4A5E3A":"transparent",color:viewMode===v.id?"#F5EFE0":"rgba(26,26,20,.45)",transition:"all .2s"}}>{v.label}</button>
           )}
         </div>
@@ -3491,7 +3491,7 @@ function GuestsModule({user, onBack}){
             </div>)}
           </div>
         </div>}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(200px,45vw),1fr))",gap:12}}>
           {tables.map(t=>{
             const pct=Math.round(t.personas/tableSize*100);
             const over=t.personas>tableSize;
@@ -3530,7 +3530,205 @@ function GuestsModule({user, onBack}){
           })}
         </div>
       </>}
+      {/* ── VISTA CÍRCULO ── */}
+      {viewMode==="circulo"&&<SeatingCircleView
+        guests={guests}
+        tableSize={tableSize}
+        onAssign={(guestId, mesa)=>{
+          const next = guests.map(g=>g.id===guestId?{...g,mesa:String(mesa)}:g);
+          setGuests(next); save(next);
+        }}
+        onRemove={(guestId)=>{
+          const next = guests.map(g=>g.id===guestId?{...g,mesa:""}:g);
+          setGuests(next); save(next);
+        }}
+        onAddTable={()=>{
+          // calcular max mesa actual
+          const maxT = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
+          // no hace nada, solo como placeholder — la mesa nueva aparece al asignar
+        }}
+      />}
+
       <BackToHome onBack={onBack}/>
+    </div>
+  </div>;
+}
+
+// ─── SEATING CIRCLE VIEW ─────────────────────────────────────────────────────
+function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
+  const [dragging, setDragging] = useState(null); // {guestId, personIdx}
+  const [dragOver, setDragOver] = useState(null); // {tableNum, seatIdx}
+
+  // Expandir cada invitado en personas individuales
+  const personas = [];
+  (guests||[]).forEach(g=>{
+    const cant = parseInt(g.cantidadInvitados||1);
+    for(let i=0;i<cant;i++){
+      personas.push({
+        guestId: g.id,
+        personIdx: i,
+        nombre: cant>1 ? `${g.nombre} ${i+1}` : g.nombre,
+        mesa: g.mesa ? parseInt(g.mesa) : null,
+        confirmacion: g.confirmacion,
+      });
+    }
+  });
+
+  const sinMesa = personas.filter(p=>!p.mesa);
+  const maxMesa = Math.max(0, ...personas.filter(p=>p.mesa).map(p=>p.mesa));
+  const numMesas = Math.max(maxMesa, 1);
+
+  const tables = Array.from({length:numMesas},(_,i)=>({
+    num: i+1,
+    personas: personas.filter(p=>p.mesa===i+1),
+  }));
+
+  const CONF_COLORS = {
+    confirmado: "#4A5E3A", pendiente: "#C9A96E", declinado: "#C05A4A"
+  };
+
+  // Posiciones en círculo
+  const circlePosiciones = (total, r=90) =>
+    Array.from({length:total},(_,i)=>{
+      const angle = (i/total)*2*Math.PI - Math.PI/2;
+      return { x: Math.cos(angle)*r, y: Math.sin(angle)*r };
+    });
+
+  const handleDragStart = (guestId, personIdx) => setDragging({guestId, personIdx});
+  const handleDragEnd = () => { setDragging(null); setDragOver(null); };
+
+  const handleDropOnTable = (tableNum) => {
+    if(!dragging) return;
+    // Si el grupo tiene cantidad > 1, asignar toda la familia a esa mesa
+    onAssign(dragging.guestId, tableNum);
+    setDragging(null); setDragOver(null);
+  };
+
+  const handleDropOnSin = () => {
+    if(!dragging) return;
+    onRemove(dragging.guestId);
+    setDragging(null); setDragOver(null);
+  };
+
+  const TableCircle = ({table}) => {
+    const seats = tableSize;
+    const assigned = table.personas;
+    const libres = Math.max(0, seats - assigned.length);
+    const allSeats = [...assigned, ...Array(libres).fill(null)];
+    const positions = circlePosiciones(Math.max(allSeats.length, 4), Math.max(70, 20 + allSeats.length * 10));
+    const R = Math.max(70, 20 + allSeats.length * 10);
+    const svgSize = (R + 36) * 2;
+    const cx = svgSize / 2;
+    const cy = svgSize / 2;
+    const over = assigned.length > seats;
+
+    return <div
+      onDragOver={e=>{e.preventDefault();setDragOver(table.num);}}
+      onDrop={()=>handleDropOnTable(table.num)}
+      style={{
+        background: dragOver===table.num ? "rgba(74,94,58,.08)" : "#FBF7EF",
+        border: `0.5px solid ${over?"rgba(200,80,60,.4)":dragOver===table.num?"rgba(74,94,58,.4)":"rgba(201,169,110,.22)"}`,
+        borderRadius:16,padding:"16px 12px",
+        transition:"all .2s",cursor:"default"
+      }}
+    >
+      <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1rem",color:"#1A1A14",textAlign:"center",marginBottom:4}}>
+        Mesa {table.num}
+      </div>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",textAlign:"center",marginBottom:8}}>
+        {assigned.length} asignados · {libres} libres{over?" ⚠️":""}
+      </div>
+      <div style={{display:"flex",justifyContent:"center"}}>
+        <svg width={svgSize} height={svgSize} style={{overflow:"visible"}}>
+          {/* Mesa central */}
+          <circle cx={cx} cy={cy} r={28} fill="rgba(201,169,110,.12)" stroke="rgba(201,169,110,.35)" strokeWidth="1.5"/>
+          <text x={cx} y={cy+4} textAnchor="middle" fontSize="11" fill="rgba(201,169,110,.8)" fontFamily="'Cinzel',serif">{assigned.length}/{seats}</text>
+          {/* Sillas */}
+          {allSeats.map((persona,i)=>{
+            const pos = positions[i] || {x:0,y:0};
+            const px = cx + pos.x;
+            const py = cy + pos.y;
+            const color = persona ? (CONF_COLORS[persona.confirmacion]||"#999") : "rgba(74,94,58,.12)";
+            const inicial = persona ? persona.nombre.charAt(0).toUpperCase() : "+";
+            return <g key={i}
+              draggable={!!persona}
+              onDragStart={()=>persona&&handleDragStart(persona.guestId, persona.personIdx)}
+              onDragEnd={handleDragEnd}
+              style={{cursor:persona?"grab":"default"}}
+            >
+              <circle cx={px} cy={py} r={16} fill={color} stroke="#FBF7EF" strokeWidth="2"/>
+              <text x={px} y={py+5} textAnchor="middle" fontSize={persona?"11":"14"} fill="#FBF7EF" fontFamily="'Calibri',sans-serif" fontWeight="600">{inicial}</text>
+              {persona&&<title>{persona.nombre}</title>}
+            </g>;
+          })}
+        </svg>
+      </div>
+    </div>;
+  };
+
+  return <div>
+    {/* Sin mesa */}
+    {sinMesa.length>0&&<div
+      onDragOver={e=>{e.preventDefault();setDragOver("sin");}}
+      onDrop={handleDropOnSin}
+      style={{
+        background:dragOver==="sin"?"rgba(200,80,60,.06)":"rgba(201,169,110,.06)",
+        border:`0.5px solid ${dragOver==="sin"?"rgba(200,80,60,.3)":"rgba(201,169,110,.25)"}`,
+        borderRadius:14,padding:"14px 16px",marginBottom:16,transition:"all .2s"
+      }}
+    >
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:10}}>
+        Sin mesa asignada ({sinMesa.length} {sinMesa.length===1?"persona":"personas"})
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+        {sinMesa.map((p,i)=>{
+          const color = CONF_COLORS[p.confirmacion]||"#999";
+          return <div key={`${p.guestId}-${p.personIdx}`}
+            draggable
+            onDragStart={()=>handleDragStart(p.guestId, p.personIdx)}
+            onDragEnd={handleDragEnd}
+            style={{
+              display:"flex",alignItems:"center",gap:8,
+              background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",
+              borderRadius:100,padding:"6px 12px 6px 8px",cursor:"grab",
+              boxShadow:dragging?.guestId===p.guestId?"0 2px 8px rgba(0,0,0,.12)":"none"
+            }}
+          >
+            <div style={{width:26,height:26,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <span style={{fontFamily:"'Calibri',sans-serif",fontSize:"11px",fontWeight:600,color:"#FFF"}}>{p.nombre.charAt(0)}</span>
+            </div>
+            <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",whiteSpace:"nowrap"}}>{p.nombre}</span>
+          </div>;
+        })}
+      </div>
+      {sinMesa.length>0&&<p style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)",marginTop:10,marginBottom:0,fontStyle:"italic"}}>
+        Arrastrá una persona a una mesa para asignarla
+      </p>}
+    </div>}
+
+    {/* Mesas en círculo */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(200px,44vw),1fr))",gap:16}}>
+      {tables.map(t=><TableCircle key={t.num} table={t}/>)}
+      {/* Botón agregar mesa */}
+      <div
+        onDragOver={e=>{e.preventDefault();setDragOver("nueva");}}
+        onDrop={()=>{
+          if(!dragging) return;
+          handleDropOnTable(numMesas+1);
+        }}
+        style={{
+          border:`1.5px dashed ${dragOver==="nueva"?"#4A5E3A":"rgba(74,94,58,.25)"}`,
+          borderRadius:16,padding:"16px",display:"flex",flexDirection:"column",
+          alignItems:"center",justifyContent:"center",gap:8,minHeight:180,
+          background:dragOver==="nueva"?"rgba(74,94,58,.06)":"transparent",
+          cursor:"default",transition:"all .2s"
+        }}
+      >
+        <span style={{fontSize:"1.5rem"}}>➕</span>
+        <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(74,94,58,.5)",textAlign:"center"}}>
+          {dragOver==="nueva"?"Soltar aquí para crear mesa nueva":"Arrastrá aquí para crear Mesa "+(numMesas+1)}
+        </span>
+      </div>
     </div>
   </div>;
 }
@@ -3829,7 +4027,7 @@ function TimelineModule({user, form, results, onBack}){
     </div>
     <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
       {adding&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"18px",marginBottom:14}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:8}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginBottom:8}}>
           {[{label:"Hora",key:"hora",type:"time"},{label:"Evento",key:"titulo",type:"text",placeholder:"ej: Primer baile"},{label:"Duración (min)",key:"duracion",type:"number"},{label:"Lugar",key:"lugar",type:"text",placeholder:"ej: Jardín"}].map(f=>
             <div key={f.key}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginBottom:4}}>{f.label}</div>
@@ -3917,10 +4115,10 @@ function TimelineModule({user, form, results, onBack}){
                 </div>
               </div>
               :<div>
-                <div style={{display:"grid",gridTemplateColumns:"90px 1fr 70px auto",gap:8,alignItems:"center",marginBottom:7}}>
-                  <input type="time" defaultValue={ev.hora} onBlur={e=>updateEv(ev.id,"hora",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14"}}/>
-                  <input type="text" defaultValue={ev.titulo} onBlur={e=>updateEv(ev.id,"titulo",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:"100%"}}/>
-                  <input type="number" defaultValue={ev.duracion} onBlur={e=>updateEv(ev.id,"duracion",e.target.value)} placeholder="min" title="Duración en minutos" style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:"100%"}}/>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",marginBottom:7}}>
+                  <input type="time" defaultValue={ev.hora} onBlur={e=>updateEv(ev.id,"hora",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:90}}/>
+                  <input type="text" defaultValue={ev.titulo} onBlur={e=>updateEv(ev.id,"titulo",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",flex:1,minWidth:120}}/>
+                  <input type="number" defaultValue={ev.duracion} onBlur={e=>updateEv(ev.id,"duracion",e.target.value)} placeholder="min" title="Duración en minutos" style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:70}}/>
                   <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓</button>
                 </div>
                 <input type="text" defaultValue={ev.lugar||""} onBlur={e=>updateEv(ev.id,"lugar",e.target.value)} placeholder="Lugar" style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:5}}/>
@@ -4436,7 +4634,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                     <button onClick={()=>setExpandKey(expandKey===`${ei}_${ii}`?null:`${ei}_${ii}`)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"2px 8px",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.5)",cursor:"pointer"}}>+</button>
                   </div>
                 </div>
-                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:8,paddingLeft:31,width:"100%",flexWrap:"wrap",alignItems:"center"}}>
+                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:8,paddingLeft:0,width:"100%",flexWrap:"wrap",alignItems:"center",marginTop:6}}>
                   <select value={resp[`${ei}_${ii}`]||""} onChange={e=>setResponsable(`${ei}_${ii}`,e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
                     <option value="">Sin responsable</option>
                     {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
