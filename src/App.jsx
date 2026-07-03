@@ -1652,7 +1652,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:3}}>Tu link privado de acceso</div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:DIM,lineHeight:1.4}}>Guardalo para volver a tu guion desde cualquier dispositivo.</div>
           </div>
-          <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);alert("Link copiado ✓");}catch(e){}}}>Copiar link</button>
+          <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);showToast("Link copiado ✓","success");}catch(e){}}}>Copiar link</button>
         </div>
       </div>}
 
@@ -1800,7 +1800,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
           {resultToken&&<div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(74,94,58,.14)",borderRadius:12,padding:"14px 16px"}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:G,marginBottom:6}}>Volver a tu resultado desde cualquier dispositivo</div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:DIM,wordBreak:"break-all",marginBottom:10,lineHeight:1.4}}>{typeof window!=="undefined"?`${window.location.origin}${window.location.pathname}?r=${resultToken}`:""}</div>
-            <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);alert("Link copiado ✓");}catch(e){}}}>Copiar link privado</button>
+            <button className="lbtn" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?r=${resultToken}`);showToast("Link copiado ✓","success");}catch(e){}}}>Copiar link privado</button>
           </div>}
         </div>
       </AccordionBlock>
@@ -2266,6 +2266,78 @@ function calcBudgetFromVendors(budgetData, vendorsList){
   return next;
 }
 
+
+// ─── SISTEMA DE TOAST ────────────────────────────────────────────────────────
+
+// Helper toast global (sin context, para compatibilidad)
+const _toastListeners = [];
+function showToast(msg, type="info"){
+  _toastListeners.forEach(fn=>fn(msg,type));
+}
+const ToastContext = React.createContext(null);
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const add = (msg, type="info", duration=3000) => {
+    const id = Date.now();
+    setToasts(t => [...t, {id, msg, type}]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), duration);
+  };
+  useEffect(()=>{
+    _toastListeners.push(add);
+    return ()=>{ const i=_toastListeners.indexOf(add); if(i>=0)_toastListeners.splice(i,1); };
+  },[]);
+  const COLORS = {
+    success: {bg:"#4A5E3A", icon:"✓"},
+    error:   {bg:"rgba(200,60,60,.9)", icon:"✗"},
+    info:    {bg:"rgba(26,26,20,.85)", icon:"ℹ"},
+    warning: {bg:"rgba(201,169,110,.9)", icon:"⚠️"},
+  };
+  return <ToastContext.Provider value={add}>
+    {children}
+    <div style={{position:"fixed",bottom:"max(24px,env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",zIndex:9999,display:"flex",flexDirection:"column",gap:8,alignItems:"center",pointerEvents:"none"}}>
+      {toasts.map(t => {
+        const s = COLORS[t.type]||COLORS.info;
+        return <div key={t.id} style={{background:s.bg,color:"#FFF",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"10px 20px",borderRadius:100,display:"flex",alignItems:"center",gap:8,boxShadow:"0 4px 16px rgba(0,0,0,.25)",animation:"toastIn .2s ease",maxWidth:"calc(100vw - 32px)",textAlign:"center",pointerEvents:"none"}}>
+          <span>{s.icon}</span>
+          <span>{t.msg}</span>
+        </div>;
+      })}
+    </div>
+    <style>{`@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+  </ToastContext.Provider>;
+}
+const useToast = () => React.useContext(ToastContext);
+
+// ─── MODAL DE CONFIRMACIÓN ────────────────────────────────────────────────────
+function ConfirmModal({ msg, onConfirm, onCancel, danger=true }) {
+  return <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}
+    onClick={onCancel}>
+    <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.4)",backdropFilter:"blur(2px)"}}/>
+    <div style={{position:"relative",background:"#FBF7EF",borderRadius:16,padding:"24px 20px",maxWidth:320,width:"100%",boxShadow:"0 8px 32px rgba(0,0,0,.2)"}}
+      onClick={e=>e.stopPropagation()}>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"#1A1A14",margin:"0 0 20px",textAlign:"center",lineHeight:1.5}}>{msg}</p>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={onCancel} style={{flex:1,background:"transparent",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,padding:"10px",fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.5)",cursor:"pointer"}}>Cancelar</button>
+        <button onClick={onConfirm} style={{flex:1,background:danger?"rgba(200,60,60,.9)":"#4A5E3A",border:"none",borderRadius:100,padding:"10px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:700,color:"#FFF",cursor:"pointer"}}>Confirmar</button>
+      </div>
+    </div>
+  </div>;
+}
+
+function useConfirm() {
+  const [state, setState] = useState(null);
+  const confirm = (msg) => new Promise(resolve => {
+    setState({msg, resolve});
+  });
+  const modal = state ? <ConfirmModal
+    msg={state.msg}
+    danger={true}
+    onConfirm={()=>{state.resolve(true); setState(null);}}
+    onCancel={()=>{state.resolve(false); setState(null);}}/> : null;
+  return [confirm, modal];
+}
+
 // ─── MÓDULO PRESUPUESTO ────────────────────────────────────────────────────────
 const CATEGORIAS_DEFAULT = [
   {id:"salon",    emoji:"🏛️", nombre:"Salón / Venue",              estimado:0,cotizado:0,pagado:0,notas:""},
@@ -2526,7 +2598,7 @@ function BudgetModule({ user, onBack }){
             </div>
           )}
           {[{label:"Cotizado",val:num(c.cotizado)},{label:"Pagado",val:num(c.pagado)}].map(({label,val})=>
-            <div key={label} onClick={()=>alert("💡 Este valor se calcula automáticamente desde el módulo de Proveedores.\n\nCuando agregás un proveedor en esa categoría, el cotizado y pagado se actualizan solos.\n\nPara modificarlo, andá a Proveedores → editá el precio o el estado del proveedor.")} style={{cursor:"help"}}>
+            <div key={label} onClick={()=>showToast("💡 Este valor se calcula desde el módulo de Proveedores","info",4000)} style={{cursor:"help"}}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.28)",marginBottom:4}}>{label} 🔗</div>
               <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px dashed rgba(74,94,58,.2)",background:"rgba(74,94,58,.04)",color:"rgba(26,26,20,.4)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <span>{SYM}{fmt(val)}</span>
@@ -3120,6 +3192,14 @@ function GuestsModule({user, onBack}){
   const [search, setSearch]     = useState("");
   const [expandedId, setExpandedId] = useState(null);
   const [budgetInvitados, setBudgetInvitados] = useState(0);
+  const [showGuestMenu, setShowGuestMenu] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  useEffect(()=>{
+    const h=()=>setShowGuestMenu(false);
+    document.addEventListener("mousedown",h);
+    return ()=>document.removeEventListener("mousedown",h);
+  },[]);
 
   useEffect(()=>{
     if(!user) return;
@@ -3331,7 +3411,7 @@ function GuestsModule({user, onBack}){
       if(row.some(function(c){ return HEADER_KEYS.indexOf(c) >= 0; })){ headerIdx = i; break; }
     }
     if(headerIdx < 0){
-      alert("No se encontro la fila de encabezados. Asegurate de tener las columnas: Nombre, Personas, Mesa, Lado, Confirmacion, Restriccion, Notas");
+      showToast("No se encontró la fila de encabezados en el archivo","error");
       return;
     }
     const headers2 = rows[headerIdx].map(function(c){
@@ -3340,7 +3420,7 @@ function GuestsModule({user, onBack}){
     const col = function(name){ return headers2.indexOf(name); };
     const iN = col("nombre"), iP = col("personas"), iM = col("mesa");
     const iL = col("lado"), iC = col("confirmacion"), iR = col("restriccion"), iNt = col("notas");
-    if(iN < 0){ alert("Falta la columna Nombre en el archivo."); return; }
+    if(iN < 0){ showToast("Falta la columna Nombre en el archivo","error"); return; }
     const LADOS = ["novio","novia","ambos"];
     const CONFS = ["pendiente","confirmado","no va"];
     const RESTRS = ["ninguna","vegetariano","vegano","sin gluten","sin lactosa","kosher","halal","alergia","otra"];
@@ -3367,11 +3447,11 @@ function GuestsModule({user, onBack}){
       newGuests.push({id:Date.now()+"-"+i, nombre:nombre, cantidadInvitados:personas, mesa:mesa, lado:lado, confirmacion:confirmacion, restriccion:restriccion, notas:notas});
     }
     if(newGuests.length === 0){
-      alert("No se encontraron invitados validos. Verifica que el archivo tenga la columna Nombre y datos.");
+      showToast("No se encontraron invitados válidos en el archivo","error");
       return;
     }
     const warn = errs.length > 0 ? " Advertencias: " + errs.slice(0,3).join(". ") : "";
-    alert("Se importaron " + newGuests.length + " invitados." + warn);
+    showToast(`✓ ${newGuests.length} invitados importados`+(warn?". "+warn:""),"success",4000);
     const next = (guests || []).concat(newGuests);
     setGuests(next);
     save(next);
@@ -3434,6 +3514,10 @@ function GuestsModule({user, onBack}){
   const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
 
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+    {confirmDelete&&<ConfirmModal
+      msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
+      onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
+      onCancel={()=>setConfirmDelete(null)}/>}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
@@ -3443,24 +3527,30 @@ function GuestsModule({user, onBack}){
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-            <div style={{background:"rgba(245,239,224,.12)",borderRadius:12,padding:"10px 14px"}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(245,239,224,.6)",marginBottom:6}}>Personas por mesa</div>
-              <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
-              {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#C9A96E":"transparent",color:tableSize===n?"#1A1A14":"rgba(245,239,224,.55)",border:`0.5px solid ${tableSize===n?"#C9A96E":"rgba(245,239,224,.2)"}`,borderRadius:100,padding:"4px 11px",fontFamily:"'Lora',serif",fontSize:".85rem",fontWeight:tableSize===n?700:400,cursor:"pointer",minWidth:32}}>
-                  {n}
-                </button>)}
-              </div>
+            {/* Acción principal siempre visible */}
+            <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".95rem",borderRadius:100,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
+            {/* Menú de opciones secundarias */}
+            <div style={{position:"relative"}}>
+              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"9px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+                ⚙️ Opciones ▾
+              </button>
+              {showGuestMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:12,padding:8,zIndex:100,boxShadow:"0 8px 24px rgba(0,0,0,.12)",minWidth:200}}>
+                {/* Personas por mesa */}
+                <div style={{padding:"8px 10px",borderBottom:"0.5px solid rgba(74,94,58,.1)",marginBottom:6}}>
+                  <div style={{fontFamily:"'Cinzel',serif",fontSize:".56rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>Personas por mesa</div>
+                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                    {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#4A5E3A":"transparent",color:tableSize===n?"#F5EFE0":"rgba(26,26,20,.6)",border:`1px solid ${tableSize===n?"#4A5E3A":"rgba(74,94,58,.2)"}`,borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",fontWeight:tableSize===n?700:400,cursor:"pointer",minWidth:32}}>{n}</button>)}
+                  </div>
+                </div>
+                {guests&&guests.length>0&&guests.some(g=>!g.mesa||g.mesa==="")&&<button onClick={()=>{asignarMesasAuto();setShowGuestMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>🪑 Asignar mesas automáticamente</button>}
+                <button onClick={()=>{exportToExcel();setShowGuestMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>↓ Exportar a Excel</button>
+                <button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>↓ Descargar plantilla</button>
+                <label style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer"}}>
+                  ↑ Importar lista
+                  <input type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
+                </label>
+              </div>}
             </div>
-            <button onClick={exportToExcel} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"9px 16px",fontFamily:"'Lora',serif",fontSize:".85rem",borderRadius:100,cursor:"pointer"}}>↓ Excel</button>
-            <button onClick={downloadTemplate} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer"}}>↓ Plantilla</button>
-            <label style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer"}}>
-              ↑ Importar
-              <input type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
-            </label>
-            {guests&&guests.length>0&&guests.some(g=>!g.mesa||g.mesa==="")&&<button onClick={asignarMesasAuto} disabled={autoMesaLoading} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"8px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer"}}>
-              {autoMesaLoading?"Asignando...":"🪑 Generar mesas auto"}
-            </button>}
-            <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"11px 22px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:"1rem",borderRadius:100,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)"}}>+ Agregar invitado</button>
           </div>
         </div>
         {/* Stats cards visuales */}
@@ -3472,9 +3562,9 @@ function GuestsModule({user, onBack}){
             {v:pend, l:"Pendientes",   icon:"⏳", bg:"rgba(201,169,110,.25)"},
             {v:noVa, l:"No van",       icon:"✗",  bg:"rgba(200,60,60,.2)"},
           ].map(s=>(
-            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:64}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:700,color:"#F5EFE0",lineHeight:1}}>{s.v}</div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
+            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:56,flex:"0 0 auto"}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:"#F5EFE0",lineHeight:1}}>{s.v}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.44rem,.7vw,.52rem)",letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
             </div>
           ))}
           {total>0&&<div style={{background:"rgba(245,239,224,.08)",borderRadius:10,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:64}}>
@@ -3496,7 +3586,7 @@ function GuestsModule({user, onBack}){
     </div>
 
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box"}}>
-      {addMode&&<div style={{background:"#FBF7EF",border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"20px",marginBottom:16,boxShadow:"0 4px 20px rgba(74,94,58,.1)"}}>
+      {addMode&&<div style={{background:"#FBF7EF",border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(74,94,58,.08)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",fontWeight:700,color:"#1A1A14"}}>Nuevo invitado</div>
           <button onClick={()=>setAddMode(false)} style={{background:"transparent",border:"none",fontSize:"1.2rem",cursor:"pointer",color:"rgba(26,26,20,.3)",lineHeight:1}}>×</button>
@@ -3592,7 +3682,7 @@ function GuestsModule({user, onBack}){
             {!isEdit
               ? <>
                   {/* Fila principal — siempre visible */}
-                  <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",cursor:"pointer"}}
+                  <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}}
                     onClick={()=>setExpandedId(isExpanded?null:g.id)}>
                     {/* Avatar inicial */}
                     <div style={{width:36,height:36,borderRadius:"50%",background:c.bg||"rgba(74,94,58,.1)",border:`1.5px solid ${c.color}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -3654,7 +3744,7 @@ function GuestsModule({user, onBack}){
                       style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:10}}/>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       <button onClick={()=>setExpandedId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".85rem",cursor:"pointer"}}>✓ Guardar</button>
-                      <button onClick={()=>{ if(window.confirm("¿Eliminar a "+g.nombre+"?")) removeGuest(g.id); }} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(200,60,60,.6)",cursor:"pointer",marginLeft:"auto"}}>Eliminar</button>
+                      <button onClick={()=>setConfirmDelete(g.id)} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(200,60,60,.6)",cursor:"pointer",marginLeft:"auto"}}>Eliminar</button>
                     </div>
                   </div>}
                 </>
@@ -3689,7 +3779,7 @@ function GuestsModule({user, onBack}){
             </div>)}
           </div>
         </div>}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(260px,100%),1fr))",gap:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:10}}>
           {tables.map(t=>{
             const pct=Math.round(t.personas/tableSize*100);
             const over=t.personas>tableSize;
@@ -3869,6 +3959,19 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
       const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
       setPinch({dist:Math.sqrt(dx*dx+dy*dy),zoom0:zoom,mx,my,pan0:{...pan}});
+    } else if(e.touches.length===1){
+      // 1 dedo: iniciar pan solo si no es sobre una mesa/elemento
+      const tgt=e.target;
+      const isBg=tgt===viewportRef.current||tgt===canvasRef.current||
+                 tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path"||
+                 tgt.tagName==="line"||tgt.tagName==="pattern";
+      if(isBg){
+        const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+        const cx=e.touches[0].clientX;
+        const cy=e.touches[0].clientY;
+        setDragging({type:"pan",x0:cx-r.left,y0:cy-r.top,pan0:{...pan}});
+        dragMoved.current=false;
+      }
     }
   };
   const onTouchMove=(e)=>{
@@ -3951,8 +4054,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,ew,eh}:x));
     } else if(dragging.type==="guest"){
       setDragging(d=>({...d,cx:pos.x,cy:pos.y}));
-      // Radio de detección generoso: toda la mesa + zona de asientos + margen extra
-      const detectR=(MESA_R_M+ASIENTO_R_M*2+0.5)*PX;
+      // Radio de detección generoso para touch: extra margen
+      const isTouchEvt=!!e.touches;
+      const detectR=(MESA_R_M+ASIENTO_R_M*2+(isTouchEvt?1.0:0.5))*PX;
       const over=mesas.find(m=>{const dx=m.mx*PX-pos.x,dy=m.my*PX-pos.y;return Math.sqrt(dx*dx+dy*dy)<detectR;});
       setHoveredMesa(over?over.id:null);
     } else if(dragging.type==="pan"){
@@ -4294,9 +4398,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   return <div style={{display:"flex",flexDirection:"column",gap:0}}>
 
     {/* ── TOOLBAR ── */}
-    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:6}}>
+    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:5}}>
       {/* Fila 1: Forma + Medidas + Zoom */}
-      <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>
         {/* Forma salón */}
         <div style={{position:"relative"}}>
           <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
@@ -4326,7 +4430,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
         </button>
       </div>
       {/* Fila 2: Acciones */}
-      <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",flexShrink:0}}>
         {/* Agregar elemento */}
         <div style={{position:"relative"}}>
           <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
@@ -4354,12 +4458,12 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     </div>}
 
     {/* ── LAYOUT PRINCIPAL: Canvas + Panel ── */}
-    <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"flex-start"}}>
+    <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"flex-start",width:"100%"}}>
 
       {/* ── CANVAS ── */}
       <div style={{flex:"1 1 300px",minWidth:0}}>
         <div ref={viewportRef}
-          style={{width:"100%",height:"clamp(300px,60vw,480px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none"}}
+          style={{width:"100%",height:"clamp(300px,55vh,480px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none",WebkitUserSelect:"none",userSelect:"none"}}
           onMouseDown={e=>{
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
@@ -4443,7 +4547,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
               >
                 {jsx}
                 {/* Botón eliminar — solo al seleccionar */}
-                {isSelected&&<button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10,lineHeight:1}}>×</button>}
+                {isSelected&&<button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}} style={{position:"absolute",top:-10,right:-10,background:"rgba(200,60,60,.9)",border:"2px solid #FBF7EF",borderRadius:"50%",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"11px",zIndex:10,lineHeight:1}}>×</button>}
               </div>;
             })}
 
@@ -4455,8 +4559,8 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           </div>
 
           {/* Tip navegación */}
-          <div style={{position:"absolute",bottom:8,right:10,fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(255,255,255,.4)",pointerEvents:"none"}}>
-            Arrastrá el canvas para moverlo · {isMobile?"Pellizco":"Botones"} = zoom
+          <div style={{position:"absolute",bottom:6,left:"50%",transform:"translateX(-50%)",fontFamily:"'Lora',serif",fontSize:".62rem",color:"rgba(255,255,255,.38)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(0,0,0,.2)",borderRadius:100,padding:"3px 10px"}}>
+            {isMobile?"👆 Deslizá para mover · Pellizco para zoom":"🖱️ Arrastrá el fondo · Scroll para zoom"}
           </div>
         </div>
 
@@ -6469,4 +6573,8 @@ export default function App(){
   }}/><GlobalNav view={view} setView={setView} hasResults={!!results}/><InstallPrompt/></>;
 
   return <><HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} onGoModule={(m)=>setView(m)} onViewResults={()=>setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/><GlobalNav view={view} setView={setView} hasResults={!!results}/><InstallPrompt/></>;
+}
+
+function AppWithProviders(){
+  return <ToastProvider><App/></ToastProvider>;
 }
