@@ -3817,7 +3817,9 @@ function GuestsModule({user, onBack}){
           </div>
         </div>
         {/* Stats cards visuales */}
-        <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",rowGap:4}}>
+        <div style={isMobile
+          ?{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:5,marginTop:8}
+          :{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",rowGap:4}}>
           {[
             {v:inv,  l:"Invitaciones", icon:"✉️", bg:"rgba(245,239,224,.12)"},
             {v:total,l:"Personas",     icon:"👥", bg:"rgba(245,239,224,.12)"},
@@ -3825,13 +3827,13 @@ function GuestsModule({user, onBack}){
             {v:pend, l:"Pendientes",   icon:"⏳", bg:"rgba(201,169,110,.25)"},
             {v:noVa, l:"No van",       icon:"✗",  bg:"rgba(200,60,60,.2)"},
           ].map(s=>(
-            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:isMobile?"5px 7px":"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:isMobile?46:56,flex:"0 0 auto"}}>
+            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:isMobile?"6px 4px":"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",...(isMobile?{width:"100%",boxSizing:"border-box"}:{minWidth:56,flex:"0 0 auto"})}}>
               <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:THEME.color.cream,lineHeight:1}}>{s.v}</div>
               <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
             </div>
           ))}
-          {total>0&&<div style={{background:"rgba(245,239,224,.08)",borderRadius:10,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:64}}>
-            <div style={{fontFamily:THEME.font.display,fontSize:"1.3rem",fontWeight:700,color:"rgba(201,169,110,.8)",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
+          {total>0&&<div style={{background:"rgba(245,239,224,.08)",borderRadius:10,padding:isMobile?"6px 4px":"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",...(isMobile?{width:"100%",boxSizing:"border-box"}:{minWidth:64})}}>
+            <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"1.3rem",fontWeight:700,color:"rgba(201,169,110,.8)",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.45)",marginTop:3}}>Confirmado</div>
           </div>}
         </div>
