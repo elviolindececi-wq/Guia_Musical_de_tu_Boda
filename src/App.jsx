@@ -1,6 +1,6 @@
 ﻿/* eslint-disable */
 // @ts-nocheck
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // ─── Supabase inline (funciona en preview y en Vercel) ─────────────────────
@@ -2274,7 +2274,7 @@ const _toastListeners = [];
 function showToast(msg, type="info"){
   _toastListeners.forEach(fn=>fn(msg,type));
 }
-const ToastContext = React.createContext(null);
+const ToastContext = createContext(null);
 
 function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
@@ -2307,7 +2307,7 @@ function ToastProvider({ children }) {
     <style>{`@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
   </ToastContext.Provider>;
 }
-const useToast = () => React.useContext(ToastContext);
+const useToast = () => useContext(ToastContext);
 
 // ─── MODAL DE CONFIRMACIÓN ────────────────────────────────────────────────────
 function ConfirmModal({ msg, onConfirm, onCancel, danger=true }) {
