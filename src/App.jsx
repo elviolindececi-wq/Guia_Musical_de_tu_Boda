@@ -3755,9 +3755,9 @@ function GuestsModule({user, onBack}){
 const SALON_SHAPES = {
   cuadrado:   { label:"Cuadrado",   path:(w,h)=>`M0,0 L${w},0 L${w},${h} L0,${h} Z` },
   rectangulo: { label:"Rectángulo", path:(w,h)=>`M0,0 L${w},0 L${w},${h} L0,${h} Z` },
-  L:  { label:"Forma L", path:(w,h)=>`M0,0 L${w},0 L${w},${h*0.5} L${w*0.5},${h*0.5} L${w*0.5},${h} L0,${h} Z` },
-  U:  { label:"Forma U", path:(w,h)=>`M0,0 L${w*0.35},0 L${w*0.35},${h*0.6} L${w*0.65},${h*0.6} L${w*0.65},0 L${w},0 L${w},${h} L0,${h} Z` },
-  oval:{ label:"Oval",  path:(w,h)=>`M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z` },
+  L:   { label:"Forma L", path:(w,h)=>`M0,0 L${w},0 L${w},${h*0.5} L${w*0.5},${h*0.5} L${w*0.5},${h} L0,${h} Z` },
+  U:   { label:"Forma U", path:(w,h)=>`M0,0 L${w*0.35},0 L${w*0.35},${h*0.6} L${w*0.65},${h*0.6} L${w*0.65},0 L${w},0 L${w},${h} L0,${h} Z` },
+  oval:{ label:"Oval",    path:(w,h)=>`M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z` },
 };
 
 const ELEMENTOS_FIJOS = [
@@ -3771,968 +3771,660 @@ const ELEMENTOS_FIJOS = [
   {id:"altar",     label:"Altar",        emoji:"🌸", color:"#8C5E7A", w:5,  h:3.5},
 ];
 
+const ESTILOS_DISTRIB = [
+  {id:"banquet",      label:"Banquete",       desc:"Mesas redondas en filas"},
+  {id:"pista_centro", label:"Pista al centro",desc:"Mesas alrededor de la pista"},
+  {id:"cabaret",      label:"Cabaret",        desc:"Filas mirando al escenario"},
+  {id:"cantine",      label:"Cantine",        desc:"Mesas largas en columnas"},
+  {id:"u_shape",      label:"Forma en U",     desc:"Mesas en U, todos al frente"},
+  {id:"chevrons",     label:"Chevrones",      desc:"Mesas en espiga diagonal"},
+];
+
 function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove }){
-  const [salonW, setSalonW] = useState(20);
-  const [salonH, setSalonH] = useState(15);
+  // ── Estado general ──
+  const [salonW, setSalonW]       = useState(20);
+  const [salonH, setSalonH]       = useState(15);
   const [salonShape, setSalonShape] = useState("cuadrado");
-  const [showShapePicker, setShowShapePicker] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  // Pan offset (desplazamiento del lienzo)
-  const [pan, setPan] = useState({x:20, y:20});
-
-  const BASE_PX = 30;
-  const PX = BASE_PX * zoom;
-  const CW = salonW * PX;
-  const CH = salonH * PX;
-
-  const [mesas, setMesas] = useState(()=>{
-    const maxMesa = Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
-    const numMesas = Math.max(maxMesa,1);
-    const cols = Math.ceil(Math.sqrt(numMesas+1));
-    return Array.from({length:numMesas},(_,i)=>({
-      id:i+1, mx:3+(i%cols)*3.5, my:3+Math.floor(i/cols)*3.5,
-    }));
+  const [zoom, setZoom]           = useState(1);
+  const [pan, setPan]             = useState({x:30,y:30});
+  const [mesas, setMesas]         = useState(()=>{
+    const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
+    const n=Math.max(maxM,1);
+    const cols=Math.ceil(Math.sqrt(n+1));
+    return Array.from({length:n},(_,i)=>({id:i+1,mx:3+(i%cols)*3.5,my:3+Math.floor(i/cols)*3.5,tipo:"round",etiqueta:""}));
   });
-
   const [elementos, setElementos] = useState([
-    {id:"novios-1",  tipo:"novios",  mx:8,  my:1,   ew:5,  eh:1.5},
-    {id:"pista-1",   tipo:"pista",   mx:6,  my:8,   ew:8,  eh:6},
-    {id:"entrada-1", tipo:"entrada", mx:8,  my:13,  ew:3,  eh:0.8},
+    {id:"novios-1",  tipo:"novios",   mx:8,  my:1,  ew:5,  eh:1.5},
+    {id:"pista-1",   tipo:"pista",    mx:6,  my:8,  ew:8,  eh:6},
+    {id:"entrada-1", tipo:"entrada",  mx:8,  my:13, ew:3,  eh:0.8},
   ]);
+  const [estiloDistrib, setEstiloDistrib] = useState("banquet");
 
+  // ── Selección e interacción ──
   const [selectedMesa, setSelectedMesa]   = useState(null);
   const [selectedElem, setSelectedElem]   = useState(null);
   const [dragging, setDragging]           = useState(null);
   const [hoveredMesa, setHoveredMesa]     = useState(null);
   const [pinch, setPinch]                 = useState(null);
-  const [panning, setPanning]             = useState(null); // pan con 2 dedos o espacio+drag
+  const [showSheet, setShowSheet]         = useState(false); // mobile bottom sheet
+  const [searchSinMesa, setSearchSinMesa] = useState("");
+  const [showShapeMenu, setShowShapeMenu] = useState(false);
+  const [showElemMenu, setShowElemMenu]   = useState(false);
 
-  const viewportRef = useRef(null); // div fijo visible
-  const canvasRef   = useRef(null); // div interior que se mueve
+  const viewportRef = useRef(null);
+  const canvasRef   = useRef(null);
 
   // ── Personas ──
   const personas = [];
   (guests||[]).forEach(g=>{
-    const cant = parseInt(g.cantidadInvitados||1);
-    for(let i=0;i<cant;i++){
-      personas.push({
-        guestId:g.id, personIdx:i,
-        nombre:cant>1?`${g.nombre} ${i+1}`:g.nombre,
-        mesa:g.mesa?parseInt(g.mesa):null,
-        confirmacion:g.confirmacion,
-      });
-    }
+    const cant=parseInt(g.cantidadInvitados||1);
+    for(let i=0;i<cant;i++)
+      personas.push({guestId:g.id,personIdx:i,nombre:cant>1?`${g.nombre} ${i+1}`:g.nombre,mesa:g.mesa?parseInt(g.mesa):null,confirmacion:g.confirmacion});
   });
-  const sinMesa = personas.filter(p=>!p.mesa);
+  const sinMesa     = personas.filter(p=>!p.mesa);
+  const sinMesaFilt = sinMesa.filter(p=>!searchSinMesa||p.nombre.toLowerCase().includes(searchSinMesa.toLowerCase()));
   const CONF_COLORS = {confirmado:"#4A5E3A",pendiente:"#C9A96E",no_va:"rgba(26,26,20,.3)"};
   const MESA_R_M    = 0.90;
   const ASIENTO_R_M = 0.28;
+  const BASE_PX     = 30;
+  const PX          = BASE_PX*zoom;
+  const CW          = salonW*PX;
+  const CH          = salonH*PX;
 
-  const circlePts = (n,r)=>Array.from({length:n},(_,i)=>{
-    const a=(i/n)*2*Math.PI-Math.PI/2;
-    return {x:Math.cos(a)*r,y:Math.sin(a)*r};
-  });
+  const circlePts=(n,r)=>Array.from({length:n},(_,i)=>{const a=(i/n)*2*Math.PI-Math.PI/2;return{x:Math.cos(a)*r,y:Math.sin(a)*r};});
+  const mesaPersonas=(id)=>personas.filter(p=>p.mesa===id);
+  const selectedMesaObj = mesas.find(m=>m.id===selectedMesa);
+  const selectedPersonas = selectedMesa?mesaPersonas(selectedMesa):[];
 
-  // ── Zoom con rueda SOLO sobre el viewport ──
-  useEffect(()=>{
-    const el = viewportRef.current;
-    if(!el) return;
-    const onWheel = (e)=>{
-      // Solo zoom si no está arrastrando
-      e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.12 : -0.12;
-      setZoom(z=>Math.max(0.3,Math.min(3,+(z+delta).toFixed(2))));
-    };
-    el.addEventListener("wheel", onWheel, {passive:false});
-    return ()=>el.removeEventListener("wheel", onWheel);
-  },[]);
+  // ── Capacidad salón ──
+  const totalInvWarn = budgetInvitados>0?budgetInvitados:(guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+  const capacidadMax = Math.floor(salonW*salonH/1.5);
+  const salonChico   = totalInvWarn>0&&totalInvWarn>capacidadMax;
+  const salonMuyChico= totalInvWarn>0&&totalInvWarn>capacidadMax*1.3;
 
-  // ── Posición del puntero relativa al canvas ──
-  const getCanvasPos = (e)=>{
-    const vRect = viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
-    const cx = e.touches?.[0]?.clientX??e.clientX;
-    const cy = e.touches?.[0]?.clientY??e.clientY;
-    return {x: cx - vRect.left - pan.x, y: cy - vRect.top - pan.y};
+  // ── Fit to screen ──
+  const fitToScreen=()=>{
+    const el=viewportRef.current; if(!el) return;
+    const vpW=el.clientWidth-60, vpH=el.clientHeight-60;
+    const newZ=Math.min(vpW/(salonW*BASE_PX),vpH/(salonH*BASE_PX),2.5);
+    setZoom(+newZ.toFixed(2));
+    const nCW=salonW*BASE_PX*newZ, nCH=salonH*BASE_PX*newZ;
+    setPan({x:(el.clientWidth-nCW)/2,y:(el.clientHeight-nCH)/2});
   };
 
-  // ── Touch: pinch zoom + pan con 2 dedos ──
-  const onTouchStart = (e)=>{
+  // ── Posición en canvas ──
+  const getCanvasPos=(e)=>{
+    const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+    const cx=e.touches?.[0]?.clientX??e.clientX;
+    const cy=e.touches?.[0]?.clientY??e.clientY;
+    return{x:cx-r.left-pan.x,y:cy-r.top-pan.y};
+  };
+
+  // ── Touch pinch ──
+  const onTouchStart=(e)=>{
     if(e.touches.length===2){
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const mx = (e.touches[0].clientX + e.touches[1].clientX)/2;
-      const my = (e.touches[0].clientY + e.touches[1].clientY)/2;
-      setPinch({dist:Math.sqrt(dx*dx+dy*dy), zoom0:zoom, mx, my});
-      setPanning({x0: mx, y0: my, pan0:{...pan}});
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+      const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      setPinch({dist:Math.sqrt(dx*dx+dy*dy),zoom0:zoom,mx,my,pan0:{...pan}});
     }
   };
-
-  const onTouchMove = (e)=>{
-    if(e.touches.length===2 && pinch){
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.sqrt(dx*dx+dy*dy);
-      const newZ = Math.max(0.3,Math.min(3,pinch.zoom0*(dist/pinch.dist)));
-      setZoom(+newZ.toFixed(2));
-      // Pan con 2 dedos
-      const mx = (e.touches[0].clientX + e.touches[1].clientX)/2;
-      const my = (e.touches[0].clientY + e.touches[1].clientY)/2;
-      if(panning){
-        setPan({x: panning.pan0.x + mx - panning.x0, y: panning.pan0.y + my - panning.y0});
-      }
+  const onTouchMove=(e)=>{
+    if(e.touches.length===2&&pinch){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      setZoom(+Math.max(0.3,Math.min(3,pinch.zoom0*(dist/pinch.dist))).toFixed(2));
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+      const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+      setPan({x:pinch.pan0.x+(mx-pinch.mx),y:pinch.pan0.y+(my-pinch.my)});
       return;
     }
     onMove(e);
   };
+  const onTouchEnd=(e)=>{if(e.touches.length<2)setPinch(null);onUp();};
 
-  const onTouchEnd = (e)=>{
-    if(e.touches.length<2){ setPinch(null); setPanning(null); }
-    onUp(e);
-  };
-
-  // ── Drag de objetos en el canvas ──
-  const startDrag = (e,type,id)=>{
-    e.preventDefault(); e.stopPropagation();
-    const pos = getCanvasPos(e);
+  // ── Drag ──
+  const startDrag=(e,type,id)=>{
+    e.preventDefault();e.stopPropagation();
+    const pos=getCanvasPos(e);
     if(type==="mesa"){
-      const item = mesas.find(m=>m.id===id);
-      if(!item) return;
-      setDragging({type,id, ox:pos.x/PX-item.mx, oy:pos.y/PX-item.my});
-      setSelectedMesa(id); setSelectedElem(null);
+      const item=mesas.find(m=>m.id===id); if(!item) return;
+      setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
+      setSelectedMesa(id);setSelectedElem(null);
+      if(window.innerWidth<640) setShowSheet(true);
     } else if(type==="elem"){
-      const item = elementos.find(el=>el.id===id);
-      if(!item) return;
-      setDragging({type,id, ox:pos.x/PX-item.mx, oy:pos.y/PX-item.my});
-      setSelectedElem(id); setSelectedMesa(null);
+      const item=elementos.find(el=>el.id===id); if(!item) return;
+      setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
+      setSelectedElem(id);setSelectedMesa(null);
     } else if(type==="resize"){
-      const item = elementos.find(el=>el.id===id);
-      if(!item) return;
-      setDragging({type:"resize",id, ox:pos.x, oy:pos.y, ew0:item.ew, eh0:item.eh});
+      const item=elementos.find(el=>el.id===id); if(!item) return;
+      setDragging({type:"resize",id,ox:pos.x,oy:pos.y,ew0:item.ew,eh0:item.eh});
     } else if(type==="guest"){
-      setDragging({type:"guest",id, cx:pos.x, cy:pos.y});
+      setDragging({type:"guest",id,cx:pos.x,cy:pos.y});
     } else if(type==="pan"){
-      // Pan con 1 dedo / mouse en área vacía
-      const vRect = viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
-      const cx = e.touches?.[0]?.clientX??e.clientX;
-      const cy = e.touches?.[0]?.clientY??e.clientY;
-      setDragging({type:"pan", x0:cx-vRect.left, y0:cy-vRect.top, pan0:{...pan}});
+      const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+      const cx=e.touches?.[0]?.clientX??e.clientX;
+      const cy=e.touches?.[0]?.clientY??e.clientY;
+      setDragging({type:"pan",x0:cx-r.left,y0:cy-r.top,pan0:{...pan}});
     }
   };
-
-  const startDragGuest = (e,guestId)=>{
+  const startDragGuest=(e,guestId)=>{
     e.stopPropagation();
-    const pos = getCanvasPos(e);
-    setDragging({type:"guest",id:guestId, cx:pos.x, cy:pos.y});
+    const pos=getCanvasPos(e);
+    setDragging({type:"guest",id:guestId,cx:pos.x,cy:pos.y});
   };
-
-  const onMove = (e)=>{
+  const onMove=(e)=>{
     if(!dragging) return;
-    const pos = getCanvasPos(e);
-    const vRect = viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
-    const cx = e.touches?.[0]?.clientX??e.clientX;
-    const cy = e.touches?.[0]?.clientY??e.clientY;
-
+    const pos=getCanvasPos(e);
+    const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+    const cx=e.touches?.[0]?.clientX??e.clientX;
+    const cy=e.touches?.[0]?.clientY??e.clientY;
     if(dragging.type==="mesa"){
-      const mx = Math.max(MESA_R_M, Math.min(salonW-MESA_R_M, pos.x/PX - dragging.ox));
-      const my = Math.max(MESA_R_M, Math.min(salonH-MESA_R_M, pos.y/PX - dragging.oy));
+      const mx=Math.max(MESA_R_M,Math.min(salonW-MESA_R_M,pos.x/PX-dragging.ox));
+      const my=Math.max(MESA_R_M,Math.min(salonH-MESA_R_M,pos.y/PX-dragging.oy));
       setMesas(ms=>ms.map(m=>m.id===dragging.id?{...m,mx,my}:m));
     } else if(dragging.type==="elem"){
-      const el = elementos.find(x=>x.id===dragging.id);
-      if(!el) return;
-      const mx = Math.max(0, Math.min(salonW-el.ew, pos.x/PX - dragging.ox));
-      const my = Math.max(0, Math.min(salonH-el.eh, pos.y/PX - dragging.oy));
+      const el=elementos.find(x=>x.id===dragging.id); if(!el) return;
+      const mx=Math.max(0,Math.min(salonW-el.ew,pos.x/PX-dragging.ox));
+      const my=Math.max(0,Math.min(salonH-el.eh,pos.y/PX-dragging.oy));
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,mx,my}:x));
     } else if(dragging.type==="resize"){
-      const ddx = (pos.x - dragging.ox)/PX;
-      const ddy = (pos.y - dragging.oy)/PX;
-      const ew = Math.max(0.5,+(dragging.ew0+ddx).toFixed(2));
-      const eh = Math.max(0.5,+(dragging.eh0+ddy).toFixed(2));
+      const ew=Math.max(0.5,+(dragging.ew0+(pos.x-dragging.ox)/PX).toFixed(2));
+      const eh=Math.max(0.5,+(dragging.eh0+(pos.y-dragging.oy)/PX).toFixed(2));
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,ew,eh}:x));
     } else if(dragging.type==="guest"){
-      setDragging(d=>({...d, cx:pos.x, cy:pos.y}));
-      const over = mesas.find(m=>{
-        const dx=m.mx*PX-pos.x; const dy=m.my*PX-pos.y;
-        return Math.sqrt(dx*dx+dy*dy)<(MESA_R_M+ASIENTO_R_M*2)*PX;
-      });
+      setDragging(d=>({...d,cx:pos.x,cy:pos.y}));
+      const over=mesas.find(m=>{const dx=m.mx*PX-pos.x,dy=m.my*PX-pos.y;return Math.sqrt(dx*dx+dy*dy)<(MESA_R_M+ASIENTO_R_M*2)*PX;});
       setHoveredMesa(over?over.id:null);
     } else if(dragging.type==="pan"){
-      const dx = cx-vRect.left - dragging.x0;
-      const dy = cy-vRect.top  - dragging.y0;
-      setPan({x: dragging.pan0.x+dx, y: dragging.pan0.y+dy});
+      setPan({x:dragging.pan0.x+(cx-r.left-dragging.x0),y:dragging.pan0.y+(cy-r.top-dragging.y0)});
     }
   };
-
-  const onUp = ()=>{
+  const onUp=()=>{
     if(dragging?.type==="guest"&&hoveredMesa) onAssign(dragging.id,hoveredMesa);
-    setDragging(null); setHoveredMesa(null);
+    setDragging(null);setHoveredMesa(null);
   };
 
-  const addMesa = ()=>{
-    const newId = Math.max(0,...mesas.map(m=>m.id))+1;
-    const i = mesas.length;
-    setMesas(ms=>[...ms,{id:newId,mx:3+(i%4)*3.5,my:3+Math.floor(i/4)*3.5}]);
+  const addMesa=()=>{
+    const newId=Math.max(0,...mesas.map(m=>m.id))+1;
+    setMesas(ms=>[...ms,{id:newId,mx:salonW/2,my:salonH/2,tipo:"round",etiqueta:""}]);
   };
-
-  // ── Warning capacidad salón ──
-  const m2PorPersona = 1.5; // estándar eventos: 1.5m² por persona
-  const capacidadMaxSalon = Math.floor(salonW * salonH / m2PorPersona);
-  const totalInvWarning = budgetInvitados > 0
-    ? budgetInvitados
-    : (guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-  const salonChico = totalInvWarning > 0 && totalInvWarning > capacidadMaxSalon;
-  const salonMuyChico = totalInvWarning > 0 && totalInvWarning > capacidadMaxSalon * 1.3;
-
-  // ── Fit to screen: ajusta zoom y pan para ver TODO el salón ──
-  const fitToScreen = ()=>{
-    const vpEl = viewportRef.current;
-    if(!vpEl) return;
-    const vpW = vpEl.clientWidth  - 80;
-    const vpH = vpEl.clientHeight - 80;
-    const zW = vpW / (salonW * BASE_PX);
-    const zH = vpH / (salonH * BASE_PX);
-    const newZ = Math.min(zW, zH, 2);
-    setZoom(+newZ.toFixed(2));
-    const newCW = salonW * BASE_PX * newZ;
-    const newCH = salonH * BASE_PX * newZ;
-    setPan({x: (vpEl.clientWidth  - newCW) / 2, y: (vpEl.clientHeight - newCH) / 2});
-  };
-
-  // ── Estilos de distribución ──
-  const [estiloDistrib, setEstiloDistrib] = useState("banquet");
-  const [showEstilos, setShowEstilos] = useState(false);
-  const ESTILOS_DISTRIB = [
-    {id:"banquet",      label:"Banquete",        desc:"Mesas redondas en filas"},
-    {id:"pista_centro", label:"Pista al centro",  desc:"Mesas alrededor de la pista"},
-    {id:"cabaret",      label:"Cabaret",          desc:"Semicírculo mirando al escenario"},
-    {id:"cantine",      label:"Cantine",          desc:"Mesas rectangulares en filas"},
-    {id:"u_shape",      label:"Forma en U",       desc:"Mesas en U mirando al frente"},
-    {id:"chevrons",     label:"Chevrones",        desc:"Mesas en ángulo de espiga"},
-  ];
-
-  // ── Distribución automática con lógica real de salón ──
-  const autoDistribuir = ()=>{
-    const W = salonW, H = salonH;
-    const mg = 1.0;
-
-    const totalInv = budgetInvitados > 0
-      ? budgetInvitados
-      : (guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-
-    const esRect = ["cantine","u_shape","chevrons"].includes(estiloDistrib);
-    const ppMesa = estiloDistrib==="cantine" ? 16
-                 : estiloDistrib==="u_shape"  ? 20
-                 : estiloDistrib==="chevrons" ? 10
-                 : tableSize;
-    const N = totalInv > 0 ? Math.ceil(totalInv/ppMesa) : Math.max(mesas.length,1);
-
-    const maxId = mesas.length>0 ? Math.max(...mesas.map(m=>m.id)) : 0;
-    let base = mesas.map(m=>({...m,tipo:esRect?"rect":"round"}));
-    if(N > base.length){
-      for(let i=base.length;i<N;i++)
-        base.push({id:maxId+i-mesas.length+1,mx:W/2,my:H/2,tipo:esRect?"rect":"round"});
-    }
-
-    const RD = MESA_R_M;
-    const GR = RD*2+1.5; // paso mesas redondas
-
-    // Helper grilla mesas redondas
-    const grilla = (x1,y1,x2,y2,n)=>{
-      const zW=x2-x1, zH=y2-y1;
-      const cols=Math.max(1,Math.floor(zW/GR));
-      const rows=Math.ceil(n/cols);
-      const eX=zW/Math.min(n,cols);
-      const eY=rows>1?Math.min(GR,zH/rows):zH/2;
-      const pts=[];
-      for(let i=0;i<n;i++){
-        const col=i%cols,row=Math.floor(i/cols);
-        const enFila=Math.min(cols,n-row*cols);
-        const offX=(zW-enFila*eX)/2;
-        pts.push({
-          mx:Math.max(mg+RD,Math.min(W-mg-RD,x1+offX+col*eX+eX/2)),
-          my:Math.max(mg+RD,Math.min(H-mg-RD,y1+row*eY+eY/2)),
-          tipo:"round",
-        });
-      }
-      return pts;
-    };
-
-    let pos=[], elems=[];
-
-    // ─── BANQUETE ─────────────────────────────────────────────────────────────
-    if(estiloDistrib==="banquet"){
-      const djW=Math.min(6,W*0.35),djH=1.8;
-      const novW=Math.min(4,W*0.28),novH=1.2;
-      const pistaW=Math.min(8,W*0.4),pistaH=Math.min(4,H*0.22);
-      const yDJ=mg, yNov=yDJ+djH+0.8, yMesas=yNov+novH+1.5, yPista=H-mg-pistaH;
-      elems=[
-        {id:"dj-1",    tipo:"escenario",mx:W/2-djW/2,    my:yDJ,   ew:djW,  eh:djH},
-        {id:"novios-1",tipo:"novios",   mx:W/2-novW/2,   my:yNov,  ew:novW, eh:novH},
-        {id:"pista-1", tipo:"pista",    mx:W/2-pistaW/2, my:yPista,ew:pistaW,eh:pistaH},
-      ];
-      pos=grilla(mg,yMesas,W-mg,yPista-1,N);
-
-    // ─── PISTA AL CENTRO ──────────────────────────────────────────────────────
-    } else if(estiloDistrib==="pista_centro"){
-      const pW=Math.min(W*0.38,8),pH=Math.min(H*0.32,6);
-      const px=(W-pW)/2,py=(H-pH)/2;
-      const novW=Math.min(4,W*0.28),novH=1.2;
-      elems=[
-        {id:"pista-1", tipo:"pista",  mx:px,        my:py, ew:pW, eh:pH},
-        {id:"novios-1",tipo:"novios", mx:W/2-novW/2,my:mg, ew:novW,eh:novH},
-      ];
-      const zL=[mg,px-0.8,mg,H-mg];
-      const zR=[px+pW+0.8,W-mg,mg,H-mg];
-      const zT=[px,px+pW,mg+novH+1,py-0.8];
-      const zB=[px,px+pW,py+pH+0.8,H-mg];
-      const zones=[
-        {x1:mg,y1:mg,x2:px-0.8,y2:H-mg},
-        {x1:px+pW+0.8,y1:mg,x2:W-mg,y2:H-mg},
-        {x1:px,y1:mg+novH+1,x2:px+pW,y2:py-0.8},
-        {x1:px,y1:py+pH+0.8,x2:px+pW,y2:H-mg},
-      ];
-      const perZ=Math.ceil(N/4);
-      let rem=N;
-      zones.forEach(z=>{
-        const n=Math.min(perZ,rem);
-        if(n>0) pos.push(...grilla(z.x1,z.y1,z.x2,z.y2,n));
-        rem-=n;
-      });
-
-    // ─── CABARET ──────────────────────────────────────────────────────────────
-    } else if(estiloDistrib==="cabaret"){
-      const djW=Math.min(6,W*0.38),djH=1.8;
-      const novW=Math.min(4,W*0.28),novH=1.2;
-      const pistaW=Math.min(6,W*0.32),pistaH=Math.min(3,H*0.18);
-      const yDJ=mg,yNov=yDJ+djH+0.8,yMesas=yNov+novH+1.5,yPista=H-mg-pistaH;
-      elems=[
-        {id:"dj-1",    tipo:"escenario",mx:W/2-djW/2,    my:yDJ,   ew:djW,  eh:djH},
-        {id:"novios-1",tipo:"novios",   mx:W/2-novW/2,   my:yNov,  ew:novW, eh:novH},
-        {id:"pista-1", tipo:"pista",    mx:W/2-pistaW/2, my:yPista,ew:pistaW,eh:pistaH},
-      ];
-      let placed=0,row=0;
-      while(placed<N){
-        const maxCols=Math.max(1,Math.floor((W-mg*2)/GR));
-        const enFila=Math.min(maxCols,N-placed);
-        const totalW=enFila*GR;
-        const offX=(W-totalW)/2;
-        for(let i=0;i<enFila;i++){
-          pos.push({
-            mx:Math.max(mg+RD,Math.min(W-mg-RD,offX+i*GR+GR/2)),
-            my:Math.min(yPista-RD-0.5,yMesas+row*GR+RD),
-            tipo:"round",
-          });
-        }
-        placed+=enFila; row++;
-      }
-
-    // ─── CANTINE ──────────────────────────────────────────────────────────────
-    // Mesas largas VERTICALES en 2-3 columnas
-    // Cada mesa: 0.8m ancho × 5m largo (16 personas: 8 por lado)
-    // Las sillas están a los LADOS (izq y der de la mesa vertical)
-    } else if(estiloDistrib==="cantine"){
-      const mLW=0.8, mLH=5.0; // mesa larga vertical
-      const djW=Math.min(6,W*0.38),djH=1.8;
-      const novW=Math.min(4,W*0.28),novH=1.2;
-      const yDJ=mg,yNov=yDJ+djH+0.8,yMesas=yNov+novH+1.8;
-      elems=[
-        {id:"dj-1",    tipo:"escenario",mx:W/2-djW/2,  my:yDJ, ew:djW, eh:djH},
-        {id:"novios-1",tipo:"novios",   mx:W/2-novW/2, my:yNov,ew:novW,eh:novH},
-      ];
-      const numCols=N<=3?2:3;
-      const colW=(W-mg*2)/numCols;
-      for(let i=0;i<N;i++){
-        const col=i%numCols, fila=Math.floor(i/numCols);
-        pos.push({
-          mx:Math.max(mg+mLW/2,Math.min(W-mg-mLW/2, mg+col*colW+colW/2)),
-          my:Math.max(mg+mLH/2,Math.min(H-mg-mLH/2, yMesas+fila*(mLH+1.5)+mLH/2)),
-          tipo:"rect_v", // rectangular vertical
-          ew:mLW, eh:mLH,
-        });
-      }
-
-    // ─── FORMA EN U ───────────────────────────────────────────────────────────
-    // Mesas MUY largas (tipo conferencia) en U
-    // Solo personas de UN LADO (el interior de la U), mirando al centro
-    // Brazo izq vertical, fondo horizontal, brazo der vertical
-    } else if(estiloDistrib==="u_shape"){
-      const mLong=Math.min(5,H*0.25); // largo de cada mesa
-      const mAncho=0.8;
-      const djW=Math.min(5,W*0.28),djH=1.8;
-      const novW=Math.min(4,W*0.24),novH=1.2;
-      // El hueco de la U es donde van el DJ y los novios
-      const brazoX_L=mg+mAncho/2;
-      const brazoX_R=W-mg-mAncho/2;
-      const fondoY=mg+mAncho/2;
-      const altBrazo=H-mg*2;
-      const enBrazo=Math.max(1,Math.floor(altBrazo/(mLong+1.0)));
-      const espacioFondo=W-mg*2-mAncho*2-2.0;
-      const enFondo=Math.max(1,Math.floor(espacioFondo/(mLong+0.8)));
-      // Posicionar DJ y novios en el centro del hueco
-      const huecoX1=mg+mAncho+1.0, huecoX2=W-mg-mAncho-1.0;
-      const huecoW=huecoX2-huecoX1;
-      elems=[
-        {id:"dj-1",    tipo:"escenario",mx:huecoX1+(huecoW-djW)/2, my:H*0.3,          ew:djW, eh:djH},
-        {id:"novios-1",tipo:"novios",   mx:huecoX1+(huecoW-novW)/2,my:H*0.3+djH+0.8,  ew:novW,eh:novH},
-      ];
-      // Construir posiciones del U
-      const posU=[];
-      // Brazo izquierdo (mesas verticales, mirando hacia la derecha = interior)
-      for(let i=0;i<enBrazo;i++)
-        posU.push({mx:brazoX_L, my:mg+mLong/2+i*(mLong+1.0), tipo:"rect_v", ew:mAncho, eh:mLong, miraSide:"right"});
-      // Fondo (mesas horizontales, mirando hacia abajo = interior)
-      const fondoXstart=huecoX1;
-      for(let i=0;i<enFondo;i++)
-        posU.push({mx:fondoXstart+i*(mLong+0.8)+mLong/2, my:fondoY, tipo:"rect_h", ew:mLong, eh:mAncho, miraSide:"down"});
-      // Brazo derecho (mesas verticales, mirando hacia la izquierda = interior)
-      for(let i=0;i<enBrazo;i++)
-        posU.push({mx:brazoX_R, my:mg+mLong/2+i*(mLong+1.0), tipo:"rect_v", ew:mAncho, eh:mLong, miraSide:"left"});
-      pos=posU.slice(0,N);
-
-    // ─── CHEVRONES ────────────────────────────────────────────────────────────
-    // Mesas medianas EN DIAGONAL a ambos lados del pasillo central
-    // Izquierda: diagonal \ (ángulo 30-40°), Derecha: diagonal / (espejo)
-    } else if(estiloDistrib==="chevrons"){
-      const mW=3.0, mH=0.8; // mesa mediana
-      const djW=Math.min(5,W*0.3),djH=1.8;
-      const novW=Math.min(4,W*0.25),novH=1.2;
-      const yDJ=mg,yNov=yDJ+djH+0.8,yMesas=yNov+novH+1.8;
-      elems=[
-        {id:"dj-1",    tipo:"escenario",mx:W/2-djW/2, my:yDJ, ew:djW,eh:djH},
-        {id:"novios-1",tipo:"novios",   mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},
-      ];
-      const pasillo=W/2;
-      const gap=0.5;
-      const stepY=mH+1.6;
-      const mitadIzq=Math.ceil(N/2);
-      const mitadDer=N-mitadIzq;
-      // Izquierda: filas de 1 mesa cada una, bajando y alejándose del pasillo
-      for(let i=0;i<mitadIzq;i++){
-        pos.push({
-          mx:Math.max(mg+mW/2, pasillo-gap-mW/2-i*0.6),
-          my:Math.min(H-mg-mH/2, yMesas+i*stepY+mH/2),
-          tipo:"rect_diag_l", // diagonal izquierda
-          ew:mW, eh:mH,
-          angle:-30, // grados
-        });
-      }
-      // Derecha: espejo
-      for(let i=0;i<mitadDer;i++){
-        pos.push({
-          mx:Math.min(W-mg-mW/2, pasillo+gap+mW/2+i*0.6),
-          my:Math.min(H-mg-mH/2, yMesas+i*stepY+mH/2),
-          tipo:"rect_diag_r",
-          ew:mW, eh:mH,
-          angle:30,
-        });
-      }
-    }
-
-    // Aplicar posiciones
-    const nuevasMesas=base.map((m,i)=>({
-      ...m,
-      mx:pos[i]?.mx ?? W/2,
-      my:pos[i]?.my ?? H/2,
-      tipo:pos[i]?.tipo ?? (esRect?"rect":"round"),
-      ew:pos[i]?.ew,
-      eh:pos[i]?.eh,
-      angle:pos[i]?.angle,
-      miraSide:pos[i]?.miraSide,
-    }));
-
-    setMesas(nuevasMesas);
-    setElementos(elems);
-    setTimeout(fitToScreen,50);
-  };;;;
-  const removeMesa = (id)=>{
+  const removeMesa=(id)=>{
     (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>onRemove(g.id));
     setMesas(ms=>ms.filter(m=>m.id!==id));
-    if(selectedMesa===id) setSelectedMesa(null);
+    if(selectedMesa===id){setSelectedMesa(null);setShowSheet(false);}
   };
-  const addElemento = (tipo)=>{
-    const def = ELEMENTOS_FIJOS.find(e=>e.id===tipo);
-    const newId = `${tipo}-${Date.now()}`;
-    setElementos(es=>[...es,{id:newId,tipo,mx:salonW/2-2,my:salonH/2-2,ew:def?.w||3,eh:def?.h||2}]);
-    setSelectedElem(newId);
+  const addElemento=(tipo)=>{
+    const def=ELEMENTOS_FIJOS.find(e=>e.id===tipo);
+    const nid=`${tipo}-${Date.now()}`;
+    setElementos(es=>[...es,{id:nid,tipo,mx:salonW/2-2,my:salonH/2-2,ew:def?.w||3,eh:def?.h||2}]);
+    setSelectedElem(nid);
   };
-  const removeElemento = (id)=>{ setElementos(es=>es.filter(el=>el.id!==id)); setSelectedElem(null); };
+  const removeElemento=(id)=>{setElementos(es=>es.filter(el=>el.id!==id));setSelectedElem(null);};
+  const updateMesa=(id,patch)=>setMesas(ms=>ms.map(m=>m.id===id?{...m,...patch}:m));
 
-  const mesaPersonas = (id)=>personas.filter(p=>p.mesa===id);
-  const selectedPersonas = selectedMesa?mesaPersonas(selectedMesa):[];
-  const shape = SALON_SHAPES[salonShape];
-  const shapePath = shape.path(CW,CH);
+  // ── fitToScreen al montar ──
+  useEffect(()=>{setTimeout(fitToScreen,100);},[]);
 
-  const cursorStyle = dragging?.type==="guest"?"grabbing":dragging?.type==="pan"?"grabbing":dragging?.type==="resize"?"nwse-resize":"default";
+  // ── Auto distribución ──
+  const autoDistribuir=()=>{
+    const W=salonW,H=salonH,mg=1.2;
+    const totalInv=budgetInvitados>0?budgetInvitados:(guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+    const ppMesa=estiloDistrib==="cantine"?16:estiloDistrib==="u_shape"?20:estiloDistrib==="chevrons"?10:tableSize;
+    const N=Math.max(1,totalInv>0?Math.ceil(totalInv/ppMesa):mesas.length);
+    const maxId=mesas.length>0?Math.max(...mesas.map(m=>m.id)):0;
+    let base=[...mesas];
+    for(let i=base.length;i<N;i++) base.push({id:maxId+i-mesas.length+1,mx:W/2,my:H/2,tipo:"round",etiqueta:""});
+    const RD=MESA_R_M,D=RD*2,GAP=D+1.4;
+    const esRect=["cantine","u_shape","chevrons"].includes(estiloDistrib);
+    const grillaR=(x1,y1,x2,y2,n)=>{
+      const zW=x2-x1,zH=y2-y1;
+      const cols=Math.max(1,Math.floor(zW/GAP));
+      const eX=zW/Math.min(n,cols),eY=Math.ceil(n/cols)>1?Math.min(GAP,zH/Math.ceil(n/cols)):zH/2;
+      return Array.from({length:n},(_,i)=>{
+        const col=i%cols,row=Math.floor(i/cols),enF=Math.min(cols,n-row*cols);
+        return{mx:Math.max(mg+RD,Math.min(W-mg-RD,x1+(zW-enF*eX)/2+col*eX+eX/2)),my:Math.max(mg+RD,Math.min(H-mg-RD,y1+row*eY+eY/2)),tipo:"round"};
+      });
+    };
+    let pos=[],elems=[];
+    if(estiloDistrib==="banquet"){
+      const djW=Math.min(6,W*0.35),djH=1.6,novW=Math.min(4,W*0.28),novH=1.2,pistaW=Math.min(8,W*0.42),pistaH=3.5;
+      const yDJ=mg,yNov=yDJ+djH+0.6,yPista=H-mg-pistaH,yM=yNov+novH+1.2;
+      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},{id:"pista-1",tipo:"pista",mx:W/2-pistaW/2,my:yPista,ew:pistaW,eh:pistaH}];
+      pos=grillaR(mg,yM,W-mg,yPista-0.8,N);
+    } else if(estiloDistrib==="pista_centro"){
+      const novW=Math.min(4,W*0.28),novH=1.2,pW=Math.min(W*0.36,7),pH=Math.min(H*0.30,6);
+      const px=(W-pW)/2,py=(H-pH)/2,G=0.8;
+      elems=[{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:mg,ew:novW,eh:novH},{id:"pista-1",tipo:"pista",mx:px,my:py,ew:pW,eh:pH}];
+      const zones=[{x1:mg,y1:mg+novH+0.6,x2:px-G,y2:H-mg},{x1:px+pW+G,y1:mg+novH+0.6,x2:W-mg,y2:H-mg},{x1:px,y1:mg+novH+0.6,x2:px+pW,y2:py-G},{x1:px,y1:py+pH+G,x2:px+pW,y2:H-mg}];
+      let rem=N;
+      zones.forEach(z=>{const n=Math.min(Math.ceil(N/4),rem);if(n>0){pos.push(...grillaR(z.x1,z.y1,z.x2,z.y2,n));rem-=n;}});
+    } else if(estiloDistrib==="cabaret"){
+      const djW=Math.min(6,W*0.38),djH=1.6,novW=Math.min(4,W*0.28),novH=1.2,pistaW=Math.min(6,W*0.32),pistaH=3.0;
+      const yDJ=mg,yNov=yDJ+djH+0.6,yPista=H-mg-pistaH,yM=yNov+novH+1.2;
+      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},{id:"pista-1",tipo:"pista",mx:W/2-pistaW/2,my:yPista,ew:pistaW,eh:pistaH}];
+      const colsMax=Math.max(1,Math.floor((W-mg*2)/GAP));
+      const espY=Math.min(GAP,(yPista-yM-RD)/Math.max(1,Math.ceil(N/colsMax)));
+      let placed=0,row=0;
+      while(placed<N){
+        const en=Math.min(colsMax,N-placed),tW=en*GAP,offX=(W-mg*2-tW)/2;
+        for(let i=0;i<en;i++) pos.push({mx:Math.max(mg+RD,Math.min(W-mg-RD,mg+offX+i*GAP+GAP/2)),my:Math.min(yPista-RD-0.5,yM+row*espY+RD),tipo:"round"});
+        placed+=en;row++;
+      }
+    } else if(estiloDistrib==="cantine"){
+      const djW=Math.min(6,W*0.38),djH=1.6,novW=Math.min(4,W*0.28),novH=1.2;
+      const mLH=Math.min(5.0,Math.max(2,(H-mg*3-djH-novH-2.5)/Math.max(1,Math.ceil(N/(N<=3?2:3)))));
+      const mLW=0.8,yDJ=mg,yNov=yDJ+djH+0.6,yM=yNov+novH+1.5,sG=1.4,pasoY=mLH+sG+0.5;
+      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
+      const nc=N<=3?2:3,cW=(W-mg*2)/nc;
+      for(let i=0;i<N;i++){const col=i%nc,fil=Math.floor(i/nc);pos.push({mx:Math.max(mg+mLW/2+sG/2,Math.min(W-mg-mLW/2-sG/2,mg+col*cW+cW/2)),my:Math.max(mg+mLH/2,Math.min(H-mg-mLH/2,yM+fil*pasoY+mLH/2)),tipo:"rect_v",ew:mLW,eh:mLH,miraSide:"both"});}
+    } else if(estiloDistrib==="u_shape"){
+      const djW=Math.min(5,W*0.28),djH=1.6,novW=Math.min(4,W*0.24),novH=1.2,mA=0.8,sG=1.2;
+      const bL=Math.min(H*0.65,10),bXL=mg+sG+mA/2,bXR=W-mg-sG-mA/2;
+      const fW=bXR-bXL-mA,fX=bXL+mA/2+fW/2,topY=mg+sG+mA/2,midY=topY+bL/2;
+      const hX1=bXL+mA/2+0.6,hW2=bXR-bXL-mA-1.2;
+      elems=[{id:"dj-1",tipo:"escenario",mx:hX1+hW2/2-djW/2,my:topY+bL*0.2,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:hX1+hW2/2-novW/2,my:topY+bL*0.2+djH+0.8,ew:novW,eh:novH}];
+      pos=[{mx:bXL,my:midY,tipo:"rect_v",ew:mA,eh:bL,miraSide:"right"},{mx:fX,my:topY,tipo:"rect_h",ew:fW,eh:mA,miraSide:"down"},{mx:bXR,my:midY,tipo:"rect_v",ew:mA,eh:bL,miraSide:"left"}];
+      if(N>3){const sub=bL/(Math.ceil((N-3)/2)+1);for(let i=0;i<N-3;i++){const l=i%2===0?"L":"R",s=Math.floor(i/2)+1;pos.push({mx:l==="L"?bXL:bXR,my:topY+s*sub,tipo:"rect_v",ew:mA,eh:Math.max(1,sub-0.3),miraSide:l==="L"?"right":"left"});}}
+    } else if(estiloDistrib==="chevrons"){
+      const djW=Math.min(5,W*0.3),djH=1.6,novW=Math.min(4,W*0.25),novH=1.2;
+      const mW=Math.min(3.5,W*0.22),mH=0.8,sG=1.0,yDJ=mg,yNov=yDJ+djH+0.6,yM=yNov+novH+1.5;
+      const pasoY=mH+sG*2+0.4,pasoX=0.6,pas=W/2,gC=0.5,mid=Math.ceil(N/2);
+      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
+      for(let i=0;i<mid;i++) pos.push({mx:Math.max(mg+mW/2+sG,pas-gC-mW/2-i*pasoX),my:Math.min(H-mg-mH/2-sG,yM+i*pasoY+mH/2),tipo:"rect_h",ew:mW,eh:mH,miraSide:"both"});
+      for(let i=0;i<N-mid;i++) pos.push({mx:Math.min(W-mg-mW/2-sG,pas+gC+mW/2+i*pasoX),my:Math.min(H-mg-mH/2-sG,yM+i*pasoY+mH/2),tipo:"rect_h",ew:mW,eh:mH,miraSide:"both"});
+    }
+    setMesas(base.map((m,i)=>({...m,mx:pos[i]?.mx??W/2,my:pos[i]?.my??H/2,tipo:pos[i]?.tipo??"round",ew:pos[i]?.ew,eh:pos[i]?.eh,angle:pos[i]?.angle,miraSide:pos[i]?.miraSide})));
+    setElementos(elems);
+    setTimeout(fitToScreen,50);
+  };
 
-  return <div style={{display:"flex",gap:12,alignItems:"flex-start",flexWrap:"wrap"}}>
+  // ── Render mesa en SVG ──
+  const renderMesaSVG=(mesa)=>{
+    const ps=mesaPersonas(mesa.id);
+    const isSelected=selectedMesa===mesa.id,isHovered=hoveredMesa===mesa.id;
+    const tipoM=mesa.tipo||"round";
+    const over=ps.length>tableSize;
+    const libres=Math.max(0,tableSize-ps.length);
+    const fillC=isSelected?"#4A5E3A":isHovered?"rgba(74,94,58,.85)":"#D4C4A0";
+    const strokeC=isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.6)";
+    const dh={onMouseDown:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);},onTouchStart:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);}};
 
-    {/* ── COLUMNA PRINCIPAL ── */}
-    <div style={{flex:1,minWidth:280}}>
+    if(tipoM==="round"){
+      const R=MESA_R_M*PX,AR=ASIENTO_R_M*PX,ts=Math.max(ps.length,tableSize);
+      const pts=circlePts(ts,R+AR),sv=(R+AR*2+6)*2,cx=sv/2,cy=sv/2;
+      return{w:sv,h:sv,jsx:<svg width={sv} height={sv} style={{overflow:"visible",display:"block"}}>
+        <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.18)"/>
+        <circle cx={cx} cy={cy} r={R} fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
+        {mesa.etiqueta
+          ?<><text x={cx} y={cy-R*0.2} textAnchor="middle" fontSize={Math.max(6,R*0.18)} fill={isSelected?"rgba(245,239,224,.8)":"rgba(74,94,58,.6)"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
+            <text x={cx} y={cy+R*0.3} textAnchor="middle" fontSize={Math.max(9,R*0.4)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
+          :<><text x={cx} y={cy-R*0.1} textAnchor="middle" fontSize={Math.max(7,R*0.24)} fill={isSelected?"#F5EFE0":"#4A5E3A"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>Mesa</text>
+            <text x={cx} y={cy+R*0.38} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
+        }
+        {libres>0&&!isSelected&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(6,R*0.19)} fill={over?"rgba(200,60,60,.8)":"rgba(74,94,58,.55)"} fontFamily="'Lora',serif" style={{pointerEvents:"none"}}>{libres}L</text>}
+        {pts.map((pt,i)=>{const p=ps[i];return<g key={i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
+          <circle cx={cx+pt.x} cy={cy+pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
+          {p&&<text x={cx+pt.x} y={cy+pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(6,AR*0.62)} fill="#fff" fontWeight="700" fontFamily="Calibri" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
+        </g>;})}
+      </svg>};
+    }
 
-      {/* Toolbar */}
-      <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
-        {/* Forma */}
+    // Mesa rectangular
+    const rW=(mesa.ew||2.4)*PX, rH=(mesa.eh||0.8)*PX;
+    const isV=rH>rW,pad=ASIENTO_R_M*PX+4,AR=ASIENTO_R_M*PX;
+    const wD=rW+pad*2,hD=rH+pad*2;
+    const mira=mesa.miraSide||"both";
+    const showT=mira==="both",showB=mira==="both",showL=(mira==="both"||mira==="right"),showR=(mira==="both"||mira==="left");
+    const seatsM=isV?Math.max(1,Math.ceil(rH/(AR*2+3))):Math.max(1,Math.ceil(rW/(AR*2+3)));
+    const angle=mesa.angle||0;
+    return{w:wD,h:hD,angle,jsx:<svg width={wD} height={hD} style={{overflow:"visible",display:"block"}}>
+      <rect x={pad+2} y={pad+2} width={rW} height={rH} rx="3" fill="rgba(0,0,0,.18)"/>
+      <rect x={pad} y={pad} width={rW} height={rH} rx="3" fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
+      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.22)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||mesa.id}</text>
+      {/* Sillas horizontales arriba */}
+      {showT&&!isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[i];const sx=pad+rW/(seatsM+1)*(i+1),sy=pad-AR-1;return<g key={"t"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
+      {/* Sillas horizontales abajo */}
+      {showB&&!isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[showT?seatsM+i:i];const sx=pad+rW/(seatsM+1)*(i+1),sy=pad+rH+AR+1;return<g key={"b"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
+      {/* Sillas verticales izq */}
+      {showL&&isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[i];const sx=pad-AR-1,sy=pad+rH/(seatsM+1)*(i+1);return<g key={"l"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
+      {/* Sillas verticales der */}
+      {showR&&isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[showL?seatsM+i:i];const sx=pad+rW+AR+1,sy=pad+rH/(seatsM+1)*(i+1);return<g key={"r"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
+    </svg>};
+  };
+
+  const isMobile = typeof window!=="undefined"&&window.innerWidth<640;
+
+  return <div style={{display:"flex",flexDirection:"column",gap:0}}>
+
+    {/* ── TOOLBAR ── */}
+    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px 12px",marginBottom:10,display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
+      {/* Fila 1: Forma + Medidas + Zoom */}
+      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",flex:1}}>
+        {/* Forma salón */}
         <div style={{position:"relative"}}>
-          <button onClick={()=>setShowShapePicker(s=>!s)} style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:8,padding:"6px 12px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#4A5E3A",cursor:"pointer"}}>
+          <button onClick={()=>setShowShapeMenu(s=>!s)} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
             🏛️ {SALON_SHAPES[salonShape].label} ▾
           </button>
-          {showShapePicker&&<div style={{position:"absolute",top:"calc(100% + 4px)",left:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.2)",borderRadius:10,padding:6,zIndex:50,display:"flex",flexDirection:"column",gap:4,minWidth:140,boxShadow:"0 4px 16px rgba(0,0,0,.12)"}}>
-            {Object.entries(SALON_SHAPES).map(([k,v])=>(
-              <button key={k} onClick={()=>{setSalonShape(k);setShowShapePicker(false);}} style={{background:salonShape===k?"rgba(74,94,58,.1)":"transparent",border:"none",borderRadius:6,padding:"6px 10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{v.label}</button>
-            ))}
+          {showShapeMenu&&<div style={{position:"absolute",top:"calc(100%+4px)",left:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:50,boxShadow:"0 4px 16px rgba(0,0,0,.1)",minWidth:130}}>
+            {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onClick={()=>{setSalonShape(k);setShowShapeMenu(false);}} style={{display:"block",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:6,padding:"6px 10px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
           </div>}
         </div>
-        {/* Medidas */}
-        <div style={{display:"flex",alignItems:"center",gap:4}}>
-          <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.45)"}}>Ancho</span>
-          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))}
-            style={{width:44,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.35)"}}>m ×</span>
-          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))}
-            style={{width:44,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.35)"}}>m</span>
+        {/* Dimensiones */}
+        <div style={{display:"flex",alignItems:"center",gap:3}}>
+          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:42,fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.4)"}}>×</span>
+          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:42,fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
-        {/* Zoom — solo botones en desktop, en mobile funciona pinch */}
-        <div style={{display:"flex",alignItems:"center",gap:2,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.2)",borderRadius:8,overflow:"hidden"}}>
-          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#4A5E3A",fontSize:"1.1rem",lineHeight:1}}>−</button>
-          <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",color:"rgba(26,26,20,.5)",minWidth:36,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
-          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#4A5E3A",fontSize:"1.1rem",lineHeight:1}}>+</button>
-          <button onClick={()=>{setZoom(1);setPan({x:20,y:20});}} title="Restablecer vista" style={{background:"transparent",border:"none",width:28,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"rgba(74,94,58,.45)",fontSize:".75rem",lineHeight:1,borderLeft:"1px solid rgba(74,94,58,.15)"}}>↺</button>
+        {/* Zoom */}
+        <div style={{display:"flex",alignItems:"center",background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,overflow:"hidden"}}>
+          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.12).toFixed(2)))} style={{background:"transparent",border:"none",width:28,height:28,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+          <span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",color:"rgba(26,26,20,.5)",minWidth:34,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
+          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.12).toFixed(2)))} style={{background:"transparent",border:"none",width:28,height:28,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
         </div>
-        {/* Agregar */}
-        <select onChange={e=>{if(e.target.value){addElemento(e.target.value);e.target.value="";}}} defaultValue="" style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"6px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
-          <option value="">+ Agregar elemento...</option>
-          {ELEMENTOS_FIJOS.map(e=><option key={e.id} value={e.id}>{e.emoji} {e.label}</option>)}
-        </select>
-        <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
-        {/* Fit to screen */}
-        <button onClick={fitToScreen} title="Ajustar a pantalla" style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:8,padding:"7px 10px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 4V1h3M9 1h3v3M12 9v3H9M4 12H1V9" stroke="#4A5E3A" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          Ajustar a pantalla
+        {/* Ajustar pantalla */}
+        <button onClick={fitToScreen} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3V1h2M9 1h2v2M11 9v2H9M3 11H1V9" stroke="#4A5E3A" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          Ajustar
         </button>
-        {/* Selector estilo + Auto distribución */}
-        <div style={{display:"flex",gap:0,border:"1px solid rgba(201,169,110,.4)",borderRadius:8,overflow:"hidden"}}>
-          <select value={estiloDistrib} onChange={e=>setEstiloDistrib(e.target.value)}
-            style={{fontFamily:"'Lora',serif",fontSize:".78rem",padding:"6px 8px",border:"none",background:"rgba(201,169,110,.08)",color:"rgba(139,107,40,.9)",cursor:"pointer",outline:"none"}}>
+      </div>
+      {/* Fila 2: Acciones */}
+      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+        {/* Agregar elemento */}
+        <div style={{position:"relative"}}>
+          <button onClick={()=>setShowElemMenu(s=>!s)} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
+          {showElemMenu&&<div style={{position:"absolute",top:"calc(100%+4px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:50,boxShadow:"0 4px 16px rgba(0,0,0,.1)",minWidth:160}}>
+            {ELEMENTOS_FIJOS.map(e=><button key={e.id} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"block",width:"100%",background:"transparent",border:"none",borderRadius:6,padding:"6px 10px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
+          </div>}
+        </div>
+        <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:7,padding:"6px 12px",fontFamily:"'Lora',serif",fontSize:".78rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
+        {/* Estilo + Distribuir */}
+        <div style={{display:"flex",border:"1px solid rgba(201,169,110,.4)",borderRadius:7,overflow:"hidden"}}>
+          <select value={estiloDistrib} onChange={e=>setEstiloDistrib(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".78rem",padding:"5px 8px",border:"none",background:"rgba(201,169,110,.08)",color:"rgba(139,107,40,.9)",cursor:"pointer",outline:"none"}}>
             {ESTILOS_DISTRIB.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
           </select>
-          <button onClick={autoDistribuir} style={{background:"rgba(201,169,110,.15)",border:"none",borderLeft:"1px solid rgba(201,169,110,.3)",padding:"6px 12px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(139,107,40,.95)",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>
-            ✨ Distribuir
-          </button>
+          <button onClick={autoDistribuir} style={{background:"rgba(201,169,110,.15)",border:"none",borderLeft:"1px solid rgba(201,169,110,.3)",padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(139,107,40,.95)",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Distribuir</button>
         </div>
       </div>
+    </div>
 
-      {/* Warning capacidad */}
-      {salonChico&&<div style={{
-        display:"flex",alignItems:"center",gap:8,
-        background:salonMuyChico?"rgba(200,60,60,.08)":"rgba(201,169,110,.08)",
-        border:`1px solid ${salonMuyChico?"rgba(200,60,60,.35)":"rgba(201,169,110,.35)"}`,
-        borderRadius:10,padding:"8px 12px",marginBottom:8
-      }}>
-        <span style={{fontSize:"1rem",flexShrink:0}}>{salonMuyChico?"🔴":"⚠️"}</span>
-        <div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:600,color:salonMuyChico?"rgba(200,60,60,.85)":"rgba(139,107,40,.9)"}}>
-            {salonMuyChico?"El salón es muy chico para los invitados":"El salón podría quedar ajustado"}
-          </div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.45)",marginTop:2}}>
-            {totalInvWarning} invitados · {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m² · Capacidad recomendada: ~{capacidadMaxSalon} personas (1.5m²/persona)
-          </div>
-        </div>
-      </div>}
+    {/* ── WARNING CAPACIDAD ── */}
+    {salonChico&&<div style={{display:"flex",alignItems:"center",gap:8,background:salonMuyChico?"rgba(200,60,60,.07)":"rgba(201,169,110,.07)",border:`1px solid ${salonMuyChico?"rgba(200,60,60,.3)":"rgba(201,169,110,.3)"}`,borderRadius:8,padding:"7px 12px",marginBottom:8}}>
+      <span style={{fontSize:".9rem",flexShrink:0}}>{salonMuyChico?"🔴":"⚠️"}</span>
+      <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:salonMuyChico?"rgba(200,60,60,.8)":"rgba(139,107,40,.85)"}}>
+        {salonMuyChico?"El salón es muy chico":"El salón podría quedar justo"} · {totalInvWarn} inv · capacidad recomendada ~{capacidadMax} (1.5m²/persona)
+      </span>
+    </div>}
 
-      {/* Viewport — área FIJA con overflow hidden */}
-      <div ref={viewportRef}
-        style={{
-          width:"100%", height:480,
-          background:"#3a3530", // fondo sólido oscuro
-          borderRadius:14,
-          border:"1px solid rgba(74,94,58,.2)",
-          overflow:"hidden",
-          position:"relative",
-          cursor:cursorStyle,
-          touchAction:"none",
-        }}
-        onMouseDown={e=>{
-          // Pan con click en área vacía (no en mesa ni elemento)
-          if(e.target===viewportRef.current||e.target===canvasRef.current){
-            startDrag(e,"pan",null);
-          }
-        }}
-        onMouseMove={onMove}
-        onMouseUp={onUp}
-        onMouseLeave={onUp}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onClick={()=>{setSelectedElem(null);}}
-      >
-        {/* Canvas interior — se mueve con pan y zoom */}
-        <div ref={canvasRef}
-          style={{
-            position:"absolute",
-            left:pan.x, top:pan.y,
-            width:CW+80, height:CH+80,
-          }}
+    {/* ── LAYOUT PRINCIPAL: Canvas + Panel ── */}
+    <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+
+      {/* ── CANVAS ── */}
+      <div style={{flex:1,minWidth:0}}>
+        <div ref={viewportRef}
+          style={{width:"100%",height:480,background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none"}}
+          onMouseDown={e=>{if(e.target===viewportRef.current||e.target===canvasRef.current)startDrag(e,"pan",null);}}
+          onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+          onClick={()=>{setSelectedElem(null);setShowShapeMenu(false);setShowElemMenu(false);}}
         >
-          {/* SVG: piso del salón */}
-          <svg style={{position:"absolute",left:30,top:30,width:CW,height:CH,overflow:"visible",pointerEvents:"none"}}>
-            <defs>
-              <pattern id="pisoSalon" width={PX} height={PX} patternUnits="userSpaceOnUse">
-                <rect width={PX} height={PX} fill="#F0EAD8"/>
-                <rect width={PX/2} height={PX/2} fill="#E8E0C8"/>
-                <rect x={PX/2} y={PX/2} width={PX/2} height={PX/2} fill="#E8E0C8"/>
-              </pattern>
-              <clipPath id="sClipSalon"><path d={shapePath}/></clipPath>
-            </defs>
-            {/* Sombra */}
-            <path d={shapePath} fill="rgba(0,0,0,.3)" transform="translate(4,4)"/>
-            {/* Piso sólido */}
-            <path d={shapePath} fill="url(#pisoSalon)" stroke="#5a4e3e" strokeWidth="2.5"/>
-            {/* Reglas */}
-            {Array.from({length:salonW+1},(_,i)=>(
-              <g key={"rx"+i}>
-                <line x1={i*PX} y1={-10} x2={i*PX} y2={-3} stroke="rgba(200,180,140,.5)" strokeWidth="1"/>
-                {i%5===0&&<text x={i*PX} y={-14} textAnchor="middle" fontSize={Math.max(8,10/zoom)} fill="rgba(200,180,140,.7)" fontFamily="'Calibri',sans-serif">{i}m</text>}
+          <div ref={canvasRef} style={{position:"absolute",left:pan.x,top:pan.y,width:CW+80,height:CH+80}}>
+            {/* Piso */}
+            <svg style={{position:"absolute",left:30,top:30,width:CW,height:CH,overflow:"visible",pointerEvents:"none"}}>
+              <defs>
+                <pattern id="pisoS4" width={PX} height={PX} patternUnits="userSpaceOnUse">
+                  <rect width={PX} height={PX} fill="#F0EAD8"/>
+                  <rect width={PX/2} height={PX/2} fill="#E8E0C8"/>
+                  <rect x={PX/2} y={PX/2} width={PX/2} height={PX/2} fill="#E8E0C8"/>
+                </pattern>
+                <clipPath id="sClipS4"><path d={SALON_SHAPES[salonShape].path(CW,CH)}/></clipPath>
+              </defs>
+              <path d={SALON_SHAPES[salonShape].path(CW,CH)} fill="#8a7e6e" transform="translate(3,3)"/>
+              <path d={SALON_SHAPES[salonShape].path(CW,CH)} fill="url(#pisoS4)" stroke="#5a4e3e" strokeWidth="2.5"/>
+              {Array.from({length:salonW+1},(_,i)=><g key={"rx"+i}>
+                <line x1={i*PX} y1={-8} x2={i*PX} y2={-2} stroke="rgba(200,180,140,.45)" strokeWidth="1"/>
+                {i%5===0&&<text x={i*PX} y={-11} textAnchor="middle" fontSize={Math.max(7,9/zoom)} fill="rgba(200,180,140,.65)" fontFamily="Calibri">{i}m</text>}
+              </g>)}
+              {Array.from({length:salonH+1},(_,i)=><g key={"ry"+i}>
+                <line x1={-8} y1={i*PX} x2={-2} y2={i*PX} stroke="rgba(200,180,140,.45)" strokeWidth="1"/>
+                {i%5===0&&<text x={-11} y={i*PX+3} textAnchor="end" fontSize={Math.max(7,9/zoom)} fill="rgba(200,180,140,.65)" fontFamily="Calibri">{i}m</text>}
+              </g>)}
+              <g clipPath="url(#sClipS4)">
+                {Array.from({length:salonH+1},(_,i)=><line key={"gh"+i} x1="0" y1={i*PX} x2={CW} y2={i*PX} stroke="rgba(255,255,255,.12)" strokeWidth="0.5"/>)}
+                {Array.from({length:salonW+1},(_,i)=><line key={"gv"+i} x1={i*PX} y1="0" x2={i*PX} y2={CH} stroke="rgba(255,255,255,.12)" strokeWidth="0.5"/>)}
               </g>
-            ))}
-            {Array.from({length:salonH+1},(_,i)=>(
-              <g key={"ry"+i}>
-                <line x1={-10} y1={i*PX} x2={-3} y2={i*PX} stroke="rgba(200,180,140,.5)" strokeWidth="1"/>
-                {i%5===0&&<text x={-14} y={i*PX+3} textAnchor="end" fontSize={Math.max(8,10/zoom)} fill="rgba(200,180,140,.7)" fontFamily="'Calibri',sans-serif">{i}m</text>}
-              </g>
-            ))}
-            {/* Grid dentro del salón */}
-            <g clipPath="url(#sClipSalon)">
-              {Array.from({length:salonH+1},(_,i)=><line key={"gh"+i} x1="0" y1={i*PX} x2={CW} y2={i*PX} stroke="rgba(255,255,255,.15)" strokeWidth="0.5"/>)}
-              {Array.from({length:salonW+1},(_,i)=><line key={"gv"+i} x1={i*PX} y1="0" x2={i*PX} y2={CH} stroke="rgba(255,255,255,.15)" strokeWidth="0.5"/>)}
-            </g>
-          </svg>
+            </svg>
 
-          {/* Elementos fijos */}
-          {elementos.map(el=>{
-            const def = ELEMENTOS_FIJOS.find(e=>e.id===el.tipo);
-            if(!def) return null;
-            const elW = el.ew*PX, elH = el.eh*PX;
-            const isSelEl = selectedElem===el.id;
-            return <div key={el.id}
-              onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
-              onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-              onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-              style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,
-                width:elW,height:elH,boxSizing:"border-box",
-                background:`${def.color}cc`,
-                border:`2px solid ${isSelEl?"#F5EFE0":def.color}`,
-                borderRadius:Math.min(8,elW*0.08),
-                display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-                zIndex:isSelEl?8:3,cursor:"grab",
-                boxShadow:isSelEl?"0 0 0 2px rgba(245,239,224,.4), 0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.25)",
-              }}
-            >
-              <span style={{fontSize:Math.max(10,Math.min(24,elH*0.4))+"px",pointerEvents:"none"}}>{def.emoji}</span>
-              {elH>20&&<span style={{fontFamily:"'Cinzel',serif",fontSize:Math.max(6,Math.min(10,elH*0.14))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
-              {elH>32&&isSelEl&&<span style={{fontFamily:"'Lora',serif",fontSize:"7px",color:"rgba(255,255,255,.6)",pointerEvents:"none"}}>{el.ew.toFixed(1)}×{el.eh.toFixed(1)}m</span>}
-              <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"9px",lineHeight:1,zIndex:10}}>×</button>
-              {/* Resize handle */}
-              <div
-                onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}}
-                onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}}
-                style={{position:"absolute",bottom:-6,right:-6,width:14,height:14,
-                  background:isSelEl?"#F5EFE0":"rgba(255,255,255,.7)",
-                  border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,
-                  display:"flex",alignItems:"center",justifyContent:"center"}}
-              >
-                <svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="5" x2="5" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3" y1="5" x2="5" y2="3" stroke={def.color} strokeWidth="1.5"/></svg>
-              </div>
-            </div>;
-          })}
+            {/* Elementos fijos */}
+            {elementos.map(el=>{
+              const def=ELEMENTOS_FIJOS.find(e=>e.id===el.tipo); if(!def) return null;
+              const elW=el.ew*PX,elH=el.eh*PX,isSel=selectedElem===el.id;
+              return <div key={el.id}
+                onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
+                onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
+                onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
+                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?"#F5EFE0":def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
+                <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
+                {elH>20&&<span style={{fontFamily:"'Cinzel',serif",fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
+                {isSel&&<>
+                  <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10}}>×</button>
+                  <div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-7,right:-7,width:16,height:16,background:"#F5EFE0",border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <svg width="7" height="7" viewBox="0 0 7 7"><line x1="1" y1="6" x2="6" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3.5" y1="6" x2="6" y2="3.5" stroke={def.color} strokeWidth="1.5"/></svg>
+                  </div>
+                </>}
+              </div>;
+            })}
 
-          {/* Mesas — redondas o rectangulares según tipo */}
-          {mesas.map(mesa=>{
-            const ps = mesaPersonas(mesa.id);
-            const isSelected = selectedMesa===mesa.id;
-            const isHovered  = hoveredMesa===mesa.id;
-            const isRect     = mesa.tipo?.startsWith("rect");
-            const over       = ps.length>(isRect?10:tableSize);
-            const libres     = Math.max(0,(isRect?10:tableSize)-ps.length);
-            const fillColor  = isSelected?"#4A5E3A":isHovered?"rgba(74,94,58,.9)":"#D4C4A0";
-            const strokeC    = isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.7)";
-            const dragHandlers = {
-              onMouseDown:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);},
-              onTouchStart:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);},
-            };
-
-            // Determinar dimensiones y tipo de mesa
-            const tipoMesa = mesa.tipo||"round";
-            const isRectAny = tipoMesa.startsWith("rect");
-            const angle = mesa.angle||0;
-            const mesaEW = mesa.ew||2.4;
-            const mesaEH = mesa.eh||0.8;
-            const miraSide = mesa.miraSide||"both"; // "both"|"right"|"left"|"down"
-
-            if(isRectAny){
-              const rW=mesaEW*PX, rH=mesaEH*PX;
-              const seatR = ASIENTO_R_M*PX;
-              // Sillas en el lado largo (a lo largo de rW)
-              const seatsLong = Math.max(1, Math.ceil(rW/(seatR*2+3)));
-              // Sillas en el lado corto (a lo largo de rH) — para mesas muy largas
-              const seatsShort = rH > rW ? Math.max(1,Math.ceil(rH/(seatR*2+3))) : seatsLong;
-              const isVertical = rH > rW; // mesa vertical (más alta que ancha)
-              // Para miraSide: cuántas sillas y de qué lados
-              const showTop   = miraSide==="both"||miraSide==="down";
-              const showBot   = miraSide==="both"||miraSide==="up";
-              const showLeft  = miraSide==="both"||miraSide==="right";
-              const showRight = miraSide==="both"||miraSide==="left";
-              const seatsMayor = isVertical ? seatsShort : seatsLong;
-              const pad = seatR+4;
-              const wDiv = rW+pad*2, hDiv = rH+pad*2;
-
-              // Rotación si tiene ángulo
-              const transform = angle ? `rotate(${angle}deg)` : undefined;
-
+            {/* Mesas */}
+            {mesas.map(mesa=>{
+              const {w,h,angle,jsx}=renderMesaSVG(mesa);
+              const isSelected=selectedMesa===mesa.id;
               return <div key={mesa.id}
-                style={{position:"absolute",
-                  left:30+mesa.mx*PX-wDiv/2, top:30+mesa.my*PX-hDiv/2,
-                  width:wDiv, height:hDiv,
-                  zIndex:isSelected?6:4, cursor:"pointer",
-                  transform, transformOrigin:"center center"}}
+                style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center"}}
                 onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
                 onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
-                onClick={e=>{e.stopPropagation();if(!dragging)setSelectedMesa(isSelected?null:mesa.id);setSelectedElem(null);}}
+                onClick={e=>{e.stopPropagation();if(!dragging){setSelectedMesa(isSelected?null:mesa.id);setSelectedElem(null);if(window.innerWidth<640)setShowSheet(true);}}}
               >
-                <svg width={wDiv} height={hDiv} style={{overflow:"visible",display:"block"}}>
-                  <rect x={pad+2} y={pad+2} width={rW} height={rH} rx="3" fill="rgba(0,0,0,.18)"/>
-                  <rect x={pad} y={pad} width={rW} height={rH} rx="3"
-                    fill={fillColor} stroke={strokeC} strokeWidth={isSelected?2.5:1.5}
-                    style={{cursor:"grab"}} {...dragHandlers}/>
-                  <text x={pad+rW/2} y={pad+rH/2+(isVertical?0:4)} textAnchor="middle"
-                    fontSize={Math.max(7,Math.min(rW,rH)*0.22)}
-                    fill={isSelected?"#F5EFE0":"#1A1A14"}
-                    fontFamily="'Playfair Display',serif" fontWeight="700"
-                    transform={isVertical?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined}
-                    style={{pointerEvents:"none"}}>{mesa.id}</text>
-
-                  {/* Sillas lado superior (a lo largo de rW) */}
-                  {showTop&&!isVertical&&Array.from({length:seatsMayor},(_,i)=>{
-                    const p=ps[i];
-                    const sx=pad+rW/(seatsMayor+1)*(i+1);
-                    const sy=pad-seatR-1;
-                    return <g key={"t"+i} style={{cursor:p?"grab":"default"}}
-                      onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
-                      <circle cx={sx} cy={sy} r={seatR}
-                        fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.4)"}
-                        stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.3)"} strokeWidth="1.5"/>
-                      {p&&<text x={sx} y={sy+seatR*0.38} textAnchor="middle" fontSize={Math.max(5,seatR*0.6)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
-                      {!p&&<text x={sx} y={sy+seatR*0.42} textAnchor="middle" fontSize={Math.max(6,seatR*0.65)} fill="rgba(90,78,62,.35)" style={{pointerEvents:"none"}}>+</text>}
-                    </g>;
-                  })}
-                  {/* Sillas lado inferior (a lo largo de rW) */}
-                  {showBot&&!isVertical&&Array.from({length:seatsMayor},(_,i)=>{
-                    const p=ps[showTop?seatsMayor+i:i];
-                    const sx=pad+rW/(seatsMayor+1)*(i+1);
-                    const sy=pad+rH+seatR+1;
-                    return <g key={"b"+i} style={{cursor:p?"grab":"default"}}
-                      onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
-                      <circle cx={sx} cy={sy} r={seatR}
-                        fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.4)"}
-                        stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.3)"} strokeWidth="1.5"/>
-                      {p&&<text x={sx} y={sy+seatR*0.38} textAnchor="middle" fontSize={Math.max(5,seatR*0.6)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
-                      {!p&&<text x={sx} y={sy+seatR*0.42} textAnchor="middle" fontSize={Math.max(6,seatR*0.65)} fill="rgba(90,78,62,.35)" style={{pointerEvents:"none"}}>+</text>}
-                    </g>;
-                  })}
-                  {/* Sillas lado izquierdo (a lo largo de rH) — mesas verticales */}
-                  {showLeft&&isVertical&&Array.from({length:seatsMayor},(_,i)=>{
-                    const p=ps[i];
-                    const sx=pad-seatR-1;
-                    const sy=pad+rH/(seatsMayor+1)*(i+1);
-                    return <g key={"l"+i} style={{cursor:p?"grab":"default"}}
-                      onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
-                      <circle cx={sx} cy={sy} r={seatR}
-                        fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.4)"}
-                        stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.3)"} strokeWidth="1.5"/>
-                      {p&&<text x={sx} y={sy+seatR*0.38} textAnchor="middle" fontSize={Math.max(5,seatR*0.6)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
-                      {!p&&<text x={sx} y={sy+seatR*0.42} textAnchor="middle" fontSize={Math.max(6,seatR*0.65)} fill="rgba(90,78,62,.35)" style={{pointerEvents:"none"}}>+</text>}
-                    </g>;
-                  })}
-                  {/* Sillas lado derecho (a lo largo de rH) — mesas verticales */}
-                  {showRight&&isVertical&&Array.from({length:seatsMayor},(_,i)=>{
-                    const p=ps[showLeft?seatsMayor+i:i];
-                    const sx=pad+rW+seatR+1;
-                    const sy=pad+rH/(seatsMayor+1)*(i+1);
-                    return <g key={"r"+i} style={{cursor:p?"grab":"default"}}
-                      onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
-                      <circle cx={sx} cy={sy} r={seatR}
-                        fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.4)"}
-                        stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.3)"} strokeWidth="1.5"/>
-                      {p&&<text x={sx} y={sy+seatR*0.38} textAnchor="middle" fontSize={Math.max(5,seatR*0.6)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
-                      {!p&&<text x={sx} y={sy+seatR*0.42} textAnchor="middle" fontSize={Math.max(6,seatR*0.65)} fill="rgba(90,78,62,.35)" style={{pointerEvents:"none"}}>+</text>}
-                    </g>;
-                  })}
-                </svg>
-                <button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}}
-                  style={{position:"absolute",top:0,right:0,background:"rgba(200,60,60,.85)",border:"none",borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"9px",lineHeight:1,zIndex:10}}>×</button>
+                {jsx}
+                {/* Botón eliminar — solo al seleccionar */}
+                {isSelected&&<button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10,lineHeight:1}}>×</button>}
               </div>;
-            }
+            })}
 
-            // Mesa redonda (default)
-            const R=MESA_R_M*PX, AR=ASIENTO_R_M*PX;
-            const totalSeats=Math.max(ps.length,tableSize);
-            const pts=circlePts(totalSeats,R+AR);
-            const svgSize=(R+AR*2+6)*2;
-            const cx=svgSize/2, cy=svgSize/2;
-            return <div key={mesa.id}
-              style={{position:"absolute",left:30+mesa.mx*PX-svgSize/2,top:30+mesa.my*PX-svgSize/2,
-                width:svgSize,height:svgSize,zIndex:isSelected?6:4,cursor:"pointer"}}
-              onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
-              onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
-              onClick={e=>{e.stopPropagation();if(!dragging)setSelectedMesa(isSelected?null:mesa.id);setSelectedElem(null);}}
-            >
-              <svg width={svgSize} height={svgSize} style={{overflow:"visible",display:"block"}}>
-                <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.2)"/>
-                <circle cx={cx} cy={cy} r={R} fill={fillColor} stroke={strokeC}
-                  strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dragHandlers}/>
-                <text x={cx} y={cy-R*0.12} textAnchor="middle" fontSize={Math.max(7,R*0.26)} fill={isSelected?"#F5EFE0":"#4A5E3A"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>Mesa</text>
-                <text x={cx} y={cy+R*0.36} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text>
-                {libres>0&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(6,R*0.2)} fill={isSelected?"rgba(245,239,224,.65)":over?"rgba(200,60,60,.8)":"rgba(74,94,58,.6)"} fontFamily="'Lora',serif" style={{pointerEvents:"none"}}>{libres} libre{libres!==1?"s":""}</text>}
-                {pts.map((pt,i)=>{
-                  const p=ps[i];
-                  return <g key={i} style={{cursor:p?"grab":"default"}}
-                    onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}
-                    onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
-                    <circle cx={cx+pt.x} cy={cy+pt.y} r={AR}
-                      fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.4)"}
-                      stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.3)"} strokeWidth="1.5"/>
-                    {p?<text x={cx+pt.x} y={cy+pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(6,AR*0.65)} fill="#fff" fontWeight="700" fontFamily="Calibri" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>
-                      :<text x={cx+pt.x} y={cy+pt.y+AR*0.42} textAnchor="middle" fontSize={Math.max(7,AR*0.72)} fill="rgba(90,78,62,.4)" style={{pointerEvents:"none"}}>+</text>}
-                    {p&&<title>{p.nombre}</title>}
-                  </g>;
-                })}
-              </svg>
-              <button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}} style={{position:"absolute",top:0,right:0,background:"rgba(200,60,60,.85)",border:"none",borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"9px",lineHeight:1,zIndex:10}}>×</button>
-            </div>;
-          })}
+            {/* Ghost invitado */}
+            {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-16,top:(dragging.cy||0)-16,width:32,height:32,borderRadius:"50%",background:"#4A5E3A",border:"2.5px solid #F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 4px 14px rgba(0,0,0,.4)"}}>
+              <span style={{fontSize:"11px",fontWeight:700,color:"#fff"}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.charAt(0)||"?"}</span>
+            </div>}
+          </div>
 
-          {/* Ghost invitado arrastrado */}
-          {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-15,top:(dragging.cy||0)-15,width:30,height:30,borderRadius:"50%",background:"#4A5E3A",border:"2.5px solid #F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 4px 14px rgba(0,0,0,.4)"}}>
-            <span style={{fontSize:"11px",fontWeight:700,color:"#fff"}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.charAt(0)||"?"}</span>
-          </div>}
+          {/* Tip navegación */}
+          <div style={{position:"absolute",bottom:8,right:10,fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(255,255,255,.4)",pointerEvents:"none"}}>
+            Arrastrá el canvas para moverlo · {isMobile?"Pellizco":"Botones"} = zoom
+          </div>
         </div>
 
-        {/* Hint de navegación superpuesto abajo del viewport */}
-        <div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",background:"rgba(0,0,0,.35)",borderRadius:100,padding:"4px 12px",pointerEvents:"none",whiteSpace:"nowrap"}}>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(255,255,255,.65)"}}>
-            🖱️ Scroll = zoom · Arrastrar = mover · 📱 Pellizco = zoom · ✨ Auto = distribuir
-          </span>
-        </div>
-      </div>
-
-      {/* Leyenda */}
-      <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>
-        <div style={{display:"flex",gap:8}}>
+        {/* Leyenda */}
+        <div style={{display:"flex",gap:10,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>
           {[{c:"#4A5E3A",l:"Confirmado"},{c:"#C9A96E",l:"Pendiente"},{c:"rgba(26,26,20,.3)",l:"No va"}].map(({c,l})=>(
-            <div key={l} style={{display:"flex",alignItems:"center",gap:3}}>
-              <div style={{width:9,height:9,borderRadius:"50%",background:c}}/>
-              <span style={{fontFamily:"'Lora',serif",fontSize:".63rem",color:"rgba(26,26,20,.4)"}}>{l}</span>
+            <div key={l} style={{display:"flex",alignItems:"center",gap:4}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:c}}/>
+              <span style={{fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(26,26,20,.4)"}}>{l}</span>
             </div>
           ))}
+          <div style={{marginLeft:"auto",fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(26,26,20,.35)"}}>
+            📐 {salonW}×{salonH}m · {mesas.length} mesa{mesas.length!==1?"s":""} · {totalInvWarn} invitados
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* ── PANEL LATERAL ── */}
-    <div style={{width:200,flexShrink:0,display:"flex",flexDirection:"column",gap:10}}>
+      {/* ── PANEL LATERAL ── (desktop) */}
+      <div style={{width:220,flexShrink:0,display:"flex",flexDirection:"column",gap:8}}>
 
-      {/* Sin mesa */}
-      <div style={{background:"rgba(201,169,110,.06)",border:"1px dashed rgba(201,169,110,.3)",borderRadius:10,padding:"10px"}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:6}}>Sin mesa ({sinMesa.length})</div>
-        {sinMesa.length===0
-          ?<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
-          :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:130,overflowY:"auto"}}>
-            {sinMesa.map(p=>(
-              <div key={`${p.guestId}-${p.personIdx}`}
-                onMouseDown={e=>startDragGuest(e,p.guestId)}
-                onTouchStart={e=>startDragGuest(e,p.guestId)}
-                style={{display:"flex",alignItems:"center",gap:5,background:"#FBF7EF",borderRadius:6,padding:"4px 7px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.2)"}}>
-                <div style={{width:16,height:16,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
-                </div>
-                <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+        {/* Info mesa seleccionada */}
+        {selectedMesaObj
+          ?<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px",overflow:"hidden"}}>
+            {/* Header */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:700,color:"#1A1A14"}}>
+                {selectedMesaObj.etiqueta||`Mesa ${selectedMesa}`}
               </div>
-            ))}
+              <button onClick={()=>{setSelectedMesa(null);}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1rem",cursor:"pointer",lineHeight:1}}>×</button>
+            </div>
+
+            {/* Etiqueta */}
+            <div style={{marginBottom:8}}>
+              <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta (Familia, Presidencial...)"
+                onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
+                style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".8rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
+              <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
+                {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
+                  <button key={et} onClick={()=>updateMesa(selectedMesa,{etiqueta:et})}
+                    style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:100,padding:"2px 7px",fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(74,94,58,.7)",cursor:"pointer"}}>
+                    {et}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tipo de mesa */}
+            <div style={{marginBottom:8}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Tipo</div>
+              <div style={{display:"flex",gap:4}}>
+                {[{v:"round",l:"⭕"},{v:"rect_h",l:"▬"},{v:"rect_v",l:"▮"}].map(opt=>{
+                  const cur=selectedMesaObj.tipo||"round";
+                  return <button key={opt.v} onClick={()=>updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3})}
+                    style={{flex:1,background:cur===opt.v?"rgba(74,94,58,.12)":"transparent",border:`1px solid ${cur===opt.v?"rgba(74,94,58,.4)":"rgba(74,94,58,.15)"}`,borderRadius:7,padding:"5px 0",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".9rem",color:cur===opt.v?"#4A5E3A":"rgba(26,26,20,.45)"}}>
+                    {opt.l}
+                  </button>;
+                })}
+              </div>
+            </div>
+
+            {/* Invitados asignados */}
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5}}>
+              Asignados · {selectedPersonas.length}/{tableSize}
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:160,overflowY:"auto",marginBottom:8}}>
+              {selectedPersonas.map(p=>(
+                <div key={`${p.guestId}-${p.personIdx}`}
+                  onMouseDown={e=>startDragGuest(e,p.guestId)}
+                  style={{display:"flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.05)",borderRadius:6,padding:"4px 7px",cursor:"grab",border:"0.5px solid rgba(74,94,58,.1)"}}>
+                  <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+                  </div>
+                  <span style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                  <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.4)",cursor:"pointer",fontSize:".8rem",padding:0,flexShrink:0}}>×</button>
+                </div>
+              ))}
+              {selectedPersonas.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas acá</div>}
+            </div>
+
+            <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"6px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
+              Eliminar esta mesa
+            </button>
+          </div>
+
+          :{/* Placeholder cuando no hay mesa seleccionada */}
+          <div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.18)",borderRadius:12,padding:"20px 12px",textAlign:"center"}}>
+            <div style={{fontSize:"1.4rem",marginBottom:6}}>👆</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla o arrastrar invitados</div>
           </div>
         }
-      </div>
 
-      {/* Info elemento seleccionado */}
-      {selectedElem&&(()=>{
-        const el = elementos.find(x=>x.id===selectedElem);
-        const def = ELEMENTOS_FIJOS.find(e=>e.id===el?.tipo);
-        if(!el||!def) return null;
-        return <div style={{background:"#FBF7EF",border:`0.5px solid ${def.color}44`,borderRadius:10,padding:"12px"}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:".9rem",fontWeight:700,color:"#1A1A14",marginBottom:6}}>{def.emoji} {def.label}</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            {[{k:"ew",l:"Ancho"},{k:"eh",l:"Alto"}].map(({k,l})=>(
-              <div key={k}>
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>{l}</div>
-                <div style={{display:"flex",alignItems:"center",gap:3}}>
-                  <input type="number" value={el[k].toFixed(1)} step="0.5" min="0.5"
-                    onChange={e=>setElementos(es=>es.map(x=>x.id===selectedElem?{...x,[k]:Math.max(0.5,parseFloat(e.target.value)||1)}:x))}
-                    style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
-                  <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",flexShrink:0}}>m</span>
+        {/* Lista sin mesa */}
+        <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:6}}>
+            Sin mesa ({sinMesa.length})
+          </div>
+          {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
+            <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
+              style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
+            <span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",fontSize:".75rem",opacity:.4}}>🔍</span>
+            {searchSinMesa&&<button onClick={()=>setSearchSinMesa("")} style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)",fontSize:".8rem"}}>×</button>}
+          </div>}
+          {sinMesa.length===0
+            ?<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
+            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:200,overflowY:"auto"}}>
+              {sinMesaFilt.map(p=>(
+                <div key={`${p.guestId}-${p.personIdx}`}
+                  onMouseDown={e=>startDragGuest(e,p.guestId)}
+                  onTouchStart={e=>startDragGuest(e,p.guestId)}
+                  style={{display:"flex",alignItems:"center",gap:5,background:"rgba(201,169,110,.06)",borderRadius:6,padding:"4px 7px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.15)"}}>
+                  <div style={{width:16,height:16,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+                  </div>
+                  <span style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-          <button onClick={()=>removeElemento(selectedElem)} style={{marginTop:8,width:"100%",background:"rgba(200,60,60,.08)",border:"1px solid rgba(200,60,60,.25)",borderRadius:6,padding:"5px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(200,60,60,.7)",cursor:"pointer"}}>Eliminar</button>
-        </div>;
-      })()}
-
-      {/* Mesa seleccionada */}
-      {selectedMesa&&!selectedElem&&(
-        <div style={{background:"#FBF7EF",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:10,padding:"12px",flex:1}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:".9rem",fontWeight:700,color:"#1A1A14",marginBottom:3}}>Mesa {selectedMesa}</div>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".53rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.35)",marginBottom:8}}>
-            {selectedPersonas.length}/{tableSize} · {Math.max(0,tableSize-selectedPersonas.length)} libre{Math.max(0,tableSize-selectedPersonas.length)!==1?"s":""}
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:220,overflowY:"auto"}}>
-            {selectedPersonas.map(p=>(
-              <div key={`${p.guestId}-${p.personIdx}`}
-                onMouseDown={e=>startDragGuest(e,p.guestId)}
-                style={{display:"flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.06)",borderRadius:7,padding:"5px 7px",cursor:"grab",border:"0.5px solid rgba(74,94,58,.12)"}}>
-                <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
-                </div>
-                <span style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-                <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.45)",cursor:"pointer",fontSize:".8rem",padding:0,flexShrink:0}}>×</button>
-              </div>
-            ))}
-            {selectedPersonas.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas acá</div>}
-          </div>
+              ))}
+              {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
+            </div>
+          }
         </div>
-      )}
 
-      {!selectedMesa&&!selectedElem&&(
-        <div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.2)",borderRadius:10,padding:"14px 10px",textAlign:"center"}}>
-          <div style={{fontSize:"1.2rem",marginBottom:4}}>👆</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.4)",lineHeight:1.5}}>Tocá una mesa o elemento para ver sus opciones</div>
+        {/* Resumen salón */}
+        <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:8,padding:"8px 10px"}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(26,26,20,.6)"}}>📐 {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m²</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",marginTop:2}}>{mesas.length} mesa{mesas.length!==1?"s":""} · Ø{(MESA_R_M*2).toFixed(1)}m c/u</div>
+          {budgetInvitados>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.6)",marginTop:2}}>👥 {budgetInvitados} inv → {Math.ceil(budgetInvitados/tableSize)} mesas sugeridas</div>}
         </div>
-      )}
-
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-        <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"8px 4px",fontFamily:"'Lora',serif",fontSize:".73rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
-        <select onChange={e=>{if(e.target.value){addElemento(e.target.value);e.target.value="";}}} defaultValue="" style={{fontFamily:"'Lora',serif",fontSize:".68rem",padding:"6px 3px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
-          <option value="">+ Elemento</option>
-          {ELEMENTOS_FIJOS.map(e=><option key={e.id} value={e.id}>{e.emoji} {e.label}</option>)}
-        </select>
-      </div>
-
-      <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:8,padding:"8px 10px"}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)"}}>📐 {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m²</div>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",marginTop:2}}>{mesas.length} mesa{mesas.length!==1?"s":""} · {tableSize} personas c/u</div>
-        {budgetInvitados>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.6)",marginTop:2}}>
-          👥 {budgetInvitados} invitados → {Math.ceil(budgetInvitados/tableSize)} mesas necesarias
-        </div>}
       </div>
     </div>
+
+    {/* ── BOTTOM SHEET MOBILE ── */}
+    {showSheet&&selectedMesaObj&&<div style={{position:"fixed",inset:0,zIndex:100,display:"flex",flexDirection:"column",justifyContent:"flex-end"}} onClick={()=>setShowSheet(false)}>
+      <div style={{background:"#FBF7EF",borderRadius:"16px 16px 0 0",padding:"16px",maxHeight:"65vh",overflowY:"auto",boxShadow:"0 -4px 24px rgba(0,0,0,.2)"}} onClick={e=>e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{width:36,height:4,background:"rgba(26,26,20,.15)",borderRadius:2,margin:"0 auto 14px"}}/>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",fontWeight:700,color:"#1A1A14"}}>{selectedMesaObj.etiqueta||`Mesa ${selectedMesa}`}</div>
+          <button onClick={()=>setShowSheet(false)} style={{background:"transparent",border:"none",fontSize:"1.2rem",cursor:"pointer",color:"rgba(26,26,20,.3)"}}>×</button>
+        </div>
+        {/* Etiquetas rápidas */}
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
+          {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
+            <button key={et} onClick={()=>updateMesa(selectedMesa,{etiqueta:et})}
+              style={{background:selectedMesaObj.etiqueta===et?"rgba(74,94,58,.15)":"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(74,94,58,.8)",cursor:"pointer"}}>
+              {et}
+            </button>
+          ))}
+        </div>
+        <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta personalizada..."
+          onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:10}}/>
+        {/* Tipo */}
+        <div style={{display:"flex",gap:6,marginBottom:12}}>
+          {[{v:"round",l:"⭕ Redonda"},{v:"rect_h",l:"▬ Horizontal"},{v:"rect_v",l:"▮ Vertical"}].map(opt=>{
+            const cur=selectedMesaObj.tipo||"round";
+            return <button key={opt.v} onClick={()=>updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3})}
+              style={{flex:1,background:cur===opt.v?"rgba(74,94,58,.12)":"transparent",border:`1px solid ${cur===opt.v?"rgba(74,94,58,.4)":"rgba(74,94,58,.15)"}`,borderRadius:8,padding:"8px 4px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".78rem",color:cur===opt.v?"#4A5E3A":"rgba(26,26,20,.45)"}}>
+              {opt.l}
+            </button>;
+          })}
+        </div>
+        {/* Invitados asignados */}
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:6}}>Asignados · {selectedPersonas.length}/{tableSize}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:200,overflowY:"auto"}}>
+          {selectedPersonas.map(p=>(
+            <div key={`${p.guestId}-${p.personIdx}`} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.05)",borderRadius:8,padding:"6px 10px"}}>
+              <div style={{width:22,height:22,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <span style={{fontSize:"8px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+              </div>
+              <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",flex:1}}>{p.nombre}</span>
+              <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.45)",cursor:"pointer",fontSize:".9rem",padding:0}}>×</button>
+            </div>
+          ))}
+          {selectedPersonas.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.3)",fontStyle:"italic",padding:"8px 0"}}>Sin invitados asignados todavía</div>}
+        </div>
+        <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",marginTop:12,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:8,padding:"10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
+          Eliminar mesa {selectedMesa}
+        </button>
+      </div>
+    </div>}
   </div>;
 }
 
