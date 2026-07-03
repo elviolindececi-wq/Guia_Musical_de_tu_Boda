@@ -3937,7 +3937,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,ew,eh}:x));
     } else if(dragging.type==="guest"){
       setDragging(d=>({...d,cx:pos.x,cy:pos.y}));
-      const over=mesas.find(m=>{const dx=m.mx*PX-pos.x,dy=m.my*PX-pos.y;return Math.sqrt(dx*dx+dy*dy)<(MESA_R_M+ASIENTO_R_M*2)*PX;});
+      // Radio de detección generoso: toda la mesa + zona de asientos + margen extra
+      const detectR=(MESA_R_M+ASIENTO_R_M*2+0.5)*PX;
+      const over=mesas.find(m=>{const dx=m.mx*PX-pos.x,dy=m.my*PX-pos.y;return Math.sqrt(dx*dx+dy*dy)<detectR;});
       setHoveredMesa(over?over.id:null);
     } else if(dragging.type==="pan"){
       setPan({x:dragging.pan0.x+(cx-r.left-dragging.x0),y:dragging.pan0.y+(cy-r.top-dragging.y0)});
@@ -3981,76 +3983,270 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
   // ── Auto distribución ──
   const autoDistribuir=()=>{
-    const W=salonW,H=salonH,mg=1.2;
+    const W=salonW, H=salonH, mg=1.0;
+
+    // Calcular N mesas necesarias
     const totalInv=budgetInvitados>0?budgetInvitados:(guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
     const ppMesa=estiloDistrib==="cantine"?16:estiloDistrib==="u_shape"?20:estiloDistrib==="chevrons"?10:tableSize;
     const N=Math.max(1,totalInv>0?Math.ceil(totalInv/ppMesa):mesas.length);
+    const esRect=["cantine","u_shape","chevrons"].includes(estiloDistrib);
+
+    // Construir lista de mesas
     const maxId=mesas.length>0?Math.max(...mesas.map(m=>m.id)):0;
     let base=[...mesas];
-    for(let i=base.length;i<N;i++) base.push({id:maxId+i-mesas.length+1,mx:W/2,my:H/2,tipo:"round",etiqueta:""});
-    const RD=MESA_R_M,D=RD*2,GAP=D+1.4;
-    const esRect=["cantine","u_shape","chevrons"].includes(estiloDistrib);
+    for(let i=base.length;i<N;i++)
+      base.push({id:maxId+i-mesas.length+1,mx:W/2,my:H/2,tipo:"round",etiqueta:""});
+
+    const RD=MESA_R_M;       // 0.90m radio mesa redonda
+    const D=RD*2;            // 1.80m diámetro
+    const GR=D+1.4;          // paso centro-a-centro mesas redondas
+    const MW=0.8;            // ancho mesa larga/rect
+    const SG=1.2;            // espacio sillas alrededor
+
+    // Helper: distribuir N mesas redondas en zona sin encimamiento
     const grillaR=(x1,y1,x2,y2,n)=>{
-      const zW=x2-x1,zH=y2-y1;
-      const cols=Math.max(1,Math.floor(zW/GAP));
-      const eX=zW/Math.min(n,cols),eY=Math.ceil(n/cols)>1?Math.min(GAP,zH/Math.ceil(n/cols)):zH/2;
+      if(n<=0) return [];
+      const zW=x2-x1, zH=y2-y1;
+      const cols=Math.max(1,Math.floor(zW/GR));
+      const eX=zW/Math.min(n,cols);
+      const rows=Math.ceil(n/cols);
+      const eY=rows>1?Math.min(GR,zH/rows):zH/2;
       return Array.from({length:n},(_,i)=>{
-        const col=i%cols,row=Math.floor(i/cols),enF=Math.min(cols,n-row*cols);
-        return{mx:Math.max(mg+RD,Math.min(W-mg-RD,x1+(zW-enF*eX)/2+col*eX+eX/2)),my:Math.max(mg+RD,Math.min(H-mg-RD,y1+row*eY+eY/2)),tipo:"round"};
+        const col=i%cols, row=Math.floor(i/cols), enF=Math.min(cols,n-row*cols);
+        return{
+          mx:Math.max(mg+RD,Math.min(W-mg-RD, x1+(zW-enF*eX)/2+col*eX+eX/2)),
+          my:Math.max(mg+RD,Math.min(H-mg-RD, y1+row*eY+eY/2)),
+          tipo:"round",
+        };
       });
     };
-    let pos=[],elems=[];
+
+    let pos=[], elems=[];
+
+    // ═══════════════════════════════════════════════════════════════
+    // BANQUETE
+    // [Mesa larga novios arriba centro]
+    // [grilla de mesas redondas abajo]
+    // ═══════════════════════════════════════════════════════════════
     if(estiloDistrib==="banquet"){
-      const djW=Math.min(6,W*0.35),djH=1.6,novW=Math.min(4,W*0.28),novH=1.2,pistaW=Math.min(8,W*0.42),pistaH=3.5;
-      const yDJ=mg,yNov=yDJ+djH+0.6,yPista=H-mg-pistaH,yM=yNov+novH+1.2;
-      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},{id:"pista-1",tipo:"pista",mx:W/2-pistaW/2,my:yPista,ew:pistaW,eh:pistaH}];
-      pos=grillaR(mg,yM,W-mg,yPista-0.8,N);
+      const novW=Math.min(W*0.55,10), novH=MW;
+      const yNov=mg+SG;
+      const yMesas=yNov+novH+SG+RD+0.5;
+      elems=[
+        {id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},
+      ];
+      pos=grillaR(mg+RD,yMesas,W-mg-RD,H-mg-RD,N);
+
+    // ═══════════════════════════════════════════════════════════════
+    // PISTA AL CENTRO (Banquet avec piste de danse)
+    // [Mesa larga novios arriba]
+    // [mesas redondas izq] [PISTA] [mesas redondas der]
+    // [mesas redondas abajo]
+    // ═══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="pista_centro"){
-      const novW=Math.min(4,W*0.28),novH=1.2,pW=Math.min(W*0.36,7),pH=Math.min(H*0.30,6);
-      const px=(W-pW)/2,py=(H-pH)/2,G=0.8;
-      elems=[{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:mg,ew:novW,eh:novH},{id:"pista-1",tipo:"pista",mx:px,my:py,ew:pW,eh:pH}];
-      const zones=[{x1:mg,y1:mg+novH+0.6,x2:px-G,y2:H-mg},{x1:px+pW+G,y1:mg+novH+0.6,x2:W-mg,y2:H-mg},{x1:px,y1:mg+novH+0.6,x2:px+pW,y2:py-G},{x1:px,y1:py+pH+G,x2:px+pW,y2:H-mg}];
+      const novW=Math.min(W*0.55,10), novH=MW;
+      const yNov=mg+SG;
+      const pW=Math.min(W*0.35,7), pH=Math.min(H*0.28,5.5);
+      const px=(W-pW)/2, py=(H-pH)/2+1;
+      elems=[
+        {id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},
+        {id:"pista-1", tipo:"pista",  mx:px,        my:py,  ew:pW,  eh:pH},
+      ];
+      const G=0.7;
+      const yTopMesas=yNov+novH+G+RD;
+      const zones=[
+        {x1:mg+RD,    y1:yTopMesas, x2:px-G,      y2:H-mg-RD},  // izq
+        {x1:px+pW+G,  y1:yTopMesas, x2:W-mg-RD,   y2:H-mg-RD},  // der
+        {x1:px,       y1:py+pH+G+RD,x2:px+pW,     y2:H-mg-RD},  // abajo pista
+        {x1:px,       y1:yTopMesas, x2:px+pW,     y2:py-G-RD},  // arriba pista
+      ];
+      const perZ=Math.ceil(N/4);
       let rem=N;
-      zones.forEach(z=>{const n=Math.min(Math.ceil(N/4),rem);if(n>0){pos.push(...grillaR(z.x1,z.y1,z.x2,z.y2,n));rem-=n;}});
+      zones.forEach(z=>{
+        const n=Math.min(perZ,rem);
+        if(n>0&&z.x2>z.x1&&z.y2>z.y1) pos.push(...grillaR(z.x1,z.y1,z.x2,z.y2,n));
+        rem-=n;
+      });
+
+    // ═══════════════════════════════════════════════════════════════
+    // CABARET
+    // [Mesa larga arriba]
+    // [fila 1: pocas mesas centradas]
+    // [fila 2: más mesas]
+    // [fila 3: más mesas aún]
+    // ═══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="cabaret"){
-      const djW=Math.min(6,W*0.38),djH=1.6,novW=Math.min(4,W*0.28),novH=1.2,pistaW=Math.min(6,W*0.32),pistaH=3.0;
-      const yDJ=mg,yNov=yDJ+djH+0.6,yPista=H-mg-pistaH,yM=yNov+novH+1.2;
-      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},{id:"pista-1",tipo:"pista",mx:W/2-pistaW/2,my:yPista,ew:pistaW,eh:pistaH}];
-      const colsMax=Math.max(1,Math.floor((W-mg*2)/GAP));
-      const espY=Math.min(GAP,(yPista-yM-RD)/Math.max(1,Math.ceil(N/colsMax)));
-      let placed=0,row=0;
+      const novW=Math.min(W*0.55,10), novH=MW;
+      const yNov=mg+SG;
+      const yMesas=yNov+novH+SG+RD+0.3;
+      elems=[
+        {id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},
+      ];
+      // Filas de mesas centradas, cada fila tiene más que la anterior
+      const maxCols=Math.max(1,Math.floor((W-mg*2-RD*2)/GR));
+      let placed=0, row=0, rowSizes=[];
+      // Calcular cuántas mesas por fila (creciente: 2,3,4,5...)
       while(placed<N){
-        const en=Math.min(colsMax,N-placed),tW=en*GAP,offX=(W-mg*2-tW)/2;
-        for(let i=0;i<en;i++) pos.push({mx:Math.max(mg+RD,Math.min(W-mg-RD,mg+offX+i*GAP+GAP/2)),my:Math.min(yPista-RD-0.5,yM+row*espY+RD),tipo:"round"});
-        placed+=en;row++;
+        const enFila=Math.min(maxCols,Math.max(2,row+2),N-placed);
+        rowSizes.push(enFila);
+        placed+=enFila;
+        row++;
       }
+      const totalFilas=rowSizes.length;
+      const zonaH=H-yMesas-mg-RD;
+      const espY=totalFilas>1?Math.min(GR,zonaH/totalFilas):zonaH/2;
+      let idx=0;
+      rowSizes.forEach((enFila,ri)=>{
+        const totalW=enFila*GR;
+        const offX=(W-mg*2-totalW)/2;
+        for(let i=0;i<enFila;i++){
+          pos.push({
+            mx:Math.max(mg+RD,Math.min(W-mg-RD, mg+offX+i*GR+GR/2)),
+            my:Math.min(H-mg-RD, yMesas+ri*espY+RD),
+            tipo:"round",
+          });
+          idx++;
+        }
+      });
+
+    // ═══════════════════════════════════════════════════════════════
+    // CANTINE
+    // [Mesa larga novios arriba centro]
+    // [4 columnas de mesas largas verticales con sillas a los lados]
+    // ═══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="cantine"){
-      const djW=Math.min(6,W*0.38),djH=1.6,novW=Math.min(4,W*0.28),novH=1.2;
-      const mLH=Math.min(5.0,Math.max(2,(H-mg*3-djH-novH-2.5)/Math.max(1,Math.ceil(N/(N<=3?2:3)))));
-      const mLW=0.8,yDJ=mg,yNov=yDJ+djH+0.6,yM=yNov+novH+1.5,sG=1.4,pasoY=mLH+sG+0.5;
-      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
-      const nc=N<=3?2:3,cW=(W-mg*2)/nc;
-      for(let i=0;i<N;i++){const col=i%nc,fil=Math.floor(i/nc);pos.push({mx:Math.max(mg+mLW/2+sG/2,Math.min(W-mg-mLW/2-sG/2,mg+col*cW+cW/2)),my:Math.max(mg+mLH/2,Math.min(H-mg-mLH/2,yM+fil*pasoY+mLH/2)),tipo:"rect_v",ew:mLW,eh:mLH,miraSide:"both"});}
+      const novW=Math.min(W*0.55,10), novH=MW;
+      const yNov=mg+SG;
+      const yMesas=yNov+novH+SG+0.8;
+
+      // Calcular largo óptimo de mesa según espacio disponible
+      const numCols=N<=4?2:N<=8?4:4;
+      const zonaH=H-yMesas-mg;
+      const filasPorCol=Math.ceil(N/numCols);
+      // Largo de mesa: ocupa casi todo el espacio vertical disponible por fila
+      const mLH=Math.min(5.0,Math.max(2.0,(zonaH-filasPorCol*0.6)/filasPorCol));
+      const pasoY=mLH+0.6; // mínimo entre mesas (solo espacio, sillas van a los lados)
+
+      elems=[
+        {id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},
+      ];
+
+      // Columnas distribuidas uniformemente en el ancho
+      // Cada col tiene espacio para la mesa + sillas a los lados
+      const colEspacio=(W-mg*2)/numCols;
+      for(let i=0;i<N;i++){
+        const col=i%numCols, fila=Math.floor(i/numCols);
+        pos.push({
+          mx:Math.max(mg+MW/2+SG/2,Math.min(W-mg-MW/2-SG/2, mg+col*colEspacio+colEspacio/2)),
+          my:Math.max(mg+mLH/2,Math.min(H-mg-mLH/2, yMesas+fila*pasoY+mLH/2)),
+          tipo:"rect_v", ew:MW, eh:mLH, miraSide:"both",
+        });
+      }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FORMA EN U
+    // [brazo izq vertical] [hueco con nada] [brazo der vertical]
+    // [fondo horizontal arriba conectando los dos brazos]
+    // Sillas SOLO en el lado interior de la U
+    // ═══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="u_shape"){
-      const djW=Math.min(5,W*0.28),djH=1.6,novW=Math.min(4,W*0.24),novH=1.2,mA=0.8,sG=1.2;
-      const bL=Math.min(H*0.65,10),bXL=mg+sG+mA/2,bXR=W-mg-sG-mA/2;
-      const fW=bXR-bXL-mA,fX=bXL+mA/2+fW/2,topY=mg+sG+mA/2,midY=topY+bL/2;
-      const hX1=bXL+mA/2+0.6,hW2=bXR-bXL-mA-1.2;
-      elems=[{id:"dj-1",tipo:"escenario",mx:hX1+hW2/2-djW/2,my:topY+bL*0.2,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:hX1+hW2/2-novW/2,my:topY+bL*0.2+djH+0.8,ew:novW,eh:novH}];
-      pos=[{mx:bXL,my:midY,tipo:"rect_v",ew:mA,eh:bL,miraSide:"right"},{mx:fX,my:topY,tipo:"rect_h",ew:fW,eh:mA,miraSide:"down"},{mx:bXR,my:midY,tipo:"rect_v",ew:mA,eh:bL,miraSide:"left"}];
-      if(N>3){const sub=bL/(Math.ceil((N-3)/2)+1);for(let i=0;i<N-3;i++){const l=i%2===0?"L":"R",s=Math.floor(i/2)+1;pos.push({mx:l==="L"?bXL:bXR,my:topY+s*sub,tipo:"rect_v",ew:mA,eh:Math.max(1,sub-0.3),miraSide:l==="L"?"right":"left"});}}
+      // La U ocupa todo el salón
+      // Los brazos son 1 mesa larga cada uno en los laterales
+      // El fondo es 1 mesa larga horizontal arriba
+      // El hueco (interior de la U) es donde van los invitados de honor
+
+      const brazoX_L=mg+SG+MW/2;          // centro brazo izq
+      const brazoX_R=W-mg-SG-MW/2;        // centro brazo der
+      const fondoY=mg+SG+MW/2;            // centro fondo
+
+      const brazoH=H-mg*2-SG*2;           // largo de cada brazo vertical
+      const fondoW=brazoX_R-brazoX_L-MW;  // ancho del fondo horizontal
+
+      // 3 segmentos base del U — siempre se crean los 3
+      const seg3=[
+        {mx:brazoX_L, my:mg+SG+brazoH/2, tipo:"rect_v", ew:MW, eh:brazoH, miraSide:"right"},
+        {mx:brazoX_L+MW/2+fondoW/2, my:fondoY, tipo:"rect_h", ew:fondoW, eh:MW, miraSide:"down"},
+        {mx:brazoX_R, my:mg+SG+brazoH/2, tipo:"rect_v", ew:MW, eh:brazoH, miraSide:"left"},
+      ];
+
+      // Si N>3, agregar mesas extra dentro del brazo (sub-segmentos)
+      pos=[...seg3];
+      if(N>3){
+        const extra=N-3;
+        for(let i=0;i<extra;i++){
+          const lado=i%2===0?"L":"R";
+          const subH=brazoH/(Math.ceil(extra/2)+1);
+          const seg=Math.floor(i/2)+1;
+          pos.push({
+            mx:lado==="L"?brazoX_L+MW+SG+MW/2:brazoX_R-MW-SG-MW/2,
+            my:mg+SG+seg*subH,
+            tipo:"rect_v",ew:MW,eh:Math.max(1.5,subH-0.5),
+            miraSide:lado==="L"?"right":"left",
+          });
+        }
+      }
+
+      // No hay elementos extra en U — el hueco es para los novios si quieren
+      elems=[];
+
+    // ═══════════════════════════════════════════════════════════════
+    // CHEVRONES
+    // [Mesa larga novios arriba centro]
+    // [mesas medianas en espiga: izq diagonal \  der diagonal /]
+    // [las mesas bajan y se alejan del pasillo central]
+    // ═══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="chevrons"){
-      const djW=Math.min(5,W*0.3),djH=1.6,novW=Math.min(4,W*0.25),novH=1.2;
-      const mW=Math.min(3.5,W*0.22),mH=0.8,sG=1.0,yDJ=mg,yNov=yDJ+djH+0.6,yM=yNov+novH+1.5;
-      const pasoY=mH+sG*2+0.4,pasoX=0.6,pas=W/2,gC=0.5,mid=Math.ceil(N/2);
-      elems=[{id:"dj-1",tipo:"escenario",mx:W/2-djW/2,my:yDJ,ew:djW,eh:djH},{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
-      for(let i=0;i<mid;i++) pos.push({mx:Math.max(mg+mW/2+sG,pas-gC-mW/2-i*pasoX),my:Math.min(H-mg-mH/2-sG,yM+i*pasoY+mH/2),tipo:"rect_h",ew:mW,eh:mH,miraSide:"both"});
-      for(let i=0;i<N-mid;i++) pos.push({mx:Math.min(W-mg-mW/2-sG,pas+gC+mW/2+i*pasoX),my:Math.min(H-mg-mH/2-sG,yM+i*pasoY+mH/2),tipo:"rect_h",ew:mW,eh:mH,miraSide:"both"});
+      const novW=Math.min(W*0.55,10), novH=MW;
+      const yNov=mg+SG;
+      const yMesas=yNov+novH+SG+0.5;
+      elems=[
+        {id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH},
+      ];
+
+      // Mesa mediana: 3m largo × 0.8m ancho, horizontal
+      const mW=Math.min(3.2,W*0.22), mH=MW;
+      const pasoY=mH+SG*2+0.3;   // espacio vertical entre mesas (sillas arriba y abajo)
+      const pasoX=0.4;            // desplazamiento horizontal por fila (la espiga)
+      const gapCentro=0.5;        // separación del pasillo central
+      const pas=W/2;
+      const mitadIzq=Math.ceil(N/2);
+      const mitadDer=N-mitadIzq;
+
+      // Izquierda: bajan y se desplazan hacia la izquierda
+      for(let i=0;i<mitadIzq;i++){
+        pos.push({
+          mx:Math.max(mg+mW/2+SG, pas-gapCentro-mW/2-i*pasoX),
+          my:Math.min(H-mg-mH/2-SG, yMesas+i*pasoY+mH/2),
+          tipo:"rect_h",ew:mW,eh:mH,miraSide:"both",
+        });
+      }
+      // Derecha: espejo exacto
+      for(let i=0;i<mitadDer;i++){
+        pos.push({
+          mx:Math.min(W-mg-mW/2-SG, pas+gapCentro+mW/2+i*pasoX),
+          my:Math.min(H-mg-mH/2-SG, yMesas+i*pasoY+mH/2),
+          tipo:"rect_h",ew:mW,eh:mH,miraSide:"both",
+        });
+      }
     }
-    setMesas(base.map((m,i)=>({...m,mx:pos[i]?.mx??W/2,my:pos[i]?.my??H/2,tipo:pos[i]?.tipo??"round",ew:pos[i]?.ew,eh:pos[i]?.eh,angle:pos[i]?.angle,miraSide:pos[i]?.miraSide})));
+
+    // Aplicar posiciones preservando etiquetas
+    const nuevasMesas=base.map((m,i)=>({
+      ...m,
+      mx:  pos[i]?.mx       ?? W/2,
+      my:  pos[i]?.my       ?? H/2,
+      tipo:pos[i]?.tipo     ?? "round",
+      ew:  pos[i]?.ew       ?? undefined,
+      eh:  pos[i]?.eh       ?? undefined,
+      angle:    pos[i]?.angle    ?? undefined,
+      miraSide: pos[i]?.miraSide ?? undefined,
+    }));
+
+    setMesas(nuevasMesas);
     setElementos(elems);
     setTimeout(fitToScreen,50);
   };
+;
 
   // ── Render mesa en SVG ──
   const renderMesaSVG=(mesa)=>{
@@ -4059,7 +4255,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     const tipoM=mesa.tipo||"round";
     const over=ps.length>tableSize;
     const libres=Math.max(0,tableSize-ps.length);
-    const fillC=isSelected?"#4A5E3A":isHovered?"rgba(74,94,58,.85)":"#D4C4A0";
+    const fillC=isSelected?"#4A5E3A":isHovered?"#5a7a48":"#D4C4A0";
     const strokeC=isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.6)";
     const dh={onMouseDown:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);},onTouchStart:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);}};
 
@@ -4069,6 +4265,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       return{w:sv,h:sv,jsx:<svg width={sv} height={sv} style={{overflow:"visible",display:"block"}}>
         <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.18)"/>
         <circle cx={cx} cy={cy} r={R} fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
+        {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill="#fff" fontFamily="'Lora',serif" fontWeight="600" style={{pointerEvents:"none"}}>soltar</text>}
         {mesa.etiqueta
           ?<><text x={cx} y={cy-R*0.2} textAnchor="middle" fontSize={Math.max(6,R*0.18)} fill={isSelected?"rgba(245,239,224,.8)":"rgba(74,94,58,.6)"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
             <text x={cx} y={cy+R*0.3} textAnchor="middle" fontSize={Math.max(9,R*0.4)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
@@ -4076,7 +4273,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
             <text x={cx} y={cy+R*0.38} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
         }
         {libres>0&&!isSelected&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(6,R*0.19)} fill={over?"rgba(200,60,60,.8)":"rgba(74,94,58,.55)"} fontFamily="'Lora',serif" style={{pointerEvents:"none"}}>{libres}L</text>}
-        {pts.map((pt,i)=>{const p=ps[i];return<g key={i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
+        {pts.map((pt,i)=>{const p=ps[i];const hitR=Math.max(AR+4,16);return<g key={i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
+          {/* Hit area invisible más grande */}
+          {p&&<circle cx={cx+pt.x} cy={cy+pt.y} r={hitR} fill="transparent"/>}
           <circle cx={cx+pt.x} cy={cy+pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
           {p&&<text x={cx+pt.x} y={cy+pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(6,AR*0.62)} fill="#fff" fontWeight="700" fontFamily="Calibri" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
         </g>;})}
@@ -4246,8 +4445,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
             })}
 
             {/* Ghost invitado */}
-            {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-16,top:(dragging.cy||0)-16,width:32,height:32,borderRadius:"50%",background:"#4A5E3A",border:"2.5px solid #F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 4px 14px rgba(0,0,0,.4)"}}>
-              <span style={{fontSize:"11px",fontWeight:700,color:"#fff"}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.charAt(0)||"?"}</span>
+            {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-20,top:(dragging.cy||0)-20,width:40,height:40,borderRadius:"50%",background:"#4A5E3A",border:"3px solid #F5EFE0",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 6px 20px rgba(0,0,0,.5)",transform:"scale(1.05)"}}>
+              <span style={{fontSize:"13px",fontWeight:700,color:"#fff",lineHeight:1}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.charAt(0)||"?"}</span>
+              <span style={{fontSize:"7px",color:"rgba(255,255,255,.7)",lineHeight:1,marginTop:1,maxWidth:34,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"center"}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.split(" ")[0]||""}</span>
             </div>}
           </div>
 
@@ -4325,8 +4525,10 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
             <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:160,overflowY:"auto",marginBottom:8}}>
               {selectedPersonas.map(p=>(
                 <div key={`${p.guestId}-${p.personIdx}`}
-                  onMouseDown={e=>startDragGuest(e,p.guestId)}
-                  style={{display:"flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.05)",borderRadius:6,padding:"4px 7px",cursor:"grab",border:"0.5px solid rgba(74,94,58,.1)"}}>
+                  onMouseDown={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
+                  onTouchStart={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
+                  title={`Arrastrá a ${p.nombre} hacia una mesa en el canvas`}
+                  style={{display:"flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.05)",borderRadius:6,padding:"5px 7px",cursor:"grab",border:"0.5px solid rgba(74,94,58,.1)",userSelect:"none"}}>
                   <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
@@ -4365,9 +4567,10 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
             :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:200,overflowY:"auto"}}>
               {sinMesaFilt.map(p=>(
                 <div key={`${p.guestId}-${p.personIdx}`}
-                  onMouseDown={e=>startDragGuest(e,p.guestId)}
-                  onTouchStart={e=>startDragGuest(e,p.guestId)}
-                  style={{display:"flex",alignItems:"center",gap:5,background:"rgba(201,169,110,.06)",borderRadius:6,padding:"4px 7px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.15)"}}>
+                  onMouseDown={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
+                  onTouchStart={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
+                  title="Arrastrá hacia una mesa en el canvas"
+                  style={{display:"flex",alignItems:"center",gap:5,background:"rgba(201,169,110,.06)",borderRadius:6,padding:"5px 7px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.15)",userSelect:"none"}}>
                   <div style={{width:16,height:16,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
