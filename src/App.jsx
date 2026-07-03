@@ -3630,6 +3630,28 @@ function GuestsModule({user, onBack}){
     const pt = e.touches ? e.touches[0] : e;
     const d = {id:g.id, nombre:g.nombre, x:pt.clientX, y:pt.clientY, over:null};
     dragMGRef.current = d; setDragMG(d);
+    // Auto-scroll: con el dedo cerca del borde superior/inferior, la página
+    // se desplaza sola para alcanzar mesas fuera de pantalla. Corre en un
+    // loop de rAF porque si el dedo queda quieto no llegan más touchmove.
+    let rafId = null;
+    const scrollLoop = () => {
+      const cur = dragMGRef.current;
+      if(!cur){ rafId=null; return; }
+      const EDGE=90, MAX=20, h=window.innerHeight;
+      let dy=0;
+      if(cur.y<EDGE) dy=-Math.ceil((EDGE-cur.y)/EDGE*MAX);
+      else if(cur.y>h-EDGE) dy=Math.ceil((cur.y-(h-EDGE))/EDGE*MAX);
+      if(dy){
+        window.scrollBy(0,dy);
+        // El destino bajo el dedo cambia al scrollear: re-evaluar
+        const el=document.elementFromPoint(cur.x,cur.y);
+        const drop=el?el.closest("[data-mesa-drop]"):null;
+        const nd={...cur,over:drop?drop.getAttribute("data-mesa-drop"):null};
+        dragMGRef.current=nd; setDragMG(nd);
+      }
+      rafId=requestAnimationFrame(scrollLoop);
+    };
+    rafId=requestAnimationFrame(scrollLoop);
     const move = (ev) => {
       const p = ev.touches ? ev.touches[0] : ev;
       if(ev.cancelable) ev.preventDefault();
@@ -3640,6 +3662,7 @@ function GuestsModule({user, onBack}){
     };
     const up = () => {
       const d2 = dragMGRef.current;
+      if(rafId) cancelAnimationFrame(rafId);
       if(d2 && d2.over !== null) updateGuest(d2.id, "mesa", d2.over);
       dragMGRef.current = null; setDragMG(null); setMovingGuest(null);
       window.removeEventListener("mousemove", move);
@@ -3673,6 +3696,19 @@ function GuestsModule({user, onBack}){
     })();
     return ()=>{alive=false;};
   },[]);
+  // Al entrar a la vista Mesas, releer el layout (SalonView pudo haberlo cambiado)
+  useEffect(()=>{
+    if(viewMode!=="mesas") return;
+    try{
+      const s=localStorage.getItem("ceci_salon_layout_v1");
+      if(s){
+        const L=JSON.parse(s);
+        salonLayoutRef.current=L;
+        if(Array.isArray(L.mesas)) setSalonMesas(L.mesas);
+      }
+    }catch(err){}
+  },[viewMode]);
+
   const guardarSalonMesas = (nuevas) => {
     const base = salonLayoutRef.current || {salonW:20,salonH:15,salonShape:"cuadrado",estiloDistrib:"banquet",elementos:[
       {id:"novios-1",tipo:"novios",mx:8.5,my:1,ew:3,eh:0.9},
@@ -4230,6 +4266,19 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
     },800);
     return ()=>clearTimeout(t);
   },[salonW,salonH,salonShape,estiloDistrib,mesas,elementos]);
+
+  // Flush al desmontar: el debounce de arriba se cancela al salir de la vista,
+  // así que guardamos el estado final de forma inmediata para no perder el último cambio
+  const layoutFlushRef = useRef(null);
+  layoutFlushRef.current = {salonW,salonH,salonShape,estiloDistrib,mesas,elementos};
+  useEffect(()=>()=>{
+    try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layoutFlushRef.current)); } catch(err){}
+    if(user&&remoteLoaded.current){
+      supabase.from("wedding_data")
+        .upsert({user_id:user.id,salon_layout:layoutFlushRef.current,updated_at:new Date().toISOString()},{onConflict:"user_id"})
+        .then(()=>{},()=>{});
+    }
+  },[]);
 
   // Carga inicial desde Supabase: el layout remoto es la fuente de verdad compartida
   useEffect(()=>{
@@ -5255,8 +5304,8 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
 
             {/* Etiqueta */}
             <div style={{marginBottom:8}}>
-              <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta (Familia, Presidencial...)"
-                onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
+              <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Nombre de la mesa (se ve en el plano)"
+                onChange={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
                 style={{width:"100%",fontFamily:THEME.font.body,fontSize:".8rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
               <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
                 {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
@@ -5413,8 +5462,8 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
           </button>
         ))}
       </div>
-      <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta personalizada..."
-        onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
+      <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Nombre de la mesa (se ve en el plano)"
+        onChange={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
         style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(14px,.9rem)",padding:"11px 12px",borderRadius:THEME.radius.sm,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:12}}/>
       {/* Tipo de mesa */}
       <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
