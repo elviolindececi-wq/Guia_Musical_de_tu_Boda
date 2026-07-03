@@ -2105,7 +2105,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Módulos de planificación</div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{modules.filter(m=>m.done).length}/{modules.length} completados</div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12,marginBottom:24}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:24}}>
         {modules.map(({emoji,label,desc,action,status,done,primary})=>
           <button key={label} onClick={action} style={{
             background:done?"rgba(74,94,58,.08)":primary&&!done?"#4A5E3A":"#FBF7EF",
@@ -4177,17 +4177,19 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       const maxFilas=Math.max(1,Math.floor((H-yMesas-mg-SG)/(pasoY)));
       const allPts=[];
       for(let i=0;i<maxFilas;i++){
-        // Izquierda
+        // Izquierda — ángulo negativo (diagonal \)
         allPts.push({
           mx:Math.max(mg+mW/2+SG,W/2-gapC-mW/2-i*pasoX),
           my:Math.min(H-mg-mH/2-SG,yMesas+i*pasoY),
           tipo:"rect_h",ew:mW,eh:mH,miraSide:"both",
+          angle:-30,
         });
-        // Derecha (espejo)
+        // Derecha — ángulo positivo (diagonal /)
         allPts.push({
           mx:Math.min(W-mg-mW/2-SG,W/2+gapC+mW/2+i*pasoX),
           my:Math.min(H-mg-mH/2-SG,yMesas+i*pasoY),
           tipo:"rect_h",ew:mW,eh:mH,miraSide:"both",
+          angle:30,
         });
       }
       const N=Math.max(calculado,Math.min(allPts.length,8));
