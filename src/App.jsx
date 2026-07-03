@@ -3671,7 +3671,7 @@ function GuestsModule({user, onBack}){
                 </div>
             }
           </div>
-          </React.Fragment>;
+          </React.Fragment>
         })}
       </>}
 
@@ -4903,7 +4903,7 @@ function TimelineModule({user, form, results, onBack}){
               </div>}
             </div>
           </div>
-          </React.Fragment>;
+          </React.Fragment>
         })}
       {/* ── APROBACIÓN DEL CRONOGRAMA ── */}
       <div style={{background:ambosAprobaron?"rgba(74,94,58,.08)":"rgba(201,169,110,.05)",border:`0.5px solid ${ambosAprobaron?"rgba(74,94,58,.3)":"rgba(201,169,110,.25)"}`,borderRadius:14,padding:"16px 18px",marginTop:16}}>
