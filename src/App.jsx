@@ -3969,6 +3969,16 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   // ── fitToScreen al montar ──
   useEffect(()=>{setTimeout(fitToScreen,100);},[]);
 
+  // ── Cerrar menus al click fuera ──
+  useEffect(()=>{
+    const handler=(e)=>{
+      setShowShapeMenu(false);
+      setShowElemMenu(false);
+    };
+    document.addEventListener("mousedown",handler);
+    return ()=>document.removeEventListener("mousedown",handler);
+  },[]);
+
   // ── Auto distribución ──
   const autoDistribuir=()=>{
     const W=salonW,H=salonH,mg=1.2;
@@ -4106,11 +4116,11 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",flex:1}}>
         {/* Forma salón */}
         <div style={{position:"relative"}}>
-          <button onClick={()=>setShowShapeMenu(s=>!s)} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
             🏛️ {SALON_SHAPES[salonShape].label} ▾
           </button>
-          {showShapeMenu&&<div style={{position:"absolute",top:"calc(100%+4px)",left:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:50,boxShadow:"0 4px 16px rgba(0,0,0,.1)",minWidth:130}}>
-            {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onClick={()=>{setSalonShape(k);setShowShapeMenu(false);}} style={{display:"block",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:6,padding:"6px 10px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
+          {showShapeMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:200,boxShadow:"0 4px 16px rgba(0,0,0,.15)",minWidth:130}}>
+            {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);setShowShapeMenu(false);}} style={{display:"block",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:6,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
           </div>}
         </div>
         {/* Dimensiones */}
@@ -4136,9 +4146,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
         {/* Agregar elemento */}
         <div style={{position:"relative"}}>
-          <button onClick={()=>setShowElemMenu(s=>!s)} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
-          {showElemMenu&&<div style={{position:"absolute",top:"calc(100%+4px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:50,boxShadow:"0 4px 16px rgba(0,0,0,.1)",minWidth:160}}>
-            {ELEMENTOS_FIJOS.map(e=><button key={e.id} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"block",width:"100%",background:"transparent",border:"none",borderRadius:6,padding:"6px 10px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
+          {showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:200,boxShadow:"0 4px 16px rgba(0,0,0,.15)",minWidth:165}}>
+            {ELEMENTOS_FIJOS.map(e=><button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"block",width:"100%",background:"transparent",border:"none",borderRadius:6,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
           </div>}
         </div>
         <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:7,padding:"6px 12px",fontFamily:"'Lora',serif",fontSize:".78rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
@@ -4170,7 +4180,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           onMouseDown={e=>{if(e.target===viewportRef.current||e.target===canvasRef.current)startDrag(e,"pan",null);}}
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-          onClick={()=>{setSelectedElem(null);setShowShapeMenu(false);setShowElemMenu(false);}}
+          onClick={()=>{setSelectedElem(null);setSelectedMesa(null);setShowShapeMenu(false);setShowElemMenu(false);}}
         >
           <div ref={canvasRef} style={{position:"absolute",left:pan.x,top:pan.y,width:CW+80,height:CH+80}}>
             {/* Piso */}
@@ -4294,11 +4304,15 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
             <div style={{marginBottom:8}}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Tipo</div>
               <div style={{display:"flex",gap:4}}>
-                {[{v:"round",l:"⭕"},{v:"rect_h",l:"▬"},{v:"rect_v",l:"▮"}].map(opt=>{
-                  const cur=selectedMesaObj.tipo||"round";
-                  return <button key={opt.v} onClick={()=>updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3})}
-                    style={{flex:1,background:cur===opt.v?"rgba(74,94,58,.12)":"transparent",border:`1px solid ${cur===opt.v?"rgba(74,94,58,.4)":"rgba(74,94,58,.15)"}`,borderRadius:7,padding:"5px 0",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".9rem",color:cur===opt.v?"#4A5E3A":"rgba(26,26,20,.45)"}}>
-                    {opt.l}
+                {[{v:"round",l:"⭕",desc:"Redonda"},{v:"rect_h",l:"▬",desc:"Horizontal"},{v:"rect_v",l:"▮",desc:"Vertical"}].map(opt=>{
+                  const cur=selectedMesaObj?.tipo||"round";
+                  const isAct=cur===opt.v;
+                  return <button key={opt.v}
+                    onMouseDown={e=>e.stopPropagation()}
+                    onClick={e=>{e.stopPropagation();updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3});}}
+                    style={{flex:1,background:isAct?"rgba(74,94,58,.15)":"#F5EFE0",border:`1.5px solid ${isAct?"#4A5E3A":"rgba(74,94,58,.15)"}`,borderRadius:8,padding:"8px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    <span style={{fontSize:"1rem",color:isAct?"#4A5E3A":"rgba(26,26,20,.4)"}}>{opt.l}</span>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".06em",textTransform:"uppercase",color:isAct?"#4A5E3A":"rgba(26,26,20,.35)"}}>{opt.desc}</span>
                   </button>;
                 })}
               </div>
@@ -4336,8 +4350,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
         {/* Lista sin mesa */}
         <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:6}}>
-            Sin mesa ({sinMesa.length})
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
+            {sinMesa.length>0&&<span style={{fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>← arrastrá al canvas</span>}
           </div>
           {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
             <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
