@@ -3749,7 +3749,7 @@ const SALON_SHAPES = {
   rectangulo: { label:"Rectángulo", path:(w,h)=>`M0,0 L${w},0 L${w},${h} L0,${h} Z` },
   L:  { label:"Forma L", path:(w,h)=>`M0,0 L${w},0 L${w},${h*0.5} L${w*0.5},${h*0.5} L${w*0.5},${h} L0,${h} Z` },
   U:  { label:"Forma U", path:(w,h)=>`M0,0 L${w*0.35},0 L${w*0.35},${h*0.6} L${w*0.65},${h*0.6} L${w*0.65},0 L${w},0 L${w},${h} L0,${h} Z` },
-  oval:{ label:"Oval",   path:(w,h)=>`M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z` },
+  oval:{ label:"Oval",  path:(w,h)=>`M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z` },
 };
 
 const ELEMENTOS_FIJOS = [
@@ -3769,8 +3769,10 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
   const [salonShape, setSalonShape] = useState("cuadrado");
   const [showShapePicker, setShowShapePicker] = useState(false);
   const [zoom, setZoom] = useState(1);
+  // Pan offset (desplazamiento del lienzo)
+  const [pan, setPan] = useState({x:20, y:20});
 
-  const BASE_PX = 28;
+  const BASE_PX = 30;
   const PX = BASE_PX * zoom;
   const CW = salonW * PX;
   const CH = salonH * PX;
@@ -3785,19 +3787,20 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
   });
 
   const [elementos, setElementos] = useState([
-    {id:"novios-1",  tipo:"novios",  mx:8,  my:1,   ew:5,   eh:1.5},
-    {id:"pista-1",   tipo:"pista",   mx:6,  my:8,   ew:8,   eh:6},
-    {id:"entrada-1", tipo:"entrada", mx:8,  my:13,  ew:3,   eh:0.8},
+    {id:"novios-1",  tipo:"novios",  mx:8,  my:1,   ew:5,  eh:1.5},
+    {id:"pista-1",   tipo:"pista",   mx:6,  my:8,   ew:8,  eh:6},
+    {id:"entrada-1", tipo:"entrada", mx:8,  my:13,  ew:3,  eh:0.8},
   ]);
 
-  const [selectedMesa, setSelectedMesa] = useState(null);
-  const [selectedElem, setSelectedElem] = useState(null);
-  const [dragging, setDragging]   = useState(null);
-  // dragging: {type:"mesa"|"elem"|"guest"|"resize", id, ox,oy, ...}
-  const [hoveredMesa, setHoveredMesa] = useState(null);
-  const [pinch, setPinch] = useState(null); // {dist, zoom0}
-  const containerRef = useRef(null);
-  const wrapperRef   = useRef(null);
+  const [selectedMesa, setSelectedMesa]   = useState(null);
+  const [selectedElem, setSelectedElem]   = useState(null);
+  const [dragging, setDragging]           = useState(null);
+  const [hoveredMesa, setHoveredMesa]     = useState(null);
+  const [pinch, setPinch]                 = useState(null);
+  const [panning, setPanning]             = useState(null); // pan con 2 dedos o espacio+drag
+
+  const viewportRef = useRef(null); // div fijo visible
+  const canvasRef   = useRef(null); // div interior que se mueve
 
   // ── Personas ──
   const personas = [];
@@ -3814,8 +3817,6 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
   });
   const sinMesa = personas.filter(p=>!p.mesa);
   const CONF_COLORS = {confirmado:"#4A5E3A",pendiente:"#C9A96E",no_va:"rgba(26,26,20,.3)"};
-  // Mesa redonda estándar de eventos: 1.80m de diámetro (radio 0.90m)
-  // Silla con persona: ~28cm de radio → caben 8-10 cómodamente
   const MESA_R_M    = 0.90;
   const ASIENTO_R_M = 0.28;
 
@@ -3824,121 +3825,138 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
     return {x:Math.cos(a)*r,y:Math.sin(a)*r};
   });
 
-  const getRect = ()=>containerRef.current?.getBoundingClientRect()||{left:0,top:0};
-
-  // ── Zoom con rueda del mouse ──
+  // ── Zoom con rueda SOLO sobre el viewport ──
   useEffect(()=>{
-    const el = wrapperRef.current;
+    const el = viewportRef.current;
     if(!el) return;
     const onWheel = (e)=>{
+      // Solo zoom si no está arrastrando
       e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.1 : -0.1;
+      const delta = e.deltaY < 0 ? 0.12 : -0.12;
       setZoom(z=>Math.max(0.3,Math.min(3,+(z+delta).toFixed(2))));
     };
-    el.addEventListener("wheel",onWheel,{passive:false});
-    return ()=>el.removeEventListener("wheel",onWheel);
+    el.addEventListener("wheel", onWheel, {passive:false});
+    return ()=>el.removeEventListener("wheel", onWheel);
   },[]);
 
-  // ── Pinch zoom (mobile) ──
+  // ── Posición del puntero relativa al canvas ──
+  const getCanvasPos = (e)=>{
+    const vRect = viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+    const cx = e.touches?.[0]?.clientX??e.clientX;
+    const cy = e.touches?.[0]?.clientY??e.clientY;
+    return {x: cx - vRect.left - pan.x, y: cy - vRect.top - pan.y};
+  };
+
+  // ── Touch: pinch zoom + pan con 2 dedos ──
   const onTouchStart = (e)=>{
     if(e.touches.length===2){
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
-      setPinch({dist:Math.sqrt(dx*dx+dy*dy), zoom0:zoom});
+      const mx = (e.touches[0].clientX + e.touches[1].clientX)/2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY)/2;
+      setPinch({dist:Math.sqrt(dx*dx+dy*dy), zoom0:zoom, mx, my});
+      setPanning({x0: mx, y0: my, pan0:{...pan}});
     }
   };
-  const onTouchMoveGlobal = (e)=>{
+
+  const onTouchMove = (e)=>{
     if(e.touches.length===2 && pinch){
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.sqrt(dx*dx+dy*dy);
       const newZ = Math.max(0.3,Math.min(3,pinch.zoom0*(dist/pinch.dist)));
       setZoom(+newZ.toFixed(2));
+      // Pan con 2 dedos
+      const mx = (e.touches[0].clientX + e.touches[1].clientX)/2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY)/2;
+      if(panning){
+        setPan({x: panning.pan0.x + mx - panning.x0, y: panning.pan0.y + my - panning.y0});
+      }
       return;
     }
     onMove(e);
   };
+
   const onTouchEnd = (e)=>{
-    if(e.touches.length<2) setPinch(null);
+    if(e.touches.length<2){ setPinch(null); setPanning(null); }
     onUp(e);
   };
 
-  // ── Drag start ──
+  // ── Drag de objetos en el canvas ──
   const startDrag = (e,type,id)=>{
     e.preventDefault(); e.stopPropagation();
-    const rect = getRect();
-    const cx = e.touches?.[0]?.clientX??e.clientX;
-    const cy = e.touches?.[0]?.clientY??e.clientY;
+    const pos = getCanvasPos(e);
     if(type==="mesa"){
       const item = mesas.find(m=>m.id===id);
       if(!item) return;
-      setDragging({type,id,ox:cx-rect.left-item.mx*PX, oy:cy-rect.top-item.my*PX});
-      setSelectedMesa(id);
+      setDragging({type,id, ox:pos.x/PX-item.mx, oy:pos.y/PX-item.my});
+      setSelectedMesa(id); setSelectedElem(null);
     } else if(type==="elem"){
       const item = elementos.find(el=>el.id===id);
       if(!item) return;
-      setDragging({type,id,ox:cx-rect.left-item.mx*PX, oy:cy-rect.top-item.my*PX});
-      setSelectedElem(id);
+      setDragging({type,id, ox:pos.x/PX-item.mx, oy:pos.y/PX-item.my});
+      setSelectedElem(id); setSelectedMesa(null);
     } else if(type==="resize"){
-      // id = elemId, resize from bottom-right corner
       const item = elementos.find(el=>el.id===id);
       if(!item) return;
-      setDragging({type:"resize",id,ox:cx,oy:cy,ew0:item.ew,eh0:item.eh});
+      setDragging({type:"resize",id, ox:pos.x, oy:pos.y, ew0:item.ew, eh0:item.eh});
     } else if(type==="guest"){
-      setDragging({type:"guest",id,cx:cx-rect.left,cy:cy-rect.top});
+      setDragging({type:"guest",id, cx:pos.x, cy:pos.y});
+    } else if(type==="pan"){
+      // Pan con 1 dedo / mouse en área vacía
+      const vRect = viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+      const cx = e.touches?.[0]?.clientX??e.clientX;
+      const cy = e.touches?.[0]?.clientY??e.clientY;
+      setDragging({type:"pan", x0:cx-vRect.left, y0:cy-vRect.top, pan0:{...pan}});
     }
   };
 
   const startDragGuest = (e,guestId)=>{
     e.stopPropagation();
-    const rect = getRect();
-    const cx = e.touches?.[0]?.clientX??e.clientX;
-    const cy = e.touches?.[0]?.clientY??e.clientY;
-    setDragging({type:"guest",id:guestId,cx:cx-rect.left,cy:cy-rect.top});
+    const pos = getCanvasPos(e);
+    setDragging({type:"guest",id:guestId, cx:pos.x, cy:pos.y});
   };
 
-  // ── Mouse/Touch move ──
   const onMove = (e)=>{
     if(!dragging) return;
-    const rect = getRect();
+    const pos = getCanvasPos(e);
+    const vRect = viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
     const cx = e.touches?.[0]?.clientX??e.clientX;
     const cy = e.touches?.[0]?.clientY??e.clientY;
-    const px = cx-rect.left;
-    const py = cy-rect.top;
 
     if(dragging.type==="mesa"){
-      const mx = Math.max(MESA_R_M,Math.min(salonW-MESA_R_M,(px-dragging.ox)/PX));
-      const my = Math.max(MESA_R_M,Math.min(salonH-MESA_R_M,(py-dragging.oy)/PX));
+      const mx = Math.max(MESA_R_M, Math.min(salonW-MESA_R_M, pos.x/PX - dragging.ox));
+      const my = Math.max(MESA_R_M, Math.min(salonH-MESA_R_M, pos.y/PX - dragging.oy));
       setMesas(ms=>ms.map(m=>m.id===dragging.id?{...m,mx,my}:m));
-
     } else if(dragging.type==="elem"){
       const el = elementos.find(x=>x.id===dragging.id);
       if(!el) return;
-      const mx = Math.max(0,Math.min(salonW-el.ew,(px-dragging.ox)/PX));
-      const my = Math.max(0,Math.min(salonH-el.eh,(py-dragging.oy)/PX));
+      const mx = Math.max(0, Math.min(salonW-el.ew, pos.x/PX - dragging.ox));
+      const my = Math.max(0, Math.min(salonH-el.eh, pos.y/PX - dragging.oy));
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,mx,my}:x));
-
     } else if(dragging.type==="resize"){
-      const ddx = (cx-dragging.ox)/PX;
-      const ddy = (cy-dragging.oy)/PX;
+      const ddx = (pos.x - dragging.ox)/PX;
+      const ddy = (pos.y - dragging.oy)/PX;
       const ew = Math.max(0.5,+(dragging.ew0+ddx).toFixed(2));
       const eh = Math.max(0.5,+(dragging.eh0+ddy).toFixed(2));
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,ew,eh}:x));
-
     } else if(dragging.type==="guest"){
-      setDragging(d=>({...d,cx:px,cy:py}));
+      setDragging(d=>({...d, cx:pos.x, cy:pos.y}));
       const over = mesas.find(m=>{
-        const dx=m.mx*PX-px; const dy=m.my*PX-py;
+        const dx=m.mx*PX-pos.x; const dy=m.my*PX-pos.y;
         return Math.sqrt(dx*dx+dy*dy)<(MESA_R_M+ASIENTO_R_M*2)*PX;
       });
       setHoveredMesa(over?over.id:null);
+    } else if(dragging.type==="pan"){
+      const dx = cx-vRect.left - dragging.x0;
+      const dy = cy-vRect.top  - dragging.y0;
+      setPan({x: dragging.pan0.x+dx, y: dragging.pan0.y+dy});
     }
   };
 
   const onUp = ()=>{
     if(dragging?.type==="guest"&&hoveredMesa) onAssign(dragging.id,hoveredMesa);
-    setDragging(null);
-    setHoveredMesa(null);
+    setDragging(null); setHoveredMesa(null);
   };
 
   const addMesa = ()=>{
@@ -3953,8 +3971,9 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
   };
   const addElemento = (tipo)=>{
     const def = ELEMENTOS_FIJOS.find(e=>e.id===tipo);
-    setElementos(es=>[...es,{id:`${tipo}-${Date.now()}`,tipo,mx:salonW/2-2,my:salonH/2-2,ew:def?.w||3,eh:def?.h||2}]);
-    setSelectedElem(`${tipo}-${Date.now()}`);
+    const newId = `${tipo}-${Date.now()}`;
+    setElementos(es=>[...es,{id:newId,tipo,mx:salonW/2-2,my:salonH/2-2,ew:def?.w||3,eh:def?.h||2}]);
+    setSelectedElem(newId);
   };
   const removeElemento = (id)=>{ setElementos(es=>es.filter(el=>el.id!==id)); setSelectedElem(null); };
 
@@ -3963,10 +3982,13 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
   const shape = SALON_SHAPES[salonShape];
   const shapePath = shape.path(CW,CH);
 
+  const cursorStyle = dragging?.type==="guest"?"grabbing":dragging?.type==="pan"?"grabbing":dragging?.type==="resize"?"nwse-resize":"default";
+
   return <div style={{display:"flex",gap:12,alignItems:"flex-start",flexWrap:"wrap"}}>
 
-    {/* ── CANVAS ── */}
+    {/* ── COLUMNA PRINCIPAL ── */}
     <div style={{flex:1,minWidth:280}}>
+
       {/* Toolbar */}
       <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
         {/* Forma */}
@@ -3980,7 +4002,7 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
             ))}
           </div>}
         </div>
-        {/* Medidas salón */}
+        {/* Medidas */}
         <div style={{display:"flex",alignItems:"center",gap:4}}>
           <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.45)"}}>Ancho</span>
           <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))}
@@ -3990,12 +4012,12 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
             style={{width:44,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",textAlign:"center"}}/>
           <span style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
-        {/* Zoom botones */}
-        <div style={{display:"flex",alignItems:"center",gap:4,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.2)",borderRadius:8,padding:"3px 8px"}}>
-          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.15).toFixed(2)))} style={{background:"transparent",border:"none",fontSize:"1.1rem",cursor:"pointer",color:"#4A5E3A",padding:"0 2px",lineHeight:1}}>−</button>
-          <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",color:"rgba(26,26,20,.5)",minWidth:38,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
-          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.15).toFixed(2)))} style={{background:"transparent",border:"none",fontSize:"1.1rem",cursor:"pointer",color:"#4A5E3A",padding:"0 2px",lineHeight:1}}>+</button>
-          <button onClick={()=>setZoom(1)} style={{background:"transparent",border:"none",fontSize:".65rem",cursor:"pointer",color:"rgba(74,94,58,.45)",padding:"0 2px",marginLeft:2}}>↺</button>
+        {/* Zoom — solo botones en desktop, en mobile funciona pinch */}
+        <div style={{display:"flex",alignItems:"center",gap:2,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.2)",borderRadius:8,overflow:"hidden"}}>
+          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#4A5E3A",fontSize:"1.1rem",lineHeight:1}}>−</button>
+          <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",color:"rgba(26,26,20,.5)",minWidth:36,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
+          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#4A5E3A",fontSize:"1.1rem",lineHeight:1}}>+</button>
+          <button onClick={()=>{setZoom(1);setPan({x:20,y:20});}} title="Restablecer vista" style={{background:"transparent",border:"none",width:28,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"rgba(74,94,58,.45)",fontSize:".75rem",lineHeight:1,borderLeft:"1px solid rgba(74,94,58,.15)"}}>↺</button>
         </div>
         {/* Agregar */}
         <select onChange={e=>{if(e.target.value){addElemento(e.target.value);e.target.value="";}}} defaultValue="" style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"6px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
@@ -4005,55 +4027,75 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
         <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
       </div>
 
-      {/* Hint zoom */}
-      <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.5)",marginBottom:6,fontStyle:"italic"}}>
-        🖱️ Scroll para hacer zoom · Arrastrá el centro de la mesa o los elementos · Arrastrá la esquina ↘ de un elemento para redimensionarlo
-      </div>
-
-      {/* Canvas wrapper — captura wheel */}
-      <div ref={wrapperRef} style={{overflowX:"auto",overflowY:"auto",maxHeight:"62vh",border:"1px solid rgba(74,94,58,.2)",borderRadius:14,background:"#9e9080",cursor:dragging?.type==="guest"?"grabbing":dragging?.type==="resize"?"nwse-resize":"default"}}>
-        <div ref={containerRef}
-          style={{position:"relative",width:CW+60,height:CH+60,minWidth:Math.min(CW+60,280),userSelect:"none"}}
-          onMouseMove={onMove}
-          onMouseUp={onUp}
-          onMouseLeave={onUp}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMoveGlobal}
-          onTouchEnd={onTouchEnd}
-          onClick={()=>{ setSelectedElem(null); }}
+      {/* Viewport — área FIJA con overflow hidden */}
+      <div ref={viewportRef}
+        style={{
+          width:"100%", height:480,
+          background:"#3a3530", // fondo sólido oscuro
+          borderRadius:14,
+          border:"1px solid rgba(74,94,58,.2)",
+          overflow:"hidden",
+          position:"relative",
+          cursor:cursorStyle,
+          touchAction:"none",
+        }}
+        onMouseDown={e=>{
+          // Pan con click en área vacía (no en mesa ni elemento)
+          if(e.target===viewportRef.current||e.target===canvasRef.current){
+            startDrag(e,"pan",null);
+          }
+        }}
+        onMouseMove={onMove}
+        onMouseUp={onUp}
+        onMouseLeave={onUp}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onClick={()=>{setSelectedElem(null);}}
+      >
+        {/* Canvas interior — se mueve con pan y zoom */}
+        <div ref={canvasRef}
+          style={{
+            position:"absolute",
+            left:pan.x, top:pan.y,
+            width:CW+80, height:CH+80,
+          }}
         >
-          {/* SVG: piso */}
+          {/* SVG: piso del salón */}
           <svg style={{position:"absolute",left:30,top:30,width:CW,height:CH,overflow:"visible",pointerEvents:"none"}}>
             <defs>
-              <pattern id="piso3" width={PX} height={PX} patternUnits="userSpaceOnUse">
+              <pattern id="pisoSalon" width={PX} height={PX} patternUnits="userSpaceOnUse">
                 <rect width={PX} height={PX} fill="#F0EAD8"/>
                 <rect width={PX/2} height={PX/2} fill="#E8E0C8"/>
                 <rect x={PX/2} y={PX/2} width={PX/2} height={PX/2} fill="#E8E0C8"/>
               </pattern>
-              <clipPath id="sClip3"><path d={shapePath}/></clipPath>
+              <clipPath id="sClipSalon"><path d={shapePath}/></clipPath>
             </defs>
-            <path d={shapePath} fill="#8a7e6e" transform="translate(3,3)"/>
-            <path d={shapePath} fill="url(#piso3)" stroke="#5a4e3e" strokeWidth="2.5"/>
+            {/* Sombra */}
+            <path d={shapePath} fill="rgba(0,0,0,.3)" transform="translate(4,4)"/>
+            {/* Piso sólido */}
+            <path d={shapePath} fill="url(#pisoSalon)" stroke="#5a4e3e" strokeWidth="2.5"/>
             {/* Reglas */}
             {Array.from({length:salonW+1},(_,i)=>(
               <g key={"rx"+i}>
-                <line x1={i*PX} y1={-10} x2={i*PX} y2={-3} stroke="rgba(90,78,62,.6)" strokeWidth="1"/>
-                {i%5===0&&<text x={i*PX} y={-13} textAnchor="middle" fontSize="8" fill="rgba(90,78,62,.7)" fontFamily="'Calibri',sans-serif">{i}m</text>}
+                <line x1={i*PX} y1={-10} x2={i*PX} y2={-3} stroke="rgba(200,180,140,.5)" strokeWidth="1"/>
+                {i%5===0&&<text x={i*PX} y={-14} textAnchor="middle" fontSize={Math.max(8,10/zoom)} fill="rgba(200,180,140,.7)" fontFamily="'Calibri',sans-serif">{i}m</text>}
               </g>
             ))}
             {Array.from({length:salonH+1},(_,i)=>(
               <g key={"ry"+i}>
-                <line x1={-10} y1={i*PX} x2={-3} y2={i*PX} stroke="rgba(90,78,62,.6)" strokeWidth="1"/>
-                {i%5===0&&<text x={-13} y={i*PX+3} textAnchor="end" fontSize="8" fill="rgba(90,78,62,.7)" fontFamily="'Calibri',sans-serif">{i}m</text>}
+                <line x1={-10} y1={i*PX} x2={-3} y2={i*PX} stroke="rgba(200,180,140,.5)" strokeWidth="1"/>
+                {i%5===0&&<text x={-14} y={i*PX+3} textAnchor="end" fontSize={Math.max(8,10/zoom)} fill="rgba(200,180,140,.7)" fontFamily="'Calibri',sans-serif">{i}m</text>}
               </g>
             ))}
-            <g clipPath="url(#sClip3)">
-              {Array.from({length:salonH+1},(_,i)=><line key={"gh"+i} x1="0" y1={i*PX} x2={CW} y2={i*PX} stroke="rgba(255,255,255,.18)" strokeWidth="0.5"/>)}
-              {Array.from({length:salonW+1},(_,i)=><line key={"gv"+i} x1={i*PX} y1="0" x2={i*PX} y2={CH} stroke="rgba(255,255,255,.18)" strokeWidth="0.5"/>)}
+            {/* Grid dentro del salón */}
+            <g clipPath="url(#sClipSalon)">
+              {Array.from({length:salonH+1},(_,i)=><line key={"gh"+i} x1="0" y1={i*PX} x2={CW} y2={i*PX} stroke="rgba(255,255,255,.15)" strokeWidth="0.5"/>)}
+              {Array.from({length:salonW+1},(_,i)=><line key={"gv"+i} x1={i*PX} y1="0" x2={i*PX} y2={CH} stroke="rgba(255,255,255,.15)" strokeWidth="0.5"/>)}
             </g>
           </svg>
 
-          {/* Elementos fijos con resize handle */}
+          {/* Elementos fijos */}
           {elementos.map(el=>{
             const def = ELEMENTOS_FIJOS.find(e=>e.id===el.tipo);
             if(!def) return null;
@@ -4061,37 +4103,32 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
             const isSelEl = selectedElem===el.id;
             return <div key={el.id}
               onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
+              onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
+              onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
               style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,
                 width:elW,height:elH,boxSizing:"border-box",
                 background:`${def.color}cc`,
                 border:`2px solid ${isSelEl?"#F5EFE0":def.color}`,
                 borderRadius:Math.min(8,elW*0.08),
                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-                zIndex:isSelEl?8:3,
-                boxShadow:isSelEl?"0 0 0 2px rgba(245,239,224,.5), 0 2px 8px rgba(0,0,0,.2)":"0 2px 6px rgba(0,0,0,.15)",
+                zIndex:isSelEl?8:3,cursor:"grab",
+                boxShadow:isSelEl?"0 0 0 2px rgba(245,239,224,.4), 0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.25)",
               }}
-              onMouseDown={e=>startDrag(e,"elem",el.id)}
-              onTouchStart={e=>startDrag(e,"elem",el.id)}
             >
-              <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
-              {elH>18&&<span style={{fontFamily:"'Cinzel',serif",fontSize:Math.max(6,Math.min(10,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.92)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
-              {elH>28&&isSelEl&&<span style={{fontFamily:"'Lora',serif",fontSize:"7px",color:"rgba(255,255,255,.65)",pointerEvents:"none"}}>{el.ew.toFixed(1)}×{el.eh.toFixed(1)}m</span>}
-              {/* Botón eliminar */}
+              <span style={{fontSize:Math.max(10,Math.min(24,elH*0.4))+"px",pointerEvents:"none"}}>{def.emoji}</span>
+              {elH>20&&<span style={{fontFamily:"'Cinzel',serif",fontSize:Math.max(6,Math.min(10,elH*0.14))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
+              {elH>32&&isSelEl&&<span style={{fontFamily:"'Lora',serif",fontSize:"7px",color:"rgba(255,255,255,.6)",pointerEvents:"none"}}>{el.ew.toFixed(1)}×{el.eh.toFixed(1)}m</span>}
               <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"9px",lineHeight:1,zIndex:10}}>×</button>
-              {/* Resize handle — esquina inferior derecha */}
+              {/* Resize handle */}
               <div
-                style={{position:"absolute",bottom:-5,right:-5,width:14,height:14,
-                  background:isSelEl?"#F5EFE0":"rgba(255,255,255,.6)",
-                  border:`1.5px solid ${def.color}`,
-                  borderRadius:3,cursor:"nwse-resize",zIndex:10,
-                  display:"flex",alignItems:"center",justifyContent:"center"}}
                 onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}}
                 onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}}
+                style={{position:"absolute",bottom:-6,right:-6,width:14,height:14,
+                  background:isSelEl?"#F5EFE0":"rgba(255,255,255,.7)",
+                  border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,
+                  display:"flex",alignItems:"center",justifyContent:"center"}}
               >
-                <svg width="6" height="6" viewBox="0 0 6 6">
-                  <line x1="1" y1="5" x2="5" y2="1" stroke={def.color} strokeWidth="1.5"/>
-                  <line x1="3" y1="5" x2="5" y2="3" stroke={def.color} strokeWidth="1.5"/>
-                </svg>
+                <svg width="6" height="6" viewBox="0 0 6 6"><line x1="1" y1="5" x2="5" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3" y1="5" x2="5" y2="3" stroke={def.color} strokeWidth="1.5"/></svg>
               </div>
             </div>;
           })}
@@ -4112,24 +4149,24 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
 
             return <div key={mesa.id}
               style={{position:"absolute",left:30+mesa.mx*PX-svgSize/2,top:30+mesa.my*PX-svgSize/2,
-                width:svgSize,height:svgSize,zIndex:dragging?.id===mesa.id?10:isSelected?6:4,cursor:"pointer"}}
+                width:svgSize,height:svgSize,zIndex:isSelected?6:4,cursor:"pointer"}}
               onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
               onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
               onClick={e=>{e.stopPropagation();if(!dragging)setSelectedMesa(isSelected?null:mesa.id);setSelectedElem(null);}}
             >
               <svg width={svgSize} height={svgSize} style={{overflow:"visible",display:"block"}}>
-                <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.12)"/>
+                <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.2)"/>
                 <circle cx={cx} cy={cy} r={R}
-                  fill={isSelected?"#4A5E3A":isHovered?"rgba(74,94,58,.85)":"#D4C4A0"}
-                  stroke={isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(74,94,58,.55)"}
+                  fill={isSelected?"#4A5E3A":isHovered?"rgba(74,94,58,.9)":"#D4C4A0"}
+                  stroke={isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.7)"}
                   strokeWidth={isSelected?2.5:1.5}
                   style={{cursor:"grab"}}
-                  onMouseDown={e=>startDrag(e,"mesa",mesa.id)}
-                  onTouchStart={e=>startDrag(e,"mesa",mesa.id)}
+                  onMouseDown={e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);}}
+                  onTouchStart={e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);}}
                 />
                 <text x={cx} y={cy-R*0.12} textAnchor="middle" fontSize={Math.max(7,R*0.26)} fill={isSelected?"#F5EFE0":"#4A5E3A"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>Mesa</text>
-                <text x={cx} y={cy+R*0.36} textAnchor="middle" fontSize={Math.max(9,R*0.42)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text>
-                {libres>0&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(6,R*0.19)} fill={isSelected?"rgba(245,239,224,.65)":over?"rgba(200,60,60,.7)":"rgba(74,94,58,.5)"} fontFamily="'Lora',serif" style={{pointerEvents:"none"}}>{libres} libre{libres!==1?"s":""}</text>}
+                <text x={cx} y={cy+R*0.36} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text>
+                {libres>0&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(6,R*0.2)} fill={isSelected?"rgba(245,239,224,.65)":over?"rgba(200,60,60,.8)":"rgba(74,94,58,.6)"} fontFamily="'Lora',serif" style={{pointerEvents:"none"}}>{libres} libre{libres!==1?"s":""}</text>}
                 {pts.map((pt,i)=>{
                   const p=ps[i];
                   return <g key={i}
@@ -4138,11 +4175,11 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
                     onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}
                   >
                     <circle cx={cx+pt.x} cy={cy+pt.y} r={AR}
-                      fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.55)"}
-                      stroke={p?"rgba(255,255,255,.8)":"rgba(74,94,58,.2)"} strokeWidth="1.5"/>
+                      fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.4)"}
+                      stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.3)"} strokeWidth="1.5"/>
                     {p
                       ?<text x={cx+pt.x} y={cy+pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(6,AR*0.65)} fill="#fff" fontWeight="700" fontFamily="'Calibri',sans-serif" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>
-                      :<text x={cx+pt.x} y={cy+pt.y+AR*0.42} textAnchor="middle" fontSize={Math.max(7,AR*0.72)} fill="rgba(74,94,58,.3)" style={{pointerEvents:"none"}}>+</text>
+                      :<text x={cx+pt.x} y={cy+pt.y+AR*0.42} textAnchor="middle" fontSize={Math.max(7,AR*0.72)} fill="rgba(90,78,62,.4)" style={{pointerEvents:"none"}}>+</text>
                     }
                     {p&&<title>{p.nombre}</title>}
                   </g>;
@@ -4152,18 +4189,23 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
             </div>;
           })}
 
-          {/* Ghost del invitado siendo arrastrado */}
-          {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-15,top:(dragging.cy||0)-15,width:30,height:30,borderRadius:"50%",background:"#4A5E3A",border:"2.5px solid #F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 4px 14px rgba(0,0,0,.35)"}}>
+          {/* Ghost invitado arrastrado */}
+          {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-15,top:(dragging.cy||0)-15,width:30,height:30,borderRadius:"50%",background:"#4A5E3A",border:"2.5px solid #F5EFE0",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 4px 14px rgba(0,0,0,.4)"}}>
             <span style={{fontSize:"11px",fontWeight:700,color:"#fff"}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.charAt(0)||"?"}</span>
           </div>}
         </div>
+
+        {/* Hint de navegación superpuesto abajo del viewport */}
+        <div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",background:"rgba(0,0,0,.35)",borderRadius:100,padding:"4px 12px",pointerEvents:"none"}}>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(255,255,255,.7)"}}>
+            🖱️ Scroll = zoom · Clic+arrastrar vacío = mover · 📱 Pellizco = zoom
+          </span>
+        </div>
       </div>
 
-      <div style={{display:"flex",gap:16,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>
-        <p style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(26,26,20,.35)",margin:0,fontStyle:"italic"}}>
-          Scroll = zoom · Arrastrá el centro de la mesa · Arrastrá ↘ de un elemento para redimensionar
-        </p>
-        <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
+      {/* Leyenda */}
+      <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{display:"flex",gap:8}}>
           {[{c:"#4A5E3A",l:"Confirmado"},{c:"#C9A96E",l:"Pendiente"},{c:"rgba(26,26,20,.3)",l:"No va"}].map(({c,l})=>(
             <div key={l} style={{display:"flex",alignItems:"center",gap:3}}>
               <div style={{width:9,height:9,borderRadius:"50%",background:c}}/>
@@ -4176,6 +4218,7 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
 
     {/* ── PANEL LATERAL ── */}
     <div style={{width:200,flexShrink:0,display:"flex",flexDirection:"column",gap:10}}>
+
       {/* Sin mesa */}
       <div style={{background:"rgba(201,169,110,.06)",border:"1px dashed rgba(201,169,110,.3)",borderRadius:10,padding:"10px"}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:6}}>Sin mesa ({sinMesa.length})</div>
@@ -4205,24 +4248,19 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
         return <div style={{background:"#FBF7EF",border:`0.5px solid ${def.color}44`,borderRadius:10,padding:"12px"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:".9rem",fontWeight:700,color:"#1A1A14",marginBottom:6}}>{def.emoji} {def.label}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            <div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Ancho</div>
-              <div style={{display:"flex",alignItems:"center",gap:3}}>
-                <input type="number" value={el.ew.toFixed(1)} step="0.5" min="0.5" onChange={e=>setElementos(es=>es.map(x=>x.id===selectedElem?{...x,ew:Math.max(0.5,parseFloat(e.target.value)||1)}:x))}
-                  style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
-                <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",flexShrink:0}}>m</span>
+            {[{k:"ew",l:"Ancho"},{k:"eh",l:"Alto"}].map(({k,l})=>(
+              <div key={k}>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>{l}</div>
+                <div style={{display:"flex",alignItems:"center",gap:3}}>
+                  <input type="number" value={el[k].toFixed(1)} step="0.5" min="0.5"
+                    onChange={e=>setElementos(es=>es.map(x=>x.id===selectedElem?{...x,[k]:Math.max(0.5,parseFloat(e.target.value)||1)}:x))}
+                    style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
+                  <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",flexShrink:0}}>m</span>
+                </div>
               </div>
-            </div>
-            <div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>Alto</div>
-              <div style={{display:"flex",alignItems:"center",gap:3}}>
-                <input type="number" value={el.eh.toFixed(1)} step="0.5" min="0.5" onChange={e=>setElementos(es=>es.map(x=>x.id===selectedElem?{...x,eh:Math.max(0.5,parseFloat(e.target.value)||1)}:x))}
-                  style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 6px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
-                <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",flexShrink:0}}>m</span>
-              </div>
-            </div>
+            ))}
           </div>
-          <button onClick={()=>removeElemento(selectedElem)} style={{marginTop:8,width:"100%",background:"rgba(200,60,60,.08)",border:"1px solid rgba(200,60,60,.25)",borderRadius:6,padding:"5px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(200,60,60,.7)",cursor:"pointer"}}>Eliminar elemento</button>
+          <button onClick={()=>removeElemento(selectedElem)} style={{marginTop:8,width:"100%",background:"rgba(200,60,60,.08)",border:"1px solid rgba(200,60,60,.25)",borderRadius:6,padding:"5px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(200,60,60,.7)",cursor:"pointer"}}>Eliminar</button>
         </div>;
       })()}
 
@@ -4268,7 +4306,7 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
       <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:8,padding:"8px 10px"}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)"}}>📐 {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m²</div>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",marginTop:2}}>Mesas Ø1.80m · {mesas.length} mesa{mesas.length!==1?"s":""} · {tableSize} sillas c/u</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",marginTop:2}}>Mesas Ø{(MESA_R_M*2).toFixed(1)}m · {mesas.length} mesa{mesas.length!==1?"s":""}</div>
       </div>
     </div>
   </div>;
