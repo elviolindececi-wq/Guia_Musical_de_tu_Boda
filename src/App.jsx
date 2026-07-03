@@ -155,7 +155,7 @@ body{margin:0;background:transparent;color:#1A1A14;-webkit-font-smoothing:antial
 button,input,textarea{font:inherit}
 button{-webkit-tap-highlight-color:transparent}
 #root{min-height:100vh;background:transparent}
-@media(max-width:480px){html{font-size:17px} body{min-width:320px}}
+@media(max-width:480px){html{font-size:17px} body{min-width:"min(320px,100%)",boxSizing:"border-box"}}
 @media(min-width:601px){html{background-image:url('/bg-desktop.jpg') !important}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -438,7 +438,7 @@ function GuiaCanciones({onStart,onBack}){
     if(el) el.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
   };
 
-  return <div style={{width:"100%",minHeight:"100vh",background:"rgba(245,239,224,.9)",paddingBottom:60}}>
+  return <div style={{width:"100%",minHeight:"100dvh",background:"rgba(245,239,224,.9)",paddingBottom:60}}>
 
     {/* Header */}
     <div style={{textAlign:"center",padding:"clamp(16px,5vw,40px) clamp(16px,5vw,48px) clamp(18px,3vw,32px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",background:"rgba(245,239,224,.5)",position:"relative"}}>
@@ -841,7 +841,7 @@ function Progress({step}){
 }
 
 function Landing({onStart}){
-  return <div style={{background:"rgba(245,239,224,.88)",minHeight:"100vh",overflow:"hidden"}}>
+  return <div style={{background:"rgba(245,239,224,.88)",minHeight:"100dvh",overflow:"hidden"}}>
     <section className="responsive-shell hero-grid" style={{position:"relative"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 18%, rgba(74,94,58,.08), transparent 38%), radial-gradient(circle at 50% 100%, rgba(74,94,58,.025), transparent 48%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",zIndex:1}}>
@@ -880,7 +880,7 @@ function Landing({onStart}){
 
       <div style={{marginTop:"clamp(36px,6vw,64px)"}}>
         <div className="brand-logo" style={{textAlign:"center",fontSize:".74rem",letterSpacing:".18em",marginBottom:22}}>Lo que recibís al comprar</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:14}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(220px,100%),1fr))",gap:14}}>
           {[
             {e:"📖",t:"Guía de canciones",d:"Las más pedidas en bodas reales, con criterio de Ceci para cada momento."},
             {e:"🎯",t:"Test + Arquetipo musical",d:"El perfil que define el estilo de toda la banda sonora."},
@@ -925,7 +925,7 @@ function EmailCapture({form,setForm,onContinue,onRecover}){
     setRecovering(false);
   };
 
-  return <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(245,239,224,.88)",padding:"32px 24px"}}>
+  return <div style={{minHeight:"100dvh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(245,239,224,.88)",padding:"clamp(16px,3vw,32px) clamp(12px,2.5vw,24px)"}}>
     <div style={{maxWidth:440,width:"100%",textAlign:"center"}} className="fu">
       <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",letterSpacing:".2em",textTransform:"uppercase",color:G,marginBottom:18}}>El Violín de Ceci</div>
       <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.85rem",fontWeight:700,color:C,margin:"0 0 12px"}}>Tu guion musical está listo.</h2>
@@ -961,7 +961,7 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome}){
   };
   const isCatolica=(form.tipoCeremonia.includes("Religiosa")&&form.denominacionReligiosa==="Católica")||form.tipoCeremonia.includes("Religiosa católica");
   const momentosDisponibles=isCatolica?MOMENTOS_CATOLICA:MOMENTOS_CIVIL_SIMBOLICA;
-  const wrap=ch=><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"rgba(245,239,224,.88)",padding:"24px 22px",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
+  const wrap=ch=><div style={{minHeight:"100dvh",display:"flex",flexDirection:"column",background:"rgba(245,239,224,.88)",padding:"clamp(14px,2.5vw,24px) clamp(10px,2vw,22px)",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
       <button onClick={onGoHome} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(74,94,58,.6)",cursor:"pointer",padding:"4px 0",display:"flex",alignItems:"center",gap:5}}>🏠 Menú principal</button>
       <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.3)"}}>Paso {step} de 6</span>
@@ -1207,7 +1207,7 @@ function Generating({names,phase}){
   useEffect(()=>{const t=setInterval(()=>setI(x=>(x+1)%pool.length),2600);return()=>clearInterval(t);},[pool.length]);
   useEffect(()=>{const t=setInterval(()=>setSeconds(x=>x+1),1000);return()=>clearInterval(t);},[]);
   const progress=Math.min(92,18+(phase*27)+(i*6));
-  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",textAlign:"center"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",textAlign:"center"}}>
     <div style={{width:"100%",maxWidth:720,background:"linear-gradient(135deg,#FBF7EF,#F5EFE0)",border:"1px solid rgba(201,169,110,.18)",borderRadius:28,padding:"clamp(30px,6vw,54px)",boxShadow:"0 24px 80px rgba(0,0,0,.22)"}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".24em",textTransform:"uppercase",color:G,marginBottom:20}}>El Violín de Ceci</div>
       <div style={{position:"relative",width:92,height:92,margin:"0 auto 28px"}}>
@@ -1228,7 +1228,7 @@ function Generating({names,phase}){
       <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.14)",borderRadius:18,padding:"18px 20px",marginBottom:18,minHeight:96,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1.15rem,2.3vw,1.38rem)",color:C,animation:"pulse 2.4s ease infinite",fontStyle:"italic",margin:0,lineHeight:1.55}}>{pool[i]}</p>
       </div>
-      <div className="generating-notes" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:10}}>
+      <div className="generating-notes" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(160px,45vw),1fr))",gap:10,marginTop:10}}>
         {CALMING_NOTES.map((note,idx)=><div key={idx} style={{background:"rgba(26,26,20,.03)",border:"0.5px solid rgba(74,94,58,.14)",borderRadius:14,padding:"12px 10px",fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.58)",lineHeight:1.45}}>
           {note}
         </div>)}
@@ -1543,7 +1543,7 @@ function GuionCarousel({items}){
           minWidth:"min(88vw,360px)",maxWidth:380,scrollSnapAlign:"start",flexShrink:0,
           background:"#FBF7EF",
           border:"0.5px solid rgba(201,169,110,.28)",
-          borderRadius:18,padding:"22px 20px",position:"relative",overflow:"hidden"
+          borderRadius:18,padding:"clamp(12px,2.5vw,22px) clamp(10px,2vw,20px)",position:"relative",overflow:"hidden"
         }}>
           {isNovia&&<div style={{position:"absolute",top:0,right:0,width:6,height:80,background:"linear-gradient(to bottom,#C9A96E,transparent)",borderRadius:"0 18px 0 0",opacity:.4,pointerEvents:"none"}}/>}
           {/* Número y ícono */}
@@ -1610,7 +1610,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
   const doneItems=Object.entries(checklistFull).flatMap(([k,items])=>items.map((_,i)=>checked[`${k}_${i}`])).filter(Boolean).length;
   const pct=totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{maxWidth:860,margin:"0 auto",background:"rgba(245,239,224,.88)",minHeight:"100vh",padding:"0 0 100px"}}>
+  return <div style={{maxWidth:860,margin:"0 auto",background:"rgba(245,239,224,.88)",minHeight:"100dvh",padding:"0 0 100px"}}>
 
     {/* ══ NAV BAR ══ */}
     <div className="no-print" style={{background:"rgba(245,239,224,.95)",backdropFilter:"blur(8px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",padding:"10px clamp(14px,3vw,32px)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,position:"sticky",top:0,zIndex:20}}>
@@ -2105,7 +2105,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
         <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Módulos de planificación</div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{modules.filter(m=>m.done).length}/{modules.length} completados</div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:24}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(160px,45vw),1fr))",gap:12,marginBottom:24}}>
         {modules.map(({emoji,label,desc,action,status,done,primary})=>
           <button key={label} onClick={action} style={{
             background:done?"rgba(74,94,58,.08)":primary&&!done?"#4A5E3A":"#FBF7EF",
@@ -2452,7 +2452,7 @@ function BudgetModule({ user, onBack }){
     save(next);
   };
 
-  if(!data) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
+  if(!data) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}>
     <p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando presupuesto...</p>
   </div>;
 
@@ -2543,9 +2543,9 @@ function BudgetModule({ user, onBack }){
     </div>;
   };
 
-  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
     {/* Header */}
-    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
@@ -2554,7 +2554,7 @@ function BudgetModule({ user, onBack }){
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
             <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se sincronizan automáticamente desde Proveedores</div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+          <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",justifyContent:"flex-start"}}>
             <select value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer",maxWidth:"min(220px,60vw)"}}>
               {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
             </select>
@@ -2611,7 +2611,7 @@ function BudgetModule({ user, onBack }){
           </div>
           {mostrarCalculadora&&<div style={{marginTop:12,background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px"}}>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>Calculadora de distribución</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(130px,45vw),1fr))",gap:10,marginBottom:12}}>
               <div>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🎵 Música en vivo</div>
                 <div style={{display:"flex",gap:6}}>
@@ -2913,7 +2913,7 @@ function VendorsModule({user, onBack}){
   };
   const removeVendor = (id) => { const next=(vendors||[]).filter(x=>x.id!==id); setVendors(next); save(next); };
 
-  if(vendors===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando proveedores...</p></div>;
+  if(vendors===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando proveedores...</p></div>;
 
   const catMap = Object.fromEntries(VENDOR_CATS.map(c=>[c.id,c]));
   const estMap = Object.fromEntries(VENDOR_ESTADOS.map(e=>[e.id,e]));
@@ -2930,9 +2930,9 @@ function VendorsModule({user, onBack}){
   const contratados = vendors.filter(v=>v.estado==="contratado"||v.estado==="pagado").length;
   const totalCotizado = vendors.reduce((s,v)=>s+parseFloat(v.precio||0),0);
 
-  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
     {/* Header */}
-    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:900,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
@@ -2956,7 +2956,7 @@ function VendorsModule({user, onBack}){
       {adding && editId==="new" && <VendorForm onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
 
       {/* Filters */}
-      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:18,alignItems:"center"}}>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14,alignItems:"center",width:"100%"}}>
         <div style={{position:"relative",flex:1,minWidth:160,marginBottom:8}}>
           <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:".85rem",pointerEvents:"none",opacity:.4}}>🔍</span>
           <input value={searchVendor} onChange={e=>setSearchVendor(e.target.value)} placeholder="Buscar proveedor..."
@@ -2975,7 +2975,7 @@ function VendorsModule({user, onBack}){
         {(filterCat!=="all"||filterEst!=="all")&&<button onClick={()=>{setFilterCat("all");setFilterEst("all");}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.4)",fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer"}}>✕ Limpiar</button>}
       </div>
 
-      {filtered.length===0 && !adding && <div style={{textAlign:"center",padding:"48px 20px",background:"#FBF7EF",borderRadius:18,border:"0.5px solid rgba(201,169,110,.2)"}}>
+      {filtered.length===0 && !adding && <div style={{textAlign:"center",padding:"clamp(20px,4vw,48px) clamp(12px,2vw,20px)",background:"#FBF7EF",borderRadius:18,border:"0.5px solid rgba(201,169,110,.2)"}}>
         <div style={{fontSize:"2.5rem",marginBottom:12}}>🏢</div>
         <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",color:"#1A1A14",marginBottom:8}}>Aún no hay proveedores</p>
         <p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.45)",margin:"0 0 20px"}}>Agregá tu primer proveedor con el botón de arriba</p>
@@ -3409,7 +3409,7 @@ function GuestsModule({user, onBack}){
   const updateGuest = (id,field,val) => { const next=guests.map(g=>g.id===id?{...g,[field]:val}:g); setGuests(next); save(next); };
   const removeGuest = (id) => { const next=guests.filter(g=>g.id!==id); setGuests(next); save(next); };
 
-  if(guests===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando invitados...</p></div>;
+  if(guests===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando invitados...</p></div>;
 
   const confMap = Object.fromEntries(CONFIRMACIONES.map(c=>[c.id,c]));
   const filtered = guests.filter(g=>{
@@ -3433,8 +3433,8 @@ function GuestsModule({user, onBack}){
   const tables = Array.from({length:maxMesa},(_,i)=>({num:i+1,guests:guests.filter(g=>parseInt(g.mesa)===i+1),personas:guests.filter(g=>parseInt(g.mesa)===i+1).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)}));
   const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
 
-  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
-    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
@@ -3445,7 +3445,7 @@ function GuestsModule({user, onBack}){
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             <div style={{background:"rgba(245,239,224,.12)",borderRadius:12,padding:"10px 14px"}}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(245,239,224,.6)",marginBottom:6}}>Personas por mesa</div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}>
+              <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
               {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#C9A96E":"transparent",color:tableSize===n?"#1A1A14":"rgba(245,239,224,.55)",border:`0.5px solid ${tableSize===n?"#C9A96E":"rgba(245,239,224,.2)"}`,borderRadius:100,padding:"4px 11px",fontFamily:"'Lora',serif",fontSize:".85rem",fontWeight:tableSize===n?700:400,cursor:"pointer",minWidth:32}}>
                   {n}
                 </button>)}
@@ -3464,7 +3464,7 @@ function GuestsModule({user, onBack}){
           </div>
         </div>
         {/* Stats cards visuales */}
-        <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",rowGap:4}}>
           {[
             {v:inv,  l:"Invitaciones", icon:"✉️", bg:"rgba(245,239,224,.12)"},
             {v:total,l:"Personas",     icon:"👥", bg:"rgba(245,239,224,.12)"},
@@ -3495,7 +3495,7 @@ function GuestsModule({user, onBack}){
       </div>
     </div>
 
-    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box"}}>
       {addMode&&<div style={{background:"#FBF7EF",border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"20px",marginBottom:16,boxShadow:"0 4px 20px rgba(74,94,58,.1)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",fontWeight:700,color:"#1A1A14"}}>Nuevo invitado</div>
@@ -3569,7 +3569,7 @@ function GuestsModule({user, onBack}){
       </div>}
 
       {viewMode==="lista"&&<>
-        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"40px 20px",background:"#FBF7EF",borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
+        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"clamp(16px,3.5vw,40px) clamp(10px,2vw,20px)",background:"#FBF7EF",borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"2rem",marginBottom:10}}>👥</div>
           <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:"#1A1A14",margin:"0 0 6px"}}>Aún no hay invitados</p>
           <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
@@ -3578,7 +3578,7 @@ function GuestsModule({user, onBack}){
             <button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,padding:"11px 20px",fontFamily:"'Lora',serif",fontWeight:600,color:"#4A5E3A",cursor:"pointer"}}>↓ Descargar plantilla Excel</button>
           </div>
         </div>}
-        {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"32px 20px",background:"#FBF7EF",borderRadius:14,border:"0.5px solid rgba(201,169,110,.2)"}}>
+        {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",background:"#FBF7EF",borderRadius:14,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"1.8rem",marginBottom:8}}>🔍</div>
           <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:"#1A1A14",margin:"0 0 4px"}}>Sin resultados para "{search}"</p>
           <p style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.4)",margin:0}}>Probá con otro nombre o limpiar los filtros</p>
@@ -3689,7 +3689,7 @@ function GuestsModule({user, onBack}){
             </div>)}
           </div>
         </div>}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(200px,45vw),1fr))",gap:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(260px,100%),1fr))",gap:12}}>
           {tables.map(t=>{
             const pct=Math.round(t.personas/tableSize*100);
             const over=t.personas>tableSize;
@@ -4294,9 +4294,9 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   return <div style={{display:"flex",flexDirection:"column",gap:0}}>
 
     {/* ── TOOLBAR ── */}
-    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px 12px",marginBottom:10,display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
+    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:6}}>
       {/* Fila 1: Forma + Medidas + Zoom */}
-      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",flex:1}}>
+      <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
         {/* Forma salón */}
         <div style={{position:"relative"}}>
           <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
@@ -4307,26 +4307,26 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           </div>}
         </div>
         {/* Dimensiones */}
-        <div style={{display:"flex",alignItems:"center",gap:3}}>
-          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:42,fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.4)"}}>×</span>
-          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:42,fontFamily:"'Lora',serif",fontSize:".82rem",padding:"4px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)"}}>m</span>
+        <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
+          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:38,fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)"}}>×</span>
+          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:38,fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
         {/* Zoom */}
-        <div style={{display:"flex",alignItems:"center",background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,overflow:"hidden"}}>
-          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.12).toFixed(2)))} style={{background:"transparent",border:"none",width:28,height:28,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
-          <span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",color:"rgba(26,26,20,.5)",minWidth:34,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
-          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.12).toFixed(2)))} style={{background:"transparent",border:"none",width:28,height:28,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+        <div style={{display:"flex",alignItems:"center",background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,overflow:"hidden",flexShrink:0}}>
+          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:26,height:26,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+          <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",color:"rgba(26,26,20,.5)",minWidth:30,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
+          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:26,height:26,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
         </div>
         {/* Ajustar pantalla */}
-        <button onClick={fitToScreen} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3V1h2M9 1h2v2M11 9v2H9M3 11H1V9" stroke="#4A5E3A" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        <button onClick={fitToScreen} title="Ajustar a pantalla" style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 8px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 3V1h2M9 1h2v2M11 9v2H9M3 11H1V9" stroke="#4A5E3A" strokeWidth="1.5" strokeLinecap="round"/></svg>
           Ajustar
         </button>
       </div>
       {/* Fila 2: Acciones */}
-      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
         {/* Agregar elemento */}
         <div style={{position:"relative"}}>
           <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
@@ -4354,12 +4354,12 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     </div>}
 
     {/* ── LAYOUT PRINCIPAL: Canvas + Panel ── */}
-    <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+    <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"flex-start"}}>
 
       {/* ── CANVAS ── */}
-      <div style={{flex:1,minWidth:0}}>
+      <div style={{flex:"1 1 300px",minWidth:0}}>
         <div ref={viewportRef}
-          style={{width:"100%",height:480,background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none"}}
+          style={{width:"100%",height:"clamp(300px,60vw,480px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none"}}
           onMouseDown={e=>{
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
@@ -4475,7 +4475,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       </div>
 
       {/* ── PANEL LATERAL ── (desktop) */}
-      <div style={{width:220,flexShrink:0,display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{flex:"1 1 200px",minWidth:0,maxWidth:320,display:"flex",flexDirection:"column",gap:8}}>
 
         {/* Info mesa seleccionada */}
         {selectedMesaObj
@@ -4582,7 +4582,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           </div>}
           {sinMesa.length===0
             ?<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
-            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:200,overflowY:"auto"}}>
+            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(200px,25vh)",overflowY:"auto"}}>
               {sinMesaFilt.map(p=>(
                 <div key={`${p.guestId}-${p.personIdx}`}
                   onMouseDown={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
@@ -4612,7 +4612,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
     {/* ── BOTTOM SHEET MOBILE ── */}
     {showSheet&&selectedMesaObj&&<div style={{position:"fixed",inset:0,zIndex:100,display:"flex",flexDirection:"column",justifyContent:"flex-end"}} onClick={()=>setShowSheet(false)}>
-      <div style={{background:"#FBF7EF",borderRadius:"16px 16px 0 0",padding:"16px",maxHeight:"65vh",overflowY:"auto",boxShadow:"0 -4px 24px rgba(0,0,0,.2)"}} onClick={e=>e.stopPropagation()}>
+      <div style={{background:"#FBF7EF",borderRadius:"16px 16px 0 0",padding:"16px",maxHeight:"70vh",overflowY:"auto",boxShadow:"0 -4px 24px rgba(0,0,0,.2)",paddingBottom:"max(16px,env(safe-area-inset-bottom))"}} onClick={e=>e.stopPropagation()}>
         {/* Handle */}
         <div style={{width:36,height:4,background:"rgba(26,26,20,.15)",borderRadius:2,margin:"0 auto 14px"}}/>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
@@ -5114,12 +5114,12 @@ function TimelineModule({user, form, results, onBack}){
   const updateEv = (id,field,val) => { const next=events.map(e=>e.id===id?{...e,[field]:val}:e); setEvents(next); save(next); };
   const removeEv = (id) => { const next=events.filter(e=>e.id!==id); setEvents(next); save(next); };
 
-  if(events===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando cronograma...</p></div>;
+  if(events===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando cronograma...</p></div>;
 
   const fecha = form?.fechaBoda?new Date(form.fechaBoda+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):null;
 
-  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
-    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
@@ -5137,7 +5137,7 @@ function TimelineModule({user, form, results, onBack}){
     </div>
     <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
       {adding&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"18px",marginBottom:14}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginBottom:8}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(100px,45vw),1fr))",gap:6,marginBottom:8}}>
           {[{label:"Hora",key:"hora",type:"time"},{label:"Evento",key:"titulo",type:"text",placeholder:"ej: Primer baile"},{label:"Duración (min)",key:"duracion",type:"number"},{label:"Lugar",key:"lugar",type:"text",placeholder:"ej: Jardín"}].map(f=>
             <div key={f.key}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginBottom:4}}>{f.label}</div>
@@ -5235,7 +5235,7 @@ function TimelineModule({user, form, results, onBack}){
                 </div>
               </div>
               :<div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",marginBottom:7}}>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:7,width:"100%"}}>
                   <input type="time" defaultValue={ev.hora} onBlur={e=>updateEv(ev.id,"hora",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:90}}/>
                   <input type="text" defaultValue={ev.titulo} onBlur={e=>updateEv(ev.id,"titulo",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",flex:1,minWidth:120}}/>
                   <input type="number" defaultValue={ev.duracion} onBlur={e=>updateEv(ev.id,"duracion",e.target.value)} placeholder="min" title="Duración en minutos" style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:70}}/>
@@ -5597,7 +5597,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
     setCustom(next); persist(null, next, null);
   };
 
-  if(checked===null) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando checklist...</p></div>;
+  if(checked===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando checklist...</p></div>;
 
   const totalPre  = CHECKLIST_GENERAL.reduce((s,e)=>s+e.items.length,0);
   const totalCust = Object.values(custom).flat().length;
@@ -5607,9 +5607,9 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   const doneItems = donePre + doneCust;
   const pct = totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
     {/* Header */}
-    <div style={{background:"#4A5E3A",padding:"clamp(16px,3vw,28px) clamp(16px,4vw,48px)"}}>
+    <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
@@ -5761,7 +5761,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                     <button onClick={()=>setExpandKey(expandKey===`${ei}_${ii}`?null:`${ei}_${ii}`)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"2px 8px",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.5)",cursor:"pointer"}}>+</button>
                   </div>
                 </div>
-                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:8,paddingLeft:0,width:"100%",flexWrap:"wrap",alignItems:"center",marginTop:6}}>
+                {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:6,paddingLeft:0,width:"100%",flexWrap:"wrap",alignItems:"flex-start",marginTop:6}}>
                   <select value={resp[`${ei}_${ii}`]||""} onChange={e=>setResponsable(`${ei}_${ii}`,e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
                     <option value="">Sin responsable</option>
                     {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
@@ -5770,7 +5770,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                   <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
                     <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Límite:</span>
                     <input type="date" value={getFecha(`${ei}_${ii}`)} onChange={e=>setFecha(`${ei}_${ii}`,e.target.value)}
-                      style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",width:130}}/>
+                      style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",width:"min(130px,100%)",boxSizing:"border-box"}}/>
                     {getFecha(`${ei}_${ii}`)&&<button onClick={()=>setFecha(`${ei}_${ii}`,"")} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",cursor:"pointer",fontSize:".9rem",padding:"0 2px",lineHeight:1}}>×</button>}
                   </div>
                   {vendors4Chk.length>0&&<div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
@@ -5938,7 +5938,7 @@ function BackToHome({onBack, style={}}){
     <button onClick={onBack} style={{
       display:"inline-flex",alignItems:"center",gap:8,
       background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",
-      borderRadius:100,padding:"13px 32px",
+      borderRadius:100,padding:"clamp(10px,1.5vw,13px) clamp(14px,2.5vw,32px)",
       fontFamily:"'Lora',serif",fontWeight:600,fontSize:".95rem",
       color:"#4A5E3A",cursor:"pointer",
       boxShadow:"0 2px 8px rgba(74,94,58,.08)"
@@ -6412,7 +6412,7 @@ export default function App(){
     }
   };
 
-  if(authLoading) return <div style={{minHeight:"100vh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
+  if(authLoading) return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
   if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onPasswordUpdated={()=>{
     // Clear all local data so the user starts completely fresh
     try { localStorage.removeItem("bsb_session"); } catch(e) {}
