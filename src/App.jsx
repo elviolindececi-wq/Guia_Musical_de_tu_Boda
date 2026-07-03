@@ -3794,20 +3794,20 @@ function GuestsModule({user, onBack}){
       msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
       onCancel={()=>setConfirmDelete(null)}/>}
-    <div style={{background:THEME.color.sage,padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
+    <div style={{background:THEME.color.sage,padding:isMobile?"10px 12px 12px":"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",transition:"max-width .25s ease"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:THEME.font.display,fontSize:"clamp(1.8rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
+            <div style={{fontFamily:THEME.font.label,fontSize:isMobile?"max(10px,.6rem)":THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:isMobile?3:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:THEME.font.display,fontSize:isMobile?"1.35rem":"clamp(1.8rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             {/* Acción principal siempre visible */}
-            <button onClick={()=>setAddMode(true)} style={{background:THEME.color.gold,color:THEME.color.ink,border:"none",padding:"11px 22px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(14px,.95rem)",borderRadius:THEME.radius.pill,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
+            <button onClick={()=>setAddMode(true)} style={{background:THEME.color.gold,color:THEME.color.ink,border:"none",padding:isMobile?"8px 14px":"11px 22px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:isMobile?"13px":"max(14px,.95rem)",borderRadius:THEME.radius.pill,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
             {/* Menú de opciones secundarias — dropdown en desktop, bottom sheet en mobile */}
             <div style={{position:"relative"}}>
-              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:THEME.color.cream,border:"1px solid rgba(245,239,224,.3)",padding:"10px 16px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",borderRadius:THEME.radius.pill,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:THEME.color.cream,border:"1px solid rgba(245,239,224,.3)",padding:isMobile?"7px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontSize:isMobile?"12px":"max(13px,.85rem)",borderRadius:THEME.radius.pill,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
                 ⚙️ Opciones ▾
               </button>
               {showGuestMenu&&!isMobile&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:THEME.radius.md,padding:8,zIndex:THEME.z.sheet,boxShadow:THEME.shadow.pop,minWidth:250}}>
@@ -3825,8 +3825,8 @@ function GuestsModule({user, onBack}){
             {v:pend, l:"Pendientes",   icon:"⏳", bg:"rgba(201,169,110,.25)"},
             {v:noVa, l:"No van",       icon:"✗",  bg:"rgba(200,60,60,.2)"},
           ].map(s=>(
-            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:56,flex:"0 0 auto"}}>
-              <div style={{fontFamily:THEME.font.display,fontSize:"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:THEME.color.cream,lineHeight:1}}>{s.v}</div>
+            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:isMobile?"5px 7px":"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:isMobile?46:56,flex:"0 0 auto"}}>
+              <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:THEME.color.cream,lineHeight:1}}>{s.v}</div>
               <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
             </div>
           ))}
@@ -3912,7 +3912,7 @@ function GuestsModule({user, onBack}){
       <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
         <div style={{display:"flex",background:THEME.color.cream2,borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
           {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Mesas"},{id:"salon",label:"🏛️ Salón"}].map(v=>
-            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:"10px 16px",minHeight:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?THEME.color.sage:"transparent",color:viewMode===v.id?THEME.color.cream:"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
+            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:isMobile?"8px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?THEME.color.sage:"transparent",color:viewMode===v.id?THEME.color.cream:"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
           )}
         </div>
         <div style={{marginLeft:"auto",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} de {guests.length}</div>
@@ -5039,9 +5039,9 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
         </div>
         {/* Dimensiones */}
         <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <input type="number" value={salonW} min="5" max="80" onChange={e=>{const v=Math.max(5,Math.min(80,parseInt(e.target.value)||20));setSalonW(v);if(salonShape==="cuadrado")setSalonH(v);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
           <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>×</span>
-          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <input type="number" value={salonH} min="5" max="80" onChange={e=>{const v=Math.max(5,Math.min(80,parseInt(e.target.value)||15));setSalonH(v);if(salonShape==="cuadrado")setSalonW(v);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
           <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
         {/* Zoom */}
@@ -5076,7 +5076,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
 
       {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
       {showShapeMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:170}}>
-        {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);setShowShapeMenu(false);}} style={{display:"flex",alignItems:"center",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
+        {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);if(k==="cuadrado"){const lado=Math.min(salonW,salonH);setSalonW(lado);setSalonH(lado);}setShowShapeMenu(false);}} style={{display:"flex",alignItems:"center",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
       </div>}
       {showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:200,maxHeight:"min(340px,50vh)",overflowY:"auto"}}>
         {ELEMENTOS_FIJOS.map(e=><button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
