@@ -3266,6 +3266,8 @@ function WeatherWidget({fechaBoda, ciudad}){
 
 // ─── MÓDULO INVITADOS ─────────────────────────────────────────────────────────
 const RESTRICCIONES = ["Ninguna","Vegetariano","Vegano","Sin gluten","Sin lactosa","Kosher","Halal","Alergia (notar)","Otra"];
+// Grupos de parentesco (protocolo bodas.net): base de la distribución recomendada
+const PARENTESCOS = ["Familia directa","Familia","Amigos","Trabajo","Niños","Otro"];
 const CONFIRMACIONES = [
   {id:"pendiente",  label:"Pendiente",  color:"rgba(201,169,110,.8)", bg:"rgba(201,169,110,.1)"},
   {id:"confirmado", label:"Confirmado", color:"rgba(74,94,58,.85)",   bg:"rgba(74,94,58,.1)"},
@@ -3280,7 +3282,7 @@ function GuestsModule({user, onBack}){
   const [filter, setFilter]     = useState({lado:"",conf:"",mesa:""});
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(false);
-  const [newGuest, setNewGuest] = useState({nombre:"",lado:"Ambos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
+  const [newGuest, setNewGuest] = useState({nombre:"",lado:"Ambos",parentesco:"Amigos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
   const [addMode, setAddMode]   = useState(false);
   const [autoMesaLoading, setAutoMesaLoading] = useState(false);
   const [search, setSearch]     = useState("");
@@ -3288,6 +3290,7 @@ function GuestsModule({user, onBack}){
   const [budgetInvitados, setBudgetInvitados] = useState(0);
   const [showGuestMenu, setShowGuestMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [movingGuest, setMovingGuest]     = useState(null); // vista Mesas: invitado en movimiento
   const isMobile = useIsMobile();
 
   useEffect(()=>{
@@ -3346,12 +3349,13 @@ function GuestsModule({user, onBack}){
     // ── HOJA 1: Lista completa ──
     const confLabel = c => c==="confirmado"?"Confirmado":c==="no_va"?"No va":"Pendiente";
     const listData = [
-      ["Nombre","Personas","Mesa","Lado","Confirmación","Restricción alimentaria","Notas"],
+      ["Nombre","Personas","Mesa","Lado","Parentesco","Confirmación","Restricción alimentaria","Notas"],
       ...guests.map(g=>[
         g.nombre||"",
         parseInt(g.cantidadInvitados||1),
         g.mesa ? parseInt(g.mesa) : "",
         g.lado||"",
+        g.parentesco||"",
         confLabel(g.confirmacion),
         g.restriccion||"Ninguna",
         g.notas||""
@@ -3434,23 +3438,24 @@ function GuestsModule({user, onBack}){
 
   // ── Descargar plantilla CSV ──
   const downloadTemplate = () => {
-    const headers = ["Nombre","Personas","Mesa","Lado","Confirmacion","Restriccion","Notas"];
+    const headers = ["Nombre","Personas","Mesa","Lado","Parentesco","Confirmacion","Restriccion","Notas"];
     const instrucciones = [
       "INSTRUCCIONES - Borrar estas filas antes de importar",
       "Lado: Novio / Novia / Ambos",
+      "Parentesco: Familia directa / Familia / Amigos / Trabajo / Ninos / Otro",
       "Confirmacion: Pendiente / Confirmado / No va",
       "Restriccion: Ninguna / Vegetariano / Vegano / Sin gluten / Sin lactosa / Kosher / Halal / Alergia / Otra",
       "Personas: numero entero - cuantas personas por invitacion",
       "Mesa: numero opcional"
     ];
     const ejemplos = [
-      ["Garcia Juan y Maria","2","3","Novio","Confirmado","Ninguna",""],
-      ["Lopez Ana","1","","Novia","Pendiente","Vegetariano","Alergica a nueces"],
-      ["Familia Rodriguez","5","7","Ambos","Confirmado","Sin gluten",""]
+      ["Garcia Juan y Maria","2","3","Novio","Familia","Confirmado","Ninguna",""],
+      ["Lopez Ana","1","","Novia","Amigos","Pendiente","Vegetariano","Alergica a nueces"],
+      ["Familia Rodriguez","5","7","Ambos","Familia directa","Confirmado","Sin gluten",""]
     ];
     const toCSV = (row) => row.map(c => String(c).includes(",") ? '"'+c+'"' : c).join(",");
     const lines = [
-      ...instrucciones.map(i => [i,"","","","","",""].map(c=>c).join(",")),
+      ...instrucciones.map(i => [i,"","","","","","",""].map(c=>c).join(",")),
       toCSV(headers),
       ...ejemplos.map(toCSV)
     ];
@@ -3499,7 +3504,7 @@ function GuestsModule({user, onBack}){
         return result;
       });
     }
-    const HEADER_KEYS = ["nombre","personas","mesa","lado","confirmacion","confirmación","restriccion","restricción","notas"];
+    const HEADER_KEYS = ["nombre","personas","mesa","lado","parentesco","confirmacion","confirmación","restriccion","restricción","notas"];
     let headerIdx = -1;
     for(let i = 0; i < rows.length; i++){
       const row = rows[i].map(function(c){ return String(c).toLowerCase().trim(); });
@@ -3514,7 +3519,7 @@ function GuestsModule({user, onBack}){
     });
     const col = function(name){ return headers2.indexOf(name); };
     const iN = col("nombre"), iP = col("personas"), iM = col("mesa");
-    const iL = col("lado"), iC = col("confirmacion"), iR = col("restriccion"), iNt = col("notas");
+    const iL = col("lado"), iC = col("confirmacion"), iR = col("restriccion"), iNt = col("notas"), iPar = col("parentesco");
     if(iN < 0){ showToast("Falta la columna Nombre en el archivo","error"); return; }
     const LADOS = ["novio","novia","ambos"];
     const CONFS = ["pendiente","confirmado","no va"];
@@ -3535,11 +3540,13 @@ function GuestsModule({user, onBack}){
       const confRaw = String(row[iC] || "pendiente").trim().toLowerCase();
       const restrRaw = String(row[iR] || "ninguna").trim().toLowerCase();
       const notas = String(row[iNt] || "").trim();
+      const parRaw = iPar >= 0 ? String(row[iPar] || "").trim().toLowerCase().replace("niños","ninos") : "";
+      const parentesco = parRaw ? (PARENTESCOS.find(p=>p.toLowerCase().replace("niños","ninos")===parRaw) || "Otro") : "Otro";
       const lado = LADOS.indexOf(ladoRaw) >= 0 ? ladoRaw.charAt(0).toUpperCase()+ladoRaw.slice(1) : "Ambos";
       const confirmacion = confRaw === "confirmado" ? "confirmado" : confRaw === "no va" ? "no_va" : "pendiente";
       const restriccion = RESTRS.indexOf(restrRaw) >= 0 ? restrRaw.charAt(0).toUpperCase()+restrRaw.slice(1) : "Ninguna";
       if(iL >= 0 && LADOS.indexOf(ladoRaw) < 0) errs.push("Fila "+(i+1)+": Lado '"+row[iL]+"' invalido, se uso Ambos");
-      newGuests.push({id:Date.now()+"-"+i, nombre:nombre, cantidadInvitados:personas, mesa:mesa, lado:lado, confirmacion:confirmacion, restriccion:restriccion, notas:notas});
+      newGuests.push({id:Date.now()+"-"+i, nombre:nombre, cantidadInvitados:personas, mesa:mesa, lado:lado, parentesco:parentesco, confirmacion:confirmacion, restriccion:restriccion, notas:notas});
     }
     if(newGuests.length === 0){
       showToast("No se encontraron invitados válidos en el archivo","error");
@@ -3578,11 +3585,124 @@ function GuestsModule({user, onBack}){
     if(!newGuest.nombre.trim()) return;
     const next = [...(guests||[]), {...newGuest, id:Date.now()+""}];
     setGuests(next); save(next);
-    setNewGuest({nombre:"",lado:"Ambos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
+    setNewGuest({nombre:"",lado:"Ambos",parentesco:"Amigos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
     setAddMode(false);
   };
   const updateGuest = (id,field,val) => { const next=guests.map(g=>g.id===id?{...g,[field]:val}:g); setGuests(next); save(next); };
   const removeGuest = (id) => { const next=guests.filter(g=>g.id!==id); setGuests(next); save(next); };
+
+  // ── Sugerencia de mesa por afinidad ─────────────────────────────
+  // Recomienda la mesa donde ya hay invitados del mismo parentesco
+  // (y lado compatible) con lugar; si no, la mesa con más espacio;
+  // si todas están llenas, la siguiente mesa nueva.
+  const sugerirMesa = (parentesco, lado, cant) => {
+    const c = parseInt(cant||1)||1;
+    const occ = {};
+    (guests||[]).forEach(g=>{
+      if(!g.mesa||g.confirmacion==="no_va") return;
+      const m = parseInt(g.mesa); if(!m) return;
+      if(!occ[m]) occ[m]={total:0,mismos:0};
+      const n = parseInt(g.cantidadInvitados||1)||1;
+      occ[m].total += n;
+      const ladoOk = g.lado===lado||g.lado==="Ambos"||lado==="Ambos";
+      if((g.parentesco||"Otro")===parentesco&&ladoOk) occ[m].mismos += n;
+    });
+    // Solo son candidatas las mesas donde YA hay afines (mismo parentesco,
+    // lado compatible) con lugar suficiente. Nunca mezclar grupos distintos.
+    const cand = Object.entries(occ)
+      .filter(([,o])=>o.mismos>0&&o.total+c<=tableSize)
+      .sort((a,b)=>b[1].mismos-a[1].mismos||a[1].total-b[1].total);
+    if(cand.length)
+      return {mesa:cand[0][0], motivo:`ya hay ${cand[0][1].mismos} de ${parentesco}`};
+    const maxM = Math.max(0,...Object.keys(occ).map(Number));
+    return {mesa:String(maxM+1), motivo:`mesa nueva para ${parentesco}`};
+  };
+
+  // ── Drag real (mouse y dedo) en la vista Mesas ──────────────────
+  // Ghost flotante que sigue el puntero; el destino se detecta con
+  // elementFromPoint sobre atributos data-mesa-drop. Funciona en touch,
+  // donde el drag & drop HTML5 nativo no existe.
+  const dragMGRef = useRef(null);
+  const [dragMG, setDragMG] = useState(null);
+  const beginDragMG = (e, g) => {
+    if(!e.touches && e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    const pt = e.touches ? e.touches[0] : e;
+    const d = {id:g.id, nombre:g.nombre, x:pt.clientX, y:pt.clientY, over:null};
+    dragMGRef.current = d; setDragMG(d);
+    const move = (ev) => {
+      const p = ev.touches ? ev.touches[0] : ev;
+      if(ev.cancelable) ev.preventDefault();
+      const el = document.elementFromPoint(p.clientX, p.clientY);
+      const drop = el ? el.closest("[data-mesa-drop]") : null;
+      const nd = {...dragMGRef.current, x:p.clientX, y:p.clientY, over:drop?drop.getAttribute("data-mesa-drop"):null};
+      dragMGRef.current = nd; setDragMG(nd);
+    };
+    const up = () => {
+      const d2 = dragMGRef.current;
+      if(d2 && d2.over !== null) updateGuest(d2.id, "mesa", d2.over);
+      dragMGRef.current = null; setDragMG(null); setMovingGuest(null);
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      window.removeEventListener("touchmove", move);
+      window.removeEventListener("touchend", up);
+      window.removeEventListener("touchcancel", up);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    window.addEventListener("touchmove", move, {passive:false});
+    window.addEventListener("touchend", up);
+    window.addEventListener("touchcancel", up);
+  };
+
+  // ── Layout del salón compartido (mismo storage que SalonView) ──
+  const salonLayoutRef = useRef(null);
+  const [salonMesas, setSalonMesas] = useState(null);
+  useEffect(()=>{
+    let alive=true;
+    (async()=>{
+      let L=null;
+      try{ const s=localStorage.getItem("ceci_salon_layout_v1"); L=s?JSON.parse(s):null; }catch(err){}
+      try{
+        const {data:row}=await supabase.from("wedding_data").select("salon_layout").eq("user_id",user.id).maybeSingle();
+        if(row?.salon_layout) L=row.salon_layout;
+      }catch(err){}
+      if(!alive) return;
+      salonLayoutRef.current = L;
+      setSalonMesas(Array.isArray(L?.mesas)?L.mesas:null);
+    })();
+    return ()=>{alive=false;};
+  },[]);
+  const guardarSalonMesas = (nuevas) => {
+    const base = salonLayoutRef.current || {salonW:20,salonH:15,salonShape:"cuadrado",estiloDistrib:"banquet",elementos:[
+      {id:"novios-1",tipo:"novios",mx:8.5,my:1,ew:3,eh:0.9},
+      {id:"pista-1",tipo:"pista",mx:6,my:8,ew:8,eh:6},
+      {id:"entrada-1",tipo:"entrada",mx:8,my:13,ew:3,eh:0.8},
+    ]};
+    const layout = {...base, mesas:nuevas};
+    salonLayoutRef.current = layout;
+    setSalonMesas(nuevas);
+    try{ localStorage.setItem("ceci_salon_layout_v1", JSON.stringify(layout)); }catch(err){}
+    supabase.from("wedding_data")
+      .upsert({user_id:user.id,salon_layout:layout,updated_at:new Date().toISOString()},{onConflict:"user_id"})
+      .then(()=>{},()=>{});
+  };
+  const agregarMesaVista = () => {
+    const ms = salonMesas||[];
+    const maxId = Math.max(0, guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0), ...ms.map(m=>m.id));
+    const id = maxId+1;
+    const cols = Math.ceil(Math.sqrt(id+1));
+    guardarSalonMesas([...ms, {id, mx:3+((id-1)%cols)*3.5, my:3+Math.floor((id-1)/cols)*3.5, tipo:"round", etiqueta:"", cap:tableSize}]);
+  };
+  const setCapMesaVista = (num, n) => {
+    const cap = Math.max(2, Math.min(80, parseInt(n)||tableSize));
+    const ms = salonMesas||[];
+    const cols = Math.ceil(Math.sqrt(num+1));
+    const existe = ms.some(m=>m.id===num);
+    guardarSalonMesas(existe
+      ? ms.map(m=>m.id===num?{...m,cap}:m)
+      : [...ms, {id:num, mx:3+((num-1)%cols)*3.5, my:3+Math.floor((num-1)/cols)*3.5, tipo:"round", etiqueta:"", cap}]);
+  };
 
   if(guests===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:THEME.font.body,color:THEME.color.sage}}>Cargando invitados...</p></div>;
 
@@ -3605,7 +3725,13 @@ function GuestsModule({user, onBack}){
   const pend  = total-conf-noVa;
   const restr = RESTRICCIONES.filter(r=>r!=="Ninguna").map(r=>({r,n:guests.filter(g=>g.restriccion===r).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)})).filter(x=>x.n>0);
   const maxMesa = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
-  const tables = Array.from({length:maxMesa},(_,i)=>({num:i+1,guests:guests.filter(g=>parseInt(g.mesa)===i+1),personas:guests.filter(g=>parseInt(g.mesa)===i+1).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)}));
+  const totalMesasVista = Math.max(maxMesa, ...((salonMesas||[]).map(m=>m.id)), 0);
+  const tables = Array.from({length:totalMesasVista},(_,i)=>{
+    const sm=(salonMesas||[]).find(m=>m.id===i+1);
+    const gs=guests.filter(g=>parseInt(g.mesa)===i+1);
+    return {num:i+1, cap:sm?.cap||tableSize, etiqueta:sm?.etiqueta||"", guests:gs,
+      personas:gs.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)};
+  });
   const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
 
   // ── Menú Opciones: contenido compartido (dropdown desktop / bottom sheet mobile) ──
@@ -3633,7 +3759,7 @@ function GuestsModule({user, onBack}){
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
       onCancel={()=>setConfirmDelete(null)}/>}
     <div style={{background:THEME.color.sage,padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
-      <div style={{maxWidth:960,margin:"0 auto"}}>
+      <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",transition:"max-width .25s ease"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
@@ -3686,7 +3812,7 @@ function GuestsModule({user, onBack}){
       </div>
     </div>
 
-    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box"}}>
+    <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box",transition:"max-width .25s ease"}}>
       {addMode&&<div style={{background:THEME.color.cream2,border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(74,94,58,.08)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{fontFamily:THEME.font.display,fontSize:"1.05rem",fontWeight:700,color:THEME.color.ink}}>Nuevo invitado</div>
@@ -3718,12 +3844,26 @@ function GuestsModule({user, onBack}){
             </select>
           </div>
           <div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Parentesco</div>
+            <select value={newGuest.parentesco} onChange={e=>setNewGuest(x=>({...x,parentesco:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
+              {PARENTESCOS.map(o=><option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
             <select value={newGuest.restriccion} onChange={e=>setNewGuest(x=>({...x,restriccion:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
               {RESTRICCIONES.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
         </div>
+        {/* Sugerencia de mesa según parentesco */}
+        {!newGuest.mesa&&guests&&guests.length>0&&(()=>{
+          const s=sugerirMesa(newGuest.parentesco||"Otro",newGuest.lado,newGuest.cantidadInvitados);
+          return <button onClick={()=>setNewGuest(x=>({...x,mesa:String(s.mesa)}))}
+            style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(201,169,110,.1)",border:"1px dashed rgba(201,169,110,.5)",borderRadius:16,padding:"9px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.95)",cursor:"pointer",marginBottom:10,textAlign:"left",maxWidth:"100%"}}>
+            💡 Sugerida: <strong>Mesa {s.mesa}</strong> · {s.motivo} — tocá para usar
+          </button>;
+        })()}
         <div style={{display:"flex",gap:8}}>
           <button onClick={addGuest} disabled={!newGuest.nombre.trim()} style={{background:newGuest.nombre.trim()?THEME.color.sage:"rgba(74,94,58,.3)",color:THEME.color.cream,border:"none",borderRadius:100,padding:"10px 24px",fontFamily:THEME.font.body,fontWeight:700,fontSize:".9rem",cursor:newGuest.nombre.trim()?"pointer":"default",transition:"background .2s"}}>
             + Agregar
@@ -3798,7 +3938,7 @@ function GuestsModule({user, onBack}){
                         {cant>1&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:THEME.color.sage,borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}</span>
+                        <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}{g.parentesco&&g.parentesco!=="Otro"?` · ${g.parentesco}`:""}</span>
                         {g.mesa&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
                         {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
                       </div>
@@ -3819,8 +3959,10 @@ function GuestsModule({user, onBack}){
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginBottom:10}}>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
-                        <input type="number" defaultValue={g.mesa||""} onBlur={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Sin asignar" min="1"
+                        <input type="number" key={`mesa-${g.id}-${g.mesa||""}`} defaultValue={g.mesa||""} onBlur={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Sin asignar" min="1"
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
+                        <button onClick={()=>{const s=sugerirMesa(g.parentesco||"Otro",g.lado,g.cantidadInvitados);updateGuest(g.id,"mesa",String(s.mesa));}}
+                          style={{background:"transparent",border:"none",fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(139,107,40,.85)",cursor:"pointer",padding:"6px 2px",textAlign:"left"}}>💡 Sugerir según parentesco</button>
                       </div>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
@@ -3832,6 +3974,13 @@ function GuestsModule({user, onBack}){
                         <select defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)}
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
                           {LADOS.map(l=><option key={l}>{l}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Parentesco</div>
+                        <select defaultValue={g.parentesco||"Otro"} onBlur={e=>updateGuest(g.id,"parentesco",e.target.value)}
+                          style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
+                          {PARENTESCOS.map(p=><option key={p}>{p}</option>)}
                         </select>
                       </div>
                       <div>
@@ -3856,44 +4005,82 @@ function GuestsModule({user, onBack}){
       </>}
 
       {viewMode==="mesas"&&<>
-        {sinMesa.length>0&&<div style={{background:"rgba(201,169,110,.08)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:12,padding:"12px 16px",marginBottom:14}}>
-          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:8}}>Sin mesa asignada ({sinMesa.length})</div>
+        {/* Barra de movimiento activo */}
+        {movingGuest&&(()=>{const mg=guests.find(g=>g.id===movingGuest);return mg?<div style={{position:"sticky",top:8,zIndex:50,display:"flex",alignItems:"center",gap:10,background:THEME.color.sage,color:THEME.color.cream,borderRadius:THEME.radius.pill,padding:"10px 16px",marginBottom:12,boxShadow:THEME.shadow.pop}}>
+          <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",flex:1}}>Moviendo a <strong>{mg.nombre}</strong> — tocá la mesa destino</span>
+          <button onClick={()=>setMovingGuest(null)} style={{background:"rgba(245,239,224,.2)",border:"none",borderRadius:THEME.radius.pill,padding:"8px 14px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:THEME.color.cream,cursor:"pointer"}}>✕ Cancelar</button>
+        </div>:null;})()}
+        {/* Zona Sin mesa — también es destino para desasignar */}
+        {(sinMesa.length>0||movingGuest||dragMG)&&<div data-mesa-drop=""
+          onDragOver={e=>e.preventDefault()}
+          onDrop={e=>{e.preventDefault();const id=e.dataTransfer.getData("guestId");if(id){updateGuest(id,"mesa","");setMovingGuest(null);}}}
+          onClick={()=>{if(movingGuest){updateGuest(movingGuest,"mesa","");setMovingGuest(null);}}}
+          style={{background:dragMG?.over===""?"rgba(74,94,58,.12)":"rgba(201,169,110,.08)",border:`${(movingGuest||dragMG)?"1.5px dashed rgba(74,94,58,.5)":"0.5px solid rgba(201,169,110,.3)"}`,borderRadius:12,padding:"12px 16px",marginBottom:14,cursor:movingGuest?"pointer":"default",transition:"border .15s, background .15s"}}>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:sinMesa.length>0?8:0}}>Sin mesa asignada ({sinMesa.length}){movingGuest?" — tocá acá para quitar de la mesa":""}</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-            {sinMesa.map(g=><div key={g.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(201,169,110,.08)",borderRadius:100,padding:"4px 10px"}}>
-              <span style={{fontFamily:THEME.font.body,fontSize:".85rem",color:"rgba(26,26,20,.65)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
-              <input type="number" placeholder="Mesa" min="1" onChange={e=>e.target.value&&updateGuest(g.id,"mesa",e.target.value)}
-                style={{width:46,fontFamily:THEME.font.body,fontSize:".78rem",padding:"2px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,textAlign:"center"}}/>
+            {sinMesa.map(g=><div key={g.id} draggable
+              onDragStart={e=>{e.dataTransfer.setData("guestId",g.id);setMovingGuest(g.id);}}
+              onDragEnd={()=>setMovingGuest(null)}
+              onClick={e=>{e.stopPropagation();setMovingGuest(movingGuest===g.id?null:g.id);}}
+              style={{display:"flex",alignItems:"center",gap:4,background:movingGuest===g.id?"rgba(74,94,58,.18)":"rgba(201,169,110,.08)",border:movingGuest===g.id?"1px solid rgba(74,94,58,.5)":"1px solid transparent",borderRadius:100,padding:"5px 12px 5px 4px",minHeight:38,cursor:"grab",userSelect:"none"}}>
+              <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
+                style={{cursor:"grab",touchAction:"none",padding:"8px 6px",color:"rgba(26,26,20,.35)",fontSize:".85rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
+              <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(26,26,20,.7)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
             </div>)}
           </div>
         </div>}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:10}}>
           {tables.map(t=>{
-            const pct=Math.round(t.personas/tableSize*100);
-            const over=t.personas>tableSize;
-            return <div key={t.num} style={{background:THEME.color.cream2,border:`0.5px solid ${over?"rgba(200,80,60,.4)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                <div style={{fontFamily:THEME.font.display,fontWeight:700,fontSize:"1.05rem",color:THEME.color.ink}}>Mesa {t.num}</div>
-                <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}/{tableSize}{over&&" ⚠️"}</span>
+            const pct=Math.round(t.personas/t.cap*100);
+            const over=t.personas>t.cap;
+            const esDestino=movingGuest&&!t.guests.some(g=>g.id===movingGuest);
+            const hoverDrag=dragMG?.over===String(t.num);
+            return <div key={t.num} data-mesa-drop={String(t.num)}
+              onDragOver={e=>e.preventDefault()}
+              onDrop={e=>{e.preventDefault();const id=e.dataTransfer.getData("guestId");if(id){updateGuest(id,"mesa",String(t.num));setMovingGuest(null);}}}
+              onClick={()=>{if(esDestino){updateGuest(movingGuest,"mesa",String(t.num));setMovingGuest(null);}}}
+              style={{background:hoverDrag?"rgba(74,94,58,.08)":THEME.color.cream2,border:(esDestino||hoverDrag)?"1.5px dashed rgba(74,94,58,.55)":`0.5px solid ${over?"rgba(200,80,60,.4)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px",cursor:esDestino?"pointer":"default",transition:"border .15s, transform .15s, background .15s",transform:(esDestino||hoverDrag)?"scale(1.01)":"none"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,marginBottom:8}}>
+                <div style={{minWidth:0}}>
+                  <div style={{fontFamily:THEME.font.display,fontWeight:700,fontSize:"1.05rem",color:THEME.color.ink}}>Mesa {t.num}</div>
+                  {t.etiqueta&&<div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.6)"}}>{t.etiqueta}</div>}
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}} onClick={e=>e.stopPropagation()}>
+                  <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}{over&&" ⚠️"} /</span>
+                  <input type="number" min="2" max="80" key={`cap-${t.num}-${t.cap}`} defaultValue={t.cap}
+                    onBlur={e=>{const v=parseInt(e.target.value); if(v&&v!==t.cap) setCapMesaVista(t.num,v);}}
+                    onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}}
+                    title="Personas por mesa"
+                    style={{width:44,fontFamily:THEME.font.body,fontSize:".85rem",fontWeight:600,padding:"5px 3px",borderRadius:7,border:"1px solid rgba(74,94,58,.25)",background:THEME.color.cream,color:THEME.color.ink,textAlign:"center"}}/>
+                </div>
               </div>
               <div style={{height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",marginBottom:10}}>
                 <div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:over?"rgba(200,80,60,.5)":pct>=80?THEME.color.gold:THEME.color.sage,borderRadius:4,transition:"width .3s"}}/>
               </div>
               {t.guests.map(g=>{
                 const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
-                return <div key={g.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,padding:"5px 0",borderBottom:"0.5px solid rgba(74,94,58,.06)"}}>
-                  <div>
-                    <span style={{fontFamily:THEME.font.body,fontSize:".88rem",color:THEME.color.ink}}>{g.nombre}</span>
+                const enMov=movingGuest===g.id;
+                return <div key={g.id} draggable
+                  onDragStart={e=>{e.stopPropagation();e.dataTransfer.setData("guestId",g.id);setMovingGuest(g.id);}}
+                  onDragEnd={()=>setMovingGuest(null)}
+                  onClick={e=>{e.stopPropagation();setMovingGuest(enMov?null:g.id);}}
+                  title="Arrastrá desde ⠿ (o tocá y elegí mesa)"
+                  style={{display:"flex",alignItems:"center",gap:6,padding:"8px 6px 8px 0",minHeight:THEME.tap.min,borderBottom:"0.5px solid rgba(74,94,58,.06)",borderRadius:8,background:enMov?"rgba(74,94,58,.12)":"transparent",cursor:"grab",userSelect:"none",transition:"background .15s"}}>
+                  <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
+                    style={{cursor:"grab",touchAction:"none",padding:"10px 8px",color:"rgba(26,26,20,.3)",fontSize:".9rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <span style={{fontFamily:THEME.font.body,fontSize:".88rem",color:THEME.color.ink}}>{enMov?"↔ ":""}{g.nombre}</span>
                     {parseInt(g.cantidadInvitados||1)>1&&<span style={{fontSize:".75rem",color:"rgba(74,94,58,.5)",marginLeft:4}}>×{g.cantidadInvitados}</span>}
                     {g.restriccion&&g.restriccion!=="Ninguna"&&<div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(200,140,0,.65)"}}>⚠️ {g.restriccion}</div>}
                   </div>
                   <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
                 </div>;
               })}
-              {t.personas<tableSize
+              {t.personas<t.cap
                 ? <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.06)",borderRadius:8,padding:"6px 10px"}}>
                     <span style={{fontSize:".85rem"}}>🪑</span>
                     <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:"rgba(74,94,58,.7)",fontWeight:600}}>
-                      Faltan {tableSize-t.personas} {tableSize-t.personas===1?"persona":"personas"} para completar la mesa
+                      Faltan {t.cap-t.personas} {t.cap-t.personas===1?"persona":"personas"} para completar la mesa
                     </span>
                   </div>
                 : <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.1)",borderRadius:8,padding:"6px 10px"}}>
@@ -3903,16 +4090,32 @@ function GuestsModule({user, onBack}){
               }
             </div>;
           })}
+          {/* Card para agregar mesa */}
+          <button onClick={agregarMesaVista}
+            style={{background:"transparent",border:"1.5px dashed rgba(74,94,58,.35)",borderRadius:14,padding:"14px",minHeight:120,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontFamily:THEME.font.body,color:THEME.color.sage,transition:"background .15s"}}>
+            <span style={{fontSize:"1.6rem",lineHeight:1}}>+</span>
+            <span style={{fontSize:"max(13px,.85rem)",fontWeight:600}}>Agregar mesa</span>
+            <span style={{fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.4)"}}>Mesa {totalMesasVista+1} · {tableSize} personas</span>
+          </button>
         </div>
+        {/* Ghost flotante durante el drag */}
+        {dragMG&&<div style={{position:"fixed",left:dragMG.x-12,top:dragMG.y-42,zIndex:9999,pointerEvents:"none",background:THEME.color.sage,color:THEME.color.cream,borderRadius:THEME.radius.pill,padding:"9px 16px",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:600,boxShadow:"0 8px 24px rgba(0,0,0,.35)",whiteSpace:"nowrap"}}>↔ {dragMG.nombre}</div>}
       </>}
       {/* ── VISTA SALÓN ── */}
       {viewMode==="salon"&&<SalonView
+        user={user}
         guests={guests}
         tableSize={tableSize}
         budgetInvitados={budgetInvitados}
         onAssign={(guestId, mesa)=>{
           const next = guests.map(g=>g.id===guestId?{...g,mesa:String(mesa)}:g);
           setGuests(next); save(next);
+        }}
+        onAssignMany={(pairs)=>{
+          const map=Object.fromEntries(pairs.map(p=>[String(p.guestId),String(p.mesa)]));
+          const next = guests.map(g=>map[g.id]!==undefined?{...g,mesa:map[g.id]}:g);
+          setGuests(next); save(next);
+          showToast(`✓ Asignación de mesas actualizada (${pairs.length} invitaciones)`,"success");
         }}
         onRemove={(guestId)=>{
           const next = guests.map(g=>g.id===guestId?{...g,mesa:""}:g);
@@ -3938,7 +4141,7 @@ const SALON_SHAPES = {
 };
 
 const ELEMENTOS_FIJOS = [
-  {id:"novios",    label:"Mesa novios",  emoji:"💍", color:"#4A5E3A", w:5,  h:1.5},
+  {id:"novios",    label:"Mesa novios",  emoji:"💍", color:"#4A5E3A", w:3,  h:0.9},
   {id:"pista",     label:"Pista baile",  emoji:"💃", color:"#C9A96E", w:8,  h:6},
   {id:"escenario", label:"DJ/Escenario", emoji:"🎧", color:"#7B5E3A", w:5,  h:2.5},
   {id:"bar",       label:"Bar",          emoji:"🍹", color:"#5E7A8C", w:4,  h:2},
@@ -3947,6 +4150,27 @@ const ELEMENTOS_FIJOS = [
   {id:"cocina",    label:"Cocina",       emoji:"🍽️", color:"#7A6E5E", w:4,  h:3},
   {id:"altar",     label:"Altar",        emoji:"🌸", color:"#8C5E7A", w:5,  h:3.5},
 ];
+
+// Tipos de mesa según bodas.net (redonda 8-12, cuadrada íntima, rectangular, imperial larga)
+// Medidas coherentes con la capacidad: ~0.6 m de borde por cubierto.
+// Cuadrada de 12 → 3 por lado → 2.0 m de lado. La capacidad se puede
+// ajustar por mesa y las medidas se recalculan solas.
+const MESA_TIPOS = [
+  {v:"round",   l:"⭕", desc:"Redonda",  ew:undefined, eh:undefined, cap:10},
+  {v:"square",  l:"◻",  desc:"Cuadrada", ew:2.0, eh:2.0, cap:10},
+  {v:"rect_h",  l:"▬",  desc:"Rect. H",  ew:5.4, eh:0.9, cap:20},
+  {v:"rect_v",  l:"▮",  desc:"Rect. V",  ew:0.9, eh:5.4, cap:20},
+  {v:"imperial",l:"═",  desc:"Imperial", ew:8.4, eh:1.1, cap:30},
+];
+
+// Capacidades seleccionables por tipo de mesa
+const CAP_OPCIONES = {
+  round:    [6,8,10,12],
+  square:   [8,10,12],
+  rect_h:   [16,20,24,30],
+  rect_v:   [16,20,24,30],
+  imperial: [24,30,40],
+};
 
 const ESTILOS_DISTRIB = [
   {id:"banquet",      label:"Banquete",       desc:"Mesas redondas en filas"},
@@ -3957,25 +4181,112 @@ const ESTILOS_DISTRIB = [
   {id:"chevrons",     label:"Chevrones",      desc:"Mesas en espiga diagonal"},
 ];
 
-function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove }){
+// ── Persistencia del layout del salón (localStorage) ────────────────────────
+const SALON_LS_KEY = "ceci_salon_layout_v1";
+const cargarSalon = () => {
+  try { const s = localStorage.getItem(SALON_LS_KEY); return s ? JSON.parse(s) : null; }
+  catch(err){ return null; }
+};
+
+function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove }){
+  // Layout guardado de sesiones anteriores (se lee una sola vez)
+  const salonInitRef = useRef();
+  if(salonInitRef.current===undefined) salonInitRef.current = cargarSalon();
+  const S0 = salonInitRef.current;
+
   // ── Estado general ──
-  const [salonW, setSalonW]       = useState(20);
-  const [salonH, setSalonH]       = useState(15);
-  const [salonShape, setSalonShape] = useState("cuadrado");
+  const [salonW, setSalonW]       = useState(S0?.salonW ?? 20);
+  const [salonH, setSalonH]       = useState(S0?.salonH ?? 15);
+  const [salonShape, setSalonShape] = useState(S0?.salonShape ?? "cuadrado");
   const [zoom, setZoom]           = useState(1);
   const [pan, setPan]             = useState({x:30,y:30});
   const [mesas, setMesas]         = useState(()=>{
+    if(S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) return S0.mesas;
     const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
     const n=Math.max(maxM,1);
     const cols=Math.ceil(Math.sqrt(n+1));
     return Array.from({length:n},(_,i)=>({id:i+1,mx:3+(i%cols)*3.5,my:3+Math.floor(i/cols)*3.5,tipo:"round",etiqueta:""}));
   });
-  const [elementos, setElementos] = useState([
-    {id:"novios-1",  tipo:"novios",   mx:8,  my:1,  ew:5,  eh:1.5},
+  const [elementos, setElementos] = useState(()=>S0?.elementos&&Array.isArray(S0.elementos)?S0.elementos:[
+    {id:"novios-1",  tipo:"novios",   mx:8.5,my:1,  ew:3,  eh:0.9},
     {id:"pista-1",   tipo:"pista",    mx:6,  my:8,  ew:8,  eh:6},
     {id:"entrada-1", tipo:"entrada",  mx:8,  my:13, ew:3,  eh:0.8},
   ]);
-  const [estiloDistrib, setEstiloDistrib] = useState("banquet");
+  const [estiloDistrib, setEstiloDistrib] = useState(S0?.estiloDistrib ?? "banquet");
+
+  // Guardado dual: localStorage (instantáneo, por dispositivo) + Supabase (sincronizado).
+  // remoteLoaded evita que el autoguardado con defaults pise el layout remoto
+  // antes de que termine de cargar en un dispositivo nuevo.
+  const remoteLoaded = useRef(false);
+  useEffect(()=>{
+    const t=setTimeout(()=>{
+      const layout={salonW,salonH,salonShape,estiloDistrib,mesas,elementos};
+      try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layout)); } catch(err){}
+      if(user&&remoteLoaded.current){
+        supabase.from("wedding_data")
+          .upsert({user_id:user.id,salon_layout:layout,updated_at:new Date().toISOString()},{onConflict:"user_id"})
+          .then(()=>{},()=>{});
+      }
+    },800);
+    return ()=>clearTimeout(t);
+  },[salonW,salonH,salonShape,estiloDistrib,mesas,elementos]);
+
+  // Carga inicial desde Supabase: el layout remoto es la fuente de verdad compartida
+  useEffect(()=>{
+    if(!user){ remoteLoaded.current=true; return; }
+    let alive=true;
+    (async()=>{
+      try{
+        const {data:row}=await supabase.from("wedding_data").select("salon_layout").eq("user_id",user.id).maybeSingle();
+        if(!alive) return;
+        const L=row?.salon_layout;
+        if(L){
+          if(L.salonW) setSalonW(L.salonW);
+          if(L.salonH) setSalonH(L.salonH);
+          if(L.salonShape) setSalonShape(L.salonShape);
+          if(L.estiloDistrib) setEstiloDistrib(L.estiloDistrib);
+          if(Array.isArray(L.elementos)) setElementos(L.elementos);
+          if(Array.isArray(L.mesas)&&L.mesas.length>0){
+            // Completar mesas faltantes referidas por invitados
+            const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
+            const ids=new Set(L.mesas.map(m=>m.id));
+            const faltan=[]; for(let i=1;i<=maxM;i++) if(!ids.has(i)) faltan.push(i);
+            const cols=Math.ceil(Math.sqrt(Math.max(maxM,1)+1));
+            setMesas([...L.mesas,...faltan.map(id=>({id,mx:3+((id-1)%cols)*3.5,my:3+Math.floor((id-1)/cols)*3.5,tipo:"round",etiqueta:""}))]);
+          }
+          setTimeout(fitToScreen,150);
+        }
+      }catch(err){}
+      remoteLoaded.current=true;
+    })();
+    return ()=>{alive=false;};
+  },[]);
+
+  // Si hay invitados asignados a números de mesa que no existen en el
+  // layout guardado (p. ej. sugeridos desde la Lista), crearlas al entrar
+  useEffect(()=>{
+    const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
+    if(maxM===0) return;
+    setMesas(ms=>{
+      const ids=new Set(ms.map(m=>m.id));
+      const faltan=[];
+      for(let i=1;i<=maxM;i++) if(!ids.has(i)) faltan.push(i);
+      if(faltan.length===0) return ms;
+      // Etiquetar la mesa nueva según el parentesco dominante de sus invitados
+      const etiquetaDe=(id)=>{
+        const cnt={};
+        (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>{
+          const p=g.parentesco||"Otro";
+          cnt[p]=(cnt[p]||0)+(parseInt(g.cantidadInvitados||1)||1);
+        });
+        const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+        if(!top||top[0]==="Otro") return "";
+        return top[0]==="Familia directa"?"Familia":top[0];
+      };
+      const cols=Math.ceil(Math.sqrt(maxM+1));
+      return [...ms,...faltan.map(id=>({id,mx:3+((id-1)%cols)*3.5,my:3+Math.floor((id-1)/cols)*3.5,tipo:"round",etiqueta:etiquetaDe(id)}))];
+    });
+  },[]);
 
   // ── Selección e interacción ──
   const [selectedMesa, setSelectedMesa]   = useState(null);
@@ -3985,12 +4296,16 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   const [hoveredMesa, setHoveredMesa]     = useState(null);
   const [pinch, setPinch]                 = useState(null);
   const [showSheet, setShowSheet]         = useState(false); // mobile bottom sheet
+  const [prevAsignacion, setPrevAsignacion] = useState(null); // snapshot para deshacer protocolo
   const [searchSinMesa, setSearchSinMesa] = useState("");
   const [showShapeMenu, setShowShapeMenu] = useState(false);
   const [showElemMenu, setShowElemMenu]   = useState(false);
+  const isMobile = useIsMobile();
+  const [hideDesktopTip, setHideDesktopTip] = useState(()=>{try{return localStorage.getItem("ceci_salon_desktop_tip")==="1";}catch(err){return false;}});
 
   const viewportRef = useRef(null);
   const canvasRef   = useRef(null);
+  const lastTap     = useRef(0); // doble tap para zoom
 
   // ── Personas ──
   const personas = [];
@@ -4001,7 +4316,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   });
   const sinMesa     = personas.filter(p=>!p.mesa);
   const sinMesaFilt = sinMesa.filter(p=>!searchSinMesa||p.nombre.toLowerCase().includes(searchSinMesa.toLowerCase()));
-  const CONF_COLORS = {confirmado:"#4A5E3A",pendiente:"#C9A96E",no_va:"rgba(26,26,20,.3)"};
+  const CONF_COLORS = {confirmado:THEME.color.sage,pendiente:THEME.color.gold,no_va:"rgba(26,26,20,.3)"};
   const MESA_R_M    = 0.90;
   const ASIENTO_R_M = 0.28;
   const BASE_PX     = 30;
@@ -4030,6 +4345,17 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     setPan({x:(el.clientWidth-nCW)/2,y:(el.clientHeight-nCH)/2});
   };
 
+  // ── Zoom centrado en un punto del viewport ──
+  const zoomAt=(factor,px,py)=>{
+    const el=viewportRef.current; if(!el) return;
+    const cx=px??el.clientWidth/2, cy=py??el.clientHeight/2;
+    const newZ=+Math.max(0.3,Math.min(3,zoom*factor)).toFixed(2);
+    if(newZ===zoom) return;
+    const k=newZ/zoom;
+    setZoom(newZ);
+    setPan(p=>({x:cx-(cx-p.x)*k, y:cy-(cy-p.y)*k}));
+  };
+
   // ── Posición en canvas ──
   const getCanvasPos=(e)=>{
     const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
@@ -4056,6 +4382,15 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
         const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
         const cx=e.touches[0].clientX;
         const cy=e.touches[0].clientY;
+        // Doble tap: acercar sobre el punto tocado, o encuadrar si ya está cerca
+        const now=Date.now();
+        if(now-lastTap.current<300){
+          lastTap.current=0;
+          if(zoom<1.5) zoomAt(1.9,cx-r.left,cy-r.top);
+          else fitToScreen();
+          return;
+        }
+        lastTap.current=now;
         setDragging({type:"pan",x0:cx-r.left,y0:cy-r.top,pan0:{...pan}});
         dragMoved.current=false;
       }
@@ -4066,11 +4401,15 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       const dx=e.touches[0].clientX-e.touches[1].clientX;
       const dy=e.touches[0].clientY-e.touches[1].clientY;
       const dist=Math.sqrt(dx*dx+dy*dy);
-      setZoom(+Math.max(0.3,Math.min(3,pinch.zoom0*(dist/pinch.dist))).toFixed(2));
-      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
-      const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const newZ=+Math.max(0.3,Math.min(3,pinch.zoom0*(dist/pinch.dist))).toFixed(2);
       const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
-      setPan({x:pinch.pan0.x+(mx-pinch.mx),y:pinch.pan0.y+(my-pinch.my)});
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
+      const my=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
+      const mx0=pinch.mx-r.left, my0=pinch.my-r.top;
+      const k=newZ/pinch.zoom0;
+      // El punto del salón bajo el centro del pellizco queda fijo (y 2 dedos también panean)
+      setZoom(newZ);
+      setPan({x:mx-(mx0-pinch.pan0.x)*k, y:my-(my0-pinch.pan0.y)*k});
       return;
     }
     onMove(e);
@@ -4097,6 +4436,12 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     } else if(type==="resize"){
       const item=elementos.find(el=>el.id===id); if(!item) return;
       setDragging({type:"resize",id,ox:pos.x,oy:pos.y,ew0:item.ew,eh0:item.eh});
+    } else if(type==="resizeM"){
+      const item=mesas.find(m=>m.id===id); if(!item) return;
+      const t=item.tipo||"round";
+      const ew0=item.ew||(t==="round"?MESA_R_M*2:2.4);
+      const eh0=item.eh||(t==="round"?MESA_R_M*2:0.8);
+      setDragging({type:"resizeM",id,ox:pos.x,oy:pos.y,ew0,eh0,tipoM:t});
     } else if(type==="guest"){
       setDragging({type:"guest",id,cx:pos.x,cy:pos.y});
     } else if(type==="pan"){
@@ -4139,6 +4484,19 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       const ew=Math.max(0.5,+(dragging.ew0+(pos.x-dragging.ox)/PX).toFixed(2));
       const eh=Math.max(0.5,+(dragging.eh0+(pos.y-dragging.oy)/PX).toFixed(2));
       setElementos(es=>es.map(x=>x.id===dragging.id?{...x,ew,eh}:x));
+    } else if(dragging.type==="resizeM"){
+      // Redimensionar mesa: redondas/cuadradas mantienen proporción; la capacidad se recalcula
+      const dx=(pos.x-dragging.ox)/PX, dy=(pos.y-dragging.oy)/PX;
+      const t=dragging.tipoM;
+      let ew,eh;
+      if(t==="round"||t==="square"){
+        const d=Math.max(dx,dy);
+        ew=eh=Math.max(0.8,Math.min(6,+(dragging.ew0+d).toFixed(1)));
+      } else {
+        ew=Math.max(0.6,Math.min(25,+(dragging.ew0+dx).toFixed(1)));
+        eh=Math.max(0.6,Math.min(25,+(dragging.eh0+dy).toFixed(1)));
+      }
+      setMesas(ms=>ms.map(m=>m.id===dragging.id?{...m,ew,eh,cap:capPorMedidas(t,ew,eh)}:m));
     } else if(dragging.type==="guest"){
       setDragging(d=>({...d,cx:pos.x,cy:pos.y}));
       // Radio de detección generoso para touch: extra margen
@@ -4173,8 +4531,27 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   const removeElemento=(id)=>{setElementos(es=>es.filter(el=>el.id!==id));setSelectedElem(null);};
   const updateMesa=(id,patch)=>setMesas(ms=>ms.map(m=>m.id===id?{...m,...patch}:m));
 
-  // ── fitToScreen al montar ──
-  useEffect(()=>{setTimeout(fitToScreen,100);},[]);
+  // ── fitToScreen al montar (espera la transición de ancho del contenedor) ──
+  useEffect(()=>{setTimeout(fitToScreen,320);},[]);
+
+  // ── Zoom con rueda del mouse, centrado en el cursor ──
+  useEffect(()=>{
+    const el=viewportRef.current; if(!el) return;
+    const h=(e)=>{
+      // Zoom solo con Ctrl/Cmd + rueda (o pinch de trackpad); el scroll normal sigue moviendo la página
+      if(!e.ctrlKey&&!e.metaKey) return;
+      e.preventDefault();
+      const r=el.getBoundingClientRect();
+      const factor=e.deltaY>0?1/1.12:1.12;
+      const newZ=+Math.max(0.3,Math.min(3,zoom*factor)).toFixed(2);
+      if(newZ===zoom) return;
+      const k=newZ/zoom, mx=e.clientX-r.left, my=e.clientY-r.top;
+      setZoom(newZ);
+      setPan(p=>({x:mx-(mx-p.x)*k, y:my-(my-p.y)*k}));
+    };
+    el.addEventListener("wheel",h,{passive:false});
+    return ()=>el.removeEventListener("wheel",h);
+  },[zoom]);
 
   // ── Cerrar menus al click fuera ──
   useEffect(()=>{
@@ -4192,7 +4569,8 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
     const totalInv=budgetInvitados>0?budgetInvitados:(guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
     const ppMesa=estiloDistrib==="cantine"?16:estiloDistrib==="u_shape"?20:estiloDistrib==="chevrons"?10:tableSize;
-    const calculado=totalInv>0?Math.ceil(totalInv/ppMesa):0;
+    // Nunca reducir: distribuir al menos las mesas que ya existen
+    const calculado=Math.max(mesas.length, totalInv>0?Math.ceil(totalInv/ppMesa):0);
 
     const RD=MESA_R_M;       // 0.90m radio
     const D=RD*2;            // 1.80m diámetro
@@ -4220,7 +4598,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     // [grilla filas × cols de mesas redondas]
     // ══════════════════════════════════════════════════════════════
     if(estiloDistrib==="banquet"){
-      const novW=Math.min(W*0.7,12), novH=MW;
+      const novW=Math.min(W*0.4,6), novH=MW;
       const yNov=mg+SG;
       const yMesas=yNov+novH+SG+RD;
       elems=[{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
@@ -4236,7 +4614,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     // [mesas abajo]
     // ══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="pista_centro"){
-      const novW=Math.min(W*0.7,12), novH=MW;
+      const novW=Math.min(W*0.4,6), novH=MW;
       const yNov=mg+SG;
       // Pista: ocupa ~40% ancho × 35% alto, centrada
       const pW=Math.min(W*0.40,8), pH=Math.min(H*0.35,6);
@@ -4273,7 +4651,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     // [fila 3: 4 mesas]  etc.
     // ══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="cabaret"){
-      const novW=Math.min(W*0.7,12), novH=MW;
+      const novW=Math.min(W*0.4,6), novH=MW;
       const yNov=mg+SG;
       const yMesas=yNov+novH+SG+RD;
       elems=[{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
@@ -4303,7 +4681,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     // Sillas a ambos lados de cada mesa larga
     // ══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="cantine"){
-      const novW=Math.min(W*0.7,12), novH=MW;
+      const novW=Math.min(W*0.4,6), novH=MW;
       const yNov=mg+SG;
       const yMesas=yNov+novH+SG;
       elems=[{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
@@ -4356,7 +4734,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     // escalonadas para crear el efecto de espiga
     // ══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="chevrons"){
-      const novW=Math.min(W*0.7,12), novH=MW;
+      const novW=Math.min(W*0.4,6), novH=MW;
       const yNov=mg+SG;
       const yMesas=yNov+novH+SG+MW/2+SG;
       elems=[{id:"novios-1",tipo:"novios",mx:W/2-novW/2,my:yNov,ew:novW,eh:novH}];
@@ -4411,19 +4789,131 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     setTimeout(fitToScreen,50);
   };
 
+  // ── Sentar por protocolo (bodas.net) ──────────────────────────
+  // Subgrupos PUROS: cada mesa pertenece a un solo grupo
+  // (parentesco × lado): familia de la novia con familia de la novia,
+  // amigos del novio con amigos del novio, trabajo con trabajo.
+  // Solo se mezcla como último recurso para no dejar gente parada.
+  // Se puede correr las veces que quieras; guarda la asignación
+  // anterior para deshacer.
+  const sentarPorProtocolo=()=>{
+    if(!guests||guests.length===0||mesas.length===0||!onAssignMany) return;
+    const centro=el=>({x:el.mx+(el.ew||0)/2,y:el.my+(el.eh||0)/2});
+    const novios=elementos.find(e=>e.tipo==="novios");
+    const pista=elementos.find(e=>e.tipo==="pista");
+    const entradaEl=elementos.find(e=>e.tipo==="entrada");
+    const refNovios=novios?centro(novios):{x:salonW/2,y:1};
+    const dist=(m,p)=>Math.hypot(m.mx-p.x,m.my-p.y);
+    const porNovios=[...mesas].sort((a,b)=>dist(a,refNovios)-dist(b,refNovios));
+    const porPista=pista?[...mesas].sort((a,b)=>dist(a,centro(pista))-dist(b,centro(pista))):porNovios;
+    const porEntrada=entradaEl?[...mesas].sort((a,b)=>dist(a,centro(entradaEl))-dist(b,centro(entradaEl))):[...porNovios].reverse();
+    const cap={}; mesas.forEach(m=>{cap[m.id]=capDe(m);});
+    const dueno={}; // mesaId → clave del subgrupo que la ocupa
+    const size=g=>parseInt(g.cantidadInvitados||1)||1;
+    const activos=(guests||[]).filter(g=>g.confirmacion!=="no_va");
+    const pairs=[]; const sinLugar=[];
+    // Snapshot para deshacer
+    setPrevAsignacion(guests.map(g=>({guestId:g.id,mesa:g.mesa||""})));
+    const asignarSubgrupo=(miembros,clave,candidatas)=>{
+      for(const g of miembros){
+        const s=size(g);
+        // 1) mesa que ya ocupa este mismo subgrupo, con lugar
+        let mesa=candidatas.find(m=>dueno[m.id]===clave&&cap[m.id]>=s);
+        // 2) mesa libre (sin dueño en esta corrida)
+        if(!mesa) mesa=candidatas.find(m=>dueno[m.id]===undefined&&cap[m.id]>=s);
+        // 3) último recurso: cualquier mesa con lugar
+        if(!mesa) mesa=candidatas.find(m=>cap[m.id]>=s)||candidatas.find(m=>cap[m.id]>0);
+        if(!mesa){sinLugar.push(g);continue;}
+        pairs.push({guestId:g.id,mesa:mesa.id});
+        cap[mesa.id]-=s;
+        if(dueno[mesa.id]===undefined) dueno[mesa.id]=clave;
+      }
+    };
+    const miembros=(parentesco,lado)=>activos
+      .filter(g=>(g.parentesco||"Otro")===parentesco&&(lado===null||(g.lado||"Ambos")===lado))
+      .sort((a,b)=>size(b)-size(a));
+    // Niños todos juntos, cerca de la entrada
+    asignarSubgrupo(miembros("Niños",null),"Niños",porEntrada);
+    // Familia segmentada por lado, en las mesas más cercanas a los novios
+    for(const p of ["Familia directa","Familia"]){
+      asignarSubgrupo(miembros(p,"Novia"),`${p}·Novia`,porNovios);
+      asignarSubgrupo(miembros(p,"Novio"),`${p}·Novio`,porNovios);
+      asignarSubgrupo(miembros(p,"Ambos"),`${p}·Ambos`,porNovios);
+    }
+    // Amigos por lado, cerca de la pista
+    asignarSubgrupo(miembros("Amigos","Novia"),"Amigos·Novia",porPista);
+    asignarSubgrupo(miembros("Amigos","Novio"),"Amigos·Novio",porPista);
+    asignarSubgrupo(miembros("Amigos","Ambos"),"Amigos·Ambos",porPista);
+    // Trabajo junto, y el resto
+    asignarSubgrupo(miembros("Trabajo",null),"Trabajo",porNovios);
+    asignarSubgrupo(miembros("Otro",null),"Otro",porNovios);
+    // Los que no entraron en ninguna mesa quedan en "Sin mesa"
+    sinLugar.forEach(g=>pairs.push({guestId:g.id,mesa:""}));
+    // Etiquetar mesas según su subgrupo (solo las que no tienen etiqueta propia)
+    const labelDe=(clave)=>{
+      if(clave==="Otro") return "";
+      const [p,l]=clave.split("·");
+      const base=p==="Familia directa"?"Familia":p;
+      return l&&l!=="Ambos"?`${base} ${l}`:base;
+    };
+    setMesas(ms=>ms.map(m=>dueno[m.id]&&!m.etiqueta?{...m,etiqueta:labelDe(dueno[m.id])}:m));
+    if(pairs.length>0) onAssignMany(pairs);
+  };
+
   // ── Render mesa en SVG ──
+  // Capacidad de una mesa: la propia de su tipo, o la global si no tiene
+  const capDe=(m)=>m?.cap||tableSize;
+
+  // Medidas derivadas de la capacidad: 0.6 m de borde por cubierto,
+  // cabeceras incluidas en rectangulares e imperiales.
+  const medidasPorCap=(tipo,cap)=>{
+    const c=Math.max(2,cap);
+    if(tipo==="round"){const d={6:1.2,8:1.5,10:1.8,12:2.2}[c]||+(c*0.6/Math.PI).toFixed(1);return{ew:d,eh:d};}
+    if(tipo==="square"){const lado=+(Math.max(1.2,Math.ceil(c/4)*0.66)).toFixed(1);return{ew:lado,eh:lado};}
+    if(tipo==="rect_h"){const L=+(Math.max(1.8,(c-2)/2*0.6)).toFixed(1);return{ew:L,eh:0.9};}
+    if(tipo==="rect_v"){const L=+(Math.max(1.8,(c-2)/2*0.6)).toFixed(1);return{ew:0.9,eh:L};}
+    if(tipo==="imperial"){const L=+(Math.max(2.4,(c-2)/2*0.6)).toFixed(1);return{ew:L,eh:1.1};}
+    return {};
+  };
+  // Capacidad recomendada según las medidas reales (~0.6 m por cubierto)
+  const capPorMedidas=(tipo,ew,eh)=>{
+    if(tipo==="round"||!tipo) return Math.max(2,Math.round(Math.PI*(ew||MESA_R_M*2)/0.6));
+    const nH=Math.max(ew>=eh?1:0,Math.floor(ew/0.55));
+    const nV=Math.max(eh>ew?1:0,Math.floor(eh/0.55));
+    return Math.max(2,2*nH+2*nV);
+  };
+  // Cambiar medidas a mano: recalcula la capacidad recomendada
+  const setMedidas=(mesa,ew,eh)=>{
+    if(!mesa) return;
+    const t=mesa.tipo||"round";
+    const w=Math.max(0.6,Math.min(25,+ew||0.6));
+    const h=t==="round"||t==="square"?w:Math.max(0.6,Math.min(25,+eh||0.6));
+    updateMesa(mesa.id,{ew:w,eh:h,cap:capPorMedidas(t,w,h)});
+  };
+  const setCapacidadA=(mesa,n)=>{
+    if(!mesa) return;
+    updateMesa(mesa.id,{cap:n,...medidasPorCap(mesa.tipo||"round",n)});
+  };
+  const medidaDe=(m)=>{
+    if(!m) return "";
+    const t=m.tipo||"round";
+    if(t==="round") return `Ø ${(m.ew||MESA_R_M*2).toFixed(1)} m`;
+    return `${(m.ew||0).toFixed(1)} × ${(m.eh||0).toFixed(1)} m`;
+  };
+
   const renderMesaSVG=(mesa)=>{
     const ps=mesaPersonas(mesa.id);
     const isSelected=selectedMesa===mesa.id,isHovered=hoveredMesa===mesa.id;
     const tipoM=mesa.tipo||"round";
-    const over=ps.length>tableSize;
-    const libres=Math.max(0,tableSize-ps.length);
-    const fillC=isSelected?"#4A5E3A":isHovered?"#5a7a48":"#D4C4A0";
+    const capM=capDe(mesa);
+    const over=ps.length>capM;
+    const libres=Math.max(0,capM-ps.length);
+    const fillC=isSelected?THEME.color.sage:isHovered?"#5a7a48":"#D4C4A0";
     const strokeC=isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.6)";
     const dh={onMouseDown:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);},onTouchStart:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);}};
 
     if(tipoM==="round"){
-      const R=MESA_R_M*PX,AR=ASIENTO_R_M*PX,ts=Math.max(ps.length,tableSize);
+      const R=(((mesa.ew||MESA_R_M*2))/2)*PX,AR=ASIENTO_R_M*PX,ts=Math.max(ps.length,capM);
       const pts=circlePts(ts,R+AR),sv=(R+AR*2+6)*2,cx=sv/2,cy=sv/2;
       return{w:sv,h:sv,jsx:<svg width={sv} height={sv} style={{overflow:"visible",display:"block"}}>
         <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.18)"/>
@@ -4431,11 +4921,11 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
         {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill="#fff" fontFamily="'Lora',serif" fontWeight="600" style={{pointerEvents:"none"}}>soltar</text>}
         {mesa.etiqueta
           ?<><text x={cx} y={cy-R*0.2} textAnchor="middle" fontSize={Math.max(6,R*0.18)} fill={isSelected?"rgba(245,239,224,.8)":"rgba(74,94,58,.6)"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
-            <text x={cx} y={cy+R*0.3} textAnchor="middle" fontSize={Math.max(9,R*0.4)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
-          :<><text x={cx} y={cy-R*0.1} textAnchor="middle" fontSize={Math.max(7,R*0.24)} fill={isSelected?"#F5EFE0":"#4A5E3A"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>Mesa</text>
-            <text x={cx} y={cy+R*0.38} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
+            <text x={cx} y={cy+R*0.3} textAnchor="middle" fontSize={Math.max(9,R*0.4)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
+          :<><text x={cx} y={cy-R*0.1} textAnchor="middle" fontSize={Math.max(7,R*0.24)} fill={isSelected?THEME.color.cream:THEME.color.sage} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>Mesa</text>
+            <text x={cx} y={cy+R*0.38} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
         }
-        {libres>0&&!isSelected&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(6,R*0.19)} fill={over?"rgba(200,60,60,.8)":"rgba(74,94,58,.55)"} fontFamily="'Lora',serif" style={{pointerEvents:"none"}}>{libres}L</text>}
+        {!isSelected&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(7,R*0.21)} fill={over?"rgba(200,60,60,.9)":libres===0?"rgba(74,94,58,.85)":"rgba(74,94,58,.6)"} fontFamily="'Lora',serif" fontWeight="600" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
         {pts.map((pt,i)=>{const p=ps[i];const hitR=Math.max(AR+4,16);return<g key={i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
           {/* Hit area invisible más grande */}
           {p&&<circle cx={cx+pt.x} cy={cy+pt.y} r={hitR} fill="transparent"/>}
@@ -4450,25 +4940,30 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     const isV=rH>rW, AR=ASIENTO_R_M*PX, pad=AR+5;
     const wD=rW+pad*2, hD=rH+pad*2;
     const mira=mesa.miraSide||"both";
-    const showT=mira==="both", showB=mira==="both";
-    const showL=(mira==="both"||mira==="right"), showR=(mira==="both"||mira==="left");
-    // Sillas escalan automáticamente: 1 silla cada ~55cm a lo largo del eje largo
-    const SILLA_PASO=0.55*PX; // 55cm por silla
-    const seatsLargo=Math.max(1,Math.floor((isV?rH:rW)/SILLA_PASO));
-    const seatsM=seatsLargo;
+    // Sillas alrededor de los 4 lados: ~1 cada 55 cm de borde (cabeceras incluidas)
+    const SILLA_PASO=0.55*PX;
+    const nH=Math.max(rW>=rH?1:0,Math.floor(rW/SILLA_PASO));
+    const nV=Math.max(rH>rW?1:0,Math.floor(rH/SILLA_PASO));
+    let seatPts=[];
+    const addT=()=>{for(let i=0;i<nH;i++)seatPts.push({x:pad+rW/(nH+1)*(i+1),y:pad-AR-1});};
+    const addB=()=>{for(let i=0;i<nH;i++)seatPts.push({x:pad+rW/(nH+1)*(i+1),y:pad+rH+AR+1});};
+    const addL=()=>{for(let i=0;i<nV;i++)seatPts.push({x:pad-AR-1,y:pad+rH/(nV+1)*(i+1)});};
+    const addR=()=>{for(let i=0;i<nV;i++)seatPts.push({x:pad+rW+AR+1,y:pad+rH/(nV+1)*(i+1)});};
+    if(mira==="both"){addT();addR();addB();addL();}
+    else if(mira==="left"){ if(isV) addR(); else addB(); }
+    else { if(isV) addL(); else addT(); }
+    seatPts=seatPts.slice(0,Math.max(ps.length,capM));
     const angle=mesa.angle||0;
     return{w:wD,h:hD,angle,jsx:<svg width={wD} height={hD} style={{overflow:"visible",display:"block"}}>
       <rect x={pad+2} y={pad+2} width={rW} height={rH} rx="3" fill="rgba(0,0,0,.18)"/>
       <rect x={pad} y={pad} width={rW} height={rH} rx="3" fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
-      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.22)} fill={isSelected?"#F5EFE0":"#1A1A14"} fontFamily="'Playfair Display',serif" fontWeight="700" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||mesa.id}</text>
-      {/* Sillas horizontales arriba */}
-      {showT&&!isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[i];const sx=pad+rW/(seatsM+1)*(i+1),sy=pad-AR-1;return<g key={"t"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
-      {/* Sillas horizontales abajo */}
-      {showB&&!isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[showT?seatsM+i:i];const sx=pad+rW/(seatsM+1)*(i+1),sy=pad+rH+AR+1;return<g key={"b"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
-      {/* Sillas verticales izq */}
-      {showL&&isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[i];const sx=pad-AR-1,sy=pad+rH/(seatsM+1)*(i+1);return<g key={"l"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
-      {/* Sillas verticales der */}
-      {showR&&isV&&Array.from({length:seatsM},(_,i)=>{const p=ps[showL?seatsM+i:i];const sx=pad+rW+AR+1,sy=pad+rH/(seatsM+1)*(i+1);return<g key={"r"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}><circle cx={sx} cy={sy} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>{p&&<text x={sx} y={sy+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}</g>;})}
+      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.22)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||mesa.id}</text>
+      {/* Sillas alrededor de los 4 lados */}
+      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={"s"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
+        {p&&<circle cx={pt.x} cy={pt.y} r={Math.max(AR+4,14)} fill="transparent"/>}
+        <circle cx={pt.x} cy={pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
+        {p&&<text x={pt.x} y={pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
+      </g>;})}
           {/* Handle rotación ↻ — esquina inferior izq */}
           <circle cx={pad/2+2} cy={hD-pad/2-2} r={9} fill="rgba(201,169,110,.85)" stroke="#FBF7EF" strokeWidth="1.5"
             style={{cursor:"crosshair"}}
@@ -4478,38 +4973,36 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     </svg>};
   };
 
-  const isMobile = typeof window!=="undefined"&&window.innerWidth<640;
+  // Estilo de los controles flotantes sobre el canvas
+  const fabStyle={width:THEME.tap.min,height:THEME.tap.min,borderRadius:"50%",border:"1px solid rgba(245,239,224,.25)",background:"rgba(26,26,20,.55)",color:THEME.color.cream,fontSize:"1.25rem",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",padding:0,lineHeight:1};
 
   return <div style={{display:"flex",flexDirection:"column",gap:0}}>
 
     {/* ── TOOLBAR ── */}
-    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:5}}>
+    <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:5,position:"relative"}}>
       {/* Fila 1: Forma + Medidas + Zoom */}
       <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>
         {/* Forma salón */}
         <div style={{position:"relative"}}>
-          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
             🏛️ {SALON_SHAPES[salonShape].label} ▾
           </button>
-          {showShapeMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:200,boxShadow:"0 4px 16px rgba(0,0,0,.15)",minWidth:130}}>
-            {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);setShowShapeMenu(false);}} style={{display:"block",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:6,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
-          </div>}
         </div>
         {/* Dimensiones */}
         <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:38,fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>×</span>
-          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:38,fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>m</span>
+          <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>×</span>
+          <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
         {/* Zoom */}
         <div style={{display:"flex",alignItems:"center",background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,overflow:"hidden",flexShrink:0}}>
-          <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:26,height:26,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
-          <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,color:"rgba(26,26,20,.5)",minWidth:30,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
-          <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:26,height:26,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+          <button onClick={()=>zoomAt(1/1.15)} style={{background:"transparent",border:"none",width:38,height:38,cursor:"pointer",color:THEME.color.sage,fontSize:"1.1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+          <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,color:"rgba(26,26,20,.5)",minWidth:30,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
+          <button onClick={()=>zoomAt(1.15)} style={{background:"transparent",border:"none",width:38,height:38,cursor:"pointer",color:THEME.color.sage,fontSize:"1.1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
         </div>
         {/* Ajustar pantalla */}
-        <button onClick={fitToScreen} title="Ajustar a pantalla" style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 8px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>
+        <button onClick={fitToScreen} title="Ajustar a pantalla" style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 10px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:THEME.color.sage,cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 3V1h2M9 1h2v2M11 9v2H9M3 11H1V9" stroke="#4A5E3A" strokeWidth="1.5" strokeLinecap="round"/></svg>
           Ajustar
         </button>
@@ -4518,28 +5011,42 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",flexShrink:0}}>
         {/* Agregar elemento */}
         <div style={{position:"relative"}}>
-          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
-          {showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:5,zIndex:200,boxShadow:"0 4px 16px rgba(0,0,0,.15)",minWidth:165}}>
-            {ELEMENTOS_FIJOS.map(e=><button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"block",width:"100%",background:"transparent",border:"none",borderRadius:6,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
-          </div>}
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
         </div>
-        <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:7,padding:"6px 12px",fontFamily:"'Lora',serif",fontSize:".78rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
+        <button onClick={addMesa} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:9,padding:"9px 14px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
         {/* Estilo + Distribuir */}
         <div style={{display:"flex",border:"1px solid rgba(201,169,110,.4)",borderRadius:7,overflow:"hidden"}}>
-          <select value={estiloDistrib} onChange={e=>setEstiloDistrib(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".78rem",padding:"5px 8px",border:"none",background:"rgba(201,169,110,.08)",color:"rgba(139,107,40,.9)",cursor:"pointer",outline:"none"}}>
+          <select value={estiloDistrib} onChange={e=>setEstiloDistrib(e.target.value)} style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",padding:"9px 8px",minHeight:40,border:"none",background:"rgba(201,169,110,.08)",color:"rgba(139,107,40,.9)",cursor:"pointer",outline:"none"}}>
             {ESTILOS_DISTRIB.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
           </select>
-          <button onClick={autoDistribuir} style={{background:"rgba(201,169,110,.15)",border:"none",borderLeft:"1px solid rgba(201,169,110,.3)",padding:"5px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(139,107,40,.95)",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Distribuir</button>
+          <button onClick={autoDistribuir} style={{background:"rgba(201,169,110,.15)",border:"none",borderLeft:"1px solid rgba(201,169,110,.3)",padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.95)",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Distribuir</button>
         </div>
+        <button onClick={sentarPorProtocolo} title="Sienta a los invitados según protocolo: familia directa cerca de los novios, amigos cerca de la pista, niños juntos cerca de la entrada" style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.3)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>👨‍👩‍👧 Sentar por protocolo</button>
+        {prevAsignacion&&<button onClick={()=>{if(onAssignMany){onAssignMany(prevAsignacion);}setPrevAsignacion(null);}} title="Volver a la asignación de mesas anterior" style={{background:"transparent",border:"1px solid rgba(139,107,40,.4)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.9)",cursor:"pointer",whiteSpace:"nowrap"}}>↩ Deshacer</button>}
       </div>
+
+      {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
+      {showShapeMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:170}}>
+        {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);setShowShapeMenu(false);}} style={{display:"flex",alignItems:"center",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
+      </div>}
+      {showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:200,maxHeight:"min(340px,50vh)",overflowY:"auto"}}>
+        {ELEMENTOS_FIJOS.map(e=><button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
+      </div>}
     </div>
 
     {/* ── WARNING CAPACIDAD ── */}
     {salonChico&&<div style={{display:"flex",alignItems:"center",gap:8,background:salonMuyChico?"rgba(200,60,60,.07)":"rgba(201,169,110,.07)",border:`1px solid ${salonMuyChico?"rgba(200,60,60,.3)":"rgba(201,169,110,.3)"}`,borderRadius:8,padding:"7px 12px",marginBottom:8}}>
       <span style={{fontSize:".9rem",flexShrink:0}}>{salonMuyChico?"🔴":"⚠️"}</span>
-      <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:salonMuyChico?"rgba(200,60,60,.8)":"rgba(139,107,40,.85)"}}>
+      <span style={{fontFamily:THEME.font.body,fontSize:".78rem",color:salonMuyChico?"rgba(200,60,60,.8)":"rgba(139,107,40,.85)"}}>
         {salonMuyChico?"El salón es muy chico":"El salón podría quedar justo"} · {totalInvWarn} inv · capacidad recomendada ~{capacidadMax} (1.5m²/persona)
       </span>
+    </div>}
+
+    {/* ── TIP MOBILE: recomendar pantalla grande ── */}
+    {isMobile&&!hideDesktopTip&&<div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.2)",borderRadius:10,padding:"8px 6px 8px 12px",marginBottom:8}}>
+      <span style={{fontSize:"1rem",flexShrink:0}}>💻</span>
+      <span style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.62)",flex:1,lineHeight:1.45}}>Podés armar el salón desde el celu, pero en una compu o tablet lo vas a ver más grande y trabajar más cómodo.</span>
+      <button onClick={()=>{setHideDesktopTip(true);try{localStorage.setItem("ceci_salon_desktop_tip","1");}catch(err){}}} aria-label="Cerrar aviso" style={{background:"transparent",border:"none",color:"rgba(26,26,20,.35)",fontSize:"1.1rem",cursor:"pointer",padding:"10px 12px",minHeight:THEME.tap.min,lineHeight:1,flexShrink:0}}>×</button>
     </div>}
 
     {/* ── LAYOUT PRINCIPAL: Canvas + Panel ── */}
@@ -4548,7 +5055,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       {/* ── CANVAS ── */}
       <div style={{flex:"1 1 300px",minWidth:0}}>
         <div ref={viewportRef} className="canvas-viewport"
-          style={{width:"100%",height:"clamp(320px,60vh,560px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none",WebkitUserSelect:"none",userSelect:"none"}}
+          style={{width:"100%",height:isMobile?"clamp(320px,55vh,480px)":"clamp(540px,78vh,1040px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none",WebkitUserSelect:"none",userSelect:"none"}}
           onMouseDown={e=>{
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
@@ -4599,12 +5106,12 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                 onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
                 onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
                 onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?"#F5EFE0":def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
+                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
                 <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
-                {elH>20&&<span style={{fontFamily:"'Cinzel',serif",fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
+                {elH>20&&<span style={{fontFamily:THEME.font.label,fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
                 {isSel&&<>
                   <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10}}>×</button>
-                  <div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-7,right:-7,width:16,height:16,background:"#F5EFE0",border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-7,right:-7,width:16,height:16,background:THEME.color.cream,border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <svg width="7" height="7" viewBox="0 0 7 7"><line x1="1" y1="6" x2="6" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3.5" y1="6" x2="6" y2="3.5" stroke={def.color} strokeWidth="1.5"/></svg>
                   </div>
                 </>}
@@ -4627,37 +5134,48 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                 e.stopPropagation();
                 setSelectedMesa(isSelected?null:mesa.id);
                 setSelectedElem(null);
-                if(window.innerWidth<640) setShowSheet(true);
+                if(isMobile) setShowSheet(true);
               }}
               >
                 {jsx}
                 {/* Botón eliminar — solo al seleccionar */}
                 {isSelected&&<button onClick={e=>{e.stopPropagation();removeMesa(mesa.id);}} style={{position:"absolute",top:-10,right:-10,background:"rgba(200,60,60,.9)",border:"2px solid #FBF7EF",borderRadius:"50%",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"11px",zIndex:10,lineHeight:1}}>×</button>}
+                {/* Handle de resize — esquina inferior derecha */}
+                {isSelected&&<div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resizeM",mesa.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resizeM",mesa.id);}}
+                  style={{position:"absolute",bottom:-9,right:-9,width:20,height:20,background:"#F5EFE0",border:"1.5px solid #4A5E3A",borderRadius:4,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",touchAction:"none"}}>
+                  <svg width="8" height="8" viewBox="0 0 8 8"><line x1="1" y1="7" x2="7" y2="1" stroke="#4A5E3A" strokeWidth="1.5"/><line x1="4" y1="7" x2="7" y2="4" stroke="#4A5E3A" strokeWidth="1.5"/></svg>
+                </div>}
               </div>;
             })}
 
             {/* Ghost invitado */}
-            {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-20,top:(dragging.cy||0)-20,width:40,height:40,borderRadius:"50%",background:"#4A5E3A",border:"3px solid #F5EFE0",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 6px 20px rgba(0,0,0,.5)",transform:"scale(1.05)"}}>
+            {dragging?.type==="guest"&&<div style={{position:"absolute",left:(dragging.cx||0)-20,top:(dragging.cy||0)-20,width:40,height:40,borderRadius:"50%",background:THEME.color.sage,border:"3px solid #F5EFE0",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:50,boxShadow:"0 6px 20px rgba(0,0,0,.5)",transform:"scale(1.05)"}}>
               <span style={{fontSize:"13px",fontWeight:700,color:"#fff",lineHeight:1}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.charAt(0)||"?"}</span>
               <span style={{fontSize:"7px",color:"rgba(255,255,255,.7)",lineHeight:1,marginTop:1,maxWidth:34,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"center"}}>{personas.find(p=>p.guestId===dragging.id)?.nombre?.split(" ")[0]||""}</span>
             </div>}
           </div>
 
           {/* Tip navegación */}
-          <div style={{position:"absolute",bottom:6,left:"50%",transform:"translateX(-50%)",fontFamily:"'Lora',serif",fontSize:THEME.text.tiny,color:"rgba(255,255,255,.38)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(0,0,0,.2)",borderRadius:100,padding:"3px 10px"}}>
-            {isMobile?"👆 Deslizá para mover · Pellizco para zoom":"🖱️ Arrastrá el fondo · Scroll para zoom"}
+          <div style={{position:"absolute",bottom:10,left:10,fontFamily:THEME.font.body,fontSize:THEME.text.tiny,color:"rgba(255,255,255,.42)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(0,0,0,.25)",borderRadius:100,padding:"4px 10px",maxWidth:"calc(100% - 80px)",overflow:"hidden",textOverflow:"ellipsis"}}>
+            {isMobile?"👆 1 dedo mueve · Pellizco zoom · Doble tap acerca":"🖱️ Arrastrá el fondo para mover · Ctrl + rueda para zoom"}
+          </div>
+          {/* Controles flotantes */}
+          <div style={{position:"absolute",right:10,bottom:10,display:"flex",flexDirection:"column",gap:8,zIndex:20}}>
+            <button onMouseDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();zoomAt(1.25);}} title="Acercar" style={fabStyle}>+</button>
+            <button onMouseDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();zoomAt(1/1.25);}} title="Alejar" style={fabStyle}>−</button>
+            <button onMouseDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();fitToScreen();}} title="Encuadrar todo" style={{...fabStyle,fontSize:".95rem"}}>⛶</button>
           </div>
         </div>
 
         {/* Leyenda */}
         <div style={{display:"flex",gap:10,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>
-          {[{c:"#4A5E3A",l:"Confirmado"},{c:"#C9A96E",l:"Pendiente"},{c:"rgba(26,26,20,.3)",l:"No va"}].map(({c,l})=>(
+          {[{c:THEME.color.sage,l:"Confirmado"},{c:THEME.color.gold,l:"Pendiente"},{c:"rgba(26,26,20,.3)",l:"No va"}].map(({c,l})=>(
             <div key={l} style={{display:"flex",alignItems:"center",gap:4}}>
               <div style={{width:8,height:8,borderRadius:"50%",background:c}}/>
-              <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>{l}</span>
+              <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>{l}</span>
             </div>
           ))}
-          <div style={{marginLeft:"auto",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>
+          <div style={{marginLeft:"auto",fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>
             📐 {salonW}×{salonH}m · {mesas.length} mesa{mesas.length!==1?"s":""} · {totalInvWarn} invitados
           </div>
         </div>
@@ -4666,26 +5184,84 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       {/* ── PANEL LATERAL ── (desktop) */}
       <div style={{flex:"1 1 200px",minWidth:0,maxWidth:320,display:"flex",flexDirection:"column",gap:8}}>
 
-        {/* Info mesa seleccionada */}
-        {selectedMesaObj
-          ?<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px",overflow:"hidden"}}>
+        {/* Elemento seleccionado — medidas tipeables (desktop) */}
+        {!isMobile&&!selectedMesaObj&&selectedElem&&(()=>{
+          const el=elementos.find(x=>x.id===selectedElem); if(!el) return null;
+          const def=ELEMENTOS_FIJOS.find(d=>d.id===el.tipo);
+          const setElDims=(w,h)=>{
+            const ew=Math.max(0.4,Math.min(30,+w||el.ew));
+            const eh=Math.max(0.4,Math.min(30,+h||el.eh));
+            setElementos(es=>es.map(x=>x.id===el.id?{...x,ew,eh}:x));
+          };
+          return <div style={{background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+              <div style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:700,color:THEME.color.ink}}>{def?.emoji} {def?.label||"Elemento"}</div>
+              <button onClick={()=>setSelectedElem(null)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1rem",cursor:"pointer",lineHeight:1}}>×</button>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+              <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Medidas</span>
+              <input type="number" step="0.1" min="0.4" key={`ew-${el.id}-${el.ew}`} defaultValue={(el.ew||1).toFixed(1)}
+                onBlur={e=>setElDims(e.target.value,el.eh)} onMouseDown={e=>e.stopPropagation()}
+                style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+              <span style={{color:"rgba(26,26,20,.35)",fontSize:".75rem"}}>×</span>
+              <input type="number" step="0.1" min="0.4" key={`eh-${el.id}-${el.eh}`} defaultValue={(el.eh||1).toFixed(1)}
+                onBlur={e=>setElDims(el.ew,e.target.value)} onMouseDown={e=>e.stopPropagation()}
+                style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+              <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>m</span>
+            </div>
+            <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",margin:0,fontStyle:"italic"}}>También podés estirar la esquina ◲ en el plano</p>
+            <button onClick={()=>removeElemento(el.id)} style={{width:"100%",marginTop:10,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"8px",fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>Eliminar elemento</button>
+          </div>;
+        })()}
+
+        {/* Info mesa seleccionada — solo desktop; en mobile se usa el bottom sheet */}
+        {!isMobile&&(selectedMesaObj
+          ?<div style={{background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px",overflow:"hidden"}}>
             {/* Header */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:700,color:"#1A1A14"}}>
+              <div style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:700,color:THEME.color.ink}}>
                 {selectedMesaObj.etiqueta||`Mesa ${selectedMesa}`}
               </div>
               <button onClick={()=>{setSelectedMesa(null);}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1rem",cursor:"pointer",lineHeight:1}}>×</button>
+            </div>
+
+            {/* Capacidad — selector por tipo, con medidas */}
+            <div style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:"8px 10px",marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.6)"}}>Personas</span>
+                <span style={{fontFamily:THEME.font.display,fontWeight:700,fontSize:"1rem",color:selectedPersonas.length>capDe(selectedMesaObj)?"#B5443A":THEME.color.ink}}>{selectedPersonas.length}<span style={{color:"rgba(26,26,20,.4)",fontWeight:400,fontSize:".8rem"}}> / {capDe(selectedMesaObj)}</span></span>
+              </div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:5}}>
+                {(CAP_OPCIONES[selectedMesaObj.tipo||"round"]||[8,10,12]).map(n=>
+                  <button key={n} onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setCapacidadA(selectedMesaObj,n);}}
+                    style={{flex:1,minWidth:34,background:capDe(selectedMesaObj)===n?THEME.color.sage:THEME.color.cream,color:capDe(selectedMesaObj)===n?THEME.color.cream:"rgba(26,26,20,.55)",border:`1px solid ${capDe(selectedMesaObj)===n?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"7px 4px",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:capDe(selectedMesaObj)===n?700:400,cursor:"pointer"}}>{n}</button>
+                )}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"flex-end"}}>
+                <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>{(selectedMesaObj.tipo||"round")==="round"?"Ø":"Medida"}</span>
+                <input type="number" step="0.1" min="0.6" key={`mw-${selectedMesa}-${selectedMesaObj.ew||""}`} defaultValue={(selectedMesaObj.ew||MESA_R_M*2).toFixed(1)}
+                  onBlur={e=>setMedidas(selectedMesaObj,e.target.value,selectedMesaObj.eh)} onMouseDown={e=>e.stopPropagation()}
+                  style={{width:52,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"5px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+                {(selectedMesaObj.tipo||"round")!=="round"&&(selectedMesaObj.tipo!=="square")&&<>
+                  <span style={{color:"rgba(26,26,20,.35)",fontSize:".75rem"}}>×</span>
+                  <input type="number" step="0.1" min="0.6" key={`mh-${selectedMesa}-${selectedMesaObj.eh||""}`} defaultValue={(selectedMesaObj.eh||0.8).toFixed(1)}
+                    onBlur={e=>setMedidas(selectedMesaObj,selectedMesaObj.ew,e.target.value)} onMouseDown={e=>e.stopPropagation()}
+                    style={{width:52,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"5px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+                </>}
+                <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>m</span>
+              </div>
+              <div style={{fontFamily:THEME.font.body,fontSize:"max(10px,.68rem)",color:"rgba(74,94,58,.55)",textAlign:"right",marginTop:3,fontStyle:"italic"}}>Sillas recomendadas: {capPorMedidas(selectedMesaObj.tipo||"round",selectedMesaObj.ew||MESA_R_M*2,selectedMesaObj.eh||MESA_R_M*2)}</div>
             </div>
 
             {/* Etiqueta */}
             <div style={{marginBottom:8}}>
               <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta (Familia, Presidencial...)"
                 onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
-                style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".8rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
+                style={{width:"100%",fontFamily:THEME.font.body,fontSize:".8rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
               <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
                 {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
                   <button key={et} onClick={()=>updateMesa(selectedMesa,{etiqueta:et})}
-                    style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:100,padding:"2px 7px",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.7)",cursor:"pointer"}}>
+                    style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:100,padding:"2px 7px",fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(74,94,58,.7)",cursor:"pointer"}}>
                     {et}
                   </button>
                 ))}
@@ -4694,17 +5270,17 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
             {/* Tipo de mesa */}
             <div style={{marginBottom:8}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Tipo</div>
-              <div style={{display:"flex",gap:4}}>
-                {[{v:"round",l:"⭕",desc:"Redonda"},{v:"rect_h",l:"▬",desc:"Horizontal"},{v:"rect_v",l:"▮",desc:"Vertical"}].map(opt=>{
+              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Tipo</div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                {MESA_TIPOS.map(opt=>{
                   const cur=selectedMesaObj?.tipo||"round";
                   const isAct=cur===opt.v;
                   return <button key={opt.v}
                     onMouseDown={e=>e.stopPropagation()}
-                    onClick={e=>{e.stopPropagation();updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3});}}
-                    style={{flex:1,background:isAct?"rgba(74,94,58,.15)":"#F5EFE0",border:`1.5px solid ${isAct?"#4A5E3A":"rgba(74,94,58,.15)"}`,borderRadius:8,padding:"8px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                    <span style={{fontSize:"1rem",color:isAct?"#4A5E3A":"rgba(26,26,20,.4)"}}>{opt.l}</span>
-                    <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:isAct?"#4A5E3A":"rgba(26,26,20,.35)"}}>{opt.desc}</span>
+                    onClick={e=>{e.stopPropagation();updateMesa(selectedMesa,{tipo:opt.v,ew:opt.ew,eh:opt.eh,cap:opt.cap});}}
+                    style={{flex:"1 0 30%",minWidth:64,background:isAct?"rgba(74,94,58,.15)":THEME.color.cream,border:`1.5px solid ${isAct?THEME.color.sage:"rgba(74,94,58,.15)"}`,borderRadius:8,padding:"8px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    <span style={{fontSize:"1rem",color:isAct?THEME.color.sage:"rgba(26,26,20,.4)"}}>{opt.l}</span>
+                    <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:isAct?THEME.color.sage:"rgba(26,26,20,.35)"}}>{opt.desc}</span>
                   </button>;
                 })}
               </div>
@@ -4712,22 +5288,22 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
             {/* Rotación — solo para mesas rect */}
             {selectedMesaObj&&selectedMesaObj.tipo!=="round"&&<div style={{marginBottom:8}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Rotación</div>
+              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Rotación</div>
               <div style={{display:"flex",gap:4,alignItems:"center"}}>
                 <button onClick={()=>updateMesa(selectedMesa,{angle:((selectedMesaObj.angle||0)-45+360)%360})}
-                  style={{flex:1,background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#4A5E3A"}}>↺ -45°</button>
-                <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)",minWidth:32,textAlign:"center"}}>{selectedMesaObj.angle||0}°</span>
+                  style={{flex:1,background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px",cursor:"pointer",fontFamily:THEME.font.body,fontSize:".85rem",color:THEME.color.sage}}>↺ -45°</button>
+                <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)",minWidth:32,textAlign:"center"}}>{selectedMesaObj.angle||0}°</span>
                 <button onClick={()=>updateMesa(selectedMesa,{angle:((selectedMesaObj.angle||0)+45)%360})}
-                  style={{flex:1,background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#4A5E3A"}}>↻ +45°</button>
+                  style={{flex:1,background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px",cursor:"pointer",fontFamily:THEME.font.body,fontSize:".85rem",color:THEME.color.sage}}>↻ +45°</button>
                 <button onClick={()=>updateMesa(selectedMesa,{angle:0})}
-                  style={{background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px 8px",cursor:"pointer",fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,color:"rgba(26,26,20,.4)"}}>0°</button>
+                  style={{background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px 8px",cursor:"pointer",fontFamily:THEME.font.label,fontSize:THEME.text.tiny,color:"rgba(26,26,20,.4)"}}>0°</button>
               </div>
-              <p style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)",margin:"4px 0 0",fontStyle:"italic"}}>O arrastrá el ↻ en la esquina de la mesa</p>
+              <p style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.35)",margin:"4px 0 0",fontStyle:"italic"}}>O arrastrá el ↻ en la esquina de la mesa</p>
             </div>}
 
             {/* Invitados asignados */}
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5}}>
-              Asignados · {selectedPersonas.length}/{tableSize}
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5}}>
+              Asignados · {selectedPersonas.length}/{capDe(selectedMesaObj)}
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:160,overflowY:"auto",marginBottom:8}}>
               {selectedPersonas.map(p=>(
@@ -4739,38 +5315,38 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                   <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
-                  <span style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                  <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
                   <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.4)",cursor:"pointer",fontSize:".8rem",padding:0,flexShrink:0}}>×</button>
                 </div>
               ))}
-              {selectedPersonas.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas acá</div>}
+              {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas acá</div>}
             </div>
 
-            <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"6px",fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
+            <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"6px",fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
               Eliminar esta mesa
             </button>
           </div>
 
           :<div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.18)",borderRadius:12,padding:"20px 12px",textAlign:"center"}}>
             <div style={{fontSize:"1.4rem",marginBottom:6}}>👆</div>
-            <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla o arrastrar invitados</div>
+            <div style={{fontFamily:THEME.font.body,fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla o arrastrar invitados</div>
           </div>
-        }
+        )}
 
         {/* Lista sin mesa */}
-        <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
+        <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
-            {sinMesa.length>0&&<span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>← arrastrá al canvas</span>}
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
+            {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>← arrastrá al canvas</span>}
           </div>
           {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
             <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
-              style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
+              style={{width:"100%",fontFamily:THEME.font.body,fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
             <span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",fontSize:".75rem",opacity:.4}}>🔍</span>
             {searchSinMesa&&<button onClick={()=>setSearchSinMesa("")} style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)",fontSize:".8rem"}}>×</button>}
           </div>}
           {sinMesa.length===0
-            ?<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
+            ?<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
             :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(200px,25vh)",overflowY:"auto"}}>
               {sinMesaFilt.map(p=>(
                 <div key={`${p.guestId}-${p.personIdx}`}
@@ -4781,74 +5357,101 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                   <div style={{width:16,height:16,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
-                  <span style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"#1A1A14",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                  <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
                 </div>
               ))}
-              {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
+              {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
             </div>
           }
         </div>
 
         {/* Resumen salón */}
         <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:8,padding:"8px 10px"}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(26,26,20,.6)"}}>📐 {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m²</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)",marginTop:2}}>{mesas.length} mesa{mesas.length!==1?"s":""} · Ø{(MESA_R_M*2).toFixed(1)}m c/u</div>
-          {budgetInvitados>0&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.6)",marginTop:2}}>👥 {budgetInvitados} inv → {Math.ceil(budgetInvitados/tableSize)} mesas sugeridas</div>}
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:".76rem",color:"rgba(26,26,20,.6)"}}>📐 {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m²</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)",marginTop:2}}>{mesas.length} mesa{mesas.length!==1?"s":""} · Ø{(MESA_R_M*2).toFixed(1)}m c/u</div>
+          {budgetInvitados>0&&<div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(74,94,58,.6)",marginTop:2}}>👥 {budgetInvitados} inv → {Math.ceil(budgetInvitados/tableSize)} mesas sugeridas</div>}
         </div>
       </div>
     </div>
 
-    {/* ── BOTTOM SHEET MOBILE ── */}
-    {showSheet&&selectedMesaObj&&<div style={{position:"fixed",inset:0,zIndex:100,display:"flex",flexDirection:"column",justifyContent:"flex-end"}} onClick={()=>setShowSheet(false)}>
-      <div style={{background:"#FBF7EF",borderRadius:"16px 16px 0 0",padding:"16px",maxHeight:"70vh",overflowY:"auto",boxShadow:"0 -4px 24px rgba(0,0,0,.2)",paddingBottom:"max(16px,env(safe-area-inset-bottom))"}} onClick={e=>e.stopPropagation()}>
-        {/* Handle */}
-        <div style={{width:36,height:4,background:"rgba(26,26,20,.15)",borderRadius:2,margin:"0 auto 14px"}}/>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",fontWeight:700,color:"#1A1A14"}}>{selectedMesaObj.etiqueta||`Mesa ${selectedMesa}`}</div>
-          <button onClick={()=>setShowSheet(false)} style={{background:"transparent",border:"none",fontSize:"1.2rem",cursor:"pointer",color:"rgba(26,26,20,.3)"}}>×</button>
+    {/* ── BOTTOM SHEET MOBILE: editor de mesa ── */}
+    {showSheet&&selectedMesaObj&&isMobile&&<BottomSheet title={selectedMesaObj.etiqueta||`Mesa ${selectedMesa}`} onClose={()=>setShowSheet(false)}>
+      {/* Capacidad — selector por tipo, con medidas */}
+      <div style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+          <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.6)"}}>Personas</span>
+          <span style={{fontFamily:THEME.font.display,fontWeight:700,fontSize:"1.15rem",color:selectedPersonas.length>capDe(selectedMesaObj)?"#B5443A":THEME.color.ink}}>{selectedPersonas.length}<span style={{color:"rgba(26,26,20,.4)",fontWeight:400,fontSize:".85rem"}}> / {capDe(selectedMesaObj)}</span></span>
         </div>
-        {/* Etiquetas rápidas */}
-        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
-          {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
-            <button key={et} onClick={()=>updateMesa(selectedMesa,{etiqueta:et})}
-              style={{background:selectedMesaObj.etiqueta===et?"rgba(74,94,58,.15)":"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(74,94,58,.8)",cursor:"pointer"}}>
-              {et}
-            </button>
-          ))}
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>
+          {(CAP_OPCIONES[selectedMesaObj.tipo||"round"]||[8,10,12]).map(n=>
+            <button key={n} onClick={()=>setCapacidadA(selectedMesaObj,n)}
+              style={{flex:1,minWidth:THEME.tap.min,minHeight:THEME.tap.min,background:capDe(selectedMesaObj)===n?THEME.color.sage:THEME.color.cream,color:capDe(selectedMesaObj)===n?THEME.color.cream:"rgba(26,26,20,.55)",border:`1px solid ${capDe(selectedMesaObj)===n?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"8px 4px",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:capDe(selectedMesaObj)===n?700:400,cursor:"pointer"}}>{n}</button>
+          )}
         </div>
-        <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta personalizada..."
-          onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
-          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:10}}/>
-        {/* Tipo */}
-        <div style={{display:"flex",gap:6,marginBottom:12}}>
-          {[{v:"round",l:"⭕ Redonda"},{v:"rect_h",l:"▬ Horizontal"},{v:"rect_v",l:"▮ Vertical"}].map(opt=>{
-            const cur=selectedMesaObj.tipo||"round";
-            return <button key={opt.v} onClick={()=>updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3})}
-              style={{flex:1,background:cur===opt.v?"rgba(74,94,58,.12)":"transparent",border:`1px solid ${cur===opt.v?"rgba(74,94,58,.4)":"rgba(74,94,58,.15)"}`,borderRadius:8,padding:"8px 4px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".78rem",color:cur===opt.v?"#4A5E3A":"rgba(26,26,20,.45)"}}>
-              {opt.l}
-            </button>;
-          })}
+        <div style={{display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end"}}>
+          <span style={{fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(26,26,20,.45)"}}>{(selectedMesaObj.tipo||"round")==="round"?"Ø":"Medida"}</span>
+          <input type="number" step="0.1" min="0.6" key={`smw-${selectedMesa}-${selectedMesaObj.ew||""}`} defaultValue={(selectedMesaObj.ew||MESA_R_M*2).toFixed(1)}
+            onBlur={e=>setMedidas(selectedMesaObj,e.target.value,selectedMesaObj.eh)}
+            style={{width:64,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+          {(selectedMesaObj.tipo||"round")!=="round"&&(selectedMesaObj.tipo!=="square")&&<>
+            <span style={{color:"rgba(26,26,20,.35)"}}>×</span>
+            <input type="number" step="0.1" min="0.6" key={`smh-${selectedMesa}-${selectedMesaObj.eh||""}`} defaultValue={(selectedMesaObj.eh||0.8).toFixed(1)}
+              onBlur={e=>setMedidas(selectedMesaObj,selectedMesaObj.ew,e.target.value)}
+              style={{width:64,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+          </>}
+          <span style={{fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(26,26,20,.45)"}}>m</span>
         </div>
-        {/* Invitados asignados */}
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:6}}>Asignados · {selectedPersonas.length}/{tableSize}</div>
-        <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:200,overflowY:"auto"}}>
-          {selectedPersonas.map(p=>(
-            <div key={`${p.guestId}-${p.personIdx}`} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.05)",borderRadius:8,padding:"6px 10px"}}>
-              <div style={{width:22,height:22,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <span style={{fontSize:"8px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
-              </div>
-              <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",flex:1}}>{p.nombre}</span>
-              <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.45)",cursor:"pointer",fontSize:".9rem",padding:0}}>×</button>
-            </div>
-          ))}
-          {selectedPersonas.length===0&&<div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.3)",fontStyle:"italic",padding:"8px 0"}}>Sin invitados asignados todavía</div>}
-        </div>
-        <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",marginTop:12,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:8,padding:"10px",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
-          Eliminar mesa {selectedMesa}
-        </button>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.55)",textAlign:"right",marginTop:4,fontStyle:"italic"}}>Sillas recomendadas: {capPorMedidas(selectedMesaObj.tipo||"round",selectedMesaObj.ew||MESA_R_M*2,selectedMesaObj.eh||MESA_R_M*2)}</div>
       </div>
-    </div>}
+      {/* Etiquetas rápidas */}
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+        {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
+          <button key={et} onClick={()=>updateMesa(selectedMesa,{etiqueta:et})}
+            style={{background:selectedMesaObj.etiqueta===et?"rgba(74,94,58,.15)":"rgba(74,94,58,.06)",border:`1px solid ${selectedMesaObj.etiqueta===et?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"10px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(74,94,58,.85)",cursor:"pointer"}}>
+            {et}
+          </button>
+        ))}
+      </div>
+      <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Etiqueta personalizada..."
+        onBlur={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
+        style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(14px,.9rem)",padding:"11px 12px",borderRadius:THEME.radius.sm,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:12}}/>
+      {/* Tipo de mesa */}
+      <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
+        {MESA_TIPOS.map(opt=>{
+          const cur=selectedMesaObj.tipo||"round";
+          return <button key={opt.v} onClick={()=>updateMesa(selectedMesa,{tipo:opt.v,ew:opt.ew,eh:opt.eh,cap:opt.cap})}
+            style={{flex:"1 0 30%",background:cur===opt.v?"rgba(74,94,58,.12)":"transparent",border:`1.5px solid ${cur===opt.v?THEME.color.sage:"rgba(74,94,58,.15)"}`,borderRadius:THEME.radius.sm,padding:"12px 4px",minHeight:THEME.tap.comfortable,cursor:"pointer",fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:cur===opt.v?THEME.color.sage:"rgba(26,26,20,.45)"}}>
+            {opt.l} {opt.desc}
+          </button>;
+        })}
+      </div>
+      {/* Rotación — solo mesas rectangulares */}
+      {selectedMesaObj.tipo&&selectedMesaObj.tipo!=="round"&&<div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center"}}>
+        <button onClick={()=>updateMesa(selectedMesa,{angle:((selectedMesaObj.angle||0)-45+360)%360})}
+          style={{flex:1,background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:THEME.radius.sm,padding:"11px",minHeight:THEME.tap.min,cursor:"pointer",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.sage}}>↺ -45°</button>
+        <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,color:"rgba(26,26,20,.45)",minWidth:40,textAlign:"center"}}>{selectedMesaObj.angle||0}°</span>
+        <button onClick={()=>updateMesa(selectedMesa,{angle:((selectedMesaObj.angle||0)+45)%360})}
+          style={{flex:1,background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:THEME.radius.sm,padding:"11px",minHeight:THEME.tap.min,cursor:"pointer",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.sage}}>↻ +45°</button>
+      </div>}
+      {/* Invitados asignados */}
+      <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:6}}>Asignados · {selectedPersonas.length}/{capDe(selectedMesaObj)}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:220,overflowY:"auto"}}>
+        {selectedPersonas.map(p=>(
+          <div key={`${p.guestId}-${p.personIdx}`} style={{display:"flex",alignItems:"center",gap:10,background:"rgba(74,94,58,.05)",borderRadius:THEME.radius.sm,padding:"8px 10px",minHeight:THEME.tap.min}}>
+            <div style={{width:26,height:26,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <span style={{fontSize:"10px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+            </div>
+            <span style={{fontFamily:THEME.font.body,fontSize:"max(14px,.88rem)",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+            <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.55)",cursor:"pointer",fontSize:"1.05rem",padding:"8px 12px",minHeight:THEME.tap.min,lineHeight:1,flexShrink:0}}>×</button>
+          </div>
+        ))}
+        {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(26,26,20,.3)",fontStyle:"italic",padding:"8px 0"}}>Sin invitados asignados todavía · Arrastralos desde "Sin mesa" en el canvas</div>}
+      </div>
+      <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",marginTop:14,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:THEME.radius.sm,padding:"12px",minHeight:THEME.tap.comfortable,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(200,60,60,.7)",cursor:"pointer"}}>
+        🗑 Eliminar mesa {selectedMesa}
+      </button>
+    </BottomSheet>}
   </div>;
 }
 
