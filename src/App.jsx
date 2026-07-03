@@ -244,6 +244,12 @@ input:focus-visible,textarea:focus-visible{outline:none}
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
 html,body{overscroll-behavior-y:none}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes expandIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.guest-expand{animation:expandIn .2s ease both}
+.sheet-overlay{animation:fadeIn .15s ease both}
+.sheet-panel{animation:sheetUp .25s cubic-bezier(.32,.72,.35,1) both}
 .canvas-viewport{touch-action:none;overscroll-behavior:contain}
 
 .brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#4A5E3A;font-weight:500}
@@ -2399,6 +2405,35 @@ function useConfirm() {
 }
 
 // ─── MÓDULO PRESUPUESTO ────────────────────────────────────────────────────────
+// ── Hook responsive + BottomSheet reutilizable (mobile) ─────────────────────
+function useIsMobile(bp=640){
+  const [m,setM]=useState(()=>typeof window!=="undefined"&&window.matchMedia(`(max-width:${bp}px)`).matches);
+  useEffect(()=>{
+    const mq=window.matchMedia(`(max-width:${bp}px)`);
+    const h=e=>setM(e.matches);
+    if(mq.addEventListener) mq.addEventListener("change",h); else mq.addListener(h);
+    return ()=>{ if(mq.removeEventListener) mq.removeEventListener("change",h); else mq.removeListener(h); };
+  },[bp]);
+  return m;
+}
+
+function BottomSheet({title,onClose,children}){
+  useEffect(()=>{
+    const prev=document.body.style.overflow;
+    document.body.style.overflow="hidden";
+    return ()=>{document.body.style.overflow=prev;};
+  },[]);
+  return <div className="sheet-overlay" onClick={onClose} onMouseDown={e=>e.stopPropagation()}
+    style={{position:"fixed",inset:0,zIndex:THEME.z.sheet,background:"rgba(26,26,20,.45)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+    <div className="sheet-panel" onClick={e=>e.stopPropagation()}
+      style={{width:"100%",maxWidth:520,background:THEME.color.cream2,borderRadius:"20px 20px 0 0",boxShadow:"0 -8px 32px rgba(0,0,0,.25)",maxHeight:"82vh",overflowY:"auto",padding:"10px 16px",paddingBottom:"calc(20px + env(safe-area-inset-bottom))"}}>
+      <div style={{width:40,height:4,borderRadius:4,background:"rgba(26,26,20,.15)",margin:"4px auto 12px"}}/>
+      {title&&<div style={{fontFamily:THEME.font.display,fontSize:"1.1rem",fontWeight:600,color:THEME.color.ink,marginBottom:10,textAlign:"center"}}>{title}</div>}
+      {children}
+    </div>
+  </div>;
+}
+
 const CATEGORIAS_DEFAULT = [
   {id:"salon",    emoji:"🏛️", nombre:"Salón / Venue",              estimado:0,cotizado:0,pagado:0,notas:""},
   {id:"catering", emoji:"🍽️", nombre:"Catering y bebidas",         estimado:0,cotizado:0,pagado:0,notas:""},
@@ -3243,7 +3278,6 @@ function GuestsModule({user, onBack}){
   const [tableSize, setTableSize] = useState(10);
   const [viewMode, setViewMode] = useState("lista");
   const [filter, setFilter]     = useState({lado:"",conf:"",mesa:""});
-  const [editId, setEditId]     = useState(null);
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(false);
   const [newGuest, setNewGuest] = useState({nombre:"",lado:"Ambos",confirmacion:"pendiente",restriccion:"Ninguna",mesa:"",cantidadInvitados:1,notas:""});
@@ -3254,6 +3288,7 @@ function GuestsModule({user, onBack}){
   const [budgetInvitados, setBudgetInvitados] = useState(0);
   const [showGuestMenu, setShowGuestMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const isMobile = useIsMobile();
 
   useEffect(()=>{
     const h=()=>setShowGuestMenu(false);
@@ -3549,7 +3584,7 @@ function GuestsModule({user, onBack}){
   const updateGuest = (id,field,val) => { const next=guests.map(g=>g.id===id?{...g,[field]:val}:g); setGuests(next); save(next); };
   const removeGuest = (id) => { const next=guests.filter(g=>g.id!==id); setGuests(next); save(next); };
 
-  if(guests===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando invitados...</p></div>;
+  if(guests===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:THEME.font.body,color:THEME.color.sage}}>Cargando invitados...</p></div>;
 
   const confMap = Object.fromEntries(CONFIRMACIONES.map(c=>[c.id,c]));
   const filtered = guests.filter(g=>{
@@ -3573,42 +3608,48 @@ function GuestsModule({user, onBack}){
   const tables = Array.from({length:maxMesa},(_,i)=>({num:i+1,guests:guests.filter(g=>parseInt(g.mesa)===i+1),personas:guests.filter(g=>parseInt(g.mesa)===i+1).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)}));
   const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
 
+  // ── Menú Opciones: contenido compartido (dropdown desktop / bottom sheet mobile) ──
+  const menuItemStyle = {display:"flex",alignItems:"center",gap:10,width:"100%",background:"transparent",border:"none",borderRadius:10,padding:"12px",minHeight:THEME.tap.comfortable,fontFamily:THEME.font.body,fontSize:"max(14px,.92rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"};
+  const guestMenuContent = <>
+    <div style={{padding:"10px 12px",borderBottom:"0.5px solid rgba(74,94,58,.1)",marginBottom:6}}>
+      <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:8}}>Personas por mesa</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?THEME.color.sage:"transparent",color:tableSize===n?THEME.color.cream:"rgba(26,26,20,.6)",border:`1px solid ${tableSize===n?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"8px 14px",minHeight:THEME.tap.min,minWidth:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:tableSize===n?700:400,cursor:"pointer"}}>{n}</button>)}
+      </div>
+    </div>
+    {guests&&guests.length>0&&guests.some(g=>!g.mesa||g.mesa==="")&&<button onClick={()=>{asignarMesasAuto();setShowGuestMenu(false);}} style={menuItemStyle}>🪑 Asignar mesas automáticamente</button>}
+    <button onClick={()=>{exportToExcel();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Exportar a Excel</button>
+    <button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Descargar plantilla</button>
+    <label style={menuItemStyle}>
+      ↑ Importar lista
+      <input type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
+    </label>
+  </>;
+
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
+    {showGuestMenu&&isMobile&&<BottomSheet title="Opciones de invitados" onClose={()=>setShowGuestMenu(false)}>{guestMenuContent}</BottomSheet>}
     {confirmDelete&&<ConfirmModal
       msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
       onCancel={()=>setConfirmDelete(null)}/>}
-    <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
+    <div style={{background:THEME.color.sage,padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:THEME.font.display,fontSize:"clamp(1.8rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             {/* Acción principal siempre visible */}
-            <button onClick={()=>setAddMode(true)} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".95rem",borderRadius:100,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
-            {/* Menú de opciones secundarias */}
+            <button onClick={()=>setAddMode(true)} style={{background:THEME.color.gold,color:THEME.color.ink,border:"none",padding:"11px 22px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(14px,.95rem)",borderRadius:THEME.radius.pill,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
+            {/* Menú de opciones secundarias — dropdown en desktop, bottom sheet en mobile */}
             <div style={{position:"relative"}}>
-              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.3)",padding:"9px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",borderRadius:100,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:THEME.color.cream,border:"1px solid rgba(245,239,224,.3)",padding:"10px 16px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",borderRadius:THEME.radius.pill,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
                 ⚙️ Opciones ▾
               </button>
-              {showGuestMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:12,padding:8,zIndex:100,boxShadow:"0 8px 24px rgba(0,0,0,.12)",minWidth:200}}>
-                {/* Personas por mesa */}
-                <div style={{padding:"8px 10px",borderBottom:"0.5px solid rgba(74,94,58,.1)",marginBottom:6}}>
-                  <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>Personas por mesa</div>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                    {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#4A5E3A":"transparent",color:tableSize===n?"#F5EFE0":"rgba(26,26,20,.6)",border:`1px solid ${tableSize===n?"#4A5E3A":"rgba(74,94,58,.2)"}`,borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",fontWeight:tableSize===n?700:400,cursor:"pointer",minWidth:32}}>{n}</button>)}
-                  </div>
-                </div>
-                {guests&&guests.length>0&&guests.some(g=>!g.mesa||g.mesa==="")&&<button onClick={()=>{asignarMesasAuto();setShowGuestMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>🪑 Asignar mesas automáticamente</button>}
-                <button onClick={()=>{exportToExcel();setShowGuestMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>↓ Exportar a Excel</button>
-                <button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer",textAlign:"left"}}>↓ Descargar plantilla</button>
-                <label style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"8px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",cursor:"pointer"}}>
-                  ↑ Importar lista
-                  <input type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
-                </label>
+              {showGuestMenu&&!isMobile&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:THEME.radius.md,padding:8,zIndex:THEME.z.sheet,boxShadow:THEME.shadow.pop,minWidth:250}}>
+                {guestMenuContent}
               </div>}
             </div>
           </div>
@@ -3623,13 +3664,13 @@ function GuestsModule({user, onBack}){
             {v:noVa, l:"No van",       icon:"✗",  bg:"rgba(200,60,60,.2)"},
           ].map(s=>(
             <div key={s.l} style={{background:s.bg,borderRadius:10,padding:"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:56,flex:"0 0 auto"}}>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:"#F5EFE0",lineHeight:1}}>{s.v}</div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
+              <div style={{fontFamily:THEME.font.display,fontSize:"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:THEME.color.cream,lineHeight:1}}>{s.v}</div>
+              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
             </div>
           ))}
           {total>0&&<div style={{background:"rgba(245,239,224,.08)",borderRadius:10,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:64}}>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:700,color:"rgba(201,169,110,.8)",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.45)",marginTop:3}}>Confirmado</div>
+            <div style={{fontFamily:THEME.font.display,fontSize:"1.3rem",fontWeight:700,color:"rgba(201,169,110,.8)",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.45)",marginTop:3}}>Confirmado</div>
           </div>}
         </div>
         {/* Barra de progreso confirmaciones */}
@@ -3638,17 +3679,17 @@ function GuestsModule({user, onBack}){
           <div style={{width:`${Math.round(pend/total*100)}%`,background:"rgba(201,169,110,.6)",transition:"width .4s"}}/>
           <div style={{width:`${Math.round(noVa/total*100)}%`,background:"rgba(200,60,60,.4)",transition:"width .4s",borderRadius:"0 6px 6px 0"}}/>
         </div>}
-        {restr.length>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(201,169,110,.65)",marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
+        {restr.length>0&&<div style={{fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(201,169,110,.65)",marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
           {restr.map(x=><span key={x.r} style={{background:"rgba(201,169,110,.12)",borderRadius:100,padding:"2px 8px"}}>⚠️ {x.r}: {x.n}</span>)}
         </div>}
-        {(saving||saved)&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(201,169,110,.7)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
+        {(saving||saved)&&<div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.7)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
       </div>
     </div>
 
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box"}}>
-      {addMode&&<div style={{background:"#FBF7EF",border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(74,94,58,.08)"}}>
+      {addMode&&<div style={{background:THEME.color.cream2,border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(74,94,58,.08)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",fontWeight:700,color:"#1A1A14"}}>Nuevo invitado</div>
+          <div style={{fontFamily:THEME.font.display,fontSize:"1.05rem",fontWeight:700,color:THEME.color.ink}}>Nuevo invitado</div>
           <button onClick={()=>setAddMode(false)} style={{background:"transparent",border:"none",fontSize:"1.2rem",cursor:"pointer",color:"rgba(26,26,20,.3)",lineHeight:1}}>×</button>
         </div>
         {/* Nombre — campo principal, más grande */}
@@ -3656,49 +3697,49 @@ function GuestsModule({user, onBack}){
           <input autoFocus type="text" value={newGuest.nombre} onChange={e=>setNewGuest(x=>({...x,nombre:e.target.value}))}
             onKeyDown={e=>e.key==="Enter"&&addGuest()}
             placeholder="Nombre completo del invitado o familia..."
-            style={{width:"100%",fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",padding:"10px 14px",borderRadius:10,border:"1.5px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
+            style={{width:"100%",fontFamily:THEME.font.display,fontSize:"1.05rem",padding:"10px 14px",borderRadius:10,border:"1.5px solid rgba(74,94,58,.3)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
         </div>
         {/* Fila secundaria */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:10}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
             <input type="number" value={newGuest.cantidadInvitados} onChange={e=>setNewGuest(x=>({...x,cantidadInvitados:e.target.value}))} min="1"
-              style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+              style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
           </div>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
             <input type="number" value={newGuest.mesa} onChange={e=>setNewGuest(x=>({...x,mesa:e.target.value}))} placeholder="—" min="1"
-              style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+              style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
           </div>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
-            <select value={newGuest.lado} onChange={e=>setNewGuest(x=>({...x,lado:e.target.value}))} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
+            <select value={newGuest.lado} onChange={e=>setNewGuest(x=>({...x,lado:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
               {LADOS.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
-            <select value={newGuest.restriccion} onChange={e=>setNewGuest(x=>({...x,restriccion:e.target.value}))} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
+            <select value={newGuest.restriccion} onChange={e=>setNewGuest(x=>({...x,restriccion:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
               {RESTRICCIONES.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
         </div>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={addGuest} disabled={!newGuest.nombre.trim()} style={{background:newGuest.nombre.trim()?"#4A5E3A":"rgba(74,94,58,.3)",color:"#F5EFE0",border:"none",borderRadius:100,padding:"10px 24px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",cursor:newGuest.nombre.trim()?"pointer":"default",transition:"background .2s"}}>
+          <button onClick={addGuest} disabled={!newGuest.nombre.trim()} style={{background:newGuest.nombre.trim()?THEME.color.sage:"rgba(74,94,58,.3)",color:THEME.color.cream,border:"none",borderRadius:100,padding:"10px 24px",fontFamily:THEME.font.body,fontWeight:700,fontSize:".9rem",cursor:newGuest.nombre.trim()?"pointer":"default",transition:"background .2s"}}>
             + Agregar
           </button>
-          <button onClick={()=>setAddMode(false)} style={{background:"transparent",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,padding:"10px 16px",fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.4)",cursor:"pointer"}}>Cancelar</button>
+          <button onClick={()=>setAddMode(false)} style={{background:"transparent",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,padding:"10px 16px",fontFamily:THEME.font.body,fontSize:".88rem",color:"rgba(26,26,20,.4)",cursor:"pointer"}}>Cancelar</button>
         </div>
       </div>}
 
       {/* Tabs de vista */}
       <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
-        <div style={{display:"flex",background:"#FBF7EF",borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
+        <div style={{display:"flex",background:THEME.color.cream2,borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
           {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Mesas"},{id:"salon",label:"🏛️ Salón"}].map(v=>
-            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:"7px 14px",borderRadius:100,border:"none",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer",background:viewMode===v.id?"#4A5E3A":"transparent",color:viewMode===v.id?"#F5EFE0":"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
+            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:"10px 16px",minHeight:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?THEME.color.sage:"transparent",color:viewMode===v.id?THEME.color.cream:"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
           )}
         </div>
-        <div style={{marginLeft:"auto",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} de {guests.length}</div>
+        <div style={{marginLeft:"auto",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} de {guests.length}</div>
       </div>
 
       {/* Barra búsqueda + filtros — solo en lista */}
@@ -3706,64 +3747,66 @@ function GuestsModule({user, onBack}){
         <div style={{flex:1,minWidth:180,position:"relative"}}>
           <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:".9rem",pointerEvents:"none",opacity:.4}}>🔍</span>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nombre, lado o mesa..."
-            style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px 8px 34px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:"#FBF7EF",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
+            style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"8px 10px 8px 34px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream2,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
           {search&&<button onClick={()=>setSearch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",fontSize:".9rem",cursor:"pointer",color:"rgba(26,26,20,.4)",lineHeight:1}}>×</button>}
         </div>
-        <select value={filter.conf} onChange={e=>setFilter(f=>({...f,conf:e.target.value}))} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:filter.conf?"#4A5E3A":"rgba(26,26,20,.5)",cursor:"pointer"}}>
+        <select value={filter.conf} onChange={e=>setFilter(f=>({...f,conf:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.conf?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
           <option value="">Confirmación</option>{CONFIRMACIONES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
-        <select value={filter.lado} onChange={e=>setFilter(f=>({...f,lado:e.target.value}))} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:filter.lado?"#4A5E3A":"rgba(26,26,20,.5)",cursor:"pointer"}}>
+        <select value={filter.lado} onChange={e=>setFilter(f=>({...f,lado:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.lado?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
           <option value="">Lado</option>{LADOS.map(l=><option key={l}>{l}</option>)}
         </select>
-        {(search||filter.conf||filter.lado)&&<button onClick={()=>{setSearch("");setFilter({lado:"",conf:"",mesa:""}); }} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(200,60,60,.6)",cursor:"pointer",whiteSpace:"nowrap"}}>✕ Limpiar</button>}
+        {(search||filter.conf||filter.lado)&&<button onClick={()=>{setSearch("");setFilter({lado:"",conf:"",mesa:""}); }} style={{background:"transparent",border:"none",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(200,60,60,.6)",cursor:"pointer",whiteSpace:"nowrap"}}>✕ Limpiar</button>}
       </div>}
 
       {viewMode==="lista"&&<>
-        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"clamp(16px,3.5vw,40px) clamp(10px,2vw,20px)",background:"#FBF7EF",borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
+        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"clamp(16px,3.5vw,40px) clamp(10px,2vw,20px)",background:THEME.color.cream2,borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"2rem",marginBottom:10}}>👥</div>
-          <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",color:"#1A1A14",margin:"0 0 6px"}}>Aún no hay invitados</p>
-          <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
+          <p style={{fontFamily:THEME.font.display,fontSize:"1.05rem",color:THEME.color.ink,margin:"0 0 6px"}}>Aún no hay invitados</p>
+          <p style={{fontFamily:THEME.font.body,fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-            <button onClick={()=>setAddMode(true)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"11px 22px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>+ Agregar invitado</button>
-            <button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,padding:"11px 20px",fontFamily:"'Lora',serif",fontWeight:600,color:"#4A5E3A",cursor:"pointer"}}>↓ Descargar plantilla Excel</button>
+            <button onClick={()=>setAddMode(true)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:100,padding:"11px 22px",fontFamily:THEME.font.body,fontWeight:700,cursor:"pointer"}}>+ Agregar invitado</button>
+            <button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer"}}>↓ Descargar plantilla Excel</button>
+            <label style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer",display:"inline-flex",alignItems:"center"}}>
+              ↑ Importar lista
+              <input type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
+            </label>
           </div>
         </div>}
-        {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",background:"#FBF7EF",borderRadius:14,border:"0.5px solid rgba(201,169,110,.2)"}}>
+        {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",background:THEME.color.cream2,borderRadius:14,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"1.8rem",marginBottom:8}}>🔍</div>
-          <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:"#1A1A14",margin:"0 0 4px"}}>Sin resultados para "{search}"</p>
-          <p style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.4)",margin:0}}>Probá con otro nombre o limpiar los filtros</p>
+          <p style={{fontFamily:THEME.font.display,fontSize:"1rem",color:THEME.color.ink,margin:"0 0 4px"}}>Sin resultados para "{search}"</p>
+          <p style={{fontFamily:THEME.font.body,fontSize:".85rem",color:"rgba(26,26,20,.4)",margin:0}}>Probá con otro nombre o limpiar los filtros</p>
         </div>}
         {filtered.map(g=>{
           const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
-          const isEdit=editId===g.id;
           const isExpanded=expandedId===g.id;
           const cant=parseInt(g.cantidadInvitados||1);
-          return <div key={g.id} style={{background:"#FBF7EF",border:`0.5px solid ${isExpanded?"rgba(74,94,58,.3)":"rgba(201,169,110,.18)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s"}}>
-            {!isEdit
-              ? <>
+          return <div key={g.id} style={{background:THEME.color.cream2,border:`0.5px solid ${isExpanded?"rgba(74,94,58,.3)":"rgba(201,169,110,.18)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s"}}>
+            <>
                   {/* Fila principal — siempre visible */}
                   <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}}
                     onClick={()=>setExpandedId(isExpanded?null:g.id)}>
                     {/* Avatar inicial */}
                     <div style={{width:36,height:36,borderRadius:"50%",background:c.bg||"rgba(74,94,58,.1)",border:`1.5px solid ${c.color}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                      <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:700,color:c.color}}>{g.nombre?.charAt(0)?.toUpperCase()||"?"}</span>
+                      <span style={{fontFamily:THEME.font.display,fontSize:"1rem",fontWeight:700,color:c.color}}>{g.nombre?.charAt(0)?.toUpperCase()||"?"}</span>
                     </div>
                     {/* Info principal */}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                        <span style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:600,color:"#1A1A14",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{g.nombre}</span>
-                        {cant>1&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:"#4A5E3A",borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
+                        <span style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:600,color:THEME.color.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{g.nombre}</span>
+                        {cant>1&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:THEME.color.sage,borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}</span>
-                        {g.mesa&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
-                        {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
+                        <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}</span>
+                        {g.mesa&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
+                        {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
                       </div>
                     </div>
                     {/* Chip de confirmación — clickable */}
                     <div style={{flexShrink:0}}>
                       <select value={g.confirmacion} onChange={e=>{e.stopPropagation();updateGuest(g.id,"confirmacion",e.target.value);}} onClick={e=>e.stopPropagation()}
-                        style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".06em",padding:"5px 8px",borderRadius:100,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
+                        style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",padding:"8px 10px",borderRadius:THEME.radius.pill,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
                         {CONFIRMACIONES.map(cc=><option key={cc.id} value={cc.id}>{cc.label}</option>)}
                       </select>
                     </div>
@@ -3772,70 +3815,54 @@ function GuestsModule({user, onBack}){
                   </div>
 
                   {/* Panel expandido */}
-                  {isExpanded&&<div style={{borderTop:"0.5px solid rgba(74,94,58,.1)",padding:"12px 14px",background:"rgba(74,94,58,.03)"}}>
+                  {isExpanded&&<div className="guest-expand" style={{borderTop:"0.5px solid rgba(74,94,58,.1)",padding:"12px 14px",background:"rgba(74,94,58,.03)"}}>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginBottom:10}}>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
+                        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
                         <input type="number" defaultValue={g.mesa||""} onBlur={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Sin asignar" min="1"
-                          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+                          style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
                       </div>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
+                        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
                         <input type="number" defaultValue={g.cantidadInvitados||1} onBlur={e=>updateGuest(g.id,"cantidadInvitados",e.target.value)} min="1"
-                          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+                          style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
                       </div>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
+                        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
                         <select defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)}
-                          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}>
+                          style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
                           {LADOS.map(l=><option key={l}>{l}</option>)}
                         </select>
                       </div>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
+                        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
                         <select defaultValue={g.restriccion} onBlur={e=>updateGuest(g.id,"restriccion",e.target.value)}
-                          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}>
+                          style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
                           {RESTRICCIONES.map(r=><option key={r}>{r}</option>)}
                         </select>
                       </div>
                     </div>
                     {/* Notas */}
                     <input type="text" defaultValue={g.notas||""} onBlur={e=>updateGuest(g.id,"notas",e.target.value)} placeholder="Notas (opcional)..."
-                      style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:10}}/>
+                      style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:10}}/>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                      <button onClick={()=>setExpandedId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 18px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".85rem",cursor:"pointer"}}>✓ Guardar</button>
-                      <button onClick={()=>setConfirmDelete(g.id)} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(200,60,60,.6)",cursor:"pointer",marginLeft:"auto"}}>Eliminar</button>
+                      <button onClick={()=>setExpandedId(null)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:THEME.radius.pill,padding:"11px 24px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.85rem)",cursor:"pointer"}}>✓ Guardar</button>
+                      <button onClick={()=>setConfirmDelete(g.id)} style={{background:"transparent",border:"none",borderRadius:THEME.radius.sm,padding:"11px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(200,60,60,.65)",cursor:"pointer",marginLeft:"auto"}}>🗑 Eliminar</button>
                     </div>
                   </div>}
                 </>
-              : <div style={{padding:"14px"}}>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:7,marginBottom:8}}>
-                    <input type="text" defaultValue={g.nombre} onBlur={e=>updateGuest(g.id,"nombre",e.target.value)} placeholder="Nombre"
-                      style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}/>
-                    <input type="number" defaultValue={g.cantidadInvitados||1} onBlur={e=>updateGuest(g.id,"cantidadInvitados",e.target.value)} min="1"
-                      style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"rgba(74,94,58,.06)",color:"#1A1A14"}} title="Personas"/>
-                    <select defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
-                      {LADOS.map(l=><option key={l}>{l}</option>)}
-                    </select>
-                    <select defaultValue={g.restriccion} onBlur={e=>updateGuest(g.id,"restriccion",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
-                      {RESTRICCIONES.map(r=><option key={r}>{r}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 16px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓ Listo</button>
-                </div>
-            }
           </div>
         })}
       </>}
 
       {viewMode==="mesas"&&<>
         {sinMesa.length>0&&<div style={{background:"rgba(201,169,110,.08)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:12,padding:"12px 16px",marginBottom:14}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:8}}>Sin mesa asignada ({sinMesa.length})</div>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:8}}>Sin mesa asignada ({sinMesa.length})</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
             {sinMesa.map(g=><div key={g.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(201,169,110,.08)",borderRadius:100,padding:"4px 10px"}}>
-              <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.65)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
+              <span style={{fontFamily:THEME.font.body,fontSize:".85rem",color:"rgba(26,26,20,.65)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
               <input type="number" placeholder="Mesa" min="1" onChange={e=>e.target.value&&updateGuest(g.id,"mesa",e.target.value)}
-                style={{width:46,fontFamily:"'Lora',serif",fontSize:".78rem",padding:"2px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",textAlign:"center"}}/>
+                style={{width:46,fontFamily:THEME.font.body,fontSize:".78rem",padding:"2px 5px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,textAlign:"center"}}/>
             </div>)}
           </div>
         </div>}
@@ -3843,35 +3870,35 @@ function GuestsModule({user, onBack}){
           {tables.map(t=>{
             const pct=Math.round(t.personas/tableSize*100);
             const over=t.personas>tableSize;
-            return <div key={t.num} style={{background:"#FBF7EF",border:`0.5px solid ${over?"rgba(200,80,60,.4)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px"}}>
+            return <div key={t.num} style={{background:THEME.color.cream2,border:`0.5px solid ${over?"rgba(200,80,60,.4)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.05rem",color:"#1A1A14"}}>Mesa {t.num}</div>
-                <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}/{tableSize}{over&&" ⚠️"}</span>
+                <div style={{fontFamily:THEME.font.display,fontWeight:700,fontSize:"1.05rem",color:THEME.color.ink}}>Mesa {t.num}</div>
+                <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}/{tableSize}{over&&" ⚠️"}</span>
               </div>
               <div style={{height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",marginBottom:10}}>
-                <div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:over?"rgba(200,80,60,.5)":pct>=80?"#C9A96E":"#4A5E3A",borderRadius:4,transition:"width .3s"}}/>
+                <div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:over?"rgba(200,80,60,.5)":pct>=80?THEME.color.gold:THEME.color.sage,borderRadius:4,transition:"width .3s"}}/>
               </div>
               {t.guests.map(g=>{
                 const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
                 return <div key={g.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,padding:"5px 0",borderBottom:"0.5px solid rgba(74,94,58,.06)"}}>
                   <div>
-                    <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"#1A1A14"}}>{g.nombre}</span>
+                    <span style={{fontFamily:THEME.font.body,fontSize:".88rem",color:THEME.color.ink}}>{g.nombre}</span>
                     {parseInt(g.cantidadInvitados||1)>1&&<span style={{fontSize:".75rem",color:"rgba(74,94,58,.5)",marginLeft:4}}>×{g.cantidadInvitados}</span>}
-                    {g.restriccion&&g.restriccion!=="Ninguna"&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(200,140,0,.65)"}}>⚠️ {g.restriccion}</div>}
+                    {g.restriccion&&g.restriccion!=="Ninguna"&&<div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(200,140,0,.65)"}}>⚠️ {g.restriccion}</div>}
                   </div>
-                  <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
+                  <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
                 </div>;
               })}
               {t.personas<tableSize
                 ? <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.06)",borderRadius:8,padding:"6px 10px"}}>
                     <span style={{fontSize:".85rem"}}>🪑</span>
-                    <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(74,94,58,.7)",fontWeight:600}}>
+                    <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:"rgba(74,94,58,.7)",fontWeight:600}}>
                       Faltan {tableSize-t.personas} {tableSize-t.personas===1?"persona":"personas"} para completar la mesa
                     </span>
                   </div>
                 : <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.1)",borderRadius:8,padding:"6px 10px"}}>
                     <span style={{fontSize:".85rem"}}>✅</span>
-                    <span style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(74,94,58,.8)",fontWeight:600}}>Mesa completa</span>
+                    <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:"rgba(74,94,58,.8)",fontWeight:600}}>Mesa completa</span>
                   </div>
               }
             </div>;
