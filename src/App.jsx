@@ -3671,7 +3671,6 @@ function GuestsModule({user, onBack}){
                 </div>
             }
           </div>
-          </React.Fragment>
         })}
       </>}
 
