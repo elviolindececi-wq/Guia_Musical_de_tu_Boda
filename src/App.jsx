@@ -4328,8 +4328,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
             </button>
           </div>
 
-          :{/* Placeholder cuando no hay mesa seleccionada */}
-          <div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.18)",borderRadius:12,padding:"20px 12px",textAlign:"center"}}>
+          :<div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.18)",borderRadius:12,padding:"20px 12px",textAlign:"center"}}>
             <div style={{fontSize:"1.4rem",marginBottom:6}}>👆</div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla o arrastrar invitados</div>
           </div>
