@@ -155,7 +155,7 @@ body{margin:0;background:transparent;color:#1A1A14;-webkit-font-smoothing:antial
 button,input,textarea{font:inherit}
 button{-webkit-tap-highlight-color:transparent}
 #root{min-height:100vh;background:transparent}
-@media(max-width:480px){html{font-size:17px} body{min-width:"min(320px,100%)",boxSizing:"border-box"}}
+@media(max-width:480px){html{font-size:17px}}
 @media(min-width:601px){html{background-image:url('/bg-desktop.jpg') !important}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -171,16 +171,13 @@ input:focus,textarea:focus{border-bottom-color:#4A5E3A;outline:none}
 input[type="date"]{color-scheme:light;color:#1A1A14}
 input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.25) sepia(1) saturate(4) hue-rotate(75deg);cursor:pointer;opacity:0.7}
 input::placeholder,textarea::placeholder{color:rgba(26,26,20,.35);font-style:italic;font-weight:400}
-input[type=date]{color-scheme:dark}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#D9B86F;border-radius:2px}
 .tag{display:inline-block;padding:9px 16px;border:1px solid rgba(74,94,58,.3);border-radius:100px;cursor:pointer;font-family:'Lora',serif;font-weight:600;font-size:1rem;color:rgba(26,26,20,.65);transition:all .2s;user-select:none;margin:3px 3px 3px 0}
 .tag:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14}
 .tag.sel{background:#4A5E3A;border-color:#4A5E3A;color:#F5EFE0}
-.tag:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14}
 .pill{display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid rgba(74,94,58,.25);border-radius:12px;cursor:pointer;font-family:'Lora',serif;font-weight:600;font-size:1.05rem;color:rgba(26,26,20,.65);transition:all .2s;user-select:none;width:100%;margin-bottom:9px;background:#FBF7EF;text-align:left;line-height:1.4}
 .pill:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14;background:rgba(74,94,58,.05)}
 .pill.sel{background:#4A5E3A;border-color:#4A5E3A;color:#F5EFE0}
-.pill:hover:not(.sel){border-color:#4A5E3A;color:#1A1A14;background:rgba(74,94,58,.05)}
 .pbtn{background:#4A5E3A;color:#F5EFE0;border:none;padding:16px 38px;font-family:'Lora',serif;font-size:1.1rem;font-weight:600;letter-spacing:.04em;border-radius:100px;cursor:pointer;transition:all .3s;min-height:54px;white-space:nowrap}
 .pbtn:active{transform:scale(.98)}
 .pbtn:disabled{opacity:.28;cursor:not-allowed;transform:none}
@@ -226,6 +223,29 @@ input[type=date]{color-scheme:dark}
   .lbtn{font-size:.88rem;padding:7px 13px}
 }
 
+/* ══ THEME utilities (Bloque 1) ══ */
+select{font-family:'Lora',serif;font-weight:500;color:#1A1A14;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234A5E3A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px!important;cursor:pointer}
+button{touch-action:manipulation}
+:focus-visible{outline:2px solid rgba(74,94,58,.55);outline-offset:2px;border-radius:4px}
+input:focus-visible,textarea:focus-visible{outline:none}
+.tag:active,.pill:active,.tab:active,.lbtn:active,.gbtn:active,.wbtn:active{transform:scale(.97)}
+.tag,.pill,.tab,.lbtn,.gbtn,.wbtn,.pbtn{-webkit-tap-highlight-color:transparent;position:relative}
+@media(pointer:coarse){
+  .tag{min-height:44px;display:inline-flex;align-items:center;padding:10px 16px}
+  .tab{min-height:44px}
+  .lbtn{min-height:44px;padding:10px 16px}
+  .gbtn{min-height:48px}
+  .cb::after{content:'';position:absolute;inset:-11px}
+  .cb{position:relative}
+  select,input,textarea{min-height:44px}
+  input[type=checkbox],input[type=radio]{min-height:auto}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+html,body{overscroll-behavior-y:none}
+.canvas-viewport{touch-action:none;overscroll-behavior:contain}
+
 .brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#4A5E3A;font-weight:500}
 .brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#1A1A14;letter-spacing:.02em;line-height:1.15;text-wrap:balance}
 .brand-title .gold{color:#D9B86F}
@@ -253,24 +273,7 @@ input[type=date]{color-scheme:dark}
   background: url('/bg-mobile.jpg') center center / cover no-repeat, #F5EFE0;
 }
 @media(min-width:600px){
-  .home-floral-bg{
-  background: url('/bg-mobile.jpg') center center / cover no-repeat fixed, #F5EFE0;
-}
-@media(min-width:600px){
-  .home-floral-bg{
-    background: url('/bg-desktop.jpg') center center / cover no-repeat fixed, #F5EFE0;
-  }
-}
-.home-content-card{
-  background: rgba(251,247,239,.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 0.5px solid rgba(201,169,110,.3);
-  border-radius: 24px;
-  padding: clamp(28px,5vw,52px) clamp(24px,5vw,48px);
-  box-shadow: 0 12px 48px rgba(26,20,14,.14);
-}
-.auth-floral-bg{
+  .auth-floral-bg{
     background: url('/bg-desktop.jpg') center center / cover no-repeat, #F5EFE0;
   }
 }
@@ -354,7 +357,64 @@ div[style*="grab"]:active{cursor:grabbing}
 }
 `;
 
-const G="#C9A96E", C="#1A1A14", DIM="rgba(26,26,20,.65)", DIMSOFT="rgba(26,26,20,.42)", BG="#F5EFE0", BG2="#FBF7EF", BG3="#EAE4D2", BORDER="rgba(201,169,110,.28)", SAGE="#4A5E3A", SAGE_L="#7B8C6E";
+// ══════════════════════════════════════════════════════════════
+// THEME — sistema de tokens de diseño (Sistema Ceci)
+// Fuente única de verdad para colores, tipografía, radios,
+// espaciado y objetivos táctiles. Los alias G/C/DIM/... se
+// mantienen por retrocompatibilidad con estilos existentes.
+// ══════════════════════════════════════════════════════════════
+const THEME = {
+  color: {
+    gold:       "#C9A96E",
+    goldBright: "#D9B86F",
+    goldDeep:   "#E6C76A",
+    ink:        "#1A1A14",
+    inkDim:     "rgba(26,26,20,.65)",
+    inkSoft:    "rgba(26,26,20,.42)",
+    inkFaint:   "rgba(26,26,20,.3)",
+    cream:      "#F5EFE0",
+    cream2:     "#FBF7EF",
+    cream3:     "#EAE4D2",
+    creamText:  "rgba(245,239,224,.75)",
+    sage:       "#4A5E3A",
+    sageLight:  "#7B8C6E",
+    sageBorder: "rgba(74,94,58,.3)",
+    sageSoft:   "rgba(74,94,58,.08)",
+    border:     "rgba(201,169,110,.28)",
+    danger:     "#B5443A",
+    dangerSoft: "rgba(200,60,60,.15)",
+    success:    "#2ECC71",
+    confColors: { confirmado:"#4A5E3A", pendiente:"#C9A96E", no_va:"rgba(26,26,20,.3)" },
+  },
+  font: {
+    display: "'Playfair Display',serif",
+    label:   "'Cinzel',serif",
+    body:    "'Lora',serif",
+    script:  "'Great Vibes',cursive",
+  },
+  // Tipografía con piso legible en mobile (html base 17px)
+  text: {
+    micro:  "max(10px,.56rem)",   // etiquetas micro (Cinzel uppercase tracking)
+    tiny:   "max(11px,.62rem)",   // metadatos, hints
+    label:  "max(12px,.72rem)",   // labels de sección
+    small:  "max(13px,.82rem)",   // texto secundario
+    body:   "max(14px,.95rem)",   // cuerpo mínimo
+    md:     "1.05rem",
+    lg:     "1.15rem",
+  },
+  radius: { sm:8, md:12, lg:16, xl:20, xxl:24, pill:100 },
+  space:  { xs:6, sm:10, md:14, lg:20, xl:28, xxl:40 },
+  shadow: {
+    card:  "0 4px 20px rgba(74,94,58,.08)",
+    float: "0 8px 28px rgba(26,20,14,.16)",
+    modal: "0 12px 48px rgba(26,20,14,.18)",
+    pop:   "0 8px 24px rgba(0,0,0,.12)",
+  },
+  tap: { min:44, comfortable:48 },
+  z:   { nav:100, sheet:200, modal:900, toast:9999 },
+};
+// Alias retrocompatibles
+const G=THEME.color.gold, C=THEME.color.ink, DIM=THEME.color.inkDim, DIMSOFT=THEME.color.inkSoft, BG=THEME.color.cream, BG2=THEME.color.cream2, BG3=THEME.color.cream3, BORDER=THEME.color.border, SAGE=THEME.color.sage, SAGE_L=THEME.color.sageLight;
 
 const CECI_VOICE = `Sos Ceci, violinista con 200 bodas en Paraguay y Brasil. Estilo: Emocional, Elegante, Cinematográfico.
 FILOSOFÍA: La música no es decoración — es la emoción que todos van a recordar. Lo que la gente recuerda es cómo se sintió cuando empezó la música. En boda luxury, hasta los silencios tienen intención.
@@ -471,7 +531,7 @@ function GuiaCanciones({onStart,onBack}){
         })}
       </div>
       {/* Scroll hint */}
-      <div style={{textAlign:"center",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)",padding:"4px 0 8px",fontStyle:"italic"}}>
+      <div style={{textAlign:"center",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)",padding:"4px 0 8px",fontStyle:"italic"}}>
         ← Deslizá para ver todos los momentos →
       </div>
     </div>
@@ -485,7 +545,7 @@ function GuiaCanciones({onStart,onBack}){
 
           {/* Momento header */}
           <div style={{background:"#4A5E3A",padding:"18px 22px 16px"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".18em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:6}}>Criterio de Ceci</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:6}}>Criterio de Ceci</div>
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.4rem,2.5vw,1.85rem)",fontWeight:600,color:"#F5EFE0",margin:0,lineHeight:1.15}}>{momento.icono} {momento.titulo}</h2>
           </div>
 
@@ -500,7 +560,7 @@ function GuiaCanciones({onStart,onBack}){
             </div>
 
             {/* Canciones */}
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".7rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Las más pedidas por los novios</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Las más pedidas por los novios</div>
             {momento.canciones.map((c,i)=>{
               const q=encodeURIComponent(c.t+" "+c.a);
               return <div key={i} style={{padding:"14px 0",borderBottom:i<momento.canciones.length-1?"0.5px solid rgba(201,169,110,.18)":"none"}}>
@@ -525,7 +585,7 @@ function GuiaCanciones({onStart,onBack}){
         <div>
           {/* 5 reglas */}
           <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.25)",borderRadius:18,padding:"clamp(18px,2.5vw,28px)",marginBottom:16}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:18}}>5 reglas de Ceci para elegir bien</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:18}}>5 reglas de Ceci para elegir bien</div>
             {GUIA_TIPS.map((tip,i)=><div key={i} style={{display:"flex",gap:14,paddingBottom:i<4?16:0,borderBottom:i<4?"0.5px solid rgba(74,94,58,.1)":"none",marginBottom:i<4?16:0}}>
               <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.25)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:700,color:"#4A5E3A",flexShrink:0,marginTop:2}}>{i+1}</div>
               <div>
@@ -537,7 +597,7 @@ function GuiaCanciones({onStart,onBack}){
 
           {/* CTA */}
           <div style={{background:"#4A5E3A",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"clamp(22px,3vw,32px)",textAlign:"center"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".18em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:12}}>El siguiente nivel</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:12}}>El siguiente nivel</div>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.4rem,2.2vw,1.85rem)",fontWeight:600,color:"#F5EFE0",margin:"0 0 12px",lineHeight:1.15}}>Hacé el test personalizado</h3>
             <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(.95rem,1.1vw,1.06rem)",color:"rgba(245,239,224,.65)",lineHeight:1.65,margin:"0 0 22px"}}>La guía te da el criterio general. El test crea el guion musical exacto para tu boda — con tu arquetipo, tus momentos y el checklist para tus proveedores.</p>
             <button style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"14px 28px",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:700,letterSpacing:".04em",borderRadius:100,cursor:"pointer",width:"100%"}} onClick={onStart}>Crear mi guion personalizado →</button>
@@ -861,7 +921,7 @@ function Landing({onStart}){
     <section className="responsive-shell" style={{paddingBottom:"clamp(42px,8vw,88px)"}}>
       <div className="desktop-two-col" style={{display:"grid",gridTemplateColumns:"1fr",gap:22,alignItems:"start"}}>
         <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.14)",borderRadius:22,padding:"clamp(22px,4vw,34px)"}}>
-          <div className="brand-logo" style={{fontSize:".7rem",letterSpacing:".18em",marginBottom:14}}>El problema que nadie habla</div>
+          <div className="brand-logo" style={{fontSize:THEME.text.label,letterSpacing:".18em",marginBottom:14}}>El problema que nadie habla</div>
           <p className="brand-copy" style={{fontSize:"clamp(1.05rem,2vw,1.25rem)",margin:"0 0 14px"}}>Podés tener el mejor salón, el vestido perfecto y una decoración impecable — pero si la música no está pensada, el momento puede no sentirse como lo imaginaste.</p>
           <p className="brand-copy" style={{fontSize:"clamp(1.05rem,2vw,1.25rem)",margin:"0",color:G,fontStyle:"italic"}}>La música no es un detalle. Es lo que transforma una boda bonita en un recuerdo inolvidable.</p>
         </div>
@@ -964,7 +1024,7 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome}){
   const wrap=ch=><div style={{minHeight:"100dvh",display:"flex",flexDirection:"column",background:"rgba(245,239,224,.88)",padding:"clamp(14px,2.5vw,24px) clamp(10px,2vw,22px)",maxWidth:"min(820px,calc(100vw - 32px))",margin:"0 auto"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
       <button onClick={onGoHome} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(74,94,58,.6)",cursor:"pointer",padding:"4px 0",display:"flex",alignItems:"center",gap:5}}>🏠 Menú principal</button>
-      <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.3)"}}>Paso {step} de 6</span>
+      <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(26,26,20,.3)"}}>Paso {step} de 6</span>
     </div>
     <Progress step={step}/>
     <div style={{flex:1}} className="fu">{ch}</div>
@@ -1137,9 +1197,9 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome}){
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0,marginLeft:8}}>
               {m.obligatorio
-                ? <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(201,169,110,.6)",border:"1px solid rgba(201,169,110,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
+                ? <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",border:"1px solid rgba(201,169,110,.25)",borderRadius:100,padding:"2px 8px"}}>siempre incluido</span>
                 : <div style={{width:22,height:22,borderRadius:4,border:`1px solid ${sel?G:"rgba(74,94,58,.3)"}`,background:sel?"rgba(201,169,110,.15)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
-                    {sel&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
+                    {sel&&<span style={{color:G,fontSize:THEME.text.label,fontWeight:700}}>✓</span>}
                   </div>
               }
             </div>
@@ -1261,7 +1321,7 @@ function BotanicalDivider({label}){
       <path d="M224,22 Q230,17 234,13" stroke="#7B8C6E" strokeWidth="0.7" fill="none" opacity="0.35"/>
       <line x1="210" y1="22" x2="328" y2="22" stroke="#C9A96E" strokeWidth="0.6" opacity="0.4"/>
     </svg>
-    {label&&<div style={{position:"absolute",top:"50%",transform:"translateY(-50%)",background:"#F5EFE0",padding:"0 14px",fontFamily:"'Cinzel',serif",fontSize:".7rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(74,94,58,.6)"}}>{label}</div>}
+    {label&&<div style={{position:"absolute",top:"50%",transform:"translateY(-50%)",background:"#F5EFE0",padding:"0 14px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(74,94,58,.6)"}}>{label}</div>}
   </div>;
 }
 
@@ -1334,7 +1394,7 @@ function SongCard({item,idx}){
   return <div style={{background:"#FBF7EF",border:"1px solid rgba(201,169,110,.09)",borderRadius:12,padding:"14px 16px",marginBottom:9,display:"flex",gap:12,alignItems:"flex-start"}}>
     <div style={{flexShrink:0,marginTop:2,textAlign:"center"}}>
       <div style={{fontSize:"1.2rem"}}>{item.icono}</div>
-      <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.35)"}}>{String(idx+1).padStart(2,"0")}</div>
+      <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.35)"}}>{String(idx+1).padStart(2,"0")}</div>
     </div>
     <div style={{flex:1,minWidth:0}}>
       <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(201,169,110,.55)",marginBottom:3}}>{item.momento}</div>
@@ -1373,7 +1433,7 @@ function PlaylistRow({item,num}){
 function CheckItem({label,done,onToggle,important}){
   return <div className="ci" onClick={onToggle}>
     <div className={`cb${done?" ck":""}`} style={{borderColor:important&&!done?"rgba(201,169,110,.5)":undefined}}>
-      {done&&<span style={{color:G,fontSize:".65rem",fontWeight:700}}>✓</span>}
+      {done&&<span style={{color:G,fontSize:THEME.text.label,fontWeight:700}}>✓</span>}
     </div>
     <span style={{fontFamily:"'Lora',serif",fontSize:"1rem",color:done?"rgba(26,26,20,.22)":C,textDecoration:done?"line-through":"none",lineHeight:1.55,transition:"all .2s"}}>{label}</span>
   </div>;
@@ -1493,7 +1553,7 @@ function AudioButton({cancion, artista, version, alt}){
       </div>}
     </div>
     {isActive&&nowPlaying&&<div style={{display:"flex",alignItems:"center",gap:6,paddingLeft:2}}>
-      <span style={{fontSize:".7rem"}}>🔊</span>
+      <span style={{fontSize:THEME.text.label}}>🔊</span>
       <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.42)",fontStyle:"italic",lineHeight:1.3}}>
         Sonando: {nowPlaying.title}{nowPlaying.artist?` – ${nowPlaying.artist}`:""} <span style={{color:"rgba(201,169,110,.55)"}}>(no es la versión exacta sugerida)</span>
       </span>
@@ -1552,7 +1612,7 @@ function GuionCarousel({items}){
               <span style={{fontSize:"1.4rem"}}>{item.icono||"♪"}</span>
               <div>
                 <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A"}}>{item.momento}</div>
-                {isNovia&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.6)",fontStyle:"italic"}}>El momento más recordado</div>}
+                {isNovia&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.6)",fontStyle:"italic"}}>El momento más recordado</div>}
               </div>
             </div>
             <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(26,26,20,.32)",background:"rgba(74,94,58,.06)",padding:"3px 8px",borderRadius:20}}>{item.duracion}</div>
@@ -1617,7 +1677,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
       <button onClick={onGoHome} style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.08)",border:"1px solid rgba(74,94,58,.2)",borderRadius:100,fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:600,color:"#4A5E3A",cursor:"pointer",padding:"7px 14px"}}>
         ← Inicio
       </button>
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Tu Banda Sonora de Boda</div>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Tu Banda Sonora de Boda</div>
       <div style={{display:"flex",gap:8}}>
         <button onClick={onGoHome} style={{background:"#4A5E3A",border:"none",borderRadius:100,padding:"8px 18px",fontFamily:"'Lora',serif",fontSize:".88rem",fontWeight:700,color:"#F5EFE0",cursor:"pointer"}}>🏠 Módulos</button>
       </div>
@@ -1669,7 +1729,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
           </div>}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:16}}>
             {[{l:"Pareja",v:`${form.nombre1} & ${form.nombre2}`},{l:"Fecha",v:fecha||"—"},{l:"Ciudad",v:form.ciudad||"—"},{l:"Arquetipo",v:arch?.n||"—"}].map(it=><div key={it.l} style={{background:"#FBF7EF",borderRadius:10,padding:"14px 16px",border:"0.5px solid rgba(201,169,110,.28)",boxShadow:"0 1px 4px rgba(74,94,58,.06)"}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:5}}>{it.l}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:5}}>{it.l}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",lineHeight:1.3}}>{it.v}</div>
             </div>)}
           </div>
@@ -2017,7 +2077,7 @@ function GlobalProgress({ user, hasResults }){
 
   return <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:14,padding:"14px 16px",marginBottom:20}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-      <span style={{fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A"}}>Progreso de tu boda</span>
+      <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A"}}>Progreso de tu boda</span>
       <span style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.1rem",color:clr}}>{pct}%</span>
     </div>
     <div style={{background:"rgba(201,169,110,.15)",borderRadius:100,height:6,overflow:"hidden",marginBottom:10}}>
@@ -2025,8 +2085,8 @@ function GlobalProgress({ user, hasResults }){
     </div>
     <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px"}}>
       {breakdown.map(({label,done})=>(
-        <span key={label} style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:done?"#4A5E3A":"rgba(26,26,20,.38)",display:"flex",alignItems:"center",gap:3}}>
-          <span style={{fontSize:".7rem"}}>{done?"✓":"○"}</span>{label}
+        <span key={label} style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:done?"#4A5E3A":"rgba(26,26,20,.38)",display:"flex",alignItems:"center",gap:3}}>
+          <span style={{fontSize:THEME.text.label}}>{done?"✓":"○"}</span>{label}
         </span>
       ))}
     </div>
@@ -2076,7 +2136,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
             ? <div style={{marginTop:12,display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"6px 16px"}}>
                 <span style={{fontSize:"1rem"}}>💍</span>
                 <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"#4A5E3A",fontWeight:600}}>{dias} días para la boda</span>
-                <span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>{new Date(form.fechaBoda).toLocaleDateString("es",{day:"numeric",month:"long",year:"numeric"})}</span>
+                <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>{new Date(form.fechaBoda).toLocaleDateString("es",{day:"numeric",month:"long",year:"numeric"})}</span>
               </div>
             : dias===0
               ? <div style={{marginTop:12,display:"inline-flex",alignItems:"center",gap:8,background:"rgba(201,169,110,.12)",borderRadius:100,padding:"6px 16px"}}>
@@ -2102,7 +2162,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
 
       {/* Module grid */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Módulos de planificación</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Módulos de planificación</div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{modules.filter(m=>m.done).length}/{modules.length} completados</div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(160px,45vw),1fr))",gap:12,marginBottom:24}}>
@@ -2562,10 +2622,10 @@ function BudgetModule({ user, onBack }){
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:isEdit?12:8}}>
         <span style={{fontSize:"1.3rem",flexShrink:0}}>{c.emoji}</span>
         <span style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:"1rem",color:"#1A1A14",flex:1}}>{c.nombre}</span>
-        {overBudget&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".65rem",letterSpacing:".1em",color:"rgba(200,80,60,.8)",background:"rgba(200,80,60,.08)",padding:"2px 8px",borderRadius:100}}>SOBRE PRES.</span>}
-        {!overBudget && num(c.estimado)>0 && num(c.cotizado)===0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".1em",color:"rgba(200,140,0,.75)",background:"rgba(255,200,0,.08)",padding:"2px 8px",borderRadius:100}}>SIN COTIZAR</span>}
-        {num(c.estimado)===0 && num(c.cotizado)>0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".1em",color:"rgba(74,94,58,.6)",background:"rgba(74,94,58,.08)",padding:"2px 8px",borderRadius:100}}>SIN ESTIMADO</span>}
-        {num(c.pagado)>0 && num(c.pagado)>=num(c.cotizado) && num(c.cotizado)>0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".1em",color:"rgba(74,94,58,.85)",background:"rgba(74,94,58,.12)",padding:"2px 8px",borderRadius:100}}>✓ PAGADO</span>}
+        {overBudget&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".1em",color:"rgba(200,80,60,.8)",background:"rgba(200,80,60,.08)",padding:"2px 8px",borderRadius:100}}>SOBRE PRES.</span>}
+        {!overBudget && num(c.estimado)>0 && num(c.cotizado)===0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",color:"rgba(200,140,0,.75)",background:"rgba(255,200,0,.08)",padding:"2px 8px",borderRadius:100}}>SIN COTIZAR</span>}
+        {num(c.estimado)===0 && num(c.cotizado)>0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",color:"rgba(74,94,58,.6)",background:"rgba(74,94,58,.08)",padding:"2px 8px",borderRadius:100}}>SIN ESTIMADO</span>}
+        {num(c.pagado)>0 && num(c.pagado)>=num(c.cotizado) && num(c.cotizado)>0 && <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",color:"rgba(74,94,58,.85)",background:"rgba(74,94,58,.12)",padding:"2px 8px",borderRadius:100}}>✓ PAGADO</span>}
         <button onClick={()=>isEdit?commitRow():setEditId(c.id)} style={{background:isEdit?"#4A5E3A":"transparent",color:isEdit?"#F5EFE0":"rgba(26,26,20,.4)",border:`1px solid ${isEdit?"#4A5E3A":"rgba(74,94,58,.25)"}`,borderRadius:100,padding:"4px 12px",fontFamily:"'Lora',serif",fontSize:".78rem",cursor:"pointer"}}>
           {isEdit?"✓ Guardar":"Editar"}
         </button>
@@ -2583,7 +2643,7 @@ function BudgetModule({ user, onBack }){
           {label:"Cotizado",val:c.cotizado,color:overBudget?"rgba(200,80,60,.8)":"rgba(201,169,110,.85)"},
           {label:"Pagado",val:c.pagado,color:"#4A5E3A"}].map(({label,val,color})=>
           <div key={label} style={{textAlign:"center"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>{label}</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:3}}>{label}</div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:600,color}}>{SYM}{fmt(val)}</div>
           </div>
         )}
@@ -2592,17 +2652,17 @@ function BudgetModule({ user, onBack }){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
           {[{label:"Presupuestado",key:"est",val:localEst,set:setLocalEst,editable:true}].map(({label,key,val,set})=>
             <div key={key}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>{label}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>{label}</div>
               <input type="number" value={val} onChange={e=>set(e.target.value)} placeholder="0"
                 style={{width:"100%",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
             </div>
           )}
           {[{label:"Cotizado",val:num(c.cotizado)},{label:"Pagado",val:num(c.pagado)}].map(({label,val})=>
             <div key={label} onClick={()=>showToast("💡 Este valor se calcula desde el módulo de Proveedores","info",4000)} style={{cursor:"help"}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.28)",marginBottom:4}}>{label} 🔗</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.28)",marginBottom:4}}>{label} 🔗</div>
               <div style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px dashed rgba(74,94,58,.2)",background:"rgba(74,94,58,.04)",color:"rgba(26,26,20,.4)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <span>{SYM}{fmt(val)}</span>
-                <span style={{fontSize:".7rem",color:"rgba(74,94,58,.35)"}}>desde proveedores ℹ️</span>
+                <span style={{fontSize:THEME.text.label,color:"rgba(74,94,58,.35)"}}>desde proveedores ℹ️</span>
               </div>
             </div>
           )}
@@ -2622,7 +2682,7 @@ function BudgetModule({ user, onBack }){
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
             <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se sincronizan automáticamente desde Proveedores</div>
           </div>
@@ -2642,7 +2702,7 @@ function BudgetModule({ user, onBack }){
 
       {/* Budget total input */}
       <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"clamp(18px,3vw,28px)",marginBottom:24}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Presupuesto total de la boda</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:14}}>Presupuesto total de la boda</div>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12,flexWrap:"wrap"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:200}}>
             <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1.5rem",color:"rgba(26,26,20,.4)"}}>{SYM}</span>
@@ -2682,10 +2742,10 @@ function BudgetModule({ user, onBack }){
             </button>}
           </div>
           {mostrarCalculadora&&<div style={{marginTop:12,background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>Calculadora de distribución</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:12}}>Calculadora de distribución</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(130px,45vw),1fr))",gap:10,marginBottom:12}}>
               <div>
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🎵 Música en vivo</div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🎵 Música en vivo</div>
                 <div style={{display:"flex",gap:6}}>
                   {[{v:"si",l:"Sí"},{v:"no",l:"Solo DJ"}].map(({v,l})=>
                     <button key={v} onClick={()=>setTieneMusica(v)} style={{
@@ -2698,7 +2758,7 @@ function BudgetModule({ user, onBack }){
                 </div>
               </div>
               <div>
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🌸 Decoración</div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:6}}>🌸 Decoración</div>
                 <div style={{display:"flex",gap:4}}>
                   {[{v:"simple",l:"Simple"},{v:"estandar",l:"Estándar"},{v:"elaborada",l:"Elab."}].map(({v,l})=>
                     <button key={v} onClick={()=>setEstiloDecoracion(v)} style={{
@@ -2735,7 +2795,7 @@ function BudgetModule({ user, onBack }){
           const estadoLabel = pctUsado>100?"⚠️ Superaste el presupuesto":pctUsado>85?"⚡ Casi al límite":"✓ Vas bien";
           return <div style={{background:pctUsado>100?"rgba(200,60,60,.06)":pctUsado>85?"rgba(255,200,0,.06)":"rgba(74,94,58,.06)",border:`0.5px solid ${pctUsado>100?"rgba(200,60,60,.25)":pctUsado>85?"rgba(200,120,0,.2)":"rgba(74,94,58,.2)"}`,borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
             <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",fontWeight:600,color:estadoColor}}>{estadoLabel}</span>
-            <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".1em",color:estadoColor}}>{pctUsado}% del presupuesto distribuido</span>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".1em",color:estadoColor}}>{pctUsado}% del presupuesto distribuido</span>
           </div>;
         })()}
 
@@ -2760,7 +2820,7 @@ function BudgetModule({ user, onBack }){
             <div style={{position:"absolute",height:"100%",width:`${Math.min(100,pctCotizado)}%`,background:"rgba(201,169,110,.35)",borderRadius:8,transition:"width .4s"}}/>
             <div style={{position:"absolute",height:"100%",width:`${Math.min(100,pctPagado)}%`,background:"#4A5E3A",borderRadius:8,transition:"width .4s"}}/>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.35)",marginTop:5}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)",marginTop:5}}>
             <span>🟢 Pagado {pctPagado}%</span>
             <span>🟡 Cotizado {pctCotizado}%</span>
           </div>
@@ -2769,19 +2829,19 @@ function BudgetModule({ user, onBack }){
         {/* ── INSIGHTS ── */}
         {(invitados&&parseInt(invitados)>0||totalCotizado>0)&&<div style={{display:"flex",gap:10,flexWrap:"wrap",paddingTop:12,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
           {invitados&&parseInt(invitados)>0&&totalEstimado>0&&<div style={{flex:1,minWidth:"calc(50% - 5px)",background:"rgba(74,94,58,.06)",borderRadius:10,padding:"10px 12px"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>💡 Por invitado</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>💡 Por invitado</div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,color:"#4A5E3A"}}>{SYM}{fmt(Math.round(totalEstimado/parseInt(invitados)))}</div>
-            <div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(26,26,20,.35)",marginTop:2}}>Basado en presupuestado</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)",marginTop:2}}>Basado en presupuestado</div>
           </div>}
           {totalCotizado>0&&(()=>{
             const ahorro = cats.filter(c=>num(c.cotizado)>0).reduce((s,c)=>s+(num(c.estimado)-num(c.cotizado)),0);
             const pos = ahorro>=0;
             return <div style={{flex:1,minWidth:130,background:pos?"rgba(74,94,58,.06)":"rgba(200,60,60,.06)",borderRadius:10,padding:"10px 12px",border:`0.5px solid ${pos?"rgba(74,94,58,.15)":"rgba(200,60,60,.2)"}`}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>{pos?"🟢 Ahorro total":"🔴 Exceso total"}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:4}}>{pos?"🟢 Ahorro total":"🔴 Exceso total"}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,color:pos?"#4A5E3A":"rgba(200,60,60,.8)"}}>
                 {pos?"▼ ":"▲ "}{SYM}{fmt(Math.abs(ahorro))}
               </div>
-              <div style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:pos?"rgba(74,94,58,.5)":"rgba(200,60,60,.55)",marginTop:2}}>
+              <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:pos?"rgba(74,94,58,.5)":"rgba(200,60,60,.55)",marginTop:2}}>
                 {pos?"Por debajo del estimado":"Por encima del estimado"}
               </div>
             </div>;
@@ -2835,7 +2895,7 @@ function BudgetModule({ user, onBack }){
 
       {/* Categories */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Por categoría</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"#4A5E3A"}}>Por categoría</div>
         <button onClick={()=>setAddingCat(true)} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,padding:"6px 14px",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#4A5E3A",cursor:"pointer"}}>+ Agregar categoría</button>
       </div>
 
@@ -2891,13 +2951,13 @@ function VendorForm({vendor, onSave, onCancel}){
   return <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"20px",marginBottom:12}}>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Categoría</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Categoría</div>
         <select value={v.cat} onChange={e=>set("cat",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
           {VENDOR_CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
         </select>
       </div>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Estado</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Estado</div>
         <select value={v.estado} onChange={e=>set("estado",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
           {VENDOR_ESTADOS.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
         </select>
@@ -2905,30 +2965,30 @@ function VendorForm({vendor, onSave, onCancel}){
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Nombre / Empresa</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Nombre / Empresa</div>
         <input type="text" value={v.nombre} onChange={e=>set("nombre",e.target.value)} placeholder="ej: Salón Los Pinos"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Contacto</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Contacto</div>
         <input type="text" value={v.contacto} onChange={e=>set("contacto",e.target.value)} placeholder="Tel / email / Instagram"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Precio cotizado</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Precio cotizado</div>
         <input type="number" value={v.precio} onChange={e=>set("precio",e.target.value)} placeholder="0"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Link (web / Instagram)</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Link (web / Instagram)</div>
         <input type="text" value={v.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
     </div>
     <div style={{marginBottom:14}}>
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Notas</div>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Notas</div>
       <textarea value={v.notas} onChange={e=>set("notas",e.target.value)} rows={2} placeholder="Incluye vajilla, requiere depósito del 30%, etc."
         style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box"}}/>
     </div>
@@ -3009,7 +3069,7 @@ function VendorsModule({user, onBack}){
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>🏢 Proveedores</h1>
           </div>
           <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",marginTop:8}}>+ Agregar</button>
@@ -3035,7 +3095,7 @@ function VendorsModule({user, onBack}){
             style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".85rem",padding:"7px 10px 7px 30px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:"#FBF7EF",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
           {searchVendor&&<button onClick={()=>setSearchVendor("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)"}}>×</button>}
         </div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginRight:4}}>Filtrar:</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginRight:4}}>Filtrar:</div>
         <select value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
           <option value="all">Todas las categorías</option>
           {VENDOR_CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
@@ -3064,9 +3124,9 @@ function VendorsModule({user, onBack}){
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
                 <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:"1.05rem",color:"#1A1A14"}}>{v.nombre||"Sin nombre"}</div>
-                <span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".1em",textTransform:"uppercase",padding:"3px 8px",borderRadius:100,background:est.bg,color:est.color}}>{est.label}</span>
+                <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",padding:"3px 8px",borderRadius:100,background:est.bg,color:est.color}}>{est.label}</span>
               </div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>{cat.label}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>{cat.label}</div>
               <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
                 {v.contacto&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)"}}>📞 {v.contacto}</div>}
                 {v.precio&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.65)",fontWeight:600}}>USD {parseFloat(v.precio).toLocaleString()}</div>}
@@ -3149,7 +3209,7 @@ function WeatherWidget({fechaBoda, ciudad}){
   const desc = WMO_DESC[wx.code]||"";
 
   return <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"16px 18px",marginBottom:16}}>
-    <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>🌤️ Clima para tu boda — {wx.name}, {wx.country}</div>
+    <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>🌤️ Clima para tu boda — {wx.name}, {wx.country}</div>
     {wx.type==="forecast"&&<div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
       <div style={{fontSize:"2.5rem",lineHeight:1}}>{icon}</div>
       <div>
@@ -3513,7 +3573,7 @@ function GuestsModule({user, onBack}){
   const tables = Array.from({length:maxMesa},(_,i)=>({num:i+1,guests:guests.filter(g=>parseInt(g.mesa)===i+1),personas:guests.filter(g=>parseInt(g.mesa)===i+1).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)}));
   const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
 
-  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     {confirmDelete&&<ConfirmModal
       msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
@@ -3523,7 +3583,7 @@ function GuestsModule({user, onBack}){
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -3537,7 +3597,7 @@ function GuestsModule({user, onBack}){
               {showGuestMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:"#FBF7EF",border:"1px solid rgba(74,94,58,.15)",borderRadius:12,padding:8,zIndex:100,boxShadow:"0 8px 24px rgba(0,0,0,.12)",minWidth:200}}>
                 {/* Personas por mesa */}
                 <div style={{padding:"8px 10px",borderBottom:"0.5px solid rgba(74,94,58,.1)",marginBottom:6}}>
-                  <div style={{fontFamily:"'Cinzel',serif",fontSize:".56rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>Personas por mesa</div>
+                  <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>Personas por mesa</div>
                   <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
                     {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?"#4A5E3A":"transparent",color:tableSize===n?"#F5EFE0":"rgba(26,26,20,.6)",border:`1px solid ${tableSize===n?"#4A5E3A":"rgba(74,94,58,.2)"}`,borderRadius:100,padding:"4px 10px",fontFamily:"'Lora',serif",fontSize:".85rem",fontWeight:tableSize===n?700:400,cursor:"pointer",minWidth:32}}>{n}</button>)}
                   </div>
@@ -3564,12 +3624,12 @@ function GuestsModule({user, onBack}){
           ].map(s=>(
             <div key={s.l} style={{background:s.bg,borderRadius:10,padding:"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:56,flex:"0 0 auto"}}>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:"#F5EFE0",lineHeight:1}}>{s.v}</div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.44rem,.7vw,.52rem)",letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
             </div>
           ))}
           {total>0&&<div style={{background:"rgba(245,239,224,.08)",borderRadius:10,padding:"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",minWidth:64}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:700,color:"rgba(201,169,110,.8)",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.45)",marginTop:3}}>Confirmado</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.45)",marginTop:3}}>Confirmado</div>
           </div>}
         </div>
         {/* Barra de progreso confirmaciones */}
@@ -3581,7 +3641,7 @@ function GuestsModule({user, onBack}){
         {restr.length>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(201,169,110,.65)",marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
           {restr.map(x=><span key={x.r} style={{background:"rgba(201,169,110,.12)",borderRadius:100,padding:"2px 8px"}}>⚠️ {x.r}: {x.n}</span>)}
         </div>}
-        {(saving||saved)&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(201,169,110,.7)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
+        {(saving||saved)&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(201,169,110,.7)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
       </div>
     </div>
 
@@ -3601,23 +3661,23 @@ function GuestsModule({user, onBack}){
         {/* Fila secundaria */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:10}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
             <input type="number" value={newGuest.cantidadInvitados} onChange={e=>setNewGuest(x=>({...x,cantidadInvitados:e.target.value}))} min="1"
               style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
           </div>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
             <input type="number" value={newGuest.mesa} onChange={e=>setNewGuest(x=>({...x,mesa:e.target.value}))} placeholder="—" min="1"
               style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
           </div>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
             <select value={newGuest.lado} onChange={e=>setNewGuest(x=>({...x,lado:e.target.value}))} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
               {LADOS.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
             <select value={newGuest.restriccion} onChange={e=>setNewGuest(x=>({...x,restriccion:e.target.value}))} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
               {RESTRICCIONES.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
@@ -3692,18 +3752,18 @@ function GuestsModule({user, onBack}){
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                         <span style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",fontWeight:600,color:"#1A1A14",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{g.nombre}</span>
-                        {cant>1&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:"#4A5E3A",borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
+                        {cant>1&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:"#4A5E3A",borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
                         <span style={{fontFamily:"'Lora',serif",fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}</span>
-                        {g.mesa&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
-                        {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
+                        {g.mesa&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
+                        {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
                       </div>
                     </div>
                     {/* Chip de confirmación — clickable */}
                     <div style={{flexShrink:0}}>
                       <select value={g.confirmacion} onChange={e=>{e.stopPropagation();updateGuest(g.id,"confirmacion",e.target.value);}} onClick={e=>e.stopPropagation()}
-                        style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".06em",padding:"5px 8px",borderRadius:100,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
+                        style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".06em",padding:"5px 8px",borderRadius:100,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
                         {CONFIRMACIONES.map(cc=><option key={cc.id} value={cc.id}>{cc.label}</option>)}
                       </select>
                     </div>
@@ -3715,24 +3775,24 @@ function GuestsModule({user, onBack}){
                   {isExpanded&&<div style={{borderTop:"0.5px solid rgba(74,94,58,.1)",padding:"12px 14px",background:"rgba(74,94,58,.03)"}}>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginBottom:10}}>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
+                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
                         <input type="number" defaultValue={g.mesa||""} onBlur={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Sin asignar" min="1"
                           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
                       </div>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
+                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
                         <input type="number" defaultValue={g.cantidadInvitados||1} onBlur={e=>updateGuest(g.id,"cantidadInvitados",e.target.value)} min="1"
                           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
                       </div>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
+                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
                         <select defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)}
                           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}>
                           {LADOS.map(l=><option key={l}>{l}</option>)}
                         </select>
                       </div>
                       <div>
-                        <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
+                        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
                         <select defaultValue={g.restriccion} onBlur={e=>updateGuest(g.id,"restriccion",e.target.value)}
                           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}>
                           {RESTRICCIONES.map(r=><option key={r}>{r}</option>)}
@@ -3770,7 +3830,7 @@ function GuestsModule({user, onBack}){
 
       {viewMode==="mesas"&&<>
         {sinMesa.length>0&&<div style={{background:"rgba(201,169,110,.08)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:12,padding:"12px 16px",marginBottom:14}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:8}}>Sin mesa asignada ({sinMesa.length})</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:8}}>Sin mesa asignada ({sinMesa.length})</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
             {sinMesa.map(g=><div key={g.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(201,169,110,.08)",borderRadius:100,padding:"4px 10px"}}>
               <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.65)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
@@ -3797,9 +3857,9 @@ function GuestsModule({user, onBack}){
                   <div>
                     <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"#1A1A14"}}>{g.nombre}</span>
                     {parseInt(g.cantidadInvitados||1)>1&&<span style={{fontSize:".75rem",color:"rgba(74,94,58,.5)",marginLeft:4}}>×{g.cantidadInvitados}</span>}
-                    {g.restriccion&&g.restriccion!=="Ninguna"&&<div style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(200,140,0,.65)"}}>⚠️ {g.restriccion}</div>}
+                    {g.restriccion&&g.restriccion!=="Ninguna"&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(200,140,0,.65)"}}>⚠️ {g.restriccion}</div>}
                   </div>
-                  <span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
+                  <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
                 </div>;
               })}
               {t.personas<tableSize
@@ -4323,8 +4383,6 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     setElementos(elems);
     setTimeout(fitToScreen,50);
   };
-;
-;
 
   // ── Render mesa en SVG ──
   const renderMesaSVG=(mesa)=>{
@@ -4413,14 +4471,14 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
         {/* Dimensiones */}
         <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
           <input type="number" value={salonW} min="5" max="80" onChange={e=>setSalonW(Math.max(5,Math.min(80,parseInt(e.target.value)||20)))} style={{width:38,fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)"}}>×</span>
+          <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>×</span>
           <input type="number" value={salonH} min="5" max="80" onChange={e=>setSalonH(Math.max(5,Math.min(80,parseInt(e.target.value)||15)))} style={{width:38,fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(26,26,20,.35)"}}>m</span>
+          <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
         {/* Zoom */}
         <div style={{display:"flex",alignItems:"center",background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,overflow:"hidden",flexShrink:0}}>
           <button onClick={()=>setZoom(z=>Math.max(0.3,+(z-0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:26,height:26,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
-          <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",color:"rgba(26,26,20,.5)",minWidth:30,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
+          <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,color:"rgba(26,26,20,.5)",minWidth:30,textAlign:"center"}}>{Math.round(zoom*100)}%</span>
           <button onClick={()=>setZoom(z=>Math.min(3,+(z+0.15).toFixed(2)))} style={{background:"transparent",border:"none",width:26,height:26,cursor:"pointer",color:"#4A5E3A",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
         </div>
         {/* Ajustar pantalla */}
@@ -4462,8 +4520,8 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
       {/* ── CANVAS ── */}
       <div style={{flex:"1 1 300px",minWidth:0}}>
-        <div ref={viewportRef}
-          style={{width:"100%",height:"clamp(300px,55vh,480px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none",WebkitUserSelect:"none",userSelect:"none"}}
+        <div ref={viewportRef} className="canvas-viewport"
+          style={{width:"100%",height:"clamp(320px,60vh,560px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none",WebkitUserSelect:"none",userSelect:"none"}}
           onMouseDown={e=>{
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
@@ -4559,7 +4617,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           </div>
 
           {/* Tip navegación */}
-          <div style={{position:"absolute",bottom:6,left:"50%",transform:"translateX(-50%)",fontFamily:"'Lora',serif",fontSize:".62rem",color:"rgba(255,255,255,.38)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(0,0,0,.2)",borderRadius:100,padding:"3px 10px"}}>
+          <div style={{position:"absolute",bottom:6,left:"50%",transform:"translateX(-50%)",fontFamily:"'Lora',serif",fontSize:THEME.text.tiny,color:"rgba(255,255,255,.38)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(0,0,0,.2)",borderRadius:100,padding:"3px 10px"}}>
             {isMobile?"👆 Deslizá para mover · Pellizco para zoom":"🖱️ Arrastrá el fondo · Scroll para zoom"}
           </div>
         </div>
@@ -4569,10 +4627,10 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           {[{c:"#4A5E3A",l:"Confirmado"},{c:"#C9A96E",l:"Pendiente"},{c:"rgba(26,26,20,.3)",l:"No va"}].map(({c,l})=>(
             <div key={l} style={{display:"flex",alignItems:"center",gap:4}}>
               <div style={{width:8,height:8,borderRadius:"50%",background:c}}/>
-              <span style={{fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(26,26,20,.4)"}}>{l}</span>
+              <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>{l}</span>
             </div>
           ))}
-          <div style={{marginLeft:"auto",fontFamily:"'Lora',serif",fontSize:".7rem",color:"rgba(26,26,20,.35)"}}>
+          <div style={{marginLeft:"auto",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>
             📐 {salonW}×{salonH}m · {mesas.length} mesa{mesas.length!==1?"s":""} · {totalInvWarn} invitados
           </div>
         </div>
@@ -4600,7 +4658,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
               <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
                 {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
                   <button key={et} onClick={()=>updateMesa(selectedMesa,{etiqueta:et})}
-                    style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:100,padding:"2px 7px",fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(74,94,58,.7)",cursor:"pointer"}}>
+                    style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:100,padding:"2px 7px",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.7)",cursor:"pointer"}}>
                     {et}
                   </button>
                 ))}
@@ -4609,7 +4667,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
             {/* Tipo de mesa */}
             <div style={{marginBottom:8}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Tipo</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Tipo</div>
               <div style={{display:"flex",gap:4}}>
                 {[{v:"round",l:"⭕",desc:"Redonda"},{v:"rect_h",l:"▬",desc:"Horizontal"},{v:"rect_v",l:"▮",desc:"Vertical"}].map(opt=>{
                   const cur=selectedMesaObj?.tipo||"round";
@@ -4619,7 +4677,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                     onClick={e=>{e.stopPropagation();updateMesa(selectedMesa,{tipo:opt.v,ew:opt.v==="round"?undefined:opt.v==="rect_h"?3:0.8,eh:opt.v==="round"?undefined:opt.v==="rect_h"?0.8:3});}}
                     style={{flex:1,background:isAct?"rgba(74,94,58,.15)":"#F5EFE0",border:`1.5px solid ${isAct?"#4A5E3A":"rgba(74,94,58,.15)"}`,borderRadius:8,padding:"8px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                     <span style={{fontSize:"1rem",color:isAct?"#4A5E3A":"rgba(26,26,20,.4)"}}>{opt.l}</span>
-                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".06em",textTransform:"uppercase",color:isAct?"#4A5E3A":"rgba(26,26,20,.35)"}}>{opt.desc}</span>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:isAct?"#4A5E3A":"rgba(26,26,20,.35)"}}>{opt.desc}</span>
                   </button>;
                 })}
               </div>
@@ -4627,21 +4685,21 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
             {/* Rotación — solo para mesas rect */}
             {selectedMesaObj&&selectedMesaObj.tipo!=="round"&&<div style={{marginBottom:8}}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Rotación</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Rotación</div>
               <div style={{display:"flex",gap:4,alignItems:"center"}}>
                 <button onClick={()=>updateMesa(selectedMesa,{angle:((selectedMesaObj.angle||0)-45+360)%360})}
                   style={{flex:1,background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#4A5E3A"}}>↺ -45°</button>
-                <span style={{fontFamily:"'Cinzel',serif",fontSize:".65rem",color:"rgba(26,26,20,.4)",minWidth:32,textAlign:"center"}}>{selectedMesaObj.angle||0}°</span>
+                <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)",minWidth:32,textAlign:"center"}}>{selectedMesaObj.angle||0}°</span>
                 <button onClick={()=>updateMesa(selectedMesa,{angle:((selectedMesaObj.angle||0)+45)%360})}
                   style={{flex:1,background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".85rem",color:"#4A5E3A"}}>↻ +45°</button>
                 <button onClick={()=>updateMesa(selectedMesa,{angle:0})}
-                  style={{background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px 8px",cursor:"pointer",fontFamily:"'Cinzel',serif",fontSize:".58rem",color:"rgba(26,26,20,.4)"}}>0°</button>
+                  style={{background:"#F5EFE0",border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px 8px",cursor:"pointer",fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,color:"rgba(26,26,20,.4)"}}>0°</button>
               </div>
-              <p style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(26,26,20,.35)",margin:"4px 0 0",fontStyle:"italic"}}>O arrastrá el ↻ en la esquina de la mesa</p>
+              <p style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.35)",margin:"4px 0 0",fontStyle:"italic"}}>O arrastrá el ↻ en la esquina de la mesa</p>
             </div>}
 
             {/* Invitados asignados */}
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".54rem",letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5}}>
               Asignados · {selectedPersonas.length}/{tableSize}
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:160,overflowY:"auto",marginBottom:8}}>
@@ -4675,8 +4733,8 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
         {/* Lista sin mesa */}
         <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
-            {sinMesa.length>0&&<span style={{fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>← arrastrá al canvas</span>}
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
+            {sinMesa.length>0&&<span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>← arrastrá al canvas</span>}
           </div>
           {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
             <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
@@ -4706,10 +4764,10 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
 
         {/* Resumen salón */}
         <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:8,padding:"8px 10px"}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".52rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Salón</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(26,26,20,.6)"}}>📐 {salonW}×{salonH}m = {(salonW*salonH).toFixed(0)}m²</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)",marginTop:2}}>{mesas.length} mesa{mesas.length!==1?"s":""} · Ø{(MESA_R_M*2).toFixed(1)}m c/u</div>
-          {budgetInvitados>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.6)",marginTop:2}}>👥 {budgetInvitados} inv → {Math.ceil(budgetInvitados/tableSize)} mesas sugeridas</div>}
+          <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)",marginTop:2}}>{mesas.length} mesa{mesas.length!==1?"s":""} · Ø{(MESA_R_M*2).toFixed(1)}m c/u</div>
+          {budgetInvitados>0&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.6)",marginTop:2}}>👥 {budgetInvitados} inv → {Math.ceil(budgetInvitados/tableSize)} mesas sugeridas</div>}
         </div>
       </div>
     </div>
@@ -4746,7 +4804,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           })}
         </div>
         {/* Invitados asignados */}
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:6}}>Asignados · {selectedPersonas.length}/{tableSize}</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:6}}>Asignados · {selectedPersonas.length}/{tableSize}</div>
         <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:200,overflowY:"auto"}}>
           {selectedPersonas.map(p=>(
             <div key={`${p.guestId}-${p.personIdx}`} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.05)",borderRadius:8,padding:"6px 10px"}}>
@@ -4849,7 +4907,7 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
       <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1rem",color:"#1A1A14",textAlign:"center",marginBottom:4}}>
         Mesa {table.num}
       </div>
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",textAlign:"center",marginBottom:8}}>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",textAlign:"center",marginBottom:8}}>
         {assigned.length} asignados · {libres} libres{over?" ⚠️":""}
       </div>
       <div style={{display:"flex",justifyContent:"center"}}>
@@ -4891,7 +4949,7 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
         borderRadius:14,padding:"14px 16px",marginBottom:16,transition:"all .2s"
       }}
     >
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:10}}>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:10}}>
         Sin mesa asignada ({sinMesa.length} {sinMesa.length===1?"persona":"personas"})
       </div>
       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
@@ -5133,7 +5191,7 @@ function ShareCronograma({ events, form }){
   };
 
   return <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:14,padding:"16px 18px",marginTop:20}}>
-    <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>📄 Exportar cronograma</div>
+    <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>📄 Exportar cronograma</div>
     <p style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)",lineHeight:1.6,margin:"0 0 14px"}}>
       Generá un PDF listo para compartir con tu coordinadora, DJ o fotógrafo.
     </p>
@@ -5222,13 +5280,13 @@ function TimelineModule({user, form, results, onBack}){
 
   const fecha = form?.fechaBoda?new Date(form.fechaBoda+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):null;
 
-  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>⏰ Cronograma del día</h1>
             {fecha&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(245,239,224,.5)",textTransform:"capitalize"}}>{fecha}</div>}
           </div>
@@ -5244,7 +5302,7 @@ function TimelineModule({user, form, results, onBack}){
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(100px,45vw),1fr))",gap:6,marginBottom:8}}>
           {[{label:"Hora",key:"hora",type:"time"},{label:"Evento",key:"titulo",type:"text",placeholder:"ej: Primer baile"},{label:"Duración (min)",key:"duracion",type:"number"},{label:"Lugar",key:"lugar",type:"text",placeholder:"ej: Jardín"}].map(f=>
             <div key={f.key}>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginBottom:4}}>{f.label}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginBottom:4}}>{f.label}</div>
               <input type={f.type} value={newEv[f.key]} onChange={e=>setNewEv(x=>({...x,[f.key]:e.target.value}))} placeholder={f.placeholder||""}
                 style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
             </div>
@@ -5269,7 +5327,7 @@ function TimelineModule({user, form, results, onBack}){
             </label>
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
-            <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
             {vendorsMusica.length>0
               ? <select value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
                   style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
@@ -5302,7 +5360,7 @@ function TimelineModule({user, form, results, onBack}){
           return <div key={ev.id}>
           {showSep&&<div style={{display:"flex",alignItems:"center",gap:10,margin:"16px 0 8px"}}>
             <div style={{flex:1,height:"0.5px",background:"rgba(201,169,110,.2)"}}/>
-            <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(201,169,110,.55)",whiteSpace:"nowrap"}}>{getMomento(hora)}</span>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(201,169,110,.55)",whiteSpace:"nowrap"}}>{getMomento(hora)}</span>
             <div style={{flex:1,height:"0.5px",background:"rgba(201,169,110,.2)"}}/>
           </div>}
           <div style={{position:"relative",marginBottom:10,paddingLeft:18}}>
@@ -5312,7 +5370,7 @@ function TimelineModule({user, form, results, onBack}){
                 <div>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
                     <div style={{fontFamily:"'Cinzel',serif",fontSize:".76rem",letterSpacing:".08em",color:"#4A5E3A",fontWeight:600}}>{ev.hora}</div>
-                    {ev.duracion>0&&<div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.32)",background:"rgba(74,94,58,.05)",padding:"1px 8px",borderRadius:100}}>⏱ {ev.duracion<60?`${ev.duracion} min`:`${Math.floor(ev.duracion/60)}h${ev.duracion%60>0?` ${ev.duracion%60}min`:""}`}</div>}
+                    {ev.duracion>0&&<div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.32)",background:"rgba(74,94,58,.05)",padding:"1px 8px",borderRadius:100}}>⏱ {ev.duracion<60?`${ev.duracion} min`:`${Math.floor(ev.duracion/60)}h${ev.duracion%60>0?` ${ev.duracion%60}min`:""}`}</div>}
                   </div>
                   <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14"}}>{ev.titulo}</div>
                   {ev.lugar&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(74,94,58,.55)",marginTop:2}}>📍 {ev.lugar}</div>}
@@ -5320,14 +5378,14 @@ function TimelineModule({user, form, results, onBack}){
                   {"cancion" in ev && (ev.cancion
                     ? <div style={{marginTop:4,display:"flex",flexDirection:"column",gap:3}}>
                         <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(201,169,110,.75)",display:"flex",alignItems:"center",gap:6}}>
-                          🎵 {ev.cancion}{ev.esVivo&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",textTransform:"uppercase",background:"rgba(74,94,58,.12)",color:"#4A5E3A",padding:"2px 7px",borderRadius:100}}>En vivo</span>}
+                          🎵 {ev.cancion}{ev.esVivo&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",background:"rgba(74,94,58,.12)",color:"#4A5E3A",padding:"2px 7px",borderRadius:100}}>En vivo</span>}
                         </div>
                         {ev.quienToca&&<div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.55)",display:"flex",alignItems:"center",gap:4}}>🎻 {ev.quienToca}</div>}
                       </div>
                     : getSugerencia(ev.id)
                       ? <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(74,94,58,.45)",marginTop:2,fontStyle:"italic",display:"flex",alignItems:"center",gap:5}}>
                           💡 Sugerencia: {getSugerencia(ev.id)}
-                          <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))} style={{background:"rgba(74,94,58,.1)",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:100,padding:"1px 8px",fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",color:"#4A5E3A",cursor:"pointer",whiteSpace:"nowrap"}}>Usar</button>
+                          <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))} style={{background:"rgba(74,94,58,.1)",border:"0.5px solid rgba(74,94,58,.25)",borderRadius:100,padding:"1px 8px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",color:"#4A5E3A",cursor:"pointer",whiteSpace:"nowrap"}}>Usar</button>
                         </div>
                       : <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",color:"rgba(74,94,58,.3)",marginTop:2,fontStyle:"italic"}}>🎵 Sin canción asignada</div>
                   )}
@@ -5377,7 +5435,7 @@ function TimelineModule({user, form, results, onBack}){
                   </div>
                   {/* Quién toca */}
                   <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
                     {vendorsMusica.length>0
                       ? <select defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
                           style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
@@ -5399,7 +5457,7 @@ function TimelineModule({user, form, results, onBack}){
         })}
       {/* ── APROBACIÓN DEL CRONOGRAMA ── */}
       <div style={{background:ambosAprobaron?"rgba(74,94,58,.08)":"rgba(201,169,110,.05)",border:`0.5px solid ${ambosAprobaron?"rgba(74,94,58,.3)":"rgba(201,169,110,.25)"}`,borderRadius:14,padding:"16px 18px",marginTop:16}}>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>
           {ambosAprobaron?"✓ Cronograma aprobado por ambos":"✓ Aprobar el cronograma"}
         </div>
         {ambosAprobaron
@@ -5711,14 +5769,14 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   const doneItems = donePre + doneCust;
   const pct = totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"max(80px,calc(80px + env(safe-area-inset-bottom))"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:860,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>📋 Checklist de la boda</h1>
           </div>
           <div style={{textAlign:"right"}}>
@@ -5742,7 +5800,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
       <div style={{background:results?"rgba(74,94,58,.06)":"rgba(201,169,110,.06)",border:`0.5px solid ${results?"rgba(74,94,58,.2)":"rgba(201,169,110,.25)"}`,borderRadius:14,padding:"16px 18px",marginBottom:16}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>🎵 Tu Banda Sonora de Boda</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>🎵 Tu Banda Sonora de Boda</div>
             {results
               ? <><div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",color:"#1A1A14",marginBottom:4}}>Guion musical creado ✓</div>
                 <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.5)",lineHeight:1.5}}>
@@ -5757,7 +5815,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
           </button>
         </div>
         {results&&<div style={{marginTop:14,paddingTop:12,borderTop:"0.5px solid rgba(74,94,58,.12)"}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:".62rem",letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:8}}>Tareas clave del guion musical</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:8}}>Tareas clave del guion musical</div>
           {[
             {k:"mx1",t:"Compartir guion con DJ y fotógrafo"},
             {k:"mx2",t:"Confirmar versión exacta de cada canción con el DJ"},
@@ -5768,7 +5826,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
             const done = !!checked[item.k];
             return <div key={item.k} onClick={()=>toggleItem(item.k)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"pointer"}}>
               <div style={{width:20,height:20,minWidth:20,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {done&&<span style={{color:"#F5EFE0",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                {done&&<span style={{color:"#F5EFE0",fontSize:THEME.text.tiny,fontWeight:700}}>✓</span>}
               </div>
               <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:done?"rgba(26,26,20,.3)":"rgba(26,26,20,.7)",textDecoration:done?"line-through":"none",lineHeight:1.45}}>{item.t}</span>
             </div>;
@@ -5809,7 +5867,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
           {/* Stage header */}
           <button onClick={()=>setOpenStage(isOpen?-1:ei)} style={{width:"100%",background:"transparent",border:"none",padding:"16px 18px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left"}}>
             <div style={{width:36,height:36,minWidth:36,borderRadius:"50%",background:etapaPct===100?"#4A5E3A":"rgba(74,94,58,.1)",border:`2px solid ${etapaPct===100?"#4A5E3A":"rgba(74,94,58,.2)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              {etapaPct===100?<span style={{color:"#F5EFE0",fontSize:".85rem"}}>✓</span>:<span style={{fontFamily:"'Lora',serif",fontSize:".72rem",fontWeight:700,color:"#4A5E3A"}}>{etapaPct}%</span>}
+              {etapaPct===100?<span style={{color:"#F5EFE0",fontSize:".85rem"}}>✓</span>:<span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,fontWeight:700,color:"#4A5E3A"}}>{etapaPct}%</span>}
             </div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:"1rem",color:"#1A1A14",lineHeight:1.2}}>{etapa.etapa}</div>
@@ -5817,7 +5875,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                 <div style={{flex:1,maxWidth:90,height:3,background:"rgba(74,94,58,.1)",borderRadius:3,overflow:"hidden"}}>
                   <div style={{height:"100%",width:`${etapaPct}%`,background:etapaPct===100?"#4A5E3A":"rgba(201,169,110,.65)",borderRadius:3,transition:"width .3s"}}/>
                 </div>
-                <span style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.4)"}}>{etapaDone}/{etapaTotal}</span>
+                <span style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>{etapaDone}/{etapaTotal}</span>
               </div>
               <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)",marginTop:2,display:"none"}}>{etapaDone} de {etapaTotal} completadas{etapaCustItems.length>0?` · ${etapaCustItems.length} personalizada${etapaCustItems.length!==1?"s":""}`:""}
               </div>
@@ -5851,7 +5909,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                   <span style={{color:"rgba(74,94,58,.25)",cursor:"grab",fontSize:"1rem",marginTop:2,flexShrink:0}} title="Arrastrar para reordenar">⠿</span>
                   <div onClick={()=>toggleItem(`${ei}_${ii}`)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
                     <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
-                      {done&&<span style={{color:"#F5EFE0",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                      {done&&<span style={{color:"#F5EFE0",fontSize:THEME.text.tiny,fontWeight:700}}>✓</span>}
                     </div>
                     <div style={{flex:1}}>
                       <span style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:done?"rgba(26,26,20,.3)":"rgba(26,26,20,.75)",textDecoration:done?"line-through":"none",lineHeight:1.5}}>{item}</span>
@@ -5859,10 +5917,10 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                     </div>
                   </div>
                   <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center",flexWrap:"wrap"}}>
-                    {resp[`${ei}_${ii}`]&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".08em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.08)",color:RESP_COLORS[resp[`${ei}_${ii}`]]||"rgba(26,26,20,.5)"}}>{resp[`${ei}_${ii}`]}</span>}
-                    {(()=>{const b=badgeFecha(`${ei}_${ii}`);return b?<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 7px",borderRadius:100,background:b.bg,color:b.color,border:`0.5px solid ${b.border}`,whiteSpace:"nowrap"}}>📅 {b.label}</span>:null;})()}
-                    {getVendorLabel(`${ei}_${ii}`)&&<span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".06em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.07)",color:"rgba(74,94,58,.65)",border:"0.5px solid rgba(74,94,58,.2)",whiteSpace:"nowrap"}}>🏢 {getVendorLabel(`${ei}_${ii}`)}</span>}
-                    <button onClick={()=>setExpandKey(expandKey===`${ei}_${ii}`?null:`${ei}_${ii}`)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"2px 8px",fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(74,94,58,.5)",cursor:"pointer"}}>+</button>
+                    {resp[`${ei}_${ii}`]&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".08em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.08)",color:RESP_COLORS[resp[`${ei}_${ii}`]]||"rgba(26,26,20,.5)"}}>{resp[`${ei}_${ii}`]}</span>}
+                    {(()=>{const b=badgeFecha(`${ei}_${ii}`);return b?<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 7px",borderRadius:100,background:b.bg,color:b.color,border:`0.5px solid ${b.border}`,whiteSpace:"nowrap"}}>📅 {b.label}</span>:null;})()}
+                    {getVendorLabel(`${ei}_${ii}`)&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 7px",borderRadius:100,background:"rgba(74,94,58,.07)",color:"rgba(74,94,58,.65)",border:"0.5px solid rgba(74,94,58,.2)",whiteSpace:"nowrap"}}>🏢 {getVendorLabel(`${ei}_${ii}`)}</span>}
+                    <button onClick={()=>setExpandKey(expandKey===`${ei}_${ii}`?null:`${ei}_${ii}`)} style={{background:"transparent",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:100,padding:"2px 8px",fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(74,94,58,.5)",cursor:"pointer"}}>+</button>
                   </div>
                 </div>
                 {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:6,paddingLeft:0,width:"100%",flexWrap:"wrap",alignItems:"flex-start",marginTop:6}}>
@@ -5872,13 +5930,13 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                   </select>
                   <input type="text" value={notas[`${ei}_${ii}`]||""} onChange={e=>setNota(`${ei}_${ii}`,e.target.value)} placeholder="Nota (proveedor, recordatorio...)" style={{flex:1,minWidth:120,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
-                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Límite:</span>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Límite:</span>
                     <input type="date" value={getFecha(`${ei}_${ii}`)} onChange={e=>setFecha(`${ei}_${ii}`,e.target.value)}
                       style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",width:"min(130px,100%)",boxSizing:"border-box"}}/>
                     {getFecha(`${ei}_${ii}`)&&<button onClick={()=>setFecha(`${ei}_${ii}`,"")} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",cursor:"pointer",fontSize:".9rem",padding:"0 2px",lineHeight:1}}>×</button>}
                   </div>
                   {vendors4Chk.length>0&&<div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
-                    <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Proveedor:</span>
+                    <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Proveedor:</span>
                     <select value={getVendorId(`${ei}_${ii}`)} onChange={e=>setVendorId(`${ei}_${ii}`,e.target.value)}
                       style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",maxWidth:140}}>
                       <option value="">Ninguno</option>
@@ -5898,10 +5956,10 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                 </div>
                 <div onClick={()=>toggleCustom(ei,item.id)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
                   <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${item.completada?"#C9A96E":"rgba(201,169,110,.4)"}`,background:item.completada?"#C9A96E":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
-                    {item.completada&&<span style={{color:"#1A1A14",fontSize:".6rem",fontWeight:700}}>✓</span>}
+                    {item.completada&&<span style={{color:"#1A1A14",fontSize:THEME.text.tiny,fontWeight:700}}>✓</span>}
                   </div>
                   <span style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:item.completada?"rgba(26,26,20,.3)":"rgba(26,26,20,.75)",textDecoration:item.completada?"line-through":"none",lineHeight:1.5}}>
-                    {item.texto} <span style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".08em",color:"rgba(201,169,110,.6)",marginLeft:4}}>personalizada</span>
+                    {item.texto} <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",color:"rgba(201,169,110,.6)",marginLeft:4}}>personalizada</span>
                   </span>
                 </div>
                 <button onClick={()=>removeCustom(ei,item.id)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.2)",fontSize:"1rem",cursor:"pointer",padding:"0 4px",flexShrink:0,marginTop:2}}>×</button>
@@ -6082,7 +6140,8 @@ function GlobalNav({view, setView, hasResults}){
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
           gap:2,background:"transparent",border:"none",
           cursor:item.disabled?"default":"pointer",
-          padding:"8px 12px 6px",
+          padding:"10px 12px 8px",
+          minHeight:THEME.tap.comfortable,
           flexShrink:0,flexGrow:1,
           opacity:item.disabled?.35:1,
           borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent",
@@ -6090,7 +6149,7 @@ function GlobalNav({view, setView, hasResults}){
         }}>
           <span style={{fontSize:"1.2rem",lineHeight:1}}>{item.icon}</span>
           <span style={{
-            fontFamily:"'Cinzel',serif",fontSize:".5rem",letterSpacing:".06em",
+            fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",
             textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",
             fontWeight:active?700:400,whiteSpace:"nowrap",marginTop:3,lineHeight:1
           }}>{item.label}</span>
