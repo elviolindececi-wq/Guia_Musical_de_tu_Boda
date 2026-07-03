@@ -3894,8 +3894,6 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     if(type==="mesa"){
       const item=mesas.find(m=>m.id===id); if(!item) return;
       setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
-      setSelectedMesa(id);setSelectedElem(null);
-      if(window.innerWidth<640) setShowSheet(true);
     } else if(type==="elem"){
       const item=elementos.find(el=>el.id===id); if(!item) return;
       setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
@@ -4361,23 +4359,20 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
         <div ref={viewportRef}
           style={{width:"100%",height:480,background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none"}}
           onMouseDown={e=>{
-            // Solo iniciar pan si click en área vacía (no en mesa ni elemento)
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
-            if(isBg) startDrag(e,"pan",null);
-          }}
-          onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
-          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-          onClick={()=>{
-            // Solo deseleccionar si NO hubo movimiento (no fue un pan)
-            if(!dragMoved.current){
+            if(isBg){
+              // Click en fondo: deseleccionar y preparar pan
               setSelectedElem(null);
               setSelectedMesa(null);
               setShowShapeMenu(false);
               setShowElemMenu(false);
+              startDrag(e,"pan",null);
             }
-            dragMoved.current=false;
           }}
+          onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+{/* sin onClick en viewport — la deselección se maneja en mousedown del fondo */}
         >
           <div ref={canvasRef} style={{position:"absolute",left:pan.x,top:pan.y,width:CW+80,height:CH+80}}>
             {/* Piso */}
@@ -4434,14 +4429,15 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                 style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center"}}
                 onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
                 onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
-                onClick={e=>{
+                onMouseDown={e=>{
+                // stopPropagation evita que el viewport inicie pan
                 e.stopPropagation();
-                if(!dragMoved.current){
-                  setSelectedMesa(isSelected?null:mesa.id);
-                  setSelectedElem(null);
-                  if(window.innerWidth<640) setShowSheet(true);
-                }
-                dragMoved.current=false;
+              }}
+              onClick={e=>{
+                e.stopPropagation();
+                setSelectedMesa(isSelected?null:mesa.id);
+                setSelectedElem(null);
+                if(window.innerWidth<640) setShowSheet(true);
               }}
               >
                 {jsx}
