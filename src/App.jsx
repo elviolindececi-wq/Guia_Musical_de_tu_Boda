@@ -4196,7 +4196,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       // 3 segmentos base del U — siempre se crean los 3
       const seg3=[
         {mx:brazoX_L, my:mg+SG+brazoH/2, tipo:"rect_v", ew:MW, eh:brazoH, miraSide:"right"},
-        {mx:brazoX_L+MW/2+fondoW/2, my:fondoY, tipo:"rect_h", ew:fondoW, eh:MW, miraSide:"down"},
+        {mx:brazoX_L+MW/2+fondoW/2, my:fondoY, tipo:"rect_h", ew:fondoW, eh:MW, miraSide:"both"},
         {mx:brazoX_R, my:mg+SG+brazoH/2, tipo:"rect_v", ew:MW, eh:brazoH, miraSide:"left"},
       ];
 
