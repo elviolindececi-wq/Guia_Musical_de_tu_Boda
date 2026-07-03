@@ -3804,6 +3804,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   const [selectedMesa, setSelectedMesa]   = useState(null);
   const [selectedElem, setSelectedElem]   = useState(null);
   const [dragging, setDragging]           = useState(null);
+  const dragMoved = useRef(false); // true si el mouse se movió durante el drag
   const [hoveredMesa, setHoveredMesa]     = useState(null);
   const [pinch, setPinch]                 = useState(null);
   const [showSheet, setShowSheet]         = useState(false); // mobile bottom sheet
@@ -3916,6 +3917,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       const cy=e.touches?.[0]?.clientY??e.clientY;
       setDragging({type:"pan",x0:cx-r.left,y0:cy-r.top,pan0:{...pan}});
     }
+    dragMoved.current=false;
   };
   const startDragGuest=(e,guestId)=>{
     e.stopPropagation();
@@ -3924,6 +3926,7 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
   };
   const onMove=(e)=>{
     if(!dragging) return;
+    dragMoved.current=true;
     const pos=getCanvasPos(e);
     const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
     const cx=e.touches?.[0]?.clientX??e.clientX;
@@ -4357,10 +4360,24 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
       <div style={{flex:1,minWidth:0}}>
         <div ref={viewportRef}
           style={{width:"100%",height:480,background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none"}}
-          onMouseDown={e=>{if(e.target===viewportRef.current||e.target===canvasRef.current)startDrag(e,"pan",null);}}
+          onMouseDown={e=>{
+            // Solo iniciar pan si click en área vacía (no en mesa ni elemento)
+            const tgt=e.target;
+            const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
+            if(isBg) startDrag(e,"pan",null);
+          }}
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-          onClick={()=>{setSelectedElem(null);setSelectedMesa(null);setShowShapeMenu(false);setShowElemMenu(false);}}
+          onClick={()=>{
+            // Solo deseleccionar si NO hubo movimiento (no fue un pan)
+            if(!dragMoved.current){
+              setSelectedElem(null);
+              setSelectedMesa(null);
+              setShowShapeMenu(false);
+              setShowElemMenu(false);
+            }
+            dragMoved.current=false;
+          }}
         >
           <div ref={canvasRef} style={{position:"absolute",left:pan.x,top:pan.y,width:CW+80,height:CH+80}}>
             {/* Piso */}
@@ -4417,7 +4434,15 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
                 style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center"}}
                 onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
                 onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
-                onClick={e=>{e.stopPropagation();if(!dragging){setSelectedMesa(isSelected?null:mesa.id);setSelectedElem(null);if(window.innerWidth<640)setShowSheet(true);}}}
+                onClick={e=>{
+                e.stopPropagation();
+                if(!dragMoved.current){
+                  setSelectedMesa(isSelected?null:mesa.id);
+                  setSelectedElem(null);
+                  if(window.innerWidth<640) setShowSheet(true);
+                }
+                dragMoved.current=false;
+              }}
               >
                 {jsx}
                 {/* Botón eliminar — solo al seleccionar */}
