@@ -4807,7 +4807,7 @@ function TimelineModule({user, form, results, onBack}){
           const prevHora=idx>0?parseInt(sorted[idx-1].hora?.split(":")?.[0]||0):hora;
           const getMomento=(h)=>h<12?"🌅 Mañana":h<16?"☀️ Tarde":h<20?"🌆 Tardecita":"🌙 Noche";
           const showSep=idx===0||getMomento(hora)!==getMomento(prevHora);
-          return <React.Fragment key={ev.id}>
+          return <div key={ev.id}>
           {showSep&&<div style={{display:"flex",alignItems:"center",gap:10,margin:"16px 0 8px"}}>
             <div style={{flex:1,height:"0.5px",background:"rgba(201,169,110,.2)"}}/>
             <span style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".14em",textTransform:"uppercase",color:"rgba(201,169,110,.55)",whiteSpace:"nowrap"}}>{getMomento(hora)}</span>
@@ -4903,7 +4903,7 @@ function TimelineModule({user, form, results, onBack}){
               </div>}
             </div>
           </div>
-          </React.Fragment>
+          </div>
         })}
       {/* ── APROBACIÓN DEL CRONOGRAMA ── */}
       <div style={{background:ambosAprobaron?"rgba(74,94,58,.08)":"rgba(201,169,110,.05)",border:`0.5px solid ${ambosAprobaron?"rgba(74,94,58,.3)":"rgba(201,169,110,.25)"}`,borderRadius:14,padding:"16px 18px",marginTop:16}}>
