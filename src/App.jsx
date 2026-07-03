@@ -4018,7 +4018,8 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     const numMesasTarget = esRectangular ? mesasRect : mesasNecesarias;
 
     // Generar las mesas si hay más de las actuales
-    let mesasBase = [...mesasBase];
+    // Construir lista base de mesas
+    let mesasBase;
     if(numMesasTarget > mesas.length){
       const extras = Array.from({length:numMesasTarget-mesas.length},(_,i)=>({
         id: Math.max(0,...mesas.map(m=>m.id))+i+1,
@@ -4029,7 +4030,6 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
     } else {
       mesasBase = mesas.map(m=>({...m, tipo:esRectangular?"rect":"round"}));
     }
-    setMesas(mesasBase);
     const N = mesasBase.length;
     const mg = 1.5; // margen paredes
     const MD = MESA_R_M*2; // diámetro mesa = 1.80m
