@@ -3964,6 +3964,73 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
     const i = mesas.length;
     setMesas(ms=>[...ms,{id:newId,mx:3+(i%4)*3.5,my:3+Math.floor(i/4)*3.5}]);
   };
+
+  // ── Fit to screen: ajusta zoom y pan para ver TODO el salón ──
+  const fitToScreen = ()=>{
+    const vpEl = viewportRef.current;
+    if(!vpEl) return;
+    const vpW = vpEl.clientWidth  - 80;
+    const vpH = vpEl.clientHeight - 80;
+    const zW = vpW / (salonW * BASE_PX);
+    const zH = vpH / (salonH * BASE_PX);
+    const newZ = Math.min(zW, zH, 2);
+    setZoom(+newZ.toFixed(2));
+    const newCW = salonW * BASE_PX * newZ;
+    const newCH = salonH * BASE_PX * newZ;
+    setPan({x: (vpEl.clientWidth  - newCW) / 2, y: (vpEl.clientHeight - newCH) / 2});
+  };
+
+  // ── Distribución automática con lógica de salón ──
+  const autoDistribuir = ()=>{
+    const W = salonW, H = salonH;
+    const numMesas = mesas.length;
+    
+    // 1. Elementos fijos con posiciones lógicas
+    const nuevosElementos = [];
+    // Pista de baile — fondo centro
+    const pistaW=8, pistaH=6;
+    nuevosElementos.push({id:"pista-auto",   tipo:"pista",    mx:W/2-pistaW/2, my:2,              ew:pistaW, eh:pistaH});
+    // Mesa de novios — frente a la pista
+    const novW=5, novH=1.5;
+    nuevosElementos.push({id:"novios-auto",  tipo:"novios",   mx:W/2-novW/2,   my:pistaH+3,       ew:novW,   eh:novH});
+    // DJ/Escenario — detrás de la pista
+    nuevosElementos.push({id:"dj-auto",      tipo:"escenario",mx:W/2-2.5,      my:0.5,            ew:5,      eh:2});
+    // Bar — esquina derecha
+    nuevosElementos.push({id:"bar-auto",     tipo:"bar",      mx:W-5,          my:H/2-1,          ew:4,      eh:2});
+    // Entrada — borde inferior centro
+    nuevosElementos.push({id:"entrada-auto", tipo:"entrada",  mx:W/2-1.5,      my:H-1.5,          ew:3,      eh:0.8});
+    // Baños — esquina inferior izquierda
+    nuevosElementos.push({id:"banios-auto",  tipo:"banios",   mx:0.5,          my:H-3.5,          ew:3,      eh:2.5});
+    setElementos(nuevosElementos);
+
+    // 2. Mesas de invitados — distribuir en arco/filas debajo de la mesa de novios
+    if(numMesas===0) return;
+    
+    const zonaY    = novH + pistaH + 4.5; // empieza debajo de la mesa de novios
+    const zonaH    = H - zonaY - 2;       // hasta el borde inferior (dejando espacio para entrada)
+    const zonaXini = 1.5;
+    const zonaXfin = W - 1.5;
+    const zonaW    = zonaXfin - zonaXini;
+
+    // Calcular cuántas mesas caben por fila (diámetro = MESA_R_M*2 + espaciado)
+    const mesaDiam = MESA_R_M*2 + 1.2; // 1.80m + 1.2m de pasillo
+    const porFila  = Math.max(1, Math.floor(zonaW / mesaDiam));
+    const filas    = Math.ceil(numMesas / porFila);
+    const espacioFilas = filas > 1 ? Math.min(mesaDiam, zonaH / filas) : zonaH / 2;
+
+    const nuevasMesas = mesas.map((m,i)=>{
+      const fila = Math.floor(i / porFila);
+      const col  = i % porFila;
+      // Centrar cada fila
+      const mesasEnEstaFila = Math.min(porFila, numMesas - fila * porFila);
+      const anchoFila = mesasEnEstaFila * mesaDiam;
+      const xOffset  = (zonaW - anchoFila) / 2;
+      const mx = zonaXini + xOffset + col * mesaDiam + mesaDiam/2;
+      const my = zonaY + fila * espacioFilas + MESA_R_M + 0.5;
+      return {...m, mx: Math.min(mx, W-MESA_R_M), my: Math.min(my, H-MESA_R_M)};
+    });
+    setMesas(nuevasMesas);
+  };
   const removeMesa = (id)=>{
     (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>onRemove(g.id));
     setMesas(ms=>ms.filter(m=>m.id!==id));
@@ -4025,6 +4092,15 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
           {ELEMENTOS_FIJOS.map(e=><option key={e.id} value={e.id}>{e.emoji} {e.label}</option>)}
         </select>
         <button onClick={addMesa} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:8,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
+        {/* Fit to screen */}
+        <button onClick={fitToScreen} title="Ver todo el salón" style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:8,padding:"7px 10px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"#4A5E3A",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4" height="4" stroke="#4A5E3A" strokeWidth="1.5" rx="0.5"/><rect x="9" y="1" width="4" height="4" stroke="#4A5E3A" strokeWidth="1.5" rx="0.5"/><rect x="1" y="9" width="4" height="4" stroke="#4A5E3A" strokeWidth="1.5" rx="0.5"/><rect x="9" y="9" width="4" height="4" stroke="#4A5E3A" strokeWidth="1.5" rx="0.5"/></svg>
+          100%
+        </button>
+        {/* Auto distribución */}
+        <button onClick={autoDistribuir} title="Distribuir automáticamente" style={{background:"rgba(201,169,110,.12)",border:"1px solid rgba(201,169,110,.4)",borderRadius:8,padding:"7px 12px",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(139,107,40,.9)",cursor:"pointer",display:"flex",alignItems:"center",gap:5,fontWeight:600}}>
+          ✨ Auto
+        </button>
       </div>
 
       {/* Viewport — área FIJA con overflow hidden */}
@@ -4196,9 +4272,9 @@ function SalonView({ guests, tableSize, onAssign, onRemove }){
         </div>
 
         {/* Hint de navegación superpuesto abajo del viewport */}
-        <div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",background:"rgba(0,0,0,.35)",borderRadius:100,padding:"4px 12px",pointerEvents:"none"}}>
-          <span style={{fontFamily:"'Lora',serif",fontSize:".68rem",color:"rgba(255,255,255,.7)"}}>
-            🖱️ Scroll = zoom · Clic+arrastrar vacío = mover · 📱 Pellizco = zoom
+        <div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",background:"rgba(0,0,0,.35)",borderRadius:100,padding:"4px 12px",pointerEvents:"none",whiteSpace:"nowrap"}}>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".65rem",color:"rgba(255,255,255,.65)"}}>
+            🖱️ Scroll = zoom · Arrastrar = mover · 📱 Pellizco = zoom · ✨ Auto = distribuir
           </span>
         </div>
       </div>
