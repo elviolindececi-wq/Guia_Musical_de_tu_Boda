@@ -4372,7 +4372,6 @@ function SalonView({ guests, tableSize, budgetInvitados=0, onAssign, onRemove })
           }}
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-{/* sin onClick en viewport — la deselección se maneja en mousedown del fondo */}
         >
           <div ref={canvasRef} style={{position:"absolute",left:pan.x,top:pan.y,width:CW+80,height:CH+80}}>
             {/* Piso */}
