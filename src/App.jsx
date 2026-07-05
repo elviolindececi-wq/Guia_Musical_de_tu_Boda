@@ -4592,6 +4592,83 @@ const decorPack = (style, W, H) => {
   return packs[style] || packs.romantico_floral;
 };
 
+// Decoración segura para formas irregulares. A diferencia de decorPack(),
+// esto no "recorta" un diseño rectangular: coloca los acentos en zonas reales
+// del contorno elegido para que no queden fuera del salón ni sobre la pista.
+const decorPackShape = (style, W, H, shape="rectangulo") => {
+  if(shape==="L"){
+    const topY=0.55, midY=H*0.50, leftX=W*0.23;
+    const packs={
+      romantico_floral:[
+        elem("arco-l","arco",W*0.50-2,topY,4,0.7),
+        elem("flores-l-novios-izq","flores",W*0.33,H*0.44,1.2,1.2),
+        elem("flores-l-novios-der","flores",W*0.63,H*0.44,1.2,1.2),
+        elem("flores-l-entrada","flores",leftX,H-2.0,1.2,1.2),
+      ],
+      elegante_clasico:[
+        elem("backing-l","backing",W*0.50-2.1,topY,4.2,0.8),
+        elem("columnas-l-1","columnas",W*0.13,H-2.1,1.1,1.1),
+        elem("columnas-l-2","columnas",W*0.37,H-2.1,1.1,1.1),
+      ],
+      boho_chic:[
+        elem("alfombra-l","alfombra",leftX-0.6,H-8.0,1.2,6.2),
+        elem("living-l","living",W*0.04,H*0.55,3.8,2.2),
+        elem("luces-l","luces",W*0.18,topY,8,0.6),
+        elem("flores-l-lounge","flores",W*0.04,H*0.52,1.2,1.2),
+      ],
+      minimalista:[
+        elem("backing-l-min","backing",W*0.50-2.1,topY,4.2,0.8),
+      ],
+      rustico:[
+        elem("living-l-rustico","living",W*0.04,H*0.55,3.8,2.2),
+        elem("luces-l-rusticas","luces",W*0.18,topY,8,0.6),
+        elem("exterior-l-rustico","exterior",W*0.28,H*0.58,5,3),
+      ],
+      glam_dorado:[
+        elem("backing-l-glam","backing",W*0.50-2.4,topY,4.8,0.8),
+        elem("luces-l-glam","luces",W*0.48,H*0.49,8,0.6),
+        elem("columnas-l-glam-1","columnas",W*0.34,H*0.44,1.1,1.1),
+        elem("columnas-l-glam-2","columnas",W*0.64,H*0.44,1.1,1.1),
+      ],
+      jardin:[
+        elem("arco-l-jardin","arco",W*0.50-2,topY,4,0.7),
+        elem("exterior-l-jardin","exterior",W*0.02,H*0.56,5,3),
+        elem("flores-l-jardin-1","flores",W*0.05,H*0.12,1.3,1.3),
+        elem("flores-l-jardin-2","flores",W*0.88,H*0.12,1.3,1.3),
+      ],
+      fiesta_nocturna:[
+        elem("luces-l-fiesta","luces",W*0.45,H*0.49,10,0.6),
+        elem("backing-l-fiesta","backing",W*0.50-2.4,topY,4.8,0.8),
+      ],
+    };
+    return packs[style]||packs.romantico_floral;
+  }
+  if(shape==="U"){
+    const packs={
+      romantico_floral:[elem("arco-u","arco",W/2-2,H*0.62,4,0.7),elem("flores-u-1","flores",W*0.12,H*0.22,1.2,1.2),elem("flores-u-2","flores",W*0.84,H*0.22,1.2,1.2)],
+      elegante_clasico:[elem("backing-u","backing",W/2-2.1,H*0.62,4.2,0.8),elem("columnas-u-1","columnas",W*0.12,H-2,1.1,1.1),elem("columnas-u-2","columnas",W*0.84,H-2,1.1,1.1)],
+      boho_chic:[elem("living-u","living",W*0.05,H*0.18,3.8,2.2),elem("alfombra-u","alfombra",W/2-0.6,H*0.66,1.2,5.5),elem("luces-u","luces",W/2-5,H-1.2,10,0.6)],
+      minimalista:[elem("backing-u-min","backing",W/2-2.1,H*0.62,4.2,0.8)],
+      rustico:[elem("living-u-rustico","living",W*0.05,H*0.18,3.8,2.2),elem("exterior-u-rustico","exterior",W*0.78,H*0.16,5,3),elem("luces-u-rusticas","luces",W/2-5,H-1.2,10,0.6)],
+      glam_dorado:[elem("backing-u-glam","backing",W/2-2.4,H*0.62,4.8,0.8),elem("luces-u-glam","luces",W/2-5,H-1.2,10,0.6)],
+      jardin:[elem("arco-u-jardin","arco",W/2-2,H*0.62,4,0.7),elem("flores-u-jardin-1","flores",W*0.1,H*0.12,1.2,1.2),elem("flores-u-jardin-2","flores",W*0.86,H*0.12,1.2,1.2)],
+      fiesta_nocturna:[elem("luces-u-fiesta","luces",W/2-5,H-1.2,10,0.6),elem("backing-u-fiesta","backing",W/2-2.4,H*0.62,4.8,0.8)],
+    };
+    return packs[style]||packs.romantico_floral;
+  }
+  if(shape==="oval"){
+    return decorPack(style,W,H).map(el=>{
+      const cx=W/2, cy=H/2;
+      let ex=(el.mx||0)+(el.ew||1)/2, ey=(el.my||0)+(el.eh||1)/2;
+      const dx=ex-cx, dy=ey-cy;
+      const norm=Math.sqrt((dx*dx)/(W*W*0.18)+(dy*dy)/(H*H*0.18)) || 1;
+      if(norm>1){ ex=cx+dx/norm; ey=cy+dy/norm; }
+      return {...el,mx:+Math.max(0.8,Math.min(W-(el.ew||1)-0.8,ex-(el.ew||1)/2)).toFixed(2),my:+Math.max(0.8,Math.min(H-(el.eh||1)-0.8,ey-(el.eh||1)/2)).toFixed(2)};
+    });
+  }
+  return decorPack(style,W,H);
+};
+
 const mesasRedondas = (coords, offset=1) => coords.map(([mx,my],i)=>mesa(i+offset,mx,my,"round",{cap:10}));
 
 const PRESET_BUILDERS = {
@@ -5093,13 +5170,169 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     return P;
   };
 
+  // Motor v2: genera el plano desde la geometría elegida.
+  // Para formas irregulares ya no se toma un rectángulo y se recorta: se arman
+  // zonas funcionales propias para L, U y Oval, cuidando que pista, DJ, mesa de
+  // novios, servicios, baños y mesas queden dentro del salón y con circulación.
+  const mesasL=(W,H,presetId)=>{
+    const roundBase=[
+      [6.5,6.2],[12.0,6.0],[31.0,6.0],[37.0,6.2],
+      [6.5,12.2],[12.0,12.3],[31.0,12.3],[37.0,12.2],
+      [6.5,21.2],[12.3,22.0],[17.0,25.5]
+    ];
+    if(presetId==="moderno_minimalista") return [
+      mesa(1,6.0,6.2,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(2,11.0,6.2,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(3,34.0,6.2,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(4,39.0,6.2,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(5,6.0,21.0,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(6,12.5,23.0,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+    ];
+    if(presetId==="fiesta_pista") return mesasRedondas([[6.0,5.8],[38.0,5.8],[6.0,13.0],[38.0,13.0],[6.2,21.5],[12.4,23.5]],1);
+    if(presetId==="ceremonia_fiesta") return mesasRedondas([[6.0,18.8],[12.0,19.5],[17.0,23.8],[6.2,25.5],[35.5,12.0],[39.5,7.0]],1);
+    return mesasRedondas(roundBase,1);
+  };
+
+  const elementosL=(W,H,presetId,decor)=>{
+    const common=[
+      elem("entrada-1","entrada",9.0,H-1.2,3.0,0.8),
+      elem("bienvenida-1","bienvenida",4.0,H-3.4,3.2,1.0),
+      elem("banios-1","banios",W-4.2,0.9,3.0,2.2),
+      elem("cocina-1","cocina",0.9,H-4.0,4.0,2.7),
+      elem("salida-1","salida",W-4.2,H*0.50-1.1,3.0,0.8),
+    ];
+    let main;
+    if(presetId==="jardin_exterior"){
+      main=[
+        elem("altar-1","altar",15.0,1.0,11.0,2.4),
+        elem("camino-1","camino",20.0,3.8,1.2,5.4),
+        elem("sillascer-1","sillas_cer",12.0,4.0,17.0,4.4),
+        elem("novios-1","novios",15.5,10.4,10.0,1.0),
+        elem("pista-1","pista",6.0,16.0,10.5,6.2),
+        elem("escenario-1","escenario",7.0,23.4,8.5,2.1),
+        elem("bar-1","bar",W-6.0,9.0,3.6,2.4),
+        elem("postres-1","postres",W-6.2,12.2,3.6,1.4),
+        elem("torta-1","torta",3.0,13.0,2.6,1.4),
+        elem("photobooth-1","photobooth",W-5.2,3.8,3.0,2.0),
+      ];
+    } else if(presetId==="fiesta_pista"){
+      main=[
+        elem("escenario-1","escenario",16.0,2.2,12.0,2.2),
+        elem("pista-1","pista",13.0,5.8,18.0,8.0),
+        elem("novios-1","novios",15.8,14.2,12.0,1.0),
+        elem("bar-1","bar",W-6.2,9.0,3.8,2.6),
+        elem("bebidas-1","bebidas",W-6.0,12.4,3.2,1.3),
+        elem("cabina360-1","cabina360",2.0,11.2,2.6,2.6),
+        elem("photobooth-1","photobooth",2.0,15.0,3.0,2.0),
+        elem("torta-1","torta",13.0,16.3,2.6,1.4),
+        elem("postres-1","postres",17.0,16.3,3.6,1.4),
+      ];
+    } else if(presetId==="ceremonia_fiesta"){
+      main=[
+        elem("altar-1","altar",15.0,1.0,12.0,2.4),
+        elem("camino-1","camino",20.4,3.8,1.2,5.8),
+        elem("sillascer-1","sillas_cer",12.0,4.0,17.0,4.6),
+        elem("novios-1","novios",15.5,10.7,10.0,1.0),
+        elem("escenario-1","escenario",4.5,15.0,9.5,2.0),
+        elem("pista-1","pista",4.5,18.0,12.0,6.0),
+        elem("bar-1","bar",W-6.2,10.2,3.8,2.4),
+        elem("torta-1","torta",17.0,16.2,2.6,1.4),
+        elem("postres-1","postres",16.0,18.5,3.6,1.4),
+      ];
+    } else {
+      main=[
+        elem("escenario-1","escenario",18.0,2.3,8.0,2.2),
+        elem("pista-1","pista",16.0,5.8,12.0,7.0),
+        elem("novios-1","novios",15.6,13.3,12.0,1.0),
+        elem("torta-1","torta",3.0,9.5,2.6,1.4),
+        elem("postres-1","postres",3.0,12.3,3.6,1.4),
+        elem("bar-1","bar",W-6.2,8.2,3.8,2.8),
+        elem("cafeteria-1","cafeteria",W-5.8,12.0,3.0,1.5),
+        elem("photobooth-1","photobooth",3.0,16.8,3.0,2.0),
+      ];
+    }
+    return [...main,...common,...decorPackShape(decor,W,H,"L")];
+  };
+
+  const buildLPlano=(presetId,decor)=>{
+    const W=44,H=30;
+    return {salonW:W,salonH:H,salonShape:"L",estiloDistrib:presetId,estiloDecor:decor,mesas:mesasL(W,H,presetId),elementos:elementosL(W,H,presetId,decor)};
+  };
+
+  const mesasU=(W,H,presetId)=>{
+    if(presetId==="moderno_minimalista") return [
+      mesa(1,7.0,6.0,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(2,W-7.0,6.0,"rect_v",{cap:18,ew:0.9,eh:4.8}),
+      mesa(3,8.0,H-8.5,"rect_h",{cap:16,ew:5.2,eh:0.9}),
+      mesa(4,W-8.0,H-8.5,"rect_h",{cap:16,ew:5.2,eh:0.9}),
+    ];
+    return mesasRedondas([[7,5.5],[W-7,5.5],[7,11.8],[W-7,11.8],[8,H-8.0],[15,H-5.8],[W-15,H-5.8],[W-8,H-8.0]],1);
+  };
+
+  const elementosU=(W,H,presetId,decor)=>{
+    const common=[
+      elem("entrada-1","entrada",W/2-1.5,H-1.2,3,0.8),
+      elem("bienvenida-1","bienvenida",W/2-5.2,H-2.4,3.2,1.0),
+      elem("banios-1","banios",W-4.0,1.0,3,2.2),
+      elem("cocina-1","cocina",1.0,1.0,4,2.7),
+      elem("salida-1","salida",W-4.2,H-1.2,3,0.8),
+    ];
+    const ceremony=presetId==="ceremonia_fiesta"||presetId==="jardin_exterior";
+    const main=ceremony?[
+      elem("altar-1","altar",W/2-7,H*0.61,14,2.4),
+      elem("camino-1","camino",W/2-0.6,H*0.70,1.2,5.6),
+      elem("sillascer-1","sillas_cer",W/2-9,H*0.68,18,4.5),
+      elem("novios-1","novios",5.5,H*0.18,10,1),
+      elem("pista-1","pista",W/2-6,H*0.78,12,5.5),
+      elem("escenario-1","escenario",W/2-4.5,H*0.92-2.0,9,2),
+      elem("bar-1","bar",W-7,H*0.18,3.8,2.6),
+      elem("torta-1","torta",W-8,H*0.36,2.6,1.4),
+      elem("postres-1","postres",W-8,H*0.43,3.6,1.4),
+    ]:[
+      elem("pista-1","pista",W/2-7,H*0.64,14,7.0),
+      elem("escenario-1","escenario",W/2-5,H*0.87,10,2.3),
+      elem("novios-1","novios",W/2-5.5,H*0.58,11,1),
+      elem("bar-1","bar",W-7,H*0.20,3.8,2.6),
+      elem("torta-1","torta",4.8,H*0.42,2.6,1.4),
+      elem("postres-1","postres",4.4,H*0.50,3.6,1.4),
+      elem("photobooth-1","photobooth",W-7,H*0.44,3,2),
+    ];
+    return [...main,...common,...decorPackShape(decor,W,H,"U")];
+  };
+
+  const buildUPlano=(presetId,decor)=>{
+    const W=46,H=30;
+    return {salonW:W,salonH:H,salonShape:"U",estiloDistrib:presetId,estiloDecor:decor,mesas:mesasU(W,H,presetId),elementos:elementosU(W,H,presetId,decor)};
+  };
+
+  const buildOvalPlano=(presetId,decor)=>{
+    const P=(presetId==="jardin_exterior"?PRESET_BUILDERS.jardin_exterior:PRESET_BUILDERS[presetId]||PRESET_BUILDERS.clasico_elegante)(decor);
+    let O=escalarPlano(P,42,28);
+    O.salonShape="oval";
+    O.elementos=(O.elementos||[]).map(el=>mantenerElementoDentroForma(el,"oval",O.salonW,O.salonH));
+    O.mesas=(O.mesas||[]).map(m=>mantenerMesaDentroForma(m,"oval",O.salonW,O.salonH));
+    O.elementos=[...(O.elementos||[]).filter(el=>!String(el.id).includes("flores-")&&!String(el.id).includes("luces-")&&!String(el.id).includes("backing-")),...decorPackShape(decor,O.salonW,O.salonH,"oval")];
+    return O;
+  };
+
+  const buildCoherentPreset=(presetId,decor,shape)=>{
+    if(presetId==="desde_cero") return {salonW:shape==="cuadrado"?28:30,salonH:shape==="cuadrado"?28:18,salonShape:shape||"rectangulo",estiloDistrib:"desde_cero",estiloDecor:decor,mesas:[],elementos:[]};
+    if(shape==="L") return buildLPlano(presetId,decor);
+    if(shape==="U") return buildUPlano(presetId,decor);
+    if(shape==="oval") return buildOvalPlano(presetId,decor);
+    let P=(PRESET_BUILDERS[presetId]||PRESET_BUILDERS.clasico_elegante)(decor);
+    if(shape==="cuadrado") P=adaptarPlanoAForma(P,"cuadrado");
+    else P={...P,salonShape:shape||P.salonShape||"rectangulo"};
+    return P;
+  };
+
   // Aplicar el plano modelo (reemplaza el plano actual; las asignaciones
   // de invitados a mesas 1-15 se conservan por número)
   const aplicarPreset=(presetId, opts={})=>{
-    const builder=PRESET_BUILDERS[presetId] || PRESET_BUILDERS.clasico_elegante;
     const formaElegida=opts.shape || selectedSalonShape || salonShape;
-    let P=builder(estiloDecor);
-    P=adaptarPlanoAForma(P,formaElegida);
+    let P=buildCoherentPreset(presetId, estiloDecor, formaElegida);
+    // Última validación: si el usuario cambia dimensiones luego, las mesas se reacomodan
+    // con zonas prohibidas para pista, DJ, baños, cocina, barra, entrada y salida.
     P.mesas = sanitizarMesasConZonas(P.mesas||[], P.elementos||[], P.salonW, P.salonH);
     const hayLayout=(mesas&&mesas.length>0)||(elementos&&elementos.length>0);
     if(!opts.skipConfirm&&hayLayout&&typeof window!=="undefined"){
