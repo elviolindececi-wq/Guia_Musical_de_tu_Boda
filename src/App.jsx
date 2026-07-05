@@ -7702,34 +7702,34 @@ const SALON_MODELO = () => PRESET_BUILDERS.jardin_romantico_central(null, 150, 1
 const GUEST_COUNT_OPTIONS = [100,150,200,250,300];
 const ROOM_SIZE_OPTIONS = {
   100: {
-    compact: { W: 16, H: 12, area: 192, label: "Compacto 16 x 12 m" },
-    recommended: { W: 18, H: 14, area: 252, label: "Recomendado 18 x 14 m" },
-    spacious: { W: 22, H: 16, area: 352, label: "Amplio 22 x 16 m" },
-    premium: { W: 26, H: 18, area: 468, label: "Premium 26 x 18 m" }
+    compact: { W: 18, H: 13, area: 234, label: "Compacto 18 x 13 m" },
+    recommended: { W: 22, H: 16, area: 352, label: "Recomendado 22 x 16 m" },
+    spacious: { W: 26, H: 18, area: 468, label: "Amplio 26 x 18 m" },
+    premium: { W: 30, H: 20, area: 600, label: "Premium 30 x 20 m" }
   },
   150: {
-    compact: { W: 20, H: 14, area: 280, label: "Compacto 20 x 14 m" },
-    recommended: { W: 22, H: 16, area: 352, label: "Recomendado 22 x 16 m" },
-    spacious: { W: 24, H: 18, area: 432, label: "Amplio 24 x 18 m" },
-    premium: { W: 28, H: 20, area: 560, label: "Premium 28 x 20 m" }
+    compact: { W: 22, H: 15, area: 330, label: "Compacto 22 x 15 m" },
+    recommended: { W: 26, H: 18, area: 468, label: "Recomendado 26 x 18 m" },
+    spacious: { W: 30, H: 20, area: 600, label: "Amplio 30 x 20 m" },
+    premium: { W: 34, H: 22, area: 748, label: "Premium 34 x 22 m" }
   },
   200: {
-    compact: { W: 22, H: 16, area: 352, label: "Compacto 22 x 16 m" },
-    recommended: { W: 24, H: 18, area: 432, label: "Recomendado 24 x 18 m" },
-    spacious: { W: 28, H: 20, area: 560, label: "Amplio 28 x 20 m" },
-    premium: { W: 32, H: 22, area: 704, label: "Premium 32 x 22 m" }
+    compact: { W: 26, H: 17, area: 442, label: "Compacto 26 x 17 m" },
+    recommended: { W: 30, H: 20, area: 600, label: "Recomendado 30 x 20 m" },
+    spacious: { W: 34, H: 22, area: 748, label: "Amplio 34 x 22 m" },
+    premium: { W: 38, H: 24, area: 912, label: "Premium 38 x 24 m" }
   },
   250: {
-    compact: { W: 26, H: 18, area: 468, label: "Compacto 26 x 18 m" },
-    recommended: { W: 28, H: 20, area: 560, label: "Recomendado 28 x 20 m" },
-    spacious: { W: 30, H: 22, area: 660, label: "Amplio 30 x 22 m" },
-    premium: { W: 36, H: 24, area: 864, label: "Premium 36 x 24 m" }
+    compact: { W: 30, H: 19, area: 570, label: "Compacto 30 x 19 m" },
+    recommended: { W: 34, H: 22, area: 748, label: "Recomendado 34 x 22 m" },
+    spacious: { W: 38, H: 24, area: 912, label: "Amplio 38 x 24 m" },
+    premium: { W: 42, H: 26, area: 1092, label: "Premium 42 x 26 m" }
   },
   300: {
-    compact: { W: 28, H: 20, area: 560, label: "Compacto 28 x 20 m" },
-    recommended: { W: 30, H: 20, area: 600, label: "Recomendado 30 x 20 m" },
-    spacious: { W: 34, H: 24, area: 816, label: "Amplio 34 x 24 m" },
-    premium: { W: 40, H: 25, area: 1000, label: "Premium 40 x 25 m" }
+    compact: { W: 34, H: 21, area: 714, label: "Compacto 34 x 21 m" },
+    recommended: { W: 38, H: 23, area: 874, label: "Recomendado 38 x 23 m" },
+    spacious: { W: 42, H: 26, area: 1092, label: "Amplio 42 x 26 m" },
+    premium: { W: 46, H: 28, area: 1288, label: "Premium 46 x 28 m" }
   }
 };
 const ROOM_SIZE_OPTION_LABELS = {
@@ -7837,16 +7837,22 @@ const centerFixedElement = (id, sizeKey, cx, cy, extra={}) => {
 // diámetro real, pero se valida con huella operativa.
 const stage2ElementBox = (el={}) => ({x1:el.mx||0,y1:el.my||0,x2:(el.mx||0)+(el.ew||0),y2:(el.my||0)+(el.eh||0),w:el.ew||0,h:el.eh||0});
 
-const stage2TableCollisionItem = (m={}) => ({
-  id: m.id,
-  type: m.tipo || m.type || "table",
-  x: Number(m.mx)||0,
-  y: Number(m.my)||0,
-  width: m.operationalWidth || m.ew || m.realDiameter || 1,
-  height: m.operationalHeight || m.eh || m.realDiameter || 1,
-  operationalWidth: m.operationalWidth || m.ew || m.realDiameter || 1,
-  operationalHeight: m.operationalHeight || m.eh || m.realDiameter || 1,
-});
+const stage2TableCollisionItem = (m={}) => {
+  const ew = m.ew || m.realDiameter || 1;
+  const eh = m.eh || m.realDiameter || 1;
+  return {
+    id: m.id,
+    type: m.tipo || m.type || "table",
+    // mx/my son esquina superior-izquierda; el motor de colisiones trabaja con
+    // el centro, así que lo calculamos sumando media mesa.
+    x: (Number(m.mx)||0) + ew/2,
+    y: (Number(m.my)||0) + eh/2,
+    width: m.operationalWidth || ew,
+    height: m.operationalHeight || eh,
+    operationalWidth: m.operationalWidth || ew,
+    operationalHeight: m.operationalHeight || eh,
+  };
+};
 const stage2FixedCollisionItem = (el={}) => ({
   id: el.id,
   type: el.tipo || el.type || "element",
@@ -7905,7 +7911,11 @@ const stage2TableFromSlot = (slot, id, tableType, label="") => {
   const round = tableType.shape === "circle";
   const ew = round ? tableType.realDiameter : (tableType.width || 4);
   const eh = round ? tableType.realDiameter : (tableType.height || 2.2);
-  return mesa(id, +slot.x.toFixed(2), +slot.y.toFixed(2), round ? "round" : "rect_h", {
+  // slot.x / slot.y son el CENTRO del hueco. mx/my se guardan como esquina
+  // superior-izquierda (igual que los elementos fijos y el renderer), restando
+  // media mesa. Antes se guardaba el centro como si fuera esquina, y las mesas
+  // aparecían corridas media mesa respecto a su posición real.
+  return mesa(id, +(slot.x - ew/2).toFixed(2), +(slot.y - eh/2).toFixed(2), round ? "round" : "rect_h", {
     cap: tableType.capacity || 0,
     ew,
     eh,
@@ -8006,9 +8016,40 @@ const STAGE2_PRESET_CONFIGS = {
     label:"Premium Experience Wedding", emoji:"✨", salon:"venue premium · varias zonas", recommended:"round_180_comfort", mixed:{rectRatio:.40,roundType:"round_180_comfort"}, pattern:"zones",
     fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W*.28,1.8),centerFixedElement("dj-1","escenario",W*.62,2.0),elem("pista-1","pista",W*.58-p.w/2,H*.40-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3.2,H*.50),centerFixedElement("barra-2","barra",W-3.2,H*.50),centerFixedElement("buffet-1","buffet",W-3.5,3.2),centerFixedElement("lounge-after-1","lounge_grande",W/2,H-3.8),centerFixedElement("activacion-1","activacion",4,H*.32),centerFixedElement("photobooth-1","photobooth",3.8,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W-4,2.5)]},
     zones:({W,H})=>[{id:"cena_media_izq",xMin:5,xMax:W*.50,yMin:H*.45,yMax:H*.72,priority:1,align:"organic"},{id:"cena_media_der",xMin:W*.62,xMax:W-5,yMin:H*.45,yMax:H*.72,priority:1,align:"organic"},{id:"cena_inferior",xMin:5,xMax:W-5,yMin:H*.68,yMax:H-5,priority:2,align:"organic"}]
+  },
+  espiga_moderna: {
+    label:"Espiga Moderna", emoji:"📐", salon:"salón moderno rectangular · loft · galería amplia", recommended:"rectangular_12", compact:"round_180_compact", pattern:"chevron",
+    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,1.4),centerFixedElement("dj-1","dj_chico",W/2,3.3),elem("pista-1","pista",W/2-p.w/2,H-p.h-2.2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H*.50),centerFixedElement("barra-2","barra",W-3,H*.50),centerFixedElement("buffet-1","buffet",W-3.5,3),centerFixedElement("lounge-1","lounge_chico",3.5,3.2),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("photobooth-1","photobooth",3.2,H-2.8),centerFixedElement("torta-1","mesa_torta",W-4,2.2)]},
+    zones:({W,H})=>[{id:"espiga_central",xMin:3,xMax:W-3,yMin:4.5,yMax:H*.72,priority:1,align:"chevron"}]
   }
 };
-const PRESET_STAGE2_ORDER = ["jardin_romantico_central","luxury_ballroom_simetrico","boho_garden_asimetrico","minimal_chic_blanco","mediterraneo_familiar","glam_black_gold","rustic_elegance","cabaret_wedding","cocktail_lounge_wedding","classic_family_reception","festival_outdoor_wedding","garden_tent_formal","urban_industrial","romantic_circular_flow","premium_experience_wedding"];
+const PRESET_STAGE2_ORDER = ["jardin_romantico_central","luxury_ballroom_simetrico","minimal_chic_blanco","espiga_moderna","boho_garden_asimetrico","mediterraneo_familiar","glam_black_gold","rustic_elegance","cabaret_wedding","cocktail_lounge_wedding","classic_family_reception","festival_outdoor_wedding","garden_tent_formal","urban_industrial","romantic_circular_flow","premium_experience_wedding"];
+
+// ── Guía de presets: sugerencia de ESPACIO ideal + inspiración ──────────────
+// Cada estilo es REFERENCIAL: sirve como punto de partida para inspirarse. La
+// idea del "espacio" es orientar en qué tipo de venue rinde mejor cada plano.
+// vibe = etiqueta corta de estética · espacio = dónde funciona · idealPax = rango
+// cómodo de invitados · tip = frase de inspiración que se muestra al elegirlo.
+const PRESET_GUIDE = {
+  jardin_romantico_central:{ vibe:"Romántico · cálido", espacio:"Salón o carpa rectangular, jardín techado", idealPax:"120–200", tip:"Pista al centro y mesas envolviéndola: la fiesta te rodea. Ideal si querés que nadie quede lejos del baile." },
+  luxury_ballroom_simetrico:{ vibe:"Elegante · formal", espacio:"Ballroom de hotel, salón premium rectangular", idealPax:"150–250", tip:"Simetría perfecta a ambos lados de la pista. Transmite formalidad y prestigio, perfecto para bodas de gala." },
+  boho_garden_asimetrico:{ vibe:"Boho · relajado", espacio:"Jardín, quinta o carpa al aire libre", idealPax:"100–180", tip:"Distribución orgánica, nada rígido. Mezcla mesas redondas y largas para un aire natural y desestructurado." },
+  minimal_chic_blanco:{ vibe:"Moderno · minimalista", espacio:"Loft blanco, galería o salón contemporáneo", idealPax:"120–200", tip:"Mesas largas en filas limpias. Estética editorial 2026: líneas rectas, mucho blanco, cero recargado." },
+  espiga_moderna:{ vibe:"Moderno · diagonal", espacio:"Salón rectangular amplio, loft o galería", idealPax:"120–200", tip:"Mesas en espiga (V) que apuntan a los novios y la pista. El estilo diagonal que arrasa en bodas de diseño, sin encimarse." },
+  mediterraneo_familiar:{ vibe:"Familiar · cálido", espacio:"Terraza, patio o salón abierto", idealPax:"100–180", tip:"Tablones largos que invitan a compartir. Ese aire de sobremesa mediterránea, comida y charla sin fin." },
+  glam_black_gold:{ vibe:"Glam · nocturno", espacio:"Salón oscuro, ballroom nocturno o rooftop", idealPax:"150–250", tip:"Drama y brillo con simetría marcada. Negro, dorado y luz cálida para una boda de noche impactante." },
+  rustic_elegance:{ vibe:"Rústico · elegante", espacio:"Estancia, quincho elegante o granero chic", idealPax:"120–200", tip:"Madera, verde y mesas largas mixtas. Calidez de campo con un acabado prolijo y sofisticado." },
+  cabaret_wedding:{ vibe:"Cena show · íntimo", espacio:"Salón íntimo o teatro pequeño con escenario", idealPax:"80–160", tip:"Todo mira al escenario. Pensado para banda en vivo o show: cena con espectáculo de protagonista." },
+  cocktail_lounge_wedding:{ vibe:"Cóctel · de pie", espacio:"Rooftop, terraza o jardín urbano", idealPax:"80–150", tip:"Formato cóctel con lounges y mesas altas. Menos sillas, más circulación: la gente se mezcla toda la noche." },
+  classic_family_reception:{ vibe:"Clásico · protocolar", espacio:"Salón tradicional, club u hotel", idealPax:"120–220", tip:"Zonas por parentesco: familia cerca de los novios, niños juntos. El orden protocolar de siempre, bien resuelto." },
+  festival_outdoor_wedding:{ vibe:"Festival · libre", espacio:"Campo, jardín amplio o quinta grande", idealPax:"150–250", tip:"Varias zonas tipo festival: cena, barras y activaciones repartidas. Para bodas grandes al aire libre." },
+  garden_tent_formal:{ vibe:"Formal · jardín", espacio:"Carpa blanca en jardín formal", idealPax:"150–250", tip:"La formalidad del ballroom pero bajo carpa. Simetría impecable con el verde del jardín como telón." },
+  urban_industrial:{ vibe:"Industrial · urbano", espacio:"Galpón, loft o warehouse", idealPax:"120–220", tip:"Mesas largas en un espacio crudo y amplio. Ladrillo, hierro y luces colgantes: tendencia urbana total." },
+  romantic_circular_flow:{ vibe:"Circular · fluido", espacio:"Salón cuadrado con buena centralidad", idealPax:"120–200", tip:"Mesas en anillos alrededor de la pista. Flujo circular que da movimiento y mantiene todo cerca del centro." },
+  premium_experience_wedding:{ vibe:"Premium · multizona", espacio:"Venue premium con varias zonas", idealPax:"150–250", tip:"Experiencia por estaciones: cena, lounge after, activaciones. Para bodas que quieren sorprender en cada rincón." }
+};
+const getPresetGuide = (id) => PRESET_GUIDE[id] || { vibe:"", espacio:"", idealPax:"", tip:"" };
+
 const getRecommendedTableTypeForPreset = (presetId, guestCount=150, roomSizeOption="recommended") => {
   const cfg = STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
   const chosen = roomSizeOption === "compact" && cfg.compact ? cfg.compact : (cfg.recommended || "round_180_comfort");
@@ -8041,10 +8082,14 @@ const generateFixedElements = (presetId, W, H, guestCount, roomSizeOption="recom
   }));
 };
 
+// Márgenes de circulación alrededor de cada elemento fijo (metros). Representan
+// el pasillo de servicio/paso real. Antes eran demasiado grandes (baños 4 m,
+// entrada 3 m) y tapaban casi todo el salón, dejando 0 slots válidos para mesas.
+// Ajustados a valores de venue real: ~1–1.5 m de paso de mozos.
 const stage2MarginByType = {
-  pista:1.5, banios:4, entrada:3, bar:2, buffet:2, escenario:2,
-  novios:1.5, torta:1.5, photobooth:1.5, living:1.5, activacion:1.5,
-  cabina360:1.5, guardarropa:1.2, proveedores:1.2, mozos:1.2
+  pista:1.2, banios:1.2, entrada:1.2, bar:1, buffet:1, escenario:1.2,
+  novios:1, torta:1, photobooth:1, living:1, activacion:1,
+  cabina360:1, guardarropa:0.8, proveedores:0.8, mozos:0.8
 };
 const generateMainAisleZone = (layout={}) => {
   const W=layout.salonW||22, H=layout.salonH||16, els=layout.elementos||[];
@@ -8058,7 +8103,7 @@ const generateDjSightlineZone = (layout={}) => {
   const dj=els.find(e=>e.tipo==="escenario"), pista=els.find(e=>e.tipo==="pista");
   if(!dj||!pista) return null;
   const dc=stage2FixedCollisionItem(dj), pc=stage2FixedCollisionItem(pista);
-  return {id:"dj_sightline",type:"forbidden",source:"corredor_visual_dj",x:pc.x,y:(dc.y+pc.y)/2,width:Math.max(dj.ew||0,pista.ew||0)+1.5,height:Math.max(1,Math.abs(pc.y-dc.y))};
+  return {id:"dj_sightline",type:"forbidden",source:"corredor_visual_dj",x:pc.x,y:(dc.y+pc.y)/2,width:Math.min(dj.ew||3,pista.ew||3)+0.5,height:Math.max(1,Math.abs(pc.y-dc.y))};
 };
 const generateForbiddenZones = (layout={}) => {
   const els = layout.elementos || [];
@@ -8083,7 +8128,7 @@ const generateTableZonesForPreset = (presetId, W, H, fixedElements=[]) => {
     pattern: z.pattern || cfg.pattern || "grid"
   }));
   // La zona de desborde queda última. Solo se usa si faltan mesas.
-  const fallbackAlign = cfg.pattern === "ring" ? "ring" : (cfg.pattern === "banquet_rows" ? "banquet_rows" : (cfg.pattern === "symmetric" ? "symmetric" : "organic"));
+  const fallbackAlign = cfg.pattern === "ring" ? "ring" : (cfg.pattern === "chevron" ? "chevron" : (cfg.pattern === "banquet_rows" ? "banquet_rows" : (cfg.pattern === "symmetric" ? "symmetric" : "organic")));
   return [...base, {id:"segunda_fila_exterior", xMin:1.5, xMax:W-1.5, yMin:1.5, yMax:H-1.5, priority:50, align:fallbackAlign, pattern:fallbackAlign, fallback:true}];
 };
 
@@ -8127,19 +8172,66 @@ const generateGridSlots = (zone, tableType, W, H, spacing=1.5) => {
   }
   return slots;
 };
+// Slots en espiga / chevron: mesas escalonadas formando una V hacia el centro
+// del salón. Se construye con la huella operativa real, así que las mesas nunca
+// se enciman (a diferencia de rotar tablones a 45°, que rompería las colisiones).
+// El escalonado en X por fila crea el efecto diagonal manteniendo el grid válido.
+const generateChevronSlots = (zone, tableType, W, H, spacing=1.5) => {
+  const opW=tableType.operationalWidth || tableType.width || tableType.realDiameter || 2.8;
+  const opH=tableType.operationalHeight || tableType.height || tableType.realDiameter || 2.8;
+  const stepX=opW+spacing;
+  const stepY=opH+spacing;
+  const cx=(zone.xMin+zone.xMax)/2;
+  const slots=[];
+  let row=0;
+  for(let y=zone.yMin+opH/2; y<=zone.yMax-opH/2+0.01; y+=stepY){
+    // Cada fila se abre en V: se corre hacia afuera según la profundidad.
+    const shift=row*(stepX*0.5);
+    for(let side of [-1,1]){
+      // Rama izquierda y derecha de la V, desde el centro hacia los lados.
+      let x = cx + side*(opW/2 + shift);
+      let guard=0;
+      while(x>=zone.xMin+opW/2-0.01 && x<=zone.xMax-opW/2+0.01 && guard<20){
+        slots.push({x:+x.toFixed(2),y:+y.toFixed(2),priority:zone.priority||1,zoneId:zone.id,label:zone.label||"",side:x<W/2?"L":(x>W/2?"R":"C"),row,pattern:"chevron",fallback:!!zone.fallback,chevDepth:row});
+        x += side*stepX;
+        guard++;
+      }
+    }
+    row++;
+  }
+  // Dedup por si las ramas se solapan en el centro en filas iniciales.
+  const seen=new Set();
+  return slots.filter(s=>{const k=`${s.x}_${s.y}`; if(seen.has(k)) return false; seen.add(k); return true;});
+};
 const generateTableSlots = (tableZones=[], tableType=TABLE_TYPES.round_180_comfort, W=22, H=16, fixedElements=[], opts={}) => {
   const spacing=opts.spacing ?? 1.5;
   const zones=[...tableZones].sort((a,b)=>(a.priority||9)-(b.priority||9));
   const slots=[];
   for(const z of zones){
     if(z.align==="ring" || z.pattern==="ring") slots.push(...generateRingSlots(z,tableType,W,H,fixedElements,spacing));
+    else if(z.align==="chevron" || z.pattern==="chevron") slots.push(...generateChevronSlots(z,tableType,W,H,spacing));
     else slots.push(...generateGridSlots(z,tableType,W,H,spacing));
   }
   return slots.map((s,idx)=>({...s,id:s.id||`${s.zoneId}_${idx}`,centerBias:Math.abs((s.x||0)-W/2)}));
 };
+// Malla fina de respaldo: barre TODO el salón con un paso chico (0.5 m) y
+// propone un candidato por celda. El validador de colisiones descarta los que
+// pisan pista/servicios/otras mesas, así que esta malla encuentra los huecos
+// reales entre los elementos fijos en vez de depender de zonas predefinidas.
+// Es la red de seguridad que garantiza que el preset llene el salón.
 const generateDenseFallbackSlots = (W,H,tableType,fixedElements=[]) => {
-  const zones=[{id:"desborde_exterior",xMin:1.2,xMax:W-1.2,yMin:1.2,yMax:H-1.2,priority:80,align:"organic",pattern:"organic",fallback:true}];
-  return generateTableSlots(zones,tableType,W,H,fixedElements,{spacing:1.2});
+  const opW=tableType.operationalWidth || tableType.width || tableType.realDiameter || 2.8;
+  const opH=tableType.operationalHeight || tableType.height || tableType.realDiameter || 2.8;
+  const stepScan=0.5;
+  const slots=[];
+  let idx=0;
+  for(let y=opH/2+0.5; y<=H-opH/2-0.5+0.01; y+=stepScan){
+    for(let x=opW/2+0.5; x<=W-opW/2-0.5+0.01; x+=stepScan){
+      slots.push({x:+x.toFixed(2),y:+y.toFixed(2),priority:80,zoneId:"malla_fina",label:"",side:x<W/2?"L":(x>W/2?"R":"C"),row:0,pattern:"organic",fallback:true,id:`malla_${idx++}`,centerBias:Math.abs(x-W/2)+Math.abs(y-H/2)*0.3});
+    }
+  }
+  // Ordenar de arriba-centro hacia afuera para un llenado prolijo.
+  return slots.sort((a,b)=>a.centerBias-b.centerBias);
 };
 const sortSlotsByPresetLogic = (slots=[], presetId="jardin_romantico_central", W=22) => {
   const cfg=STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
@@ -8149,6 +8241,7 @@ const sortSlotsByPresetLogic = (slots=[], presetId="jardin_romantico_central", W
     return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || Math.round(a.y*2)-Math.round(b.y*2) || Math.abs(a.x-W/2)-Math.abs(b.x-W/2) || (a.x-b.x));
   }
   if(pattern==="ring") return base.sort((a,b)=>(a.ring||0)-(b.ring||0) || (a.angle||0)-(b.angle||0));
+  if(pattern==="chevron") return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || (a.chevDepth||0)-(b.chevDepth||0) || Math.abs(a.x-W/2)-Math.abs(b.x-W/2) || (a.y-b.y));
   if(pattern==="banquet_rows") return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || (a.y-b.y) || (a.x-b.x));
   if(pattern==="organic") return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || (a.score||0)-(b.score||0) || (a.y-b.y) || (a.x-b.x));
   return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || Math.abs(a.x-W/2)-Math.abs(b.x-W/2) || (a.y-b.y) || (a.x-b.x));
@@ -8225,7 +8318,7 @@ const validateLayout = (layout={}) => {
   }
   return {valid:warnings.length===0,warnings:[...new Set(warnings)],capacity};
 };
-const generateWeddingLayout = ({presetId="jardin_romantico_central",guestCount=150,roomSizeOption="recommended",tableType="auto",format="dinner",musicType="dj",coupleTableType="sweetheart"}={}) => {
+const generateWeddingLayoutCore = ({presetId="jardin_romantico_central",guestCount=150,roomSizeOption="recommended",tableType="auto",format="dinner",musicType="dj",coupleTableType="sweetheart"}={}) => {
   const cfg = STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
   const room=getRoomSize(guestCount,roomSizeOption);
   const W=room.W, H=room.H;
@@ -8235,19 +8328,22 @@ const generateWeddingLayout = ({presetId="jardin_romantico_central",guestCount=1
   let allTables=[];
   const placementWarnings=[];
   for(const part of plan){
-    const forbidden=generateForbiddenZones({salonW:W,salonH:H,elementos:fixedElements,mesas:allTables,guestCount});
-    const slots=generateTableSlots(zones,part.type,W,H,fixedElements,{spacing:1.5});
-    let result=placeTablesInSlots(part.count,slots,forbidden,part.type,W,H,allTables.length+1,part.label||"",{presetId,existingTables:allTables});
-    if(!result.success){
-      const relaxedSlots=generateTableSlots(zones,part.type,W,H,fixedElements,{spacing:1.2});
-      result=placeTablesInSlots(part.count,relaxedSlots,forbidden,part.type,W,H,allTables.length+1,part.label||"",{presetId,existingTables:allTables});
-    }
-    if(!result.success){
-      const extraSlots=generateDenseFallbackSlots(W,H,part.type,fixedElements);
-      result=placeTablesInSlots(part.count,extraSlots,forbidden,part.type,W,H,allTables.length+1,part.label||"",{presetId,existingTables:allTables});
-    }
-    allTables=[...allTables,...(result.placed||[])];
-    if(!result.success) placementWarnings.push(`Faltan ${result.missingTables} mesas de ${part.type.label} para este preset.`);
+    // Colocación acumulativa: cada pasada agrega mesas sin descartar las ya
+    // ubicadas. Antes, si una pasada fallaba, el reintento reiniciaba desde 0 y
+    // volvía a fallar igual — por eso los presets quedaban con 0 o 1 mesa.
+    let placedForPart=[];
+    const runPass=(slotSet)=>{
+      const stillNeeded=part.count-placedForPart.length;
+      if(stillNeeded<=0) return;
+      const forbidden=generateForbiddenZones({salonW:W,salonH:H,elementos:fixedElements,mesas:[...allTables,...placedForPart],guestCount});
+      const r=placeTablesInSlots(stillNeeded,slotSet,forbidden,part.type,W,H,allTables.length+placedForPart.length+1,part.label||"",{presetId,existingTables:[...allTables,...placedForPart]});
+      placedForPart=[...placedForPart,...(r.placed||[])];
+    };
+    runPass(generateTableSlots(zones,part.type,W,H,fixedElements,{spacing:1.5}));
+    if(placedForPart.length<part.count) runPass(generateTableSlots(zones,part.type,W,H,fixedElements,{spacing:1.2}));
+    if(placedForPart.length<part.count) runPass(generateDenseFallbackSlots(W,H,part.type,fixedElements));
+    allTables=[...allTables,...placedForPart];
+    if(placedForPart.length<part.count) placementWarnings.push(`Faltan ${part.count-placedForPart.length} mesas de ${part.type.label} para este preset.`);
   }
   const layout={
     salonW:W, salonH:H, salonShape:"rectangulo", salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,
@@ -8269,6 +8365,33 @@ const generateWeddingLayout = ({presetId="jardin_romantico_central",guestCount=1
   if(plan.some(p=>p.type.warning)) summary.alertas.push(...plan.filter(p=>p.type.warning).map(p=>p.type.warning));
   summary.alertas=[...new Set(summary.alertas)];
   return {...layout, layoutSummary:summary, overflowTables: allTables.length<requiredTables, maxPresetSeats:validation.capacity};
+};
+
+// Wrapper con auto-escalado: si el tamaño elegido no alcanza a sentar a todos,
+// va probando salones más grandes (recommended → spacious → premium) hasta
+// cubrir la capacidad. Así "Generar plano" siempre entrega un plano usable en
+// vez de uno con la mitad de las mesas. Respeta el tamaño que el usuario pidió
+// como piso: nunca achica por debajo de su elección.
+const ROOM_SIZE_LADDER = ["compact","recommended","spacious","premium"];
+const generateWeddingLayout = (params={}) => {
+  const requested = params.roomSizeOption || "recommended";
+  const startIdx = Math.max(0, ROOM_SIZE_LADDER.indexOf(requested));
+  const guestCount = params.guestCount || 150;
+  let best = null;
+  for(let i=startIdx; i<ROOM_SIZE_LADDER.length; i++){
+    const attempt = generateWeddingLayoutCore({...params, roomSizeOption: ROOM_SIZE_LADDER[i]});
+    const cap = attempt.maxPresetSeats || 0;
+    // Nos quedamos con el mejor intento visto por si ninguno cubre del todo.
+    if(!best || cap > (best.maxPresetSeats||0)) best = attempt;
+    // Cocktail no necesita cubrir asientos 1:1.
+    if(attempt.layoutSummary?.capacidadSentada >= guestCount || params.format === "cocktail") { best = attempt; break; }
+  }
+  if(best && (best.maxPresetSeats||0) < guestCount && best.format !== "cocktail"){
+    best.layoutSummary = best.layoutSummary || {alertas:[]};
+    best.layoutSummary.alertas = [...new Set([...(best.layoutSummary.alertas||[]),
+      `Aún en el salón más grande de este estilo entran ${best.maxPresetSeats} de ${guestCount} asientos. Probá con menos invitados, mesas más compactas o el estilo "Espiga Moderna"/"Minimal Chic" que rinden más mesas.`])];
+  }
+  return best || generateWeddingLayoutCore(params);
 };
 
 function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia, onGoDesigner, onGoGuests }){
@@ -9683,13 +9806,27 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
       {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
       {isDesignerMode&&showPresetMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:14,padding:10,zIndex:320,boxShadow:THEME.shadow.pop,minWidth:320,maxWidth:"min(520px,92vw)",maxHeight:"min(560px,72vh)",overflowY:"auto"}}>
-        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",padding:"5px 8px 8px"}}>Presets reales de boda</div>
-        <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
-          Preset de boda
-          <select value={selectedSalonType} onChange={e=>{setSelectedSalonType(e.target.value);setSelectedTableTypeId("auto");}} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
-            {PRESET_STAGE2_ORDER.map(id=>{const p=STAGE2_PRESET_CONFIGS[id]; return <option key={id} value={id}>{p?.emoji||"✨"} {p?.label||id}</option>;})}
-          </select>
-        </label>
+        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",padding:"5px 8px 4px"}}>Elegí un estilo</div>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.42)",padding:"0 8px 8px",lineHeight:1.4}}>
+          Cada estilo es <strong style={{color:"rgba(74,94,58,.7)"}}>referencial</strong>, pensado para inspirarte. Tocá uno para ver en qué espacio rinde mejor y cuántos invitados le quedan cómodos.
+        </div>
+        <div style={{display:"grid",gap:6,maxHeight:"min(240px,38vh)",overflowY:"auto",padding:"2px 2px 4px"}}>
+          {PRESET_STAGE2_ORDER.map(id=>{
+            const p=STAGE2_PRESET_CONFIGS[id]; const g=getPresetGuide(id); const sel=selectedSalonType===id;
+            return <button key={id} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSelectedSalonType(id);setSelectedTableTypeId("auto");}} style={{textAlign:"left",display:"grid",gridTemplateColumns:"auto 1fr",gap:9,alignItems:"start",width:"100%",background:sel?"rgba(74,94,58,.1)":"white",border:sel?"1.5px solid rgba(74,94,58,.55)":"1px solid rgba(74,94,58,.16)",borderRadius:11,padding:"10px 11px",cursor:"pointer"}}>
+              <span style={{fontSize:"1.15rem",lineHeight:1.1,marginTop:1}}>{p?.emoji||"✨"}</span>
+              <span style={{display:"grid",gap:2}}>
+                <span style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                  <strong style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,fontWeight:700}}>{p?.label||id}</strong>
+                  {g.vibe&&<span style={{fontFamily:THEME.font.body,fontSize:"max(10px,.65rem)",color:"rgba(74,94,58,.75)",background:"rgba(74,94,58,.09)",borderRadius:20,padding:"1px 8px"}}>{g.vibe}</span>}
+                </span>
+                <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",lineHeight:1.35}}>📍 {g.espacio}</span>
+                <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.7rem)",color:"rgba(26,26,20,.42)"}}>👥 Ideal {g.idealPax} invitados</span>
+                {sel&&g.tip&&<span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(139,107,40,.9)",lineHeight:1.4,marginTop:3,fontStyle:"italic"}}>💡 {g.tip}</span>}
+              </span>
+            </button>;
+          })}
+        </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
           <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
             Invitados
