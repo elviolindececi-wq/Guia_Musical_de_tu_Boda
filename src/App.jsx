@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 // @ts-nocheck
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -1920,19 +1920,28 @@ function AuthScreen({ initialMode="signup", initialError="", onPasswordUpdated }
 
   const signUp=async()=>{
     clean();
+    if(!supabase) return setErr("No está configurada la conexión con Supabase.");
     if(!email || !password) return setErr("Completá email y contraseña.");
     if(password.length<6) return setErr("La contraseña debe tener al menos 6 caracteres.");
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const redirectUrl = `${window.location.origin}/`;
+    const { data, error } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),
       password,
-      options:{ emailRedirectTo: window.location.origin }
+      options:{ emailRedirectTo: redirectUrl }
     });
     setLoading(false);
     if(error){
-      const msg = error.message?.toLowerCase();
-      if(msg?.includes("already")) return setErr("Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.");
-      return setErr("No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.");
+      console.error("Supabase signUp error:", error);
+      const msg = error.message?.toLowerCase() || "";
+      if(msg.includes("already") || msg.includes("registered")) return setErr("Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.");
+      if(msg.includes("redirect") || msg.includes("url")) return setErr("El dominio de la app no está autorizado en Supabase. Agregá https://tu-boda-organizada.vercel.app/** en Auth → URL Configuration → Redirect URLs.");
+      if(msg.includes("signup") || msg.includes("disabled")) return setErr("El registro está desactivado en Supabase. Revisá Auth → Providers → Email.");
+      return setErr(error.message || "No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.");
+    }
+    if(data?.session){
+      setMsg("Cuenta creada. Ya podés continuar en la app.");
+      return;
     }
     setMsg("Cuenta creada. Revisá tu email para confirmar el acceso — puede llegar en unos minutos.");
     setMode("login");
@@ -4502,7 +4511,9 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const [searchSinMesa, setSearchSinMesa] = useState("");
   const [showShapeMenu, setShowShapeMenu] = useState(false);
   const [showElemMenu, setShowElemMenu]   = useState(false);
+  const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
   const isMobile = useIsMobile();
+  const isTouchAssignment = useIsMobile(1024); // smartphones y tablets: tocar invitado → tocar mesa
   const [hideDesktopTip, setHideDesktopTip] = useState(()=>{try{return localStorage.getItem("ceci_salon_desktop_tip")==="1";}catch(err){return false;}});
 
   const viewportRef = useRef(null);
@@ -4530,6 +4541,25 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const mesaPersonas=(id)=>personas.filter(p=>p.mesa===id);
   const selectedMesaObj = mesas.find(m=>m.id===selectedMesa);
   const selectedPersonas = selectedMesa?mesaPersonas(selectedMesa):[];
+
+  const selectGuestForTapAssign=(p)=>{
+    if(!p) return;
+    setSelectedGuestForAssign({guestId:p.guestId,nombre:p.nombre});
+    setSelectedElem(null);
+    setSelectedMesa(null);
+    if(typeof showToast==="function") showToast(`Ahora tocá la mesa donde querés sentar a ${p.nombre}`,"success",2600);
+  };
+
+  const assignSelectedGuestToMesa=(mesaId)=>{
+    if(!selectedGuestForAssign) return false;
+    onAssign(selectedGuestForAssign.guestId,mesaId);
+    if(typeof showToast==="function") showToast(`✓ ${selectedGuestForAssign.nombre} asignado/a a Mesa ${mesaId}`,"success",2200);
+    setSelectedGuestForAssign(null);
+    setSelectedMesa(mesaId);
+    setSelectedElem(null);
+    if(isMobile) setShowSheet(false);
+    return true;
+  };
 
   // ── Capacidad salón ──
   const totalInvWarn = budgetInvitados>0?budgetInvitados:(guests||[]).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
@@ -5112,7 +5142,15 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
     const libres=Math.max(0,capM-ps.length);
     const fillC=isSelected?THEME.color.sage:isHovered?"#5a7a48":"#D4C4A0";
     const strokeC=isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.6)";
-    const dh={onMouseDown:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);},onTouchStart:e=>{e.stopPropagation();startDrag(e,"mesa",mesa.id);}};
+    const dh={
+      onMouseDown:e=>{
+        e.stopPropagation();
+        if(selectedGuestForAssign) return;
+        startDrag(e,"mesa",mesa.id);
+      },
+      // En touch/tablet, el tap debe seleccionar/asignar; no iniciar drag nativo.
+      onTouchStart:e=>{ e.stopPropagation(); }
+    };
 
     if(tipoM==="round"){
       const R=(((mesa.ew||MESA_R_M*2))/2)*PX,AR=ASIENTO_R_M*PX,ts=Math.max(ps.length,capM);
@@ -5128,7 +5166,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
             <text x={cx} y={cy+R*0.38} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
         }
         {!isSelected&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(7,R*0.21)} fill={over?"rgba(200,60,60,.9)":libres===0?"rgba(74,94,58,.85)":"rgba(74,94,58,.6)"} fontFamily="'Lora',serif" fontWeight="600" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
-        {pts.map((pt,i)=>{const p=ps[i];const hitR=Math.max(AR+4,16);return<g key={i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
+        {pts.map((pt,i)=>{const p=ps[i];const hitR=Math.max(AR+4,16);return<g key={i} style={{cursor:p?(isTouchAssignment?"pointer":"grab"):"default"}} onMouseDown={p?e=>{e.stopPropagation(); if(!isTouchAssignment) startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); if(!isTouchAssignment) startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
           {/* Hit area invisible más grande */}
           {p&&<circle cx={cx+pt.x} cy={cy+pt.y} r={hitR} fill="transparent"/>}
           <circle cx={cx+pt.x} cy={cy+pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
@@ -5161,7 +5199,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       <rect x={pad} y={pad} width={rW} height={rH} rx="3" fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
       <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.22)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||mesa.id}</text>
       {/* Sillas alrededor de los 4 lados */}
-      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={"s"+i} style={{cursor:p?"grab":"default"}} onMouseDown={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation();startDragGuest(e,p.guestId);}:undefined}>
+      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={"s"+i} style={{cursor:p?(isTouchAssignment?"pointer":"grab"):"default"}} onMouseDown={p?e=>{e.stopPropagation(); if(!isTouchAssignment) startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); if(!isTouchAssignment) startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
         {p&&<circle cx={pt.x} cy={pt.y} r={Math.max(AR+4,14)} fill="transparent"/>}
         <circle cx={pt.x} cy={pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
         {p&&<text x={pt.x} y={pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
@@ -5239,6 +5277,12 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       </div>}
     </div>
 
+    {isTouchAssignment&&selectedGuestForAssign&&<div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.09)",border:"1px solid rgba(74,94,58,.25)",borderRadius:10,padding:"9px 12px",marginBottom:8}}>
+      <span style={{fontSize:"1rem"}}>👤</span>
+      <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.84rem)",color:"rgba(26,26,20,.68)",flex:1,lineHeight:1.35}}>Seleccionado/a: <strong style={{color:THEME.color.sage}}>{selectedGuestForAssign.nombre}</strong>. Ahora tocá una mesa para asignarlo/a.</span>
+      <button onClick={()=>setSelectedGuestForAssign(null)} style={{background:"transparent",border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.84rem)",color:"rgba(200,60,60,.65)",cursor:"pointer",padding:"8px 10px"}}>Cancelar</button>
+    </div>}
+
     {/* ── WARNING CAPACIDAD ── */}
     {salonChico&&<div style={{display:"flex",alignItems:"center",gap:8,background:salonMuyChico?"rgba(200,60,60,.07)":"rgba(201,169,110,.07)",border:`1px solid ${salonMuyChico?"rgba(200,60,60,.3)":"rgba(201,169,110,.3)"}`,borderRadius:8,padding:"7px 12px",marginBottom:8}}>
       <span style={{fontSize:".9rem",flexShrink:0}}>{salonMuyChico?"🔴":"⚠️"}</span>
@@ -5269,6 +5313,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
               // Click en fondo: solo deseleccionar (el canvas ya no se arrastra)
               setSelectedElem(null);
               setSelectedMesa(null);
+              setSelectedGuestForAssign(null);
               setShowShapeMenu(false);
               setShowElemMenu(false);
             }
@@ -5339,6 +5384,10 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
               }}
               onClick={e=>{
                 e.stopPropagation();
+                if(isTouchAssignment && selectedGuestForAssign){
+                  assignSelectedGuestToMesa(mesa.id);
+                  return;
+                }
                 setSelectedMesa(isSelected?null:mesa.id);
                 setSelectedElem(null);
                 if(isMobile) setShowSheet(true);
@@ -5365,7 +5414,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
         </div>
           {/* Tip navegación — fijo sobre el visor, no scrollea con el salón */}
           <div style={{position:"absolute",bottom:16,left:10,fontFamily:THEME.font.body,fontSize:THEME.text.tiny,color:"rgba(255,255,255,.78)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(26,26,20,.45)",borderRadius:100,padding:"4px 10px",maxWidth:"calc(100% - 90px)",overflow:"hidden",textOverflow:"ellipsis",zIndex:20}}>
-            {isMobile?"👆 Deslizá para recorrer · Pellizco zoom · Doble tap acerca":"🖱️ Barras o rueda para recorrer · Ctrl + rueda para zoom"}
+            {selectedGuestForAssign?`👆 Tocá una mesa para sentar a ${selectedGuestForAssign.nombre}`:isTouchAssignment?"👆 Tocá invitado sin mesa → tocá una mesa · Pellizco zoom":"🖱️ Barras o rueda para recorrer · Ctrl + rueda para zoom"}
           </div>
           {/* Controles flotantes — fijos sobre el visor */}
           <div style={{position:"absolute",right:18,bottom:18,display:"flex",flexDirection:"column",gap:8,zIndex:20}}>
@@ -5516,15 +5565,16 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
             <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:160,overflowY:"auto",marginBottom:8}}>
               {selectedPersonas.map(p=>(
                 <div key={`${p.guestId}-${p.personIdx}`}
-                  onMouseDown={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
-                  onTouchStart={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
-                  title={`Arrastrá a ${p.nombre} hacia una mesa en el canvas`}
-                  style={{display:"flex",alignItems:"center",gap:6,background:"rgba(74,94,58,.05)",borderRadius:6,padding:"5px 7px",cursor:"grab",border:"0.5px solid rgba(74,94,58,.1)",userSelect:"none"}}>
+                  onMouseDown={e=>{e.stopPropagation(); if(!isTouchAssignment) startDragGuest(e,p.guestId);}}
+                  onTouchStart={e=>{e.stopPropagation();}}
+                  onClick={e=>{e.stopPropagation(); if(isTouchAssignment) selectGuestForTapAssign(p);}}
+                  title={isTouchAssignment?`Tocá y luego elegí otra mesa para ${p.nombre}`:`Arrastrá a ${p.nombre} hacia una mesa en el canvas`}
+                  style={{display:"flex",alignItems:"center",gap:6,background:selectedGuestForAssign?.guestId===p.guestId?"rgba(74,94,58,.12)":"rgba(74,94,58,.05)",borderRadius:6,padding:"5px 7px",cursor:isTouchAssignment?"pointer":"grab",border:selectedGuestForAssign?.guestId===p.guestId?"1.5px solid rgba(74,94,58,.45)":"0.5px solid rgba(74,94,58,.1)",userSelect:"none"}}>
                   <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
                   <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-                  <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.4)",cursor:"pointer",fontSize:".8rem",padding:0,flexShrink:0}}>×</button>
+                  <button onClick={e=>{e.stopPropagation();onRemove(p.guestId); if(selectedGuestForAssign?.guestId===p.guestId) setSelectedGuestForAssign(null);}} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.4)",cursor:"pointer",fontSize:".8rem",padding:0,flexShrink:0}}>×</button>
                 </div>
               ))}
               {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas acá</div>}
@@ -5545,7 +5595,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
         <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
-            {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>← arrastrá al canvas</span>}
+            {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>{isTouchAssignment?"tocá invitado → mesa":"← arrastrá al canvas"}</span>}
           </div>
           {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
             <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
@@ -5556,18 +5606,24 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
           {sinMesa.length===0
             ?<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
             :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(200px,25vh)",overflowY:"auto"}}>
-              {sinMesaFilt.map(p=>(
-                <div key={`${p.guestId}-${p.personIdx}`}
-                  onMouseDown={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
-                  onTouchStart={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}}
-                  title="Arrastrá hacia una mesa en el canvas"
-                  style={{display:"flex",alignItems:"center",gap:5,background:"rgba(201,169,110,.06)",borderRadius:6,padding:"5px 7px",cursor:"grab",border:"0.5px solid rgba(201,169,110,.15)",userSelect:"none"}}>
-                  <div style={{width:16,height:16,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {sinMesaFilt.map(p=>{
+                const isGuestSelected=selectedGuestForAssign?.guestId===p.guestId;
+                return <div key={`${p.guestId}-${p.personIdx}`}
+                  onMouseDown={e=>{e.stopPropagation(); if(!isTouchAssignment) startDragGuest(e,p.guestId);}}
+                  onTouchStart={e=>{e.stopPropagation();}}
+                  onClick={e=>{
+                    e.stopPropagation();
+                    if(isTouchAssignment) selectGuestForTapAssign(p);
+                  }}
+                  title={isTouchAssignment?"Tocá y luego elegí una mesa":"Arrastrá hacia una mesa en el canvas"}
+                  style={{display:"flex",alignItems:"center",gap:5,background:isGuestSelected?"rgba(74,94,58,.12)":"rgba(201,169,110,.06)",borderRadius:6,padding:"7px 8px",cursor:isTouchAssignment?"pointer":"grab",border:isGuestSelected?"1.5px solid rgba(74,94,58,.48)":"0.5px solid rgba(201,169,110,.15)",userSelect:"none",boxShadow:isGuestSelected?"0 0 0 2px rgba(74,94,58,.06)":"none"}}>
+                  <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
-                  <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-                </div>
-              ))}
+                  <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                  {isGuestSelected&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,color:THEME.color.sage,letterSpacing:".08em",textTransform:"uppercase"}}>mesa?</span>}
+                </div>;
+              })}
               {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
             </div>
           }
@@ -5646,12 +5702,14 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:6}}>Asignados · {selectedPersonas.length}/{capDe(selectedMesaObj)}</div>
       <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:220,overflowY:"auto"}}>
         {selectedPersonas.map(p=>(
-          <div key={`${p.guestId}-${p.personIdx}`} style={{display:"flex",alignItems:"center",gap:10,background:"rgba(74,94,58,.05)",borderRadius:THEME.radius.sm,padding:"8px 10px",minHeight:THEME.tap.min}}>
+          <div key={`${p.guestId}-${p.personIdx}`}
+            onClick={e=>{e.stopPropagation(); if(isTouchAssignment) selectGuestForTapAssign(p);}}
+            style={{display:"flex",alignItems:"center",gap:10,background:selectedGuestForAssign?.guestId===p.guestId?"rgba(74,94,58,.12)":"rgba(74,94,58,.05)",border:selectedGuestForAssign?.guestId===p.guestId?"1.5px solid rgba(74,94,58,.45)":"1px solid transparent",borderRadius:THEME.radius.sm,padding:"8px 10px",minHeight:THEME.tap.min,cursor:isTouchAssignment?"pointer":"default"}}>
             <div style={{width:26,height:26,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <span style={{fontSize:"10px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
             </div>
             <span style={{fontFamily:THEME.font.body,fontSize:"max(14px,.88rem)",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-            <button onClick={()=>onRemove(p.guestId)} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.55)",cursor:"pointer",fontSize:"1.05rem",padding:"8px 12px",minHeight:THEME.tap.min,lineHeight:1,flexShrink:0}}>×</button>
+            <button onClick={e=>{e.stopPropagation();onRemove(p.guestId); if(selectedGuestForAssign?.guestId===p.guestId) setSelectedGuestForAssign(null);}} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.55)",cursor:"pointer",fontSize:"1.05rem",padding:"8px 12px",minHeight:THEME.tap.min,lineHeight:1,flexShrink:0}}>×</button>
           </div>
         ))}
         {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(26,26,20,.3)",fontStyle:"italic",padding:"8px 0"}}>Sin invitados asignados todavía · Arrastralos desde "Sin mesa" en el canvas</div>}
