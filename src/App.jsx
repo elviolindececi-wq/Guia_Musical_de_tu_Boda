@@ -4322,14 +4322,72 @@ const SALON_SHAPES = {
 };
 
 const ELEMENTOS_FIJOS = [
-  {id:"novios",    label:"Mesa novios",  emoji:"💍", color:"#4A5E3A", w:3,  h:0.9},
-  {id:"pista",     label:"Pista baile",  emoji:"💃", color:"#C9A96E", w:8,  h:6},
-  {id:"escenario", label:"DJ/Escenario", emoji:"🎧", color:"#7B5E3A", w:5,  h:2.5},
-  {id:"bar",       label:"Bar",          emoji:"🍹", color:"#5E7A8C", w:4,  h:2},
-  {id:"entrada",   label:"Entrada",      emoji:"🚪", color:"#8C7A5E", w:3,  h:0.8},
-  {id:"banios",    label:"Baños",        emoji:"🚻", color:"#6E8C7A", w:3,  h:2.5},
-  {id:"cocina",    label:"Cocina",       emoji:"🍽️", color:"#7A6E5E", w:4,  h:3},
-  {id:"altar",     label:"Altar",        emoji:"🌸", color:"#8C5E7A", w:5,  h:3.5},
+  // Principales
+  {id:"novios",       label:"Mesa novios",       emoji:"💍", color:"#4A5E3A", w:3.4, h:0.9},
+  {id:"presidencial", label:"Presidencial",       emoji:"👑", color:"#4A5E3A", w:5.2, h:1.0},
+  {id:"pista",        label:"Pista baile",        emoji:"💃", color:"#C9A96E", w:8,   h:6},
+  {id:"escenario",    label:"DJ/Escenario",      emoji:"🎧", color:"#7B5E3A", w:5,   h:2.5},
+  {id:"entrada",      label:"Entrada",           emoji:"🚪", color:"#8C7A5E", w:3,   h:0.8},
+
+  // Comida y bebida
+  {id:"torta",        label:"Mesa de torta",      emoji:"🎂", color:"#B9905A", w:2.6, h:1.5},
+  {id:"postres",      label:"Mesa dulce",         emoji:"🧁", color:"#C59A6A", w:3.6, h:1.4},
+  {id:"bar",          label:"Barra",              emoji:"🍹", color:"#5E7A8C", w:4,   h:2},
+  {id:"cafeteria",    label:"Cafetería",          emoji:"☕", color:"#8C6B50", w:3,   h:1.5},
+  {id:"buffet",       label:"Buffet",             emoji:"🍽️", color:"#7A6E5E", w:4.6, h:1.4},
+  {id:"bebidas",      label:"Bebidas",            emoji:"🥂", color:"#6B8494", w:3.2, h:1.3},
+  {id:"catering",     label:"Catering",           emoji:"👨‍🍳", color:"#7A6E5E", w:3.8, h:2},
+
+  // Decoración y experiencia
+  {id:"bienvenida",   label:"Bienvenida",         emoji:"🪧", color:"#8C7A5E", w:2.8, h:1.1},
+  {id:"regalos",      label:"Mesa regalos",       emoji:"🎁", color:"#8B6F93", w:2.6, h:1.4},
+  {id:"photobooth",   label:"Photobooth",         emoji:"📸", color:"#6E6A8C", w:3,   h:2},
+  {id:"cabina360",    label:"Cabina 360",         emoji:"🎥", color:"#6E6A8C", w:2.6, h:2.6},
+  {id:"arco",         label:"Arco floral",        emoji:"🌸", color:"#8C5E7A", w:3.6, h:0.7},
+  {id:"flores",       label:"Flores",             emoji:"💐", color:"#8C5E7A", w:1.3, h:1.3},
+  {id:"centro_floral",label:"Centro floral",      emoji:"🌷", color:"#9A765E", w:1.6, h:1.6},
+  {id:"backing",      label:"Backing fotos",      emoji:"✨", color:"#9A7B45", w:4.2, h:0.8},
+  {id:"alfombra",     label:"Camino/alfombra",    emoji:"🟫", color:"#9B6D4D", w:1.2, h:7},
+  {id:"living",       label:"Living lounge",      emoji:"🛋️", color:"#6E8C7A", w:3.8, h:2.2},
+  {id:"luces",        label:"Luces",              emoji:"💡", color:"#B9905A", w:4.0, h:0.6},
+  {id:"columnas",     label:"Columnas",           emoji:"🏺", color:"#8C7A5E", w:1.2, h:1.2},
+
+  // Servicios
+  {id:"banios",       label:"Baños",              emoji:"🚻", color:"#6E8C7A", w:3,   h:2.5},
+  {id:"cocina",       label:"Cocina",             emoji:"🍽️", color:"#7A6E5E", w:4,   h:3},
+  {id:"guardarropa",  label:"Guardarropa",        emoji:"🧥", color:"#60707A", w:3,   h:1.6},
+  {id:"proveedores",  label:"Proveedores",        emoji:"📦", color:"#7A6E5E", w:3.2, h:1.6},
+  {id:"mozos",        label:"Mozos",              emoji:"🤵", color:"#60705D", w:2.8, h:1.4},
+  {id:"salida",       label:"Salida",             emoji:"🚪", color:"#8C7A5E", w:3,   h:0.8},
+  {id:"emergencia",   label:"Emergencia",         emoji:"🧯", color:"#A35A4A", w:2.6, h:1.0},
+
+  // Ceremonia y zonas especiales
+  {id:"altar",        label:"Altar",              emoji:"🌸", color:"#8C5E7A", w:5,   h:3.5},
+  {id:"sillas_cer",   label:"Sillas ceremonia",   emoji:"🪑", color:"#8C7A5E", w:8,   h:4},
+  {id:"camino",       label:"Camino central",     emoji:"🤍", color:"#B9905A", w:1.2, h:7},
+  {id:"musicos",      label:"Músicos ceremonia",  emoji:"🎻", color:"#7B5E3A", w:3,   h:1.4},
+  {id:"ninos",        label:"Sector niños",       emoji:"🧸", color:"#8C8A5E", w:3.5, h:2.2},
+  {id:"fumadores",    label:"Área fumadores",     emoji:"🌿", color:"#5E8C66", w:3,   h:2},
+  {id:"exterior",     label:"Zona exterior",      emoji:"🌳", color:"#5E8C66", w:5,   h:3},
+];
+
+const ELEMENTO_CATEGORIAS = [
+  {label:"Principales", items:["novios","presidencial","pista","escenario","entrada"]},
+  {label:"Comida y bebida", items:["torta","postres","bar","cafeteria","buffet","bebidas","catering"]},
+  {label:"Decoración", items:["bienvenida","regalos","photobooth","cabina360","arco","flores","centro_floral","backing","alfombra","living","luces","columnas"]},
+  {label:"Servicios", items:["banios","cocina","guardarropa","proveedores","mozos","salida","emergencia"]},
+  {label:"Ceremonia / zonas", items:["altar","sillas_cer","camino","musicos","ninos","fumadores","exterior"]},
+];
+
+const DECOR_STYLES = [
+  {id:"romantico_floral", label:"Romántico floral", desc:"Flores, torta y mesa dulce protagonistas"},
+  {id:"elegante_clasico", label:"Elegante clásico", desc:"Distribución equilibrada y sobria"},
+  {id:"boho_chic", label:"Boho chic", desc:"Alfombras, living y flores orgánicas"},
+  {id:"minimalista", label:"Minimalista moderno", desc:"Pocos elementos y circulación clara"},
+  {id:"rustico", label:"Rústico", desc:"Barra, buffet, madera y zona exterior"},
+  {id:"glam_dorado", label:"Glam dorado", desc:"Backing, photobooth y pista protagonista"},
+  {id:"jardin", label:"Jardín natural", desc:"Arcos, luces y zonas al aire libre"},
+  {id:"fiesta_nocturna", label:"Fiesta nocturna", desc:"Barra, DJ y cabina 360 cerca de pista"},
 ];
 
 // Tipos de mesa según bodas.net (redonda 8-12, cuadrada íntima, rectangular, imperial larga)
@@ -4369,32 +4427,143 @@ const cargarSalon = () => {
   catch(err){ return null; }
 };
 
-// Plano modelo: salón 40×20 m para 150 personas — 15 redondas de 10
-// alrededor de la pista central, mesa de novios junto a la pista,
-// escenario, dos barras, baños, cocina y entrada. Inspirado en los
-// planos clásicos de banquete.
-const SALON_MODELO = () => {
-  const filaX = [6.5, 11, 15.5, 20, 24.5, 29, 33.5];
-  const mesas = [
-    ...filaX.map((x,i)=>({id:i+1,  mx:x,  my:3,  tipo:"round", etiqueta:"", cap:10})),
-    ...filaX.map((x,i)=>({id:i+8,  mx:x,  my:17, tipo:"round", etiqueta:"", cap:10})),
-    {id:15, mx:6.5, my:10, tipo:"round", etiqueta:"", cap:10},
-  ];
-  return {
-    salonW: 40, salonH: 20, salonShape: "rectangulo", estiloDistrib: "banquet",
-    mesas,
-    elementos: [
-      {id:"pista-1",     tipo:"pista",     mx:16,   my:6,    ew:8,   eh:8},
-      {id:"novios-1",    tipo:"novios",    mx:12.4, my:9.5,  ew:2.6, eh:0.9},
-      {id:"escenario-1", tipo:"escenario", mx:24.6, my:7.5,  ew:2,   eh:5},
-      {id:"bar-1",       tipo:"bar",       mx:36.6, my:2,    ew:2.6, eh:4},
-      {id:"bar-2",       tipo:"bar",       mx:36.6, my:14,   ew:2.6, eh:4},
-      {id:"banios-1",    tipo:"banios",    mx:0.8,  my:0.8,  ew:3,   eh:2.5},
-      {id:"cocina-1",    tipo:"cocina",    mx:0.8,  my:16.6, ew:3.6, eh:2.6},
-      {id:"entrada-1",   tipo:"entrada",   mx:18.5, my:19.1, ew:3,   eh:0.8},
+// Helpers para crear presets del salón. Cada preset devuelve un layout completo
+// pero editable: mesas, pista, decoración, servicios y zonas del evento.
+const elem = (id,tipo,mx,my,ew,eh,extra={}) => ({id,tipo,mx,my,ew,eh,...extra});
+const mesa = (id,mx,my,tipo="round",extra={}) => ({id,mx,my,tipo,cap:extra.cap||10,etiqueta:extra.etiqueta||"",...extra});
+
+const decorPack = (style, W, H) => {
+  const packs = {
+    romantico_floral: [
+      elem("arco-1","arco",W/2-1.8,1.0,3.6,0.7),
+      elem("flores-1","flores",2.0,2.0,1.3,1.3), elem("flores-2","flores",W-3.3,2.0,1.3,1.3),
+      elem("centrofloral-1","centro_floral",W/2-0.8,H/2-0.8,1.6,1.6),
+    ],
+    elegante_clasico: [
+      elem("columnas-1","columnas",2.0,2.0,1.2,1.2), elem("columnas-2","columnas",W-3.2,2.0,1.2,1.2),
+      elem("backing-1","backing",W/2-2.1,0.8,4.2,0.8),
+    ],
+    boho_chic: [
+      elem("alfombra-1","alfombra",W/2-0.6,1.3,1.2,6.2),
+      elem("living-1","living",W-5.2,H-4.0,3.8,2.2),
+      elem("luces-1","luces",W/2-4,H-1.8,8,0.6),
+      elem("flores-1","flores",2.0,H-3.0,1.3,1.3),
+    ],
+    minimalista: [
+      elem("backing-1","backing",W/2-2.1,0.8,4.2,0.8),
+      elem("flores-1","flores",W-3.0,H-3.0,1.1,1.1),
+    ],
+    rustico: [
+      elem("exterior-1","exterior",W-6,H-4.2,5,3),
+      elem("luces-1","luces",W/2-4,1.0,8,0.6),
+      elem("living-1","living",1.2,H-4.0,3.8,2.2),
+    ],
+    glam_dorado: [
+      elem("backing-1","backing",W/2-2.4,0.7,4.8,0.8),
+      elem("cabina360-1","cabina360",W-4.2,H/2-1.3,2.6,2.6),
+      elem("luces-1","luces",W/2-4,H-1.7,8,0.6),
+      elem("columnas-1","columnas",W/2-3.2,1.8,1.2,1.2), elem("columnas-2","columnas",W/2+2.0,1.8,1.2,1.2),
+    ],
+    jardin: [
+      elem("arco-1","arco",W/2-2.0,1.0,4.0,0.7),
+      elem("exterior-1","exterior",W-6.0,H-4.0,5,3),
+      elem("luces-1","luces",W/2-5.0,H-1.8,10,0.6),
+      elem("flores-1","flores",2.0,2.0,1.3,1.3), elem("flores-2","flores",W-3.3,2.0,1.3,1.3),
+    ],
+    fiesta_nocturna: [
+      elem("cabina360-1","cabina360",W-4.0,H/2-1.3,2.6,2.6),
+      elem("luces-1","luces",W/2-5.0,H-1.8,10,0.6),
+      elem("photobooth-1","photobooth",1.3,H-4.0,3,2),
     ],
   };
+  return packs[style] || packs.romantico_floral;
 };
+
+const mesasRedondas = (coords, offset=1) => coords.map(([mx,my],i)=>mesa(i+offset,mx,my,"round",{cap:10}));
+
+const PRESET_BUILDERS = {
+  clasico_elegante: (decor="romantico_floral") => {
+    const W=40, H=20;
+    const filaX=[6.5,11,15.5,24.5,29,33.5];
+    const mesas=[
+      ...filaX.map((x,i)=>mesa(i+1,x,3,"round",{cap:10})),
+      ...filaX.map((x,i)=>mesa(i+7,x,17,"round",{cap:10})),
+      mesa(13,6.5,10,"round",{cap:10}), mesa(14,33.5,10,"round",{cap:10}), mesa(15,20,16.5,"round",{cap:10}),
+    ];
+    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
+      elementos:[
+        elem("pista-1","pista",16,6,8,7), elem("presidencial-1","presidencial",16.8,1.3,6.4,1.0),
+        elem("escenario-1","escenario",24.8,7.6,2.2,4.8), elem("torta-1","torta",12.6,6.0,2.6,1.5),
+        elem("postres-1","postres",12.1,12.7,3.6,1.4), elem("bar-1","bar",36.2,2.0,2.8,4.2),
+        elem("cafeteria-1","cafeteria",36.2,14.6,2.8,1.6), elem("bienvenida-1","bienvenida",18.4,18.7,3.2,1.0),
+        elem("photobooth-1","photobooth",1.3,8.7,3,2), elem("regalos-1","regalos",1.4,12.0,2.6,1.4),
+        elem("banios-1","banios",0.8,0.8,3,2.2), elem("cocina-1","cocina",0.8,16.5,3.8,2.7),
+        ...decorPack(decor,W,H),
+      ]};
+  },
+  rectangular: (decor="elegante_clasico") => {
+    const W=48,H=18;
+    const mesas=[];
+    [6,11,16,21,27,32,37,42].forEach((x,i)=>mesas.push(mesa(i+1,x,4,"round",{cap:10})));
+    [6,11,16,21,27,32,37,42].forEach((x,i)=>mesas.push(mesa(i+9,x,14,"round",{cap:10})));
+    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"banquet",estiloDecor:decor,mesas,
+      elementos:[
+        elem("entrada-1","entrada",22.5,17.1,3,0.8), elem("presidencial-1","presidencial",20.8,1.2,6.4,1.0),
+        elem("pista-1","pista",20,5.4,8,7), elem("escenario-1","escenario",29.4,6.2,5.2,2.4),
+        elem("bar-1","bar",44.0,2.0,3.0,3.4), elem("postres-1","postres",44.0,12.8,3.0,1.4),
+        elem("torta-1","torta",17.0,7.0,2.5,1.4), elem("bienvenida-1","bienvenida",18.6,16.6,3.2,1.0),
+        elem("photobooth-1","photobooth",1.2,7.6,3,2), elem("banios-1","banios",1.0,1.0,3,2.2),
+        elem("cocina-1","cocina",1.0,14.0,4,2.8), ...decorPack(decor,W,H),
+      ]};
+  },
+  jardin_exterior: (decor="jardin") => {
+    const W=38,H=24;
+    const mesas=mesasRedondas([[7,12],[12,10],[17,12],[22,10],[27,12],[32,14],[8,18],[14,18],[20,18],[26,18]],1);
+    return {salonW:W,salonH:H,salonShape:"oval",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
+      elementos:[
+        elem("altar-1","altar",15.5,1.0,7,2.6), elem("camino-1","camino",18.4,3.4,1.2,6.5),
+        elem("sillascer-1","sillas_cer",13.5,3.8,9,4.2), elem("musicos-1","musicos",24.0,3.0,3,1.4),
+        elem("pista-1","pista",16,12.2,7,6), elem("novios-1","novios",15.8,9.6,6.2,1.0),
+        elem("bar-1","bar",31.8,5.8,3.4,2), elem("postres-1","postres",30.8,9.2,3.6,1.4),
+        elem("torta-1","torta",12.5,12.4,2.6,1.4), elem("living-1","living",2.0,16.5,3.8,2.2),
+        elem("bienvenida-1","bienvenida",17.5,22.4,3.2,1.0), elem("photobooth-1","photobooth",2.0,10.0,3,2),
+        elem("catering-1","catering",1.4,20.0,3.8,2), elem("banios-1","banios",33.8,20.0,3,2.2),
+        ...decorPack(decor,W,H),
+      ]};
+  },
+  moderno_minimalista: (decor="minimalista") => {
+    const W=36,H=20;
+    const mesas=[mesa(1,8,5,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(2,8,11,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(3,8,17,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(4,27,5,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(5,27,11,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(6,27,17,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"})];
+    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"cantine",estiloDecor:decor,mesas,
+      elementos:[elem("pista-1","pista",14,7,8,6),elem("novios-1","novios",14.6,1.4,6.8,1),elem("escenario-1","escenario",23.4,8.5,3.8,2.2),elem("bar-1","bar",30.8,2.2,3.6,2),elem("torta-1","torta",2.0,7.2,2.5,1.4),elem("postres-1","postres",2.0,10.6,3.3,1.3),elem("bienvenida-1","bienvenida",16.4,18.7,3.2,1.0),elem("banios-1","banios",31.8,16.5,3,2.2),elem("cocina-1","cocina",1.0,16.5,4,2.7),...decorPack(decor,W,H)]};
+  },
+  fiesta_pista: (decor="fiesta_nocturna") => {
+    const W=40,H=22;
+    const mesas=mesasRedondas([[5.5,5],[10,4],[30,4],[34.5,5],[5.5,17],[10,18],[30,18],[34.5,17],[5.5,11],[34.5,11]],1);
+    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
+      elementos:[elem("pista-1","pista",13,5.2,14,11),elem("escenario-1","escenario",15.5,1.1,9,2.4),elem("novios-1","novios",16.4,18.8,7.2,1),elem("bar-1","bar",29.5,9.0,4.6,2),elem("bebidas-1","bebidas",29.8,11.5,3.2,1.3),elem("cabina360-1","cabina360",1.4,9.4,2.6,2.6),elem("photobooth-1","photobooth",1.2,13.0,3,2),elem("torta-1","torta",11.0,16.8,2.6,1.4),elem("postres-1","postres",24.5,16.8,3.6,1.4),elem("bienvenida-1","bienvenida",18.4,20.6,3.2,1.0),elem("banios-1","banios",35.8,18.5,3,2.2),elem("cocina-1","cocina",1.0,18.5,4,2.7),...decorPack(decor,W,H)]};
+  },
+  ceremonia_fiesta: (decor="romantico_floral") => {
+    const W=42,H=26;
+    const mesas=mesasRedondas([[6,15],[11,15],[31,15],[36,15],[6,21],[12,21],[18,21],[24,21],[30,21],[36,21]],1);
+    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
+      elementos:[elem("altar-1","altar",16.0,1.0,10,2.6),elem("camino-1","camino",20.4,3.8,1.2,7.0),elem("sillascer-1","sillas_cer",14.0,4.3,14,5.0),elem("musicos-1","musicos",29.4,3.5,3,1.4),elem("pista-1","pista",16.0,12.5,10,6.5),elem("novios-1","novios",17.0,10.2,8.0,1.0),elem("escenario-1","escenario",27.4,13.4,4.2,2.2),elem("bar-1","bar",35.8,8.5,4,2),elem("postres-1","postres",35.2,11.5,3.6,1.4),elem("torta-1","torta",11.2,12.5,2.6,1.4),elem("bienvenida-1","bienvenida",19.4,24.5,3.2,1.0),elem("photobooth-1","photobooth",2.0,10.5,3,2),elem("banios-1","banios",37.8,22.5,3,2.2),elem("cocina-1","cocina",1.0,22.2,4,2.7),...decorPack(decor,W,H)]};
+  },
+  desde_cero: (decor="romantico_floral") => ({salonW:30,salonH:18,salonShape:"rectangulo",estiloDistrib:"banquet",estiloDecor:decor,mesas:[],elementos:[]}),
+};
+
+const SALON_PRESETS = [
+  {id:"clasico_elegante", emoji:"💍", label:"Clásico elegante", desc:"Pista central, presidencial, torta, mesa dulce y barra"},
+  {id:"rectangular", emoji:"🏛️", label:"Salón rectangular", desc:"Ideal para espacios largos con circulación lateral"},
+  {id:"jardin_exterior", emoji:"🌳", label:"Jardín / exterior", desc:"Ceremonia, cocktail, livings y mesas abiertas"},
+  {id:"moderno_minimalista", emoji:"◻️", label:"Moderno minimalista", desc:"Mesas largas, pocos elementos y diseño limpio"},
+  {id:"fiesta_pista", emoji:"🎧", label:"Fiesta / pista protagonista", desc:"Pista grande, DJ, barra y cabina 360"},
+  {id:"ceremonia_fiesta", emoji:"🌸", label:"Ceremonia + fiesta", desc:"Altar, sillas, camino y salón en un mismo plano"},
+  {id:"desde_cero", emoji:"＋", label:"Crear desde cero", desc:"Limpia el canvas y deja el salón vacío"},
+];
+
+// Default actual: preset clásico editable para no arrancar con un salón vacío.
+const SALON_MODELO = () => PRESET_BUILDERS.clasico_elegante("romantico_floral");
 
 function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia }){
   // Layout guardado de sesiones anteriores (se lee una sola vez)
@@ -4410,7 +4579,8 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const [zoom, setZoom]           = useState(1);
   const [mesas, setMesas]         = useState(()=> (S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas);
   const [elementos, setElementos] = useState(()=> (S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos);
-  const [estiloDistrib, setEstiloDistrib] = useState(S0?.estiloDistrib ?? "banquet");
+  const [estiloDistrib, setEstiloDistrib] = useState(S0?.estiloDistrib ?? M0.estiloDistrib ?? "banquet");
+  const [estiloDecor, setEstiloDecor] = useState(S0?.estiloDecor ?? M0.estiloDecor ?? "romantico_floral");
 
   // Guardado dual: localStorage (instantáneo, por dispositivo) + Supabase (sincronizado).
   // remoteLoaded evita que el autoguardado con defaults pise el layout remoto
@@ -4418,7 +4588,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const remoteLoaded = useRef(false);
   useEffect(()=>{
     const t=setTimeout(()=>{
-      const layout={salonW,salonH,salonShape,estiloDistrib,mesas,elementos};
+      const layout={salonW,salonH,salonShape,estiloDistrib,estiloDecor,mesas,elementos};
       try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layout)); } catch(err){}
       if(user&&remoteLoaded.current){
         supabase.from("wedding_data")
@@ -4427,12 +4597,12 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       }
     },800);
     return ()=>clearTimeout(t);
-  },[salonW,salonH,salonShape,estiloDistrib,mesas,elementos]);
+  },[salonW,salonH,salonShape,estiloDistrib,estiloDecor,mesas,elementos]);
 
   // Flush al desmontar: el debounce de arriba se cancela al salir de la vista,
   // así que guardamos el estado final de forma inmediata para no perder el último cambio
   const layoutFlushRef = useRef(null);
-  layoutFlushRef.current = {salonW,salonH,salonShape,estiloDistrib,mesas,elementos};
+  layoutFlushRef.current = {salonW,salonH,salonShape,estiloDistrib,estiloDecor,mesas,elementos};
   useEffect(()=>()=>{
     try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layoutFlushRef.current)); } catch(err){}
     if(user&&remoteLoaded.current){
@@ -4456,6 +4626,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
           if(L.salonH) setSalonH(L.salonH);
           if(L.salonShape) setSalonShape(L.salonShape);
           if(L.estiloDistrib) setEstiloDistrib(L.estiloDistrib);
+          if(L.estiloDecor) setEstiloDecor(L.estiloDecor);
           if(Array.isArray(L.elementos)) setElementos(L.elementos);
           if(Array.isArray(L.mesas)&&L.mesas.length>0){
             // Completar mesas faltantes referidas por invitados
@@ -4511,6 +4682,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const [searchSinMesa, setSearchSinMesa] = useState("");
   const [showShapeMenu, setShowShapeMenu] = useState(false);
   const [showElemMenu, setShowElemMenu]   = useState(false);
+  const [showPresetMenu, setShowPresetMenu] = useState(false);
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
   const isMobile = useIsMobile();
   const isTouchAssignment = useIsMobile(1024); // smartphones y tablets: tocar invitado → tocar mesa
@@ -4571,13 +4743,24 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   // ── Fit to screen ──
   // Aplicar el plano modelo (reemplaza el plano actual; las asignaciones
   // de invitados a mesas 1-15 se conservan por número)
-  const aplicarModelo=()=>{
-    const M=SALON_MODELO();
-    setSalonW(M.salonW); setSalonH(M.salonH); setSalonShape(M.salonShape);
-    setMesas(M.mesas); setElementos(M.elementos);
-    setSelectedMesa(null); setSelectedElem(null);
+  const aplicarPreset=(presetId, opts={})=>{
+    const builder=PRESET_BUILDERS[presetId] || PRESET_BUILDERS.clasico_elegante;
+    const P=builder(estiloDecor);
+    const hayLayout=(mesas&&mesas.length>0)||(elementos&&elementos.length>0);
+    if(!opts.skipConfirm&&hayLayout&&typeof window!=="undefined"){
+      const ok=window.confirm("Esto reemplaza la disposición actual del salón, pero conserva los invitados asignados por número de mesa. ¿Querés continuar?");
+      if(!ok) return;
+    }
+    setSalonW(P.salonW); setSalonH(P.salonH); setSalonShape(P.salonShape);
+    setEstiloDistrib(P.estiloDistrib||"banquet"); setEstiloDecor(P.estiloDecor||estiloDecor);
+    setMesas(P.mesas||[]); setElementos(P.elementos||[]);
+    setSelectedMesa(null); setSelectedElem(null); setSelectedGuestForAssign(null);
+    setShowPresetMenu(false); setShowShapeMenu(false); setShowElemMenu(false);
+    if(typeof showToast==="function") showToast(`✓ Plantilla aplicada: ${SALON_PRESETS.find(x=>x.id===presetId)?.label||"salón"}`,"success",2200);
     setTimeout(fitToScreen,80);
   };
+
+  const aplicarModelo=()=>aplicarPreset("clasico_elegante");
 
   const fitToScreen=()=>{
     const el=viewportRef.current; if(!el) return;
@@ -4841,7 +5024,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   useEffect(()=>{
     const handler=(e)=>{
       setShowShapeMenu(false);
-      setShowElemMenu(false);
+      setShowElemMenu(false);setShowPresetMenu(false);
     };
     document.addEventListener("mousedown",handler);
     return ()=>document.removeEventListener("mousedown",handler);
@@ -5069,7 +5252,9 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
     }));
 
     setMesas(nuevasMesas);
-    setElementos(elems);
+    // Distribuir mesas no debe borrar la decoración agregada a mano ni la de una plantilla.
+    const reemplazables=new Set(["novios","pista","escenario"]);
+    setElementos(actual=>[...elems,...(actual||[]).filter(el=>!reemplazables.has(el.tipo))]);
     setTimeout(fitToScreen,50);
   };
 
@@ -5276,7 +5461,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",msOverflowStyle:"none"}}>
         {/* Forma salón */}
         <div style={{position:"relative"}}>
-          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowShapeMenu(s=>!s);setShowElemMenu(false);setShowPresetMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
             🏛️ {SALON_SHAPES[salonShape].label} ▾
           </button>
         </div>
@@ -5301,9 +5486,13 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       </div>
       {/* Fila 2: Acciones */}
       <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",flexShrink:0}}>
+        {/* Plantillas prediseñadas */}
+        <div style={{position:"relative"}}>
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Plantillas ▾</button>
+        </div>
         {/* Agregar elemento */}
         <div style={{position:"relative"}}>
-          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
+          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);setShowPresetMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
         </div>
         <button onClick={addMesa} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:9,padding:"9px 14px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
         {/* Estilo + Distribuir */}
@@ -5319,13 +5508,30 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       </div>
 
       {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
+      {showPresetMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:12,padding:8,zIndex:320,boxShadow:THEME.shadow.pop,minWidth:280,maxWidth:"min(420px,92vw)",maxHeight:"min(520px,70vh)",overflowY:"auto"}}>
+        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",padding:"5px 8px 8px"}}>Elegí estilo de decoración</div>
+        <select value={estiloDecor} onChange={e=>setEstiloDecor(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none",marginBottom:8}}>
+          {DECOR_STYLES.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}
+        </select>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,padding:"0 8px 8px",borderBottom:"0.5px solid rgba(74,94,58,.12)",marginBottom:6}}>La plantilla se carga ya decorada, pero después podés mover, borrar o sumar elementos.</div>
+        {SALON_PRESETS.map(pr=><button key={pr.id} onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(pr.id)} style={{display:"flex",alignItems:"flex-start",gap:10,width:"100%",background:pr.id==="desde_cero"?"rgba(200,60,60,.035)":"transparent",border:"none",borderRadius:9,padding:"11px 10px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>
+          <span style={{fontSize:"1.1rem",lineHeight:1.2,flexShrink:0}}>{pr.emoji}</span>
+          <span style={{display:"flex",flexDirection:"column",gap:2}}>
+            <strong style={{fontSize:"max(13px,.85rem)",color:pr.id==="desde_cero"?"rgba(200,60,60,.75)":THEME.color.sage}}>{pr.label}</strong>
+            <span style={{fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.25}}>{pr.desc}</span>
+          </span>
+        </button>)}
+      </div>}
       {showShapeMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:170}}>
         {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);if(k==="cuadrado"){const lado=Math.min(salonW,salonH);setSalonW(lado);setSalonH(lado);}setShowShapeMenu(false);}} style={{display:"flex",alignItems:"center",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
         <div style={{borderTop:"0.5px solid rgba(74,94,58,.12)",margin:"6px 0"}}/>
         <button onMouseDown={e=>e.stopPropagation()} onClick={()=>{aplicarModelo();setShowShapeMenu(false);}} title="Reemplaza el plano actual por el modelo de banquete" style={{display:"flex",alignItems:"center",width:"100%",background:"rgba(201,169,110,.1)",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:700,color:"rgba(139,107,40,.95)",cursor:"pointer",textAlign:"left"}}>✨ Cargar salón modelo (40×20 · 150 pers.)</button>
       </div>}
       {showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:200,maxHeight:"min(340px,50vh)",overflowY:"auto"}}>
-        {ELEMENTOS_FIJOS.map(e=><button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
+        {ELEMENTO_CATEGORIAS.map(cat=><div key={cat.label} style={{padding:"2px 0 6px"}}>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.45)",padding:"7px 8px 5px"}}>{cat.label}</div>
+          {cat.items.map(id=>{const e=ELEMENTOS_FIJOS.find(x=>x.id===id); if(!e) return null; return <button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"10px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>;})}
+        </div>)}
       </div>}
     </div>
 
@@ -5368,6 +5574,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
               setSelectedGuestForAssign(null);
               setShowShapeMenu(false);
               setShowElemMenu(false);
+              setShowPresetMenu(false);
             }
           }}
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
