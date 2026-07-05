@@ -4662,6 +4662,55 @@ const cargarSalon = () => {
   catch(err){ return null; }
 };
 
+
+// Reparación controlada de escala y proporción del canvas.
+// La versión anterior trataba presets normalizados 100×100 como si fueran metros reales.
+// Desde acá, el salón vuelve a trabajar en metros reales y el render usa una sola escala: metros → px.
+const ROOM_SIZE_BY_GUESTS = [
+  {max:100, w:18, h:14, danceW:5, danceH:4},
+  {max:150, w:22, h:16, danceW:6, danceH:5},
+  {max:200, w:24, h:18, danceW:7, danceH:6},
+  {max:250, w:28, h:20, danceW:8, danceH:7},
+  {max:300, w:30, h:20, danceW:9, danceH:8},
+];
+const getRoomSizeForGuests = (total=150) => {
+  const n = Number(total)||150;
+  return ROOM_SIZE_BY_GUESTS.find(r=>n<=r.max) || ROOM_SIZE_BY_GUESTS[ROOM_SIZE_BY_GUESTS.length-1];
+};
+const normToMetersX = (x, roomW) => +((Number(x)||0) * roomW / 100).toFixed(2);
+const normToMetersY = (y, roomH) => +((Number(y)||0) * roomH / 100).toFixed(2);
+const tableDiameterForGuests = (tableSize=10) => (Number(tableSize)||10) <= 8 ? 1.50 : 1.80;
+const isNormalizedSalonLayout = (L) => !!L && ((Number(L.salonW)||0) >= 80 || (Number(L.salonH)||0) >= 80);
+const convertNormalizedLayoutToMeters = (L, totalPeople=150, tableSize=10) => {
+  if(!isNormalizedSalonLayout(L)) return L;
+  const room = getRoomSizeForGuests(totalPeople);
+  const W = room.w, H = room.h;
+  const convertElem = (el={}) => {
+    const tipo = el.tipo || el.key || "";
+    const isPista = tipo === "pista" || tipo === "pista_baile" || el.presetKey === "pista_baile";
+    const ew = isPista ? room.danceW : normToMetersX(el.ew ?? el.w ?? 3, W);
+    const eh = isPista ? room.danceH : normToMetersY(el.eh ?? el.h ?? 2, H);
+    const mx = normToMetersX(el.mx ?? el.x ?? 0, W);
+    const my = normToMetersY(el.my ?? el.y ?? 0, H);
+    return {...el, mx:+Math.max(0, Math.min(W-ew, mx)).toFixed(2), my:+Math.max(0, Math.min(H-eh, my)).toFixed(2), ew, eh};
+  };
+  const convertMesa = (m={}) => {
+    const tipo = m.tipo || m.type || "round";
+    const isRound = tipo === "round";
+    const ew = isRound ? tableDiameterForGuests(tableSize) : normToMetersX(m.ew ?? m.w ?? 16, W);
+    const eh = isRound ? ew : normToMetersY(m.eh ?? m.h ?? 6, H);
+    return {...m, mx:normToMetersX(m.mx ?? m.x ?? 0, W), my:normToMetersY(m.my ?? m.y ?? 0, H), ew, eh};
+  };
+  return {
+    ...L,
+    salonW: W,
+    salonH: H,
+    salonShape: "rectangulo",
+    mesas: Array.isArray(L.mesas) ? L.mesas.map(convertMesa) : [],
+    elementos: Array.isArray(L.elementos) ? L.elementos.map(convertElem) : [],
+  };
+};
+
 // Helpers para crear presets del salón. Cada preset devuelve un layout completo
 // pero editable: mesas, pista, decoración, servicios y zonas del evento.
 const elem = (id,tipo,mx,my,ew,eh,extra={}) => ({id,tipo,mx,my,ew,eh,...extra});
@@ -7549,15 +7598,22 @@ const humanizePresetKey = (key="") => String(key)
   .replace(/_/g," ")
   .replace(/\w/g, c => c.toUpperCase());
 
-const presetElementToCanvas = (p, raw) => {
+const presetElementToCanvas = (p, raw, room) => {
   const tipo = PRESET_ELEMENT_TYPE_MAP[raw.key] || PRESET_ELEMENT_TYPE_MAP[String(raw.key).replace(/_\d+$/," ")] || "backing";
+  const W = room?.w || 22;
+  const H = room?.h || 16;
+  const isPista = raw.key === "pista_baile";
+  const ew = isPista ? room.danceW : normToMetersX(raw.w, W);
+  const eh = isPista ? room.danceH : normToMetersY(raw.h, H);
+  const cx = normToMetersX(raw.x, W);
+  const cy = normToMetersY(raw.y, H);
   return elem(
     `${p.id}-${raw.key}`,
     tipo,
-    +(raw.x - raw.w/2).toFixed(2),
-    +(raw.y - raw.h/2).toFixed(2),
-    raw.w,
-    raw.h,
+    +(cx - ew/2).toFixed(2),
+    +(cy - eh/2).toFixed(2),
+    ew,
+    eh,
     {
       locked: true,
       presetFixed: true,
@@ -7567,22 +7623,26 @@ const presetElementToCanvas = (p, raw) => {
   );
 };
 
-const presetTableToCanvas = (raw, index, tableSize=10) => {
-  const round = raw.type === "round";
+const presetTableToCanvas = (raw, index, tableSize=10, room={w:22,h:16}) => {
+  const tipo = raw.type || "round";
+  const round = tipo === "round";
   const cap = round ? tableSize : (raw.cap || tableSize);
-  return mesa(index + 1, raw.x, raw.y, raw.type || "round", {
-    ew: raw.w,
-    eh: raw.h,
+  const visualD = tableDiameterForGuests(tableSize);
+  const ew = round ? visualD : normToMetersX(raw.w || 16, room.w);
+  const eh = round ? visualD : normToMetersY(raw.h || 6, room.h);
+  return mesa(index + 1, normToMetersX(raw.x, room.w), normToMetersY(raw.y, room.h), tipo, {
+    ew,
+    eh,
     cap,
     etiqueta: raw.label && !/^T\d+/i.test(raw.label) && !/^H\d+/i.test(raw.label) ? raw.label.replace(/_/g," ") : "",
     presetKey: raw.label,
     presetOrder: index + 1,
-    miraSide: raw.type === "rect_h" || raw.type === "imperial" ? "both" : undefined,
+    miraSide: tipo === "rect_h" || tipo === "imperial" ? "both" : undefined,
   });
 };
 
-const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=10) => {
-  const normalized = tablePattern.map((t,i)=>presetTableToCanvas(t,i,tableSize));
+const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=10, room={w:22,h:16}) => {
+  const normalized = tablePattern.map((t,i)=>presetTableToCanvas(t,i,tableSize,room));
   if(!totalPeople || totalPeople <= 0) return {tables: normalized, overflow:false, seats: normalized.reduce((s,m)=>s+(m.cap||tableSize),0)};
   let seats = 0;
   const selected = [];
@@ -7595,12 +7655,13 @@ const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=10
   return {tables: selected, overflow: totalPeople > maxSeats, seats: Math.min(seats, maxSeats), maxSeats};
 };
 
-const buildReferenceWeddingPreset = (presetId, totalPeople=0, tableSize=10) => {
+const buildReferenceWeddingPreset = (presetId, totalPeople=150, tableSize=10) => {
   const p = REFERENCE_WEDDING_PRESETS.find(x=>x.id===presetId) || REFERENCE_WEDDING_PRESETS[0];
-  const picked = selectPresetTablesByGuests(p.tables || [], totalPeople, tableSize || 10);
+  const room = getRoomSizeForGuests(totalPeople || 150);
+  const picked = selectPresetTablesByGuests(p.tables || [], totalPeople, tableSize || 10, room);
   return {
-    salonW: 100,
-    salonH: 100,
+    salonW: room.w,
+    salonH: room.h,
     salonShape: "rectangulo",
     salonShapeConfig: DEFAULT_SALON_SHAPE_CONFIG,
     estiloDistrib: p.id,
@@ -7610,14 +7671,14 @@ const buildReferenceWeddingPreset = (presetId, totalPeople=0, tableSize=10) => {
     overflowTables: picked.overflow,
     maxPresetSeats: picked.maxSeats || picked.seats || 0,
     mesas: picked.tables,
-    elementos: (p.elements || []).map(raw=>presetElementToCanvas(p, raw)),
+    elementos: (p.elements || []).map(raw=>presetElementToCanvas(p, raw, room)),
   };
 };
 
 const PRESET_BUILDERS = Object.fromEntries(
   REFERENCE_WEDDING_PRESETS.map(p => [p.id, (_decor, totalPeople=0, tableSize=10) => buildReferenceWeddingPreset(p.id, totalPeople, tableSize)])
 );
-PRESET_BUILDERS.desde_cero = () => ({salonW:100,salonH:100,salonShape:"rectangulo",salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,estiloDistrib:"desde_cero",estiloDecor:"desde_cero",mesas:[],elementos:[]});
+PRESET_BUILDERS.desde_cero = () => { const r=getRoomSizeForGuests(150); return {salonW:r.w,salonH:r.h,salonShape:"rectangulo",salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,estiloDistrib:"desde_cero",estiloDecor:"desde_cero",mesas:[],elementos:[]}; };
 
 const SALON_PRESETS = [
   ...REFERENCE_WEDDING_PRESETS.map((p,idx)=>({
@@ -7630,14 +7691,15 @@ const SALON_PRESETS = [
 ];
 
 // Default actual: preset clásico editable para no arrancar con un salón vacío.
-const SALON_MODELO = () => PRESET_BUILDERS.jardin_romantico_central(null, 0, 10);
+const SALON_MODELO = () => PRESET_BUILDERS.jardin_romantico_central(null, 150, 10);
 
 function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia, onGoDesigner, onGoGuests }){
   // Layout guardado de sesiones anteriores (se lee una sola vez)
+  const totalInvitadosInicial = budgetInvitados>0 ? budgetInvitados : (guests||[]).reduce((s,g)=>s+(parseInt(g.cantidadInvitados||1)||1),0);
   const salonInitRef = useRef();
-  if(salonInitRef.current===undefined) salonInitRef.current = cargarSalon();
+  if(salonInitRef.current===undefined) salonInitRef.current = convertNormalizedLayoutToMeters(cargarSalon(), totalInvitadosInicial || 150, tableSize || 10);
   const S0 = salonInitRef.current;
-  const M0 = SALON_MODELO(); // default: plano modelo 40×20 para 150 personas
+  const M0 = SALON_MODELO(); // default: salón proporcional 22×16 para 150 personas
   const isDesignerMode = mode === "designer";
   const isGuestMode = mode !== "designer";
 
@@ -7690,7 +7752,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       try{
         const {data:row}=await supabase.from("wedding_data").select("salon_layout").eq("user_id",user.id).maybeSingle();
         if(!alive) return;
-        const L=row?.salon_layout;
+        const L=convertNormalizedLayoutToMeters(row?.salon_layout, totalInvitadosInicial || 150, tableSize || 10);
         if(L){
           if(L.salonW) setSalonW(L.salonW);
           if(L.salonH) setSalonH(L.salonH);
@@ -9030,7 +9092,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             Preset: <strong style={{color:THEME.color.sage}}>{SALON_PRESETS.find(p=>p.id===selectedSalonType)?.label}</strong>
           </div>
           <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:4}}>
-            Los elementos fijos usan coordenadas cerradas 100×100: entrada, baños, pista, DJ, mesa de novios, barra y buffet no se mueven. La app solo agrega o quita mesas siguiendo el patrón del preset según cantidad de invitados.
+            El preset se normaliza a medidas reales del salón. Entrada, baños, pista, DJ, mesa de novios, barra y buffet mantienen su posición proporcional; la escala visual usa metros reales para evitar deformaciones.
           </div>
         </div>
         <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType)} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Aplicar preset real</button>
