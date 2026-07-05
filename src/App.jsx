@@ -2434,6 +2434,75 @@ function BottomSheet({title,onClose,children}){
   </div>;
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// GUÍA NUPCIAL — contenido informativo para los novios
+// Protocolo de mesas, ceremonia (lados, alianzas, cortejo) e
+// invitaciones/regalos. Accesible desde el Salón y desde Opciones.
+// ═══════════════════════════════════════════════════════════════
+const GUIA_SECCIONES = [
+  {id:"mesas", icon:"🪑", titulo:"Mesas y protocolo", bloques:[
+    {t:"La mesa de los novios", p:"Es el punto de referencia del salón: presidencial (los novios con padres y padrinos) o \"sweetheart\" (solo los dos). Debe ver a todos los invitados y estar cerca de la pista."},
+    {t:"Familia primero", p:"Las mesas más cercanas a los novios son para la familia directa: padres, hermanos y abuelos de cada lado. Después, el resto de la familia. La app aplica esto automáticamente con \"Sentar por protocolo\"."},
+    {t:"Amigos cerca de la pista", p:"Los grupos más jóvenes y animados van cerca de la pista de baile: ellos la encienden. Compañeros de trabajo y conocidos pueden ir en mesas intermedias."},
+    {t:"Niños juntos", p:"A partir de los 4-5 años, una mesa infantil propia (con actividades) cerca de la salida facilita que entren y salgan sin cruzar todo el salón. Bebés y muy pequeños, con sus padres, idealmente en extremos de mesa."},
+    {t:"Afinidad antes que compromiso", p:"Sentá junta a la gente que se conoce o comparte edad e intereses. Evitá juntar personas enemistadas, y no armes \"la mesa de los sueltos\": repartilos donde tengan al menos un conocido."},
+    {t:"Capacidades cómodas", p:"Redondas: 8-10 personas (ideales para conversar). Cuadradas: 8-12. Rectangulares e imperiales: para grupos grandes, calculá ~60 cm de mesa por persona. La app te recomienda las sillas según la medida."},
+  ]},
+  {id:"ceremonia", icon:"💍", titulo:"Ceremonia", bloques:[
+    {t:"¿De qué lado va cada uno?", p:"En la tradición occidental (y en la ceremonia católica), la novia se ubica a la IZQUIERDA del novio mirando al altar — los invitados de la novia se sientan a la izquierda y los del novio a la derecha. En la tradición judía es al revés. En ceremonias civiles o al aire libre, cada vez más parejas lo deciden libremente."},
+    {t:"¿Quién lleva las alianzas?", p:"Tradicionalmente las lleva el padrino, o un paje/niño de anillos que las entrega en el momento del rito. Consejo práctico: que el paje lleve réplicas y el padrino las verdaderas. En Paraguay y gran parte de Latinoamérica la alianza se usa en la mano derecha durante el compromiso y pasa a la izquierda al casarse (o se mantiene, según la costumbre familiar)."},
+    {t:"Orden de entrada del cortejo", p:"Un orden clásico: 1) el novio entra del brazo de su madre, 2) padrinos y madrinas, 3) damas de honor y caballeros, 4) pajes y niña de las flores, 5) la novia entra última del brazo de su padre. Al salir, los novios encabezan y el cortejo los sigue en orden inverso. Es una guía, no una regla: adaptalo a tu familia."},
+    {t:"Los testigos", p:"Para el civil en Paraguay se requieren testigos mayores de edad con cédula vigente (confirmá la cantidad exacta en tu oficina del Registro Civil). Elegí personas puntuales y avisales con tiempo qué documentos llevar."},
+  ]},
+  {id:"invitaciones", icon:"✉️", titulo:"Invitaciones y regalos", bloques:[
+    {t:"¿Papel o digital?", p:"Digital: económica, rápida, con confirmación integrada (y esta app para el seguimiento). Papel: más formal y emotiva, ideal como recuerdo. Camino intermedio muy usado: papel para familia mayor y padrinos, digital para el resto. Enviá 2-3 meses antes; \"save the date\" 6+ meses si hay invitados que viajan."},
+    {t:"¿A quién invitar?", p:"Una regla que ordena: si no hablaste con esa persona en el último año y no es familia, probablemente no necesita estar. Definan juntos un número máximo según presupuesto y salón, repartan cupos por lado, y armen una \"lista B\" para cubrir bajas. Sean parejos con los \"+1\": mismo criterio para todos."},
+    {t:"¿Cómo pedir regalos con elegancia?", p:"Nunca en la invitación principal: usá una tarjeta aparte o la web/invitación digital. Opciones habituales: mesa de regalos en tiendas, lista de regalos online, o \"lluvia de sobres\" (aporte en efectivo, muy común en Paraguay) con una frase amable tipo \"tu presencia es nuestro mejor regalo; si querés hacernos uno, un aporte para nuestra nueva etapa nos ayuda muchísimo\". Datos bancarios solo si alguien los pide."},
+    {t:"Confirmaciones (RSVP)", p:"Pedí confirmación con fecha límite (2-3 semanas antes) y un canal claro: WhatsApp, formulario o llamada. Una semana antes, repasá los \"pendientes\" de esta app y confirmalos uno a uno — el catering y las mesas dependen de ese número."},
+  ]},
+];
+
+function GuiaNupcial({abierta, seccionInicial="mesas", onClose}){
+  const [sec, setSec] = useState(seccionInicial);
+  useEffect(()=>{ if(abierta) setSec(seccionInicial); },[abierta,seccionInicial]);
+  useEffect(()=>{
+    if(!abierta) return;
+    const prev=document.body.style.overflow;
+    document.body.style.overflow="hidden";
+    return ()=>{document.body.style.overflow=prev;};
+  },[abierta]);
+  if(!abierta) return null;
+  const actual = GUIA_SECCIONES.find(s=>s.id===sec)||GUIA_SECCIONES[0];
+  return <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:THEME.z.modal,background:"rgba(26,26,20,.55)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0"}}>
+    <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:680,background:THEME.color.cream2,borderRadius:"20px 20px 0 0",maxHeight:"90vh",display:"flex",flexDirection:"column",boxShadow:"0 -10px 40px rgba(0,0,0,.3)"}}>
+      <div style={{padding:"14px 18px 10px",borderBottom:"0.5px solid rgba(74,94,58,.12)"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+          <div style={{fontFamily:THEME.font.display,fontSize:"1.25rem",fontWeight:700,color:THEME.color.ink}}>📖 Guía nupcial</div>
+          <button onClick={onClose} style={{background:"rgba(74,94,58,.08)",border:"none",borderRadius:"50%",width:36,height:36,minHeight:36,fontSize:"1rem",color:"rgba(26,26,20,.5)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>✕</button>
+        </div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:2}}>
+          {GUIA_SECCIONES.map(s=>
+            <button key={s.id} onClick={()=>setSec(s.id)}
+              style={{background:sec===s.id?THEME.color.sage:"transparent",color:sec===s.id?THEME.color.cream:"rgba(26,26,20,.55)",border:`1px solid ${sec===s.id?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"9px 14px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:sec===s.id?700:400,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+              {s.icon} {s.titulo}
+            </button>
+          )}
+        </div>
+      </div>
+      <div style={{overflowY:"auto",padding:"14px 18px",paddingBottom:"calc(20px + env(safe-area-inset-bottom))"}}>
+        {actual.bloques.map((b,i)=>
+          <div key={i} style={{marginBottom:16}}>
+            <div style={{fontFamily:THEME.font.display,fontSize:"1rem",fontWeight:700,color:THEME.color.sage,marginBottom:5}}>{b.t}</div>
+            <p style={{fontFamily:THEME.font.body,fontSize:"max(14px,.9rem)",color:"rgba(26,26,20,.75)",lineHeight:1.65,margin:0}}>{b.p}</p>
+          </div>
+        )}
+        <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",fontStyle:"italic",marginTop:18,borderTop:"0.5px solid rgba(74,94,58,.1)",paddingTop:10}}>Estas son costumbres y recomendaciones generales — cada boda es de ustedes: adapten lo que les sirva y descarten el resto.</p>
+      </div>
+    </div>
+  </div>;
+}
+
 const CATEGORIAS_DEFAULT = [
   {id:"salon",    emoji:"🏛️", nombre:"Salón / Venue",              estimado:0,cotizado:0,pagado:0,notas:""},
   {id:"catering", emoji:"🍽️", nombre:"Catering y bebidas",         estimado:0,cotizado:0,pagado:0,notas:""},
@@ -3291,6 +3360,7 @@ function GuestsModule({user, onBack}){
   const [showGuestMenu, setShowGuestMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [movingGuest, setMovingGuest]     = useState(null); // vista Mesas: invitado en movimiento
+  const [guia, setGuia]                   = useState(null); // sección de la guía abierta (o null)
   const isMobile = useIsMobile();
 
   useEffect(()=>{
@@ -3721,7 +3791,7 @@ function GuestsModule({user, onBack}){
     try{ localStorage.setItem("ceci_salon_layout_v1", JSON.stringify(layout)); }catch(err){}
     supabase.from("wedding_data")
       .upsert({user_id:user.id,salon_layout:layout,updated_at:new Date().toISOString()},{onConflict:"user_id"})
-      .then(()=>{},()=>{});
+      .then((res)=>{if(res&&res.error)console.warn("⚠️ No se pudo guardar el salón en Supabase:",res.error.message);});
   };
   const agregarMesaVista = () => {
     const ms = salonMesas||[];
@@ -3786,10 +3856,12 @@ function GuestsModule({user, onBack}){
       ↑ Importar lista
       <input type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
     </label>
+    <button onClick={()=>{setGuia("ceremonia");setShowGuestMenu(false);}} style={menuItemStyle}>📖 Guía nupcial (ceremonia, invitaciones...)</button>
   </>;
 
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     {showGuestMenu&&isMobile&&<BottomSheet title="Opciones de invitados" onClose={()=>setShowGuestMenu(false)}>{guestMenuContent}</BottomSheet>}
+    <GuiaNupcial abierta={!!guia} seccionInicial={guia||"mesas"} onClose={()=>setGuia(null)}/>
     {confirmDelete&&<ConfirmModal
       msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
@@ -4142,6 +4214,7 @@ function GuestsModule({user, onBack}){
       {/* ── VISTA SALÓN ── */}
       {viewMode==="salon"&&<SalonView
         user={user}
+        onOpenGuia={()=>setGuia("mesas")}
         guests={guests}
         tableSize={tableSize}
         budgetInvitados={budgetInvitados}
@@ -4226,7 +4299,7 @@ const cargarSalon = () => {
   catch(err){ return null; }
 };
 
-function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove }){
+function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia }){
   // Layout guardado de sesiones anteriores (se lee una sola vez)
   const salonInitRef = useRef();
   if(salonInitRef.current===undefined) salonInitRef.current = cargarSalon();
@@ -4237,7 +4310,6 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const [salonH, setSalonH]       = useState(S0?.salonH ?? 15);
   const [salonShape, setSalonShape] = useState(S0?.salonShape ?? "cuadrado");
   const [zoom, setZoom]           = useState(1);
-  const [pan, setPan]             = useState({x:30,y:30});
   const [mesas, setMesas]         = useState(()=>{
     if(S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) return S0.mesas;
     const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
@@ -4263,7 +4335,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       if(user&&remoteLoaded.current){
         supabase.from("wedding_data")
           .upsert({user_id:user.id,salon_layout:layout,updated_at:new Date().toISOString()},{onConflict:"user_id"})
-          .then(()=>{},()=>{});
+          .then((res)=>{if(res&&res.error)console.warn("⚠️ No se pudo guardar el salón en Supabase:",res.error.message);});
       }
     },800);
     return ()=>clearTimeout(t);
@@ -4278,7 +4350,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
     if(user&&remoteLoaded.current){
       supabase.from("wedding_data")
         .upsert({user_id:user.id,salon_layout:layoutFlushRef.current,updated_at:new Date().toISOString()},{onConflict:"user_id"})
-        .then(()=>{},()=>{});
+        .then((res)=>{if(res&&res.error)console.warn("⚠️ No se pudo guardar el salón en Supabase:",res.error.message);});
     }
   },[]);
 
@@ -4392,27 +4464,27 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
     const vpW=el.clientWidth-60, vpH=el.clientHeight-60;
     const newZ=Math.min(vpW/(salonW*BASE_PX),vpH/(salonH*BASE_PX),2.5);
     setZoom(+newZ.toFixed(2));
-    const nCW=salonW*BASE_PX*newZ, nCH=salonH*BASE_PX*newZ;
-    setPan({x:(el.clientWidth-nCW)/2,y:(el.clientHeight-nCH)/2});
+    requestAnimationFrame(()=>{el.scrollLeft=0;el.scrollTop=0;});
   };
 
-  // ── Zoom centrado en un punto del viewport ──
+  // ── Zoom centrado en un punto: se preserva ajustando el scroll ──
   const zoomAt=(factor,px,py)=>{
     const el=viewportRef.current; if(!el) return;
     const cx=px??el.clientWidth/2, cy=py??el.clientHeight/2;
     const newZ=+Math.max(0.3,Math.min(3,zoom*factor)).toFixed(2);
     if(newZ===zoom) return;
     const k=newZ/zoom;
+    const contentX=el.scrollLeft+cx, contentY=el.scrollTop+cy;
     setZoom(newZ);
-    setPan(p=>({x:cx-(cx-p.x)*k, y:cy-(cy-p.y)*k}));
+    requestAnimationFrame(()=>{el.scrollLeft=Math.max(0,contentX*k-cx);el.scrollTop=Math.max(0,contentY*k-cy);});
   };
 
   // ── Posición en canvas ──
   const getCanvasPos=(e)=>{
-    const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+    const r=canvasRef.current?.getBoundingClientRect()||{left:0,top:0};
     const cx=e.touches?.[0]?.clientX??e.clientX;
     const cy=e.touches?.[0]?.clientY??e.clientY;
-    return{x:cx-r.left-pan.x,y:cy-r.top-pan.y};
+    return{x:cx-r.left,y:cy-r.top};
   };
 
   // ── Touch pinch ──
@@ -4422,7 +4494,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       const dy=e.touches[0].clientY-e.touches[1].clientY;
       const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
       const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
-      setPinch({dist:Math.sqrt(dx*dx+dy*dy),zoom0:zoom,mx,my,pan0:{...pan}});
+      setPinch({dist:Math.sqrt(dx*dx+dy*dy),zoom0:zoom,mx,my});
     } else if(e.touches.length===1){
       // 1 dedo: iniciar pan solo si no es sobre una mesa/elemento
       const tgt=e.target;
@@ -4442,25 +4514,27 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
           return;
         }
         lastTap.current=now;
-        setDragging({type:"pan",x0:cx-r.left,y0:cy-r.top,pan0:{...pan}});
-        dragMoved.current=false;
+        // El desplazamiento con 1 dedo es scroll nativo del contenedor
       }
     }
   };
   const onTouchMove=(e)=>{
     if(e.touches.length===2&&pinch){
+      if(e.cancelable) e.preventDefault();
       const dx=e.touches[0].clientX-e.touches[1].clientX;
       const dy=e.touches[0].clientY-e.touches[1].clientY;
       const dist=Math.sqrt(dx*dx+dy*dy);
       const newZ=+Math.max(0.3,Math.min(3,pinch.zoom0*(dist/pinch.dist))).toFixed(2);
-      const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
+      const el=viewportRef.current; if(!el) return;
+      const r=el.getBoundingClientRect();
       const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
       const my=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
-      const mx0=pinch.mx-r.left, my0=pinch.my-r.top;
-      const k=newZ/pinch.zoom0;
-      // El punto del salón bajo el centro del pellizco queda fijo (y 2 dedos también panean)
-      setZoom(newZ);
-      setPan({x:mx-(mx0-pinch.pan0.x)*k, y:my-(my0-pinch.pan0.y)*k});
+      if(newZ!==zoom){
+        const k=newZ/zoom;
+        const contentX=el.scrollLeft+mx, contentY=el.scrollTop+my;
+        setZoom(newZ);
+        requestAnimationFrame(()=>{el.scrollLeft=Math.max(0,contentX*k-mx);el.scrollTop=Math.max(0,contentY*k-my);});
+      }
       return;
     }
     onMove(e);
@@ -4495,11 +4569,6 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       setDragging({type:"resizeM",id,ox:pos.x,oy:pos.y,ew0,eh0,tipoM:t});
     } else if(type==="guest"){
       setDragging({type:"guest",id,cx:pos.x,cy:pos.y});
-    } else if(type==="pan"){
-      const r=viewportRef.current?.getBoundingClientRect()||{left:0,top:0};
-      const cx=e.touches?.[0]?.clientX??e.clientX;
-      const cy=e.touches?.[0]?.clientY??e.clientY;
-      setDragging({type:"pan",x0:cx-r.left,y0:cy-r.top,pan0:{...pan}});
     }
     dragMoved.current=false;
   };
@@ -4555,8 +4624,6 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       const detectR=(MESA_R_M+ASIENTO_R_M*2+(isTouchEvt?1.0:0.5))*PX;
       const over=mesas.find(m=>{const dx=m.mx*PX-pos.x,dy=m.my*PX-pos.y;return Math.sqrt(dx*dx+dy*dy)<detectR;});
       setHoveredMesa(over?over.id:null);
-    } else if(dragging.type==="pan"){
-      setPan({x:dragging.pan0.x+(cx-r.left-dragging.x0),y:dragging.pan0.y+(cy-r.top-dragging.y0)});
     }
   };
   const onUp=()=>{
@@ -4589,16 +4656,11 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   useEffect(()=>{
     const el=viewportRef.current; if(!el) return;
     const h=(e)=>{
-      // Zoom solo con Ctrl/Cmd + rueda (o pinch de trackpad); el scroll normal sigue moviendo la página
+      // Zoom solo con Ctrl/Cmd + rueda (o pinch de trackpad); la rueda sola scrollea el salón
       if(!e.ctrlKey&&!e.metaKey) return;
       e.preventDefault();
       const r=el.getBoundingClientRect();
-      const factor=e.deltaY>0?1/1.12:1.12;
-      const newZ=+Math.max(0.3,Math.min(3,zoom*factor)).toFixed(2);
-      if(newZ===zoom) return;
-      const k=newZ/zoom, mx=e.clientX-r.left, my=e.clientY-r.top;
-      setZoom(newZ);
-      setPan(p=>({x:mx-(mx-p.x)*k, y:my-(my-p.y)*k}));
+      zoomAt(e.deltaY>0?1/1.12:1.12, e.clientX-r.left, e.clientY-r.top);
     };
     el.addEventListener("wheel",h,{passive:false});
     return ()=>el.removeEventListener("wheel",h);
@@ -5041,9 +5103,9 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
         </div>
         {/* Dimensiones */}
         <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-          <input type="number" value={salonW} min="5" max="80" onChange={e=>{const v=Math.max(5,Math.min(80,parseInt(e.target.value)||20));setSalonW(v);if(salonShape==="cuadrado")setSalonH(v);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <input type="number" key={`sw-${salonW}`} defaultValue={salonW} min="5" max="100" onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}} onBlur={e=>{const v=Math.max(5,Math.min(100,parseInt(e.target.value)||salonW));setSalonW(v);if(salonShape==="cuadrado")setSalonH(v);setTimeout(fitToScreen,60);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
           <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>×</span>
-          <input type="number" value={salonH} min="5" max="80" onChange={e=>{const v=Math.max(5,Math.min(80,parseInt(e.target.value)||15));setSalonH(v);if(salonShape==="cuadrado")setSalonW(v);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <input type="number" key={`sh-${salonH}`} defaultValue={salonH} min="5" max="100" onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}} onBlur={e=>{const v=Math.max(5,Math.min(100,parseInt(e.target.value)||salonH));setSalonH(v);if(salonShape==="cuadrado")setSalonW(v);setTimeout(fitToScreen,60);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
           <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
         {/* Zoom */}
@@ -5074,6 +5136,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
         </div>
         <button onClick={sentarPorProtocolo} title="Sienta a los invitados según protocolo: familia directa cerca de los novios, amigos cerca de la pista, niños juntos cerca de la entrada" style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.3)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>👨‍👩‍👧 Sentar por protocolo</button>
         {prevAsignacion&&<button onClick={()=>{if(onAssignMany){onAssignMany(prevAsignacion);}setPrevAsignacion(null);}} title="Volver a la asignación de mesas anterior" style={{background:"transparent",border:"1px solid rgba(139,107,40,.4)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.9)",cursor:"pointer",whiteSpace:"nowrap"}}>↩ Deshacer</button>}
+        {onOpenGuia&&<button onClick={onOpenGuia} title="Cómo ordenar a los invitados según protocolo" style={{background:"transparent",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(74,94,58,.8)",cursor:"pointer",whiteSpace:"nowrap"}}>📖 Guía</button>}
       </div>
 
       {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
@@ -5105,24 +5168,26 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
 
       {/* ── CANVAS ── */}
       <div style={{flex:"1 1 300px",minWidth:0}}>
+        <div style={{position:"relative"}}>
         <div ref={viewportRef} className="canvas-viewport"
-          style={{width:"100%",height:isMobile?"clamp(320px,55vh,480px)":"clamp(540px,78vh,1040px)",background:"#3a3530",borderRadius:12,overflow:"hidden",position:"relative",cursor:dragging?.type==="pan"?"grabbing":dragging?.type==="guest"?"crosshair":"default",touchAction:"none",WebkitUserSelect:"none",userSelect:"none"}}
+          style={{width:"100%",height:isMobile?"clamp(320px,55vh,480px)":"clamp(540px,78vh,1040px)",background:"repeating-linear-gradient(45deg,#7C9B5A 0,#7C9B5A 16px,#759354 16px,#759354 32px)",borderRadius:12,overflow:"auto",position:"relative",cursor:dragging?.type==="guest"?"crosshair":"default",touchAction:"pan-x pan-y",WebkitUserSelect:"none",userSelect:"none",WebkitOverflowScrolling:"touch"}}
           onMouseDown={e=>{
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
             if(isBg){
-              // Click en fondo: deseleccionar y preparar pan
+              // Click en fondo: solo deseleccionar (el canvas ya no se arrastra)
               setSelectedElem(null);
               setSelectedMesa(null);
               setShowShapeMenu(false);
               setShowElemMenu(false);
-              startDrag(e,"pan",null);
             }
           }}
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         >
-          <div ref={canvasRef} style={{position:"absolute",left:pan.x,top:pan.y,width:CW+80,height:CH+80}}>
+          <div ref={canvasRef} style={{position:"relative",margin:"0 auto",width:CW+80,height:CH+80}}>
+            {/* Vereda perimetral (contorno del salón) */}
+            <div style={{position:"absolute",left:10,top:10,width:CW+40,height:CH+40,background:"repeating-linear-gradient(0deg,#CFC8B8 0,#CFC8B8 22px,#C6BFAE 22px,#C6BFAE 24px)",borderRadius:8,boxShadow:"0 8px 28px rgba(30,40,20,.35)"}}/>
             {/* Piso */}
             <svg style={{position:"absolute",left:30,top:30,width:CW,height:CH,overflow:"visible",pointerEvents:"none"}}>
               <defs>
@@ -5157,7 +5222,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
                 onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
                 onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
                 onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
+                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,touchAction:"none",boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
                 <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
                 {elH>20&&<span style={{fontFamily:THEME.font.label,fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
                 {isSel&&<>
@@ -5174,7 +5239,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
               const {w,h,angle,jsx}=renderMesaSVG(mesa);
               const isSelected=selectedMesa===mesa.id;
               return <div key={mesa.id}
-                style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center"}}
+                style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center",touchAction:"none"}}
                 onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
                 onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
                 onMouseDown={e=>{
@@ -5206,15 +5271,16 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
             </div>}
           </div>
 
-          {/* Tip navegación */}
-          <div style={{position:"absolute",bottom:10,left:10,fontFamily:THEME.font.body,fontSize:THEME.text.tiny,color:"rgba(255,255,255,.42)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(0,0,0,.25)",borderRadius:100,padding:"4px 10px",maxWidth:"calc(100% - 80px)",overflow:"hidden",textOverflow:"ellipsis"}}>
-            {isMobile?"👆 1 dedo mueve · Pellizco zoom · Doble tap acerca":"🖱️ Arrastrá el fondo para mover · Ctrl + rueda para zoom"}
+        </div>
+          {/* Tip navegación — fijo sobre el visor, no scrollea con el salón */}
+          <div style={{position:"absolute",bottom:16,left:10,fontFamily:THEME.font.body,fontSize:THEME.text.tiny,color:"rgba(255,255,255,.78)",pointerEvents:"none",whiteSpace:"nowrap",background:"rgba(26,26,20,.45)",borderRadius:100,padding:"4px 10px",maxWidth:"calc(100% - 90px)",overflow:"hidden",textOverflow:"ellipsis",zIndex:20}}>
+            {isMobile?"👆 Deslizá para recorrer · Pellizco zoom · Doble tap acerca":"🖱️ Barras o rueda para recorrer · Ctrl + rueda para zoom"}
           </div>
-          {/* Controles flotantes */}
-          <div style={{position:"absolute",right:10,bottom:10,display:"flex",flexDirection:"column",gap:8,zIndex:20}}>
-            <button onMouseDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();zoomAt(1.25);}} title="Acercar" style={fabStyle}>+</button>
-            <button onMouseDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();zoomAt(1/1.25);}} title="Alejar" style={fabStyle}>−</button>
-            <button onMouseDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();fitToScreen();}} title="Encuadrar todo" style={{...fabStyle,fontSize:".95rem"}}>⛶</button>
+          {/* Controles flotantes — fijos sobre el visor */}
+          <div style={{position:"absolute",right:18,bottom:18,display:"flex",flexDirection:"column",gap:8,zIndex:20}}>
+            <button onClick={()=>zoomAt(1.25)} title="Acercar" style={fabStyle}>+</button>
+            <button onClick={()=>zoomAt(1/1.25)} title="Alejar" style={fabStyle}>−</button>
+            <button onClick={()=>fitToScreen()} title="Encuadrar todo" style={{...fabStyle,fontSize:".95rem"}}>⛶</button>
           </div>
         </div>
 
