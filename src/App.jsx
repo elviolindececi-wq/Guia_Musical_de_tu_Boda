@@ -4656,7 +4656,7 @@ const ESTILOS_DISTRIB = [
 const NORMALIZE_DISTRIB = (v) => ["u_shape","chevrons"].includes(v) ? "banquet" : (v || "banquet");
 
 // ── Persistencia del layout del salón (localStorage) ────────────────────────
-const SALON_LS_KEY = "ceci_salon_layout_v1";
+const SALON_LS_KEY = "ceci_salon_layout_v2_fiesta_latina";
 const cargarSalon = () => {
   try { const s = localStorage.getItem(SALON_LS_KEY); return s ? JSON.parse(s) : null; }
   catch(err){ return null; }
@@ -7615,7 +7615,8 @@ const presetElementToCanvas = (p, raw, room) => {
     ew,
     eh,
     {
-      locked: true,
+      locked: false,
+      editable: true,
       presetFixed: true,
       presetKey: raw.key,
       labelOverride: humanizePresetKey(raw.key),
@@ -7691,7 +7692,7 @@ const SALON_PRESETS = [
 ];
 
 // Default actual: preset clásico editable para no arrancar con un salón vacío.
-const SALON_MODELO = () => generateWeddingLayout({presetId:"clasica_elegante", guestCount:150, roomSizeOption:"recommended", tableType:"auto"});
+const SALON_MODELO = () => generateWeddingLayout({presetId:"fiesta_latina", guestCount:150, roomSizeOption:"recommended", tableType:"auto"});
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -7824,7 +7825,8 @@ const calculateSeatedCapacity = (tables=[]) => tables.reduce((s,t)=>s+(Number(t.
 const centerFixedElement = (id, sizeKey, cx, cy, extra={}) => {
   const s = FIXED_ELEMENT_SIZES[sizeKey] || FIXED_ELEMENT_SIZES.entrada;
   return elem(id, s.tipo, +(cx - s.w/2).toFixed(2), +(cy - s.h/2).toFixed(2), s.w, s.h, {
-    locked:true,
+    locked:false,
+    editable:true,
     presetFixed:true,
     stage2Fixed:true,
     nonPhysical: !!s.nonPhysical,
@@ -7930,7 +7932,7 @@ const stage2TableFromSlot = (slot, id, tableType, label="") => {
 };
 
 
-const TOPDOWN_PRESET_DEFAULT_ID = "clasica_elegante";
+const TOPDOWN_PRESET_DEFAULT_ID = "fiesta_latina";
 
 // ── Presets exactos basados en los JPG de referencia ─────────────────────
 // Los JPG fueron diseñados en 1800×1200 px con un área útil de salón de
@@ -7958,7 +7960,8 @@ const exactElement = (W,H,raw={}) => {
   const mx = exClamp(exX(x1,W),0,Math.max(0,W-ew));
   const my = exClamp(exY(y1,H),0,Math.max(0,H-eh));
   return elem(raw.id, raw.tipo, +mx.toFixed(2), +my.toFixed(2), +ew.toFixed(2), +eh.toFixed(2), {
-    locked:true,
+    locked:false,
+    editable:true,
     presetFixed:true,
     stage2Fixed:true,
     exactReference:true,
@@ -8476,6 +8479,69 @@ const generateWeddingLayout = (params={}) => {
   return best || generateWeddingLayoutCore(params);
 };
 
+
+const makeElementsEditable = (items=[]) => Array.isArray(items) ? items.map(el=>({
+  ...el,
+  locked:false,
+  editable:true
+})) : [];
+
+const ELEMENT_RECOMMENDATIONS = {
+  pista:["Dejá la pista como zona libre: no pongas mesas ni estaciones encima.","Funciona mejor cerca del DJ/banda y visible desde la mayoría de las mesas.","Dejá al menos 1–1,5 m de circulación alrededor para que la gente entre y salga cómoda."],
+  escenario:["Ubicalo mirando a la pista, no contra mesas importantes.","Evitá que barras o buffet bloqueen la visual entre DJ/banda y pista.","Dejá espacio técnico atrás o a un costado para cables, parlantes y proveedores."],
+  bar:["Conviene ubicarlo cerca de la fiesta, pero sin invadir la pista.","Dejá frente libre para fila y servicio; no pegues mesas directamente delante.","Si la boda es grande, duplicá barra o agregá estación de bebidas en el lado opuesto."],
+  buffet:["Necesita pasillo amplio para filas y circulación de mozos.","Mejor en lateral o fondo, no atravesando el eje principal de entrada.","Separalo de la pista para evitar cruces entre servicio y baile."],
+  novios:["La mesa de novios debe ver el salón y quedar cerca de pista/escenario.","Ubicala como punto de referencia visual, no escondida en una esquina.","Familia directa y padrinos suelen ir en mesas cercanas."],
+  altar:["Mantené un eje claro desde la entrada o camino central hasta el altar.","Dejá aire lateral para cortejo, fotos y músicos.","Evitá poner buffet, bar o baños demasiado cerca del momento ceremonial."],
+  camino:["Debe quedar despejado de mesas y estaciones.","Funciona mejor si conecta entrada, altar o punto focal.","Usalo como guía visual: flores, alfombra o luces pueden reforzar el recorrido."],
+  photobooth:["Ubicalo en un lugar visible, pero fuera del flujo principal de mozos.","Dejá espacio frontal para grupos y fila.","Cerca del lounge o barra suele funcionar bien para activar la experiencia."],
+  living:["El lounge debe descansar del ruido de la pista, pero seguir conectado visualmente.","No lo encierres detrás de mesas; dejá un acceso claro.","Sumá luces o flores alrededor para que se sienta como rincón de foto."],
+  torta:["La mesa de torta debe tener buen fondo para fotos.","No la pegues a la pista si hay mucho movimiento.","Dejá espacio frontal para corte simbólico y fotos familiares."],
+  entrada:["La entrada necesita lectura clara: bienvenida, circulación y primer impacto.","No bloquees la entrada con mesas grandes.","Cerca de regalos, seating o bienvenida funciona muy bien."],
+  banios:["Los baños deben estar señalizados y accesibles, pero no protagonistas visuales.","Dejá pasillo libre y evitá mesas pegadas a la puerta.","Conviene ubicarlos en perímetro o zona de servicio."],
+  sillas_cer:["Mantené simetría respecto al camino central.","Dejá pasillos laterales para cortejo y fotógrafos.","No invadas el altar ni bloquees la salida hacia recepción."],
+  luces:["Las luces pueden marcar ejes visuales sin ocupar circulación.","Usalas para unir pista, mesas y lounge en una misma atmósfera.","En exterior, también ayudan a guiar recorridos."],
+  flores:["Usalas como acento, no como obstáculo.","Funcionan bien en entradas, altar, mesa de novios y rincones de foto.","Repetí flores simétricas si querés una sensación más elegante."],
+  backing:["Debe mirar hacia el flujo de invitados y tener espacio para fotos.","Evitá ponerlo de espaldas a la circulación principal.","Sumale iluminación o flores si querés más impacto visual."],
+};
+
+const getElementRecommendations = (el={}, ctx={}) => {
+  const base = ELEMENT_RECOMMENDATIONS[el.tipo] || [
+    "Dejá circulación libre alrededor para que no bloquee el recorrido.",
+    "Ubicalo en relación a la pista, entrada o mesa de novios según su función.",
+    "Podés moverlo o redimensionarlo desde el canvas hasta que respire visualmente."
+  ];
+  const extra=[];
+  const W=ctx.salonW||0, H=ctx.salonH||0;
+  if(W&&H&&((el.mx||0)<0.4 || (el.my||0)<0.4 || (el.mx||0)+(el.ew||0)>W-0.4 || (el.my||0)+(el.eh||0)>H-0.4)) extra.push("Está muy cerca del borde: revisá que no corte circulación, sillas o servicio.");
+  if((el.ew||0)*(el.eh||0)>18 && !el.nonPhysical) extra.push("Es un elemento grande: verificá que no tape mesas ni el paso principal.");
+  return [...base,...extra].slice(0,4);
+};
+
+const getMesaRecommendations = (mesa={}, personas=[], cap=10) => {
+  const tipo=mesa.tipo||"round";
+  const tips=[];
+  if(personas.length>cap) tips.push(`Está sobre capacidad: ${personas.length}/${cap}. Subí capacidad, agrandá la mesa o mové invitados.`);
+  else if(personas.length===cap) tips.push("Mesa completa: revisá que los invitados tengan afinidad y que no quede demasiado apretada.");
+  else if(personas.length===0) tips.push("Mesa libre: podés usarla para invitados pendientes o eliminarla si no aporta al layout.");
+  else tips.push(`Todavía tiene ${Math.max(0,cap-personas.length)} lugar${cap-personas.length===1?"":"es"}: completala por afinidad o protocolo.`);
+  if(tipo==="round") tips.push("Redonda: ideal para conversación. Funciona mejor con 8–10 personas y paso alrededor.");
+  if(tipo==="rect_h"||tipo==="rect_v"||tipo==="imperial") tips.push("Mesa larga/imperial: cuidá la orientación para que no bloquee la vista a pista o escenario.");
+  if(!mesa.etiqueta) tips.push("Agregá una etiqueta como Familia, Amigos o Padrinos para entender rápido el plano.");
+  tips.push("Mantené al menos 1 m de separación con pista, barras, buffet y otras mesas.");
+  return tips.slice(0,4);
+};
+
+function RecommendationBox({title="Recomendaciones", items=[]}){
+  if(!items||items.length===0) return null;
+  return <div style={{background:"rgba(201,169,110,.08)",border:"1px solid rgba(201,169,110,.22)",borderRadius:10,padding:"9px 10px",margin:"0 0 10px"}}>
+    <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.62)",marginBottom:6}}>💡 {title}</div>
+    <ul style={{margin:0,paddingLeft:16,display:"flex",flexDirection:"column",gap:4}}>
+      {items.map((it,i)=><li key={i} style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",lineHeight:1.35,color:"rgba(26,26,20,.58)"}}>{it}</li>)}
+    </ul>
+  </div>;
+}
+
 function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia, onGoDesigner, onGoGuests }){
   // Layout guardado de sesiones anteriores (se lee una sola vez)
   const totalInvitadosInicial = budgetInvitados>0 ? budgetInvitados : (guests||[]).reduce((s,g)=>s+(parseInt(g.cantidadInvitados||1)||1),0);
@@ -8493,7 +8559,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [salonShapeConfig, setSalonShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [zoom, setZoom]           = useState(1);
   const [mesas, setMesas]         = useState(()=> (S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas);
-  const [elementos, setElementos] = useState(()=> (S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos);
+  const [elementos, setElementos] = useState(()=> makeElementsEditable((S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos));
   const [estiloDistrib, setEstiloDistrib] = useState(NORMALIZE_DISTRIB(S0?.estiloDistrib ?? M0.estiloDistrib ?? "banquet"));
   const [estiloDecor, setEstiloDecor] = useState(S0?.estiloDecor ?? M0.estiloDecor ?? "romantico_floral");
 
@@ -8501,7 +8567,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   // El error "Cannot access 'ia' before initialization" venía de que el
   // useEffect de guardado armaba su dependency array con estas variables
   // antes de que existieran en el cuerpo de SalonView.
-  const [selectedSalonType, setSelectedSalonType] = useState(S0?.selectedSalonType || "clasica_elegante");
+  const [selectedSalonType, setSelectedSalonType] = useState(S0?.selectedSalonType || "fiesta_latina");
   const [selectedGuestCount, setSelectedGuestCount] = useState(nearestGuestOption(S0?.selectedGuestCount || totalInvitadosInicial || 150));
   const [roomSizeOption, setRoomSizeOption] = useState(S0?.roomSizeOption || "recommended");
   const [selectedTableTypeId, setSelectedTableTypeId] = useState(S0?.selectedTableTypeId || "auto");
@@ -8558,7 +8624,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           if(L.selectedTableTypeId) setSelectedTableTypeId(L.selectedTableTypeId);
           if(L.selectedSalonType) setSelectedSalonType(L.selectedSalonType);
           if(L.layoutSummary) setLayoutSummary(L.layoutSummary);
-          if(Array.isArray(L.elementos)) setElementos(L.elementos);
+          if(Array.isArray(L.elementos)) setElementos(makeElementsEditable(L.elementos));
           if(Array.isArray(L.mesas)&&L.mesas.length>0){
             // Completar mesas faltantes referidas por invitados
             const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
@@ -9098,7 +9164,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   // Aplicar preset profesional Etapa 2: no toca escala del canvas.
   // Calcula invitados, tamaño de salón, tipo de mesa, elementos fijos y slots válidos.
   const aplicarPreset=(presetId, opts={})=>{
-    const effectivePreset = presetId || selectedSalonType || "clasica_elegante";
+    const effectivePreset = presetId || selectedSalonType || "fiesta_latina";
     const guestCount = selectedGuestCount || nearestGuestOption(totalInvWarn || 150);
     const roomOpt = roomSizeOption || "recommended";
     let P = effectivePreset === "desde_cero"
@@ -9115,7 +9181,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
     const hayLayout=(mesas&&mesas.length>0)||(elementos&&elementos.length>0);
     if(!opts.skipConfirm&&hayLayout&&typeof window!=="undefined"){
-      const ok=window.confirm("Esto reemplaza el plano actual por un preset profesional. Los elementos fijos quedan bloqueados; solo las mesas se adaptan según invitados. ¿Querés continuar?");
+      const ok=window.confirm("Esto reemplaza el plano actual por un preset profesional editable. Después vas a poder mover y redimensionar mesas, pista, barra, DJ, lounge y todos los elementos. ¿Querés continuar?");
       if(!ok) return;
     }
 
@@ -9123,7 +9189,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     setSalonShapeConfig(P.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG); setSelectedShapeConfig(P.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG);
     setEstiloDistrib(NORMALIZE_DISTRIB(P.estiloDistrib||effectivePreset)); setEstiloDecor(P.estiloDecor||effectivePreset);
     if(effectivePreset!=="desde_cero") setSelectedSalonType(effectivePreset);
-    setMesas(P.mesas||[]); setElementos(P.elementos||[]);
+    setMesas(P.mesas||[]); setElementos(makeElementsEditable(P.elementos||[]));
     setLayoutSummary(P.layoutSummary || null);
     setSelectedMesa(null); setSelectedElem(null); setSelectedGuestForAssign(null);
     setShowPresetMenu(false); setShowShapeMenu(false); setShowElemMenu(false);
@@ -9137,7 +9203,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     setTimeout(fitToScreen,80);
   };
 
-  const aplicarModelo=()=>aplicarPreset("clasica_elegante",{skipConfirm:true});
+  const aplicarModelo=()=>aplicarPreset("fiesta_latina",{skipConfirm:true});
 
   const fitToScreen=()=>{
     const el=viewportRef.current; if(!el) return;
@@ -9282,7 +9348,6 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     } else if(type==="elem"){
       const item=elementos.find(el=>el.id===id); if(!item) return;
       setSelectedElem(id);setSelectedMesa(null);
-      if(item.locked) return;
       setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
     } else if(type==="rotate"){
       // Rotar mesa rectangular
@@ -9291,7 +9356,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       const angle0=item.angle||0;
       setDragging({type:"rotate",id,cx,cy,angle0,startAng:Math.atan2(pos.y-cy,pos.x-cx)});
     } else if(type==="resize"){
-      const item=elementos.find(el=>el.id===id); if(!item || item.locked) return;
+      const item=elementos.find(el=>el.id===id); if(!item) return;
       setDragging({type:"resize",id,ox:pos.x,oy:pos.y,ew0:item.ew,eh0:item.eh});
     } else if(type==="resizeM"){
       const item=mesas.find(m=>m.id===id); if(!item) return;
@@ -9935,7 +10000,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             Preset: <strong style={{color:THEME.color.sage}}>{STAGE2_PRESET_CONFIGS[selectedSalonType]?.label}</strong>
           </div>
           <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:4}}>
-            {getRoomSize(selectedGuestCount,roomSizeOption).label} · Mesa recomendada: {getRecommendedTableTypeForPreset(selectedSalonType,selectedGuestCount,roomSizeOption).label}. Los elementos fijos no se mueven; solo se calculan mesas en slots válidos.
+            {getRoomSize(selectedGuestCount,roomSizeOption).label} · Mesa recomendada: {getRecommendedTableTypeForPreset(selectedSalonType,selectedGuestCount,roomSizeOption).label}. El preset carga una referencia base editable: podés mover y redimensionar mesas, pista, barra, DJ, lounge y todos los elementos.
           </div>
         </div>
         <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType)} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Generar plano</button>
@@ -10033,7 +10098,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               </g>
             </svg>
 
-            {/* Elementos fijos */}
+            {/* Elementos editables del preset */}
             {isDesignerMode&&elementos.map(el=>{
               const def=ELEMENTOS_FIJOS.find(e=>e.id===el.tipo); if(!def) return null;
               const elW=el.ew*PX,elH=el.eh*PX,isSel=selectedElem===el.id;
@@ -10041,10 +10106,10 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                 onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
                 onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
                 onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:el.locked?"not-allowed":"grab",zIndex:isSel?8:3,touchAction:"none",boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
+                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,touchAction:"none",boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
                 <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
                 {elH>20&&<span style={{fontFamily:THEME.font.label,fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
-                {isSel&&!el.locked&&<>
+                {isSel&&<>
                   <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10}}>×</button>
                   <div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-7,right:-7,width:16,height:16,background:THEME.color.cream,border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <svg width="7" height="7" viewBox="0 0 7 7"><line x1="1" y1="6" x2="6" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3.5" y1="6" x2="6" y2="3.5" stroke={def.color} strokeWidth="1.5"/></svg>
@@ -10142,8 +10207,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               <div style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:700,color:THEME.color.ink}}>{def?.emoji} {def?.label||"Elemento"}</div>
               <button onClick={()=>setSelectedElem(null)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1rem",cursor:"pointer",lineHeight:1}}>×</button>
             </div>
-            {el.locked&&<p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.72)",margin:"0 0 9px",fontStyle:"italic"}}>Elemento fijo del preset: no se mueve ni se redimensiona. Solo las mesas se adaptan a la cantidad de invitados.</p>}
-            {!el.locked&&<>
+            <RecommendationBox items={getElementRecommendations(el,{salonW,salonH,mesas,elementos})}/>
+            <>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                 <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Medidas</span>
                 <input type="number" step="0.1" min="0.4" key={`ew-${el.id}-${el.ew}`} defaultValue={(el.ew||1).toFixed(1)}
@@ -10157,7 +10222,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               </div>
               <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",margin:0,fontStyle:"italic"}}>También podés estirar la esquina ◲ en el plano</p>
               <button onClick={()=>removeElemento(el.id)} style={{width:"100%",marginTop:10,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"8px",fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>Eliminar elemento</button>
-            </>}
+            </>
           </div>;
         })()}
 
@@ -10199,6 +10264,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               </div>
               <div style={{fontFamily:THEME.font.body,fontSize:"max(10px,.68rem)",color:"rgba(74,94,58,.55)",textAlign:"right",marginTop:3,fontStyle:"italic"}}>Sillas recomendadas: {capPorMedidas(selectedMesaObj.tipo||"round",selectedMesaObj.ew||MESA_R_M*2,selectedMesaObj.eh||MESA_R_M*2)}</div>
             </div>
+
+            <RecommendationBox items={getMesaRecommendations(selectedMesaObj, selectedPersonas, capDe(selectedMesaObj))}/>
 
             {/* Etiqueta */}
             <div style={{marginBottom:8}}>
@@ -10359,6 +10426,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         </div>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.55)",textAlign:"right",marginTop:4,fontStyle:"italic"}}>Sillas recomendadas: {capPorMedidas(selectedMesaObj.tipo||"round",selectedMesaObj.ew||MESA_R_M*2,selectedMesaObj.eh||MESA_R_M*2)}</div>
       </div>
+      <RecommendationBox items={getMesaRecommendations(selectedMesaObj, selectedPersonas, capDe(selectedMesaObj))}/>
       {/* Etiquetas rápidas */}
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
         {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
