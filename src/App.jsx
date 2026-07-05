@@ -4519,6 +4519,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const viewportRef = useRef(null);
   const canvasRef   = useRef(null);
   const lastTap     = useRef(0); // doble tap para zoom
+  const mesaTouchDragRef = useRef(null); // touch/tablet: arrastrar mesas sin romper el tap para asignar invitados
 
   // ── Personas ──
   const personas = [];
@@ -4606,9 +4607,55 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
     return{x:cx-r.left,y:cy-r.top};
   };
 
+  // ── Touch/tablet: mover mesas con el dedo ─────────────────────
+  // En mobile necesitamos dos gestos distintos sobre la mesa:
+  // 1) tap corto = seleccionar mesa o asignar el invitado seleccionado;
+  // 2) mantener y arrastrar = mover la mesa de lugar.
+  const beginMesaTouchDrag=(e,mesa)=>{
+    const t=e.touches?.[0];
+    if(!t||selectedGuestForAssign) return;
+    const pos=getCanvasPos(e);
+    mesaTouchDragRef.current={
+      id:mesa.id,
+      startX:t.clientX,
+      startY:t.clientY,
+      ox:pos.x/PX-mesa.mx,
+      oy:pos.y/PX-mesa.my,
+      moved:false
+    };
+  };
+
+  const moveMesaTouchDrag=(e)=>{
+    const cand=mesaTouchDragRef.current;
+    const t=e.touches?.[0];
+    if(!cand||!t||selectedGuestForAssign) return false;
+    const dx=t.clientX-cand.startX, dy=t.clientY-cand.startY;
+    if(!cand.moved&&Math.hypot(dx,dy)<8) return false;
+
+    if(e.cancelable) e.preventDefault();
+    cand.moved=true;
+    dragMoved.current=true;
+    const pos=getCanvasPos(e);
+    const mx=Math.max(MESA_R_M,Math.min(salonW-MESA_R_M,pos.x/PX-cand.ox));
+    const my=Math.max(MESA_R_M,Math.min(salonH-MESA_R_M,pos.y/PX-cand.oy));
+    setDragging({type:"mesa",id:cand.id,ox:cand.ox,oy:cand.oy});
+    setMesas(ms=>ms.map(m=>m.id===cand.id?{...m,mx,my}:m));
+    setSelectedMesa(cand.id);
+    setSelectedElem(null);
+    if(isMobile) setShowSheet(false);
+    return true;
+  };
+
+  const endMesaTouchDrag=()=>{
+    const moved=!!mesaTouchDragRef.current?.moved;
+    mesaTouchDragRef.current=null;
+    return moved;
+  };
+
   // ── Touch pinch ──
   const onTouchStart=(e)=>{
     if(e.touches.length===2){
+      mesaTouchDragRef.current=null;
       const dx=e.touches[0].clientX-e.touches[1].clientX;
       const dy=e.touches[0].clientY-e.touches[1].clientY;
       const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
@@ -4656,9 +4703,14 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       }
       return;
     }
+    if(e.touches.length===1&&moveMesaTouchDrag(e)) return;
     onMove(e);
   };
-  const onTouchEnd=(e)=>{if(e.touches.length<2)setPinch(null);onUp();};
+  const onTouchEnd=(e)=>{
+    if(e.touches.length<2)setPinch(null);
+    endMesaTouchDrag();
+    onUp();
+  };
 
   // ── Drag ──
   const startDrag=(e,type,id)=>{
@@ -5148,8 +5200,8 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
         if(selectedGuestForAssign) return;
         startDrag(e,"mesa",mesa.id);
       },
-      // En touch/tablet, el tap debe seleccionar/asignar; no iniciar drag nativo.
-      onTouchStart:e=>{ e.stopPropagation(); }
+      // En touch/tablet: tap selecciona/asigna; mantener y arrastrar mueve la mesa.
+      onTouchStart:e=>{ e.stopPropagation(); beginMesaTouchDrag(e,mesa); }
     };
 
     if(tipoM==="round"){
@@ -5384,6 +5436,10 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
               }}
               onClick={e=>{
                 e.stopPropagation();
+                if(dragMoved.current){
+                  dragMoved.current=false;
+                  return;
+                }
                 if(isTouchAssignment && selectedGuestForAssign){
                   assignSelectedGuestToMesa(mesa.id);
                   return;
@@ -5587,7 +5643,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
 
           :<div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.18)",borderRadius:12,padding:"20px 12px",textAlign:"center"}}>
             <div style={{fontSize:"1.4rem",marginBottom:6}}>👆</div>
-            <div style={{fontFamily:THEME.font.body,fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla o arrastrar invitados</div>
+            <div style={{fontFamily:THEME.font.body,fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla. Para moverla, mantené presionado y arrastrá.</div>
           </div>
         )}
 
