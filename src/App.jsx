@@ -7831,17 +7831,75 @@ const centerFixedElement = (id, sizeKey, cx, cy, extra={}) => {
     ...extra
   });
 };
+
+// ── Etapa 2B · motor fuerte de slots, simetría y colisiones ───────────────
+// No toca escala/viewBox. Todo sigue en metros. La mesa redonda se dibuja con
+// diámetro real, pero se valida con huella operativa.
 const stage2ElementBox = (el={}) => ({x1:el.mx||0,y1:el.my||0,x2:(el.mx||0)+(el.ew||0),y2:(el.my||0)+(el.eh||0),w:el.ew||0,h:el.eh||0});
+
+const stage2TableCollisionItem = (m={}) => ({
+  id: m.id,
+  type: m.tipo || m.type || "table",
+  x: Number(m.mx)||0,
+  y: Number(m.my)||0,
+  width: m.operationalWidth || m.ew || m.realDiameter || 1,
+  height: m.operationalHeight || m.eh || m.realDiameter || 1,
+  operationalWidth: m.operationalWidth || m.ew || m.realDiameter || 1,
+  operationalHeight: m.operationalHeight || m.eh || m.realDiameter || 1,
+});
+const stage2FixedCollisionItem = (el={}) => ({
+  id: el.id,
+  type: el.tipo || el.type || "element",
+  source: el.tipo || el.type || el.id,
+  x: (Number(el.mx)||0) + (Number(el.ew)||0)/2,
+  y: (Number(el.my)||0) + (Number(el.eh)||0)/2,
+  width: Number(el.ew)||0,
+  height: Number(el.eh)||0,
+  operationalWidth: Number(el.ew)||0,
+  operationalHeight: Number(el.eh)||0,
+  nonPhysical: !!el.nonPhysical,
+});
+const stage2CollisionItemFromBox = (b={}) => ({
+  id:b.id,
+  source:b.source,
+  type:b.type || b.source || "zone",
+  x: ((Number(b.x1)||0)+(Number(b.x2)||0))/2,
+  y: ((Number(b.y1)||0)+(Number(b.y2)||0))/2,
+  width: Math.max(0,(Number(b.x2)||0)-(Number(b.x1)||0)),
+  height: Math.max(0,(Number(b.y2)||0)-(Number(b.y1)||0)),
+});
+function getBounds(item={}) {
+  if(item.left !== undefined && item.right !== undefined) return item;
+  if(item.x1 !== undefined && item.x2 !== undefined) {
+    return {left:item.x1,right:item.x2,top:item.y1,bottom:item.y2};
+  }
+  const width = item.operationalWidth || item.width || item.ew || item.realDiameter || 1;
+  const height = item.operationalHeight || item.height || item.eh || item.realDiameter || 1;
+  const x = item.x !== undefined ? item.x : ((item.mx||0) + (item.ew||0)/2);
+  const y = item.y !== undefined ? item.y : ((item.my||0) + (item.eh||0)/2);
+  return {left:x-width/2,right:x+width/2,top:y-height/2,bottom:y+height/2};
+}
+function boxesOverlap(a,b,margin=0) {
+  const A=getBounds(a), B=getBounds(b);
+  return !(A.right + margin <= B.left || A.left - margin >= B.right || A.bottom + margin <= B.top || A.top - margin >= B.bottom);
+}
+function isInsideRoom(item,W,H) {
+  const b=getBounds(item);
+  return b.left >= 0 && b.right <= W && b.top >= 0 && b.bottom <= H;
+}
+function expandZone(element, margin=0) {
+  const item = element.x1 !== undefined ? stage2CollisionItemFromBox(element) : (element.mx !== undefined ? stage2FixedCollisionItem(element) : element);
+  const width = item.operationalWidth || item.width || item.realDiameter || 1;
+  const height = item.operationalHeight || item.height || item.realDiameter || 1;
+  return { id:`forbidden_${item.id||item.source||"zone"}`, type:"forbidden", source:item.source||item.type||item.id, x:item.x, y:item.y, width:width + margin*2, height:height + margin*2 };
+}
 const stage2MesaOperationalBox = (m={}) => {
-  // Etapa 2 controlada: para no deformar ni vaciar el canvas, la colisión visual
-  // usa el tamaño real dibujado. La huella operativa queda guardada en la mesa
-  // como metadata para futuras validaciones avanzadas, pero no agranda el círculo visible.
-  const opW = m.ew || m.operationalWidth || 1.8;
-  const opH = m.eh || m.operationalHeight || 1.8;
-  return {x1:(m.mx||0)-opW/2,y1:(m.my||0)-opH/2,x2:(m.mx||0)+opW/2,y2:(m.my||0)+opH/2,w:opW,h:opH};
+  const b=getBounds(stage2TableCollisionItem(m));
+  return {x1:b.left,y1:b.top,x2:b.right,y2:b.bottom,w:b.right-b.left,h:b.bottom-b.top};
 };
-const stage2ExpandBox = (b,g=0) => ({x1:b.x1-g,y1:b.y1-g,x2:b.x2+g,y2:b.y2+g,w:b.w+2*g,h:b.h+2*g});
-const stage2BoxesHit = (a,b) => a.x1<b.x2 && a.x2>b.x1 && a.y1<b.y2 && a.y2>b.y1;
+const stage2ExpandBox = (b,g=0) => ({x1:b.x1-g,y1:b.y1-g,x2:b.x2+g,y2:b.y2+g,w:(b.w||((b.x2||0)-(b.x1||0)))+2*g,h:(b.h||((b.y2||0)-(b.y1||0)))+2*g,source:b.source,id:b.id});
+const stage2BoxesHit = (a,b,margin=0) => boxesOverlap(a,b,margin);
+const checkCollisionUsingOperationalFootprint = (a,b) => boxesOverlap(stage2TableCollisionItem(a), stage2TableCollisionItem(b), 0);
 const clampStage2Box = (v,min,max) => Math.max(min,Math.min(max,v));
 const stage2TableFromSlot = (slot, id, tableType, label="") => {
   const round = tableType.shape === "circle";
@@ -7855,98 +7913,12 @@ const stage2TableFromSlot = (slot, id, tableType, label="") => {
     operationalHeight: tableType.operationalHeight || eh,
     tableTypeId: tableType.id,
     etiqueta: label,
+    zoneId: slot.zoneId,
+    slotPriority: slot.priority,
     miraSide: round ? undefined : "both"
   });
 };
-const STAGE2_PRESET_CONFIGS = {
-  jardin_romantico_central: {
-    label:"Jardín Romántico Central", emoji:"🌿", salon:"rectangular · jardín techado · carpa blanca", recommended:"round_180_comfort", compact:"round_150_compact", pattern:"grid",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5), centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,1.5), centerFixedElement("dj-1","dj_chico",W/2,3.4),
-      elem("pista-1","pista",+(W/2-p.w/2).toFixed(2),+(H*.56-p.h/2).toFixed(2),p.w,p.h,{locked:true,presetFixed:true}), centerFixedElement("barra-1","barra",2.8,H*.58), centerFixedElement("buffet-1","buffet",W-3.5,H*.32), centerFixedElement("banos-1","banos",W-2,H-1.5), centerFixedElement("photobooth-1","photobooth",3,H-2.8), centerFixedElement("lounge-1","lounge_chico",3.5,3.2), centerFixedElement("torta-1","mesa_torta",W-4,2.2)
-    ]},
-    zones:({W,H})=>[
-      {id:"lateral_izquierda",xMin:4,xMax:W/2-5,yMin:H*.45,yMax:H*.75,priority:1,align:"grid"},{id:"lateral_derecha",xMin:W/2+5,xMax:W-5,yMin:H*.45,yMax:H*.75,priority:1,align:"grid"},
-      {id:"superior_izquierda",xMin:4,xMax:W/2-3,yMin:4.8,yMax:H*.45,priority:2,align:"grid"},{id:"superior_derecha",xMin:W/2+3,xMax:W-5,yMin:4.8,yMax:H*.45,priority:2,align:"grid"},
-      {id:"inferior_izquierda",xMin:4,xMax:W/2-2,yMin:H*.72,yMax:H-4,priority:3,align:"grid"},{id:"inferior_derecha",xMin:W/2+2,xMax:W-5,yMin:H*.72,yMax:H-4,priority:3,align:"grid"}
-    ]
-  },
-  luxury_ballroom_simetrico: {
-    label:"Luxury Ballroom Simétrico", emoji:"🏛️", salon:"ballroom · hotel · salón premium rectangular", recommended:"round_180_comfort", compact:"round_180_compact", pattern:"symmetric",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5), centerFixedElement("novios-1","mesa_novios_familiar",W/2,1.4), centerFixedElement("dj-1","dj_chico",W/2,3.4), elem("pista-1","pista",W/2-p.w/2,H*.54-p.h/2,p.w,p.h,{locked:true,presetFixed:true}), centerFixedElement("barra-1","barra",2.8,H*.46), centerFixedElement("barra-2","barra",W-2.8,H*.46), centerFixedElement("buffet-1","buffet",W/2,H-2.8), centerFixedElement("banos-1","banos",W-2,H-1.5), centerFixedElement("photobooth-1","photobooth",3,H-2.8), centerFixedElement("lounge-1","lounge_chico",W-4,H-4), centerFixedElement("torta-1","mesa_torta",W-4,2.2)
-    ]}, zones:({W,H})=>[
-      {id:"sup_izq",xMin:4,xMax:W/2-4,yMin:4.8,yMax:H*.42,priority:1,align:"symmetric"},{id:"sup_der",xMin:W/2+4,xMax:W-4,yMin:4.8,yMax:H*.42,priority:1,align:"symmetric"},
-      {id:"lat_izq",xMin:4,xMax:W/2-5,yMin:H*.43,yMax:H*.72,priority:2,align:"symmetric"},{id:"lat_der",xMin:W/2+5,xMax:W-4,yMin:H*.43,yMax:H*.72,priority:2,align:"symmetric"},
-      {id:"inf_izq",xMin:4,xMax:W/2-3,yMin:H*.72,yMax:H-4.5,priority:3,align:"symmetric"},{id:"inf_der",xMin:W/2+3,xMax:W-4,yMin:H*.72,yMax:H-4.5,priority:3,align:"symmetric"}
-    ]
-  },
-  boho_garden_asimetrico: {
-    label:"Boho Garden Asimétrico", emoji:"🌾", salon:"jardín · quinta · exterior · carpa relajada", recommended:"round_180_comfort", mixed:{rectRatio:.35,roundType:"round_180_comfort"}, pattern:"organic",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_sweetheart",W*.32,1.8),centerFixedElement("dj-1","dj_chico",W*.70,2.8),elem("pista-1","pista",W*.58-p.w/2,H*.55-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("lounge-1","lounge_grande",W*.20,H*.40),centerFixedElement("barra-1","barra",3,H-2.8),centerFixedElement("buffet-1","buffet",W-3.2,H*.38),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("photobooth-1","photobooth",W*.25,H*.70),centerFixedElement("torta-1","mesa_torta",W*.48,2.8)]},
-    zones:({W,H})=>[{id:"organica_centro_izq",xMin:4,xMax:W*.48,yMin:H*.28,yMax:H*.75,priority:1,align:"organic"},{id:"organica_derecha",xMin:W*.62,xMax:W-5,yMin:H*.30,yMax:H*.78,priority:1,align:"organic"},{id:"inferior",xMin:W*.30,xMax:W-5,yMin:H*.72,yMax:H-4,priority:2,align:"organic"}]
-  },
-  minimal_chic_blanco: {
-    label:"Minimal Chic Blanco", emoji:"◻️", salon:"salón moderno · loft blanco · galería contemporánea", recommended:"rectangular_12", pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,1.5),centerFixedElement("dj-1","dj_chico",W-3,H*.45),elem("pista-1","pista",W/2-p.w/2,H*.54-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H-2.8),centerFixedElement("buffet-1","buffet",W-3.5,3),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("photobooth-1","photobooth",W-4,H-3.8),centerFixedElement("lounge-1","lounge_chico",3.5,3.5),centerFixedElement("torta-1","mesa_torta",W-4,2.2)]},
-    zones:({W,H})=>[{id:"filas_superiores",xMin:4,xMax:W-5,yMin:4.8,yMax:H*.42,priority:1,align:"banquet_rows"},{id:"filas_inferiores",xMin:4,xMax:W-5,yMin:H*.68,yMax:H-4,priority:1,align:"banquet_rows"},{id:"laterales",xMin:4,xMax:W-5,yMin:H*.42,yMax:H*.68,priority:2,align:"banquet_rows"}]
-  },
-  mediterraneo_familiar: {
-    label:"Mediterráneo Familiar", emoji:"🍋", salon:"terraza · patio · jardín · salón abierto", recommended:"rectangular_12", pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_imperial_novios",W/2,1.6),centerFixedElement("dj-1","dj_chico",W-3.5,H*.50),elem("pista-1","pista",W*.72-p.w/2,H*.60-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H*.62),centerFixedElement("buffet-1","buffet",W-3.5,3.2),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("lounge-1","lounge_chico",3.8,3.6),centerFixedElement("photobooth-1","photobooth",3.5,H-2.8),centerFixedElement("torta-1","mesa_torta",W-4.5,2.4)]},
-    zones:({W,H})=>[{id:"bloque_mesas_izq",xMin:5,xMax:W*.58,yMin:4.8,yMax:H-4,priority:1,align:"banquet_rows"},{id:"bloque_mesas_centro",xMin:W*.25,xMax:W*.62,yMin:H*.35,yMax:H*.78,priority:2,align:"banquet_rows"}]
-  },
-  glam_black_gold: {
-    label:"Glam Black & Gold", emoji:"🖤", salon:"salón nocturno · ballroom oscuro · rooftop premium", recommended:"round_180_comfort", compact:"round_180_compact", pattern:"symmetric",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,1.4),centerFixedElement("dj-1","escenario",W/2,3.4),elem("pista-1","pista",W/2-p.w/2,H*.55-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",2.8,H*.50),centerFixedElement("barra-2","barra",W-2.8,H*.50),centerFixedElement("lounge-1","lounge_grande",4,H-3.8),centerFixedElement("photobooth-1","photobooth",W-4.5,H-3.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W-4,2.2),centerFixedElement("buffet-1","buffet",W-3.5,H*.30)]},
-    zones:({W,H})=>[{id:"superior_lujo",xMin:4,xMax:W-4,yMin:4.8,yMax:H*.40,priority:1,align:"symmetric"},{id:"lateral_izq",xMin:4,xMax:W/2-5,yMin:H*.42,yMax:H*.72,priority:2,align:"symmetric"},{id:"lateral_der",xMin:W/2+5,xMax:W-4,yMin:H*.42,yMax:H*.72,priority:2,align:"symmetric"},{id:"inferior",xMin:5,xMax:W-5,yMin:H*.72,yMax:H-4.5,priority:3,align:"symmetric"}]
-  },
-  rustic_elegance: {
-    label:"Rustic Elegance", emoji:"🪵", salon:"estancia · quincho elegante · granero chic", recommended:"round_180_comfort", mixed:{rectRatio:.55,roundType:"round_180_comfort"}, pattern:"organic",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W/2,1.6),centerFixedElement("dj-1","dj_chico",W-3.2,H*.50),elem("pista-1","pista",W*.52-p.w/2,H*.58-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H*.52),centerFixedElement("buffet-1","buffet",W-3.5,3.2),centerFixedElement("lounge-1","lounge_chico",3.8,H-3.8),centerFixedElement("photobooth-1","photobooth",W-4.5,H-3.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W-4,2.4)]},
-    zones:({W,H})=>[{id:"rectangulares_izquierda",xMin:5,xMax:W*.48,yMin:4.8,yMax:H-4.5,priority:1,align:"banquet_rows"},{id:"redondas_derecha",xMin:W*.58,xMax:W-5,yMin:4.8,yMax:H*.78,priority:1,align:"organic"},{id:"inferior_mixta",xMin:W*.25,xMax:W-5,yMin:H*.70,yMax:H-4.5,priority:2,align:"organic"}]
-  },
-  cabaret_wedding: {
-    label:"Cabaret Wedding", emoji:"🎭", salon:"salón íntimo · teatro pequeño · escenario", recommended:"round_150_compact", compact:"round_180_comfort", warning250:"Este preset funciona mejor hasta 200 invitados.", pattern:"cabaret",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("escenario-1","escenario",W/2,1.8),elem("pista-1","pista",W/2-p.w/2,H*.34-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("novios-1","mesa_novios_sweetheart",W*.22,2.5),centerFixedElement("barra-1","barra",2.8,H*.52),centerFixedElement("barra-2","barra",W-2.8,H*.52),centerFixedElement("lounge-1","lounge_chico",3.8,H-3.8),centerFixedElement("buffet-1","buffet",W-3.8,H-3.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("photobooth-1","photobooth",W*.40,H-2.8),centerFixedElement("torta-1","mesa_torta",W-4,2.5)]},
-    zones:({W,H})=>[{id:"platea_izq",xMin:4,xMax:W/2-3,yMin:H*.42,yMax:H*.78,priority:1,align:"grid"},{id:"platea_der",xMin:W/2+3,xMax:W-4,yMin:H*.42,yMax:H*.78,priority:1,align:"grid"},{id:"fondo_platea",xMin:5,xMax:W-5,yMin:H*.72,yMax:H-4.5,priority:2,align:"grid"}]
-  },
-  cocktail_lounge_wedding: {
-    label:"Cocktail Lounge Wedding", emoji:"🍸", salon:"rooftop · terraza · jardín urbano", recommended:"round_150_compact", cocktail:true, pattern:"cocktail",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("dj-1","escenario",W/2,2.4),elem("pista-1","pista",W/2-p.w/2,H*.50-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("novios-1","mesa_novios_sweetheart",3.5,2.4),centerFixedElement("lounge-1","lounge_grande",3.5,H*.40),centerFixedElement("lounge-2","lounge_grande",W-4,H-3.8),centerFixedElement("barra-1","barra",3.5,H-2.8),centerFixedElement("barra-2","barra",W-3.2,H*.45),centerFixedElement("buffet-1","buffet",W-3.8,3),centerFixedElement("photobooth-1","photobooth",W*.42,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W-4.5,2.4)]},
-    zones:({W,H})=>[{id:"mesas_altas_izq",xMin:5,xMax:W/2-4,yMin:4.5,yMax:H-4.5,priority:1,align:"organic"},{id:"mesas_altas_der",xMin:W/2+4,xMax:W-5,yMin:4.5,yMax:H-4.5,priority:1,align:"organic"},{id:"zona_social_inferior",xMin:5,xMax:W-5,yMin:H*.68,yMax:H-4.5,priority:2,align:"organic"}]
-  },
-  classic_family_reception: {
-    label:"Classic Family Reception", emoji:"👨‍👩‍👧", salon:"salón tradicional · club · hotel", recommended:"round_180_comfort", compact:"round_150_compact", pattern:"family",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W/2,1.5),centerFixedElement("dj-1","dj_chico",W-3.8,3),elem("pista-1","pista",W/2-p.w/2,H*.54-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H*.60),centerFixedElement("buffet-1","buffet",W-3.5,H*.60),centerFixedElement("lounge-1","lounge_chico",3.8,3.2),centerFixedElement("torta-1","mesa_torta",W-4,2.2),centerFixedElement("photobooth-1","photobooth",3.8,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5)]},
-    zones:({W,H})=>[{id:"familia_cercana",xMin:W*.25,xMax:W*.75,yMin:4.8,yMax:H*.40,priority:1,align:"grid",label:"Familia"},{id:"invitados_izq",xMin:4,xMax:W/2-4,yMin:H*.42,yMax:H*.78,priority:2,align:"grid"},{id:"invitados_der",xMin:W/2+4,xMax:W-5,yMin:H*.42,yMax:H*.78,priority:2,align:"grid"},{id:"adultos_mayores",xMin:4,xMax:W*.45,yMin:H*.70,yMax:H-4.5,priority:3,align:"grid",label:"Adultos mayores"},{id:"ninos",xMin:W*.45,xMax:W*.65,yMin:H*.72,yMax:H-4.5,priority:3,align:"grid",label:"Niños"}]
-  },
-  festival_outdoor_wedding: {
-    label:"Festival Outdoor Wedding", emoji:"🎪", salon:"campo · jardín amplio · quinta", recommended:"round_180_comfort", mixed:{rectRatio:.55,roundType:"round_180_comfort"}, pattern:"zones",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("escenario-1","escenario",W/2,1.8),elem("pista-1","pista",W/2-p.w/2,H*.38-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("novios-1","mesa_novios_sweetheart",W*.22,2.5),centerFixedElement("lounge-1","lounge_chico",3.8,H*.38),centerFixedElement("lounge-2","lounge_chico",W-3.8,H*.38),centerFixedElement("barra-1","barra",3.2,H*.58),centerFixedElement("barra-2","barra",W-3.2,H*.58),centerFixedElement("buffet-1","buffet",3.8,H-3.8),centerFixedElement("buffet-2","buffet",W-3.8,H-3.8),centerFixedElement("photobooth-1","photobooth",W/2,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W-4,2.5)]},
-    zones:({W,H})=>[{id:"mesas_inferiores",xMin:5,xMax:W-5,yMin:H*.58,yMax:H-4.8,priority:1,align:"organic"},{id:"mesas_lateral_izq",xMin:5,xMax:W*.38,yMin:H*.42,yMax:H*.70,priority:2,align:"organic"},{id:"mesas_lateral_der",xMin:W*.62,xMax:W-5,yMin:H*.42,yMax:H*.70,priority:2,align:"organic"}]
-  },
-  garden_tent_formal: {
-    label:"Garden Tent Formal", emoji:"🤍", salon:"carpa blanca · jardín formal", recommended:"round_180_comfort", compact:"round_180_compact", pattern:"formal",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W/2,1.5),centerFixedElement("dj-1","dj_chico",W-3.8,3.2),elem("pista-1","pista",W/2-p.w/2,H*.54-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),elem("decoracion-aerea-1","luces",W/2-(p.w+1)/2,H*.54-(p.h+1)/2,p.w+1,p.h+1,{locked:true,presetFixed:true,nonPhysical:true}),centerFixedElement("barra-1","barra",3,H*.54),centerFixedElement("buffet-1","buffet",W-3.5,H*.54),centerFixedElement("lounge-1","lounge_chico",3.8,3.2),centerFixedElement("torta-1","mesa_torta",W-4,2.2),centerFixedElement("photobooth-1","photobooth",3.8,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5)]},
-    zones:({W,H})=>[{id:"superior",xMin:5,xMax:W-5,yMin:4.8,yMax:H*.40,priority:1,align:"grid"},{id:"laterales",xMin:5,xMax:W-5,yMin:H*.42,yMax:H*.72,priority:2,align:"grid"},{id:"inferior",xMin:5,xMax:W-5,yMin:H*.72,yMax:H-4.5,priority:3,align:"grid"}]
-  },
-  urban_industrial: {
-    label:"Urban Industrial", emoji:"🏙️", salon:"galpón · loft · warehouse", recommended:"rectangular_12", pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W*.32,1.7),centerFixedElement("dj-1","escenario",W*.68,2.2),elem("pista-1","pista",W/2-p.w/2,H*.54-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H*.52),centerFixedElement("buffet-1","buffet",W-3.5,3.2),centerFixedElement("lounge-1","lounge_grande",W-4.2,H*.70),centerFixedElement("photobooth-1","photobooth",3.8,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W/2,3.2)]},
-    zones:({W,H})=>[{id:"filas_izq",xMin:5,xMax:W/2-4,yMin:4.8,yMax:H-4.5,priority:1,align:"banquet_rows"},{id:"filas_der",xMin:W/2+4,xMax:W-5,yMin:4.8,yMax:H*.68,priority:1,align:"banquet_rows"},{id:"inferior",xMin:5,xMax:W-5,yMin:H*.70,yMax:H-4.5,priority:2,align:"banquet_rows"}]
-  },
-  romantic_circular_flow: {
-    label:"Romantic Circular Flow", emoji:"⭕", salon:"salón cuadrado · espacio con centralidad", recommended:"round_180_comfort", compact:"round_150_compact", pattern:"ring",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W/2,1.5),centerFixedElement("dj-1","dj_chico",W-3.8,3.2),elem("pista-1","pista",W/2-p.w/2,H*.55-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3,H*.54),centerFixedElement("buffet-1","buffet",W-3.5,H*.54),centerFixedElement("lounge-1","lounge_chico",3.8,3.2),centerFixedElement("torta-1","mesa_torta",W-4,2.2),centerFixedElement("photobooth-1","photobooth",3.8,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5)]},
-    zones:({W,H})=>[{id:"ring",xMin:3,xMax:W-3,yMin:4.2,yMax:H-4.2,priority:1,align:"ring"}]
-  },
-  premium_experience_wedding: {
-    label:"Premium Experience Wedding", emoji:"✨", salon:"venue premium · varias zonas", recommended:"round_180_comfort", mixed:{rectRatio:.40,roundType:"round_180_comfort"}, pattern:"zones",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[centerFixedElement("entrada-1","entrada",W/2,H-.5),centerFixedElement("novios-1","mesa_novios_familiar",W*.28,1.8),centerFixedElement("dj-1","escenario",W*.62,2.0),elem("pista-1","pista",W*.58-p.w/2,H*.40-p.h/2,p.w,p.h,{locked:true,presetFixed:true}),centerFixedElement("barra-1","barra",3.2,H*.50),centerFixedElement("barra-2","barra",W-3.2,H*.50),centerFixedElement("buffet-1","buffet",W-3.5,3.2),centerFixedElement("lounge-after-1","lounge_grande",W/2,H-3.8),centerFixedElement("activacion-1","activacion",4,H*.32),centerFixedElement("photobooth-1","photobooth",3.8,H-2.8),centerFixedElement("banos-1","banos",W-2,H-1.5),centerFixedElement("torta-1","mesa_torta",W-4,2.5)]},
-    zones:({W,H})=>[{id:"cena_media_izq",xMin:5,xMax:W*.50,yMin:H*.45,yMax:H*.72,priority:1,align:"organic"},{id:"cena_media_der",xMin:W*.62,xMax:W-5,yMin:H*.45,yMax:H*.72,priority:1,align:"organic"},{id:"cena_inferior",xMin:5,xMax:W-5,yMin:H*.68,yMax:H-5,priority:2,align:"organic"}]
-  }
-};
+
 const PRESET_STAGE2_ORDER = ["jardin_romantico_central","luxury_ballroom_simetrico","boho_garden_asimetrico","minimal_chic_blanco","mediterraneo_familiar","glam_black_gold","rustic_elegance","cabaret_wedding","cocktail_lounge_wedding","classic_family_reception","festival_outdoor_wedding","garden_tent_formal","urban_industrial","romantic_circular_flow","premium_experience_wedding"];
 const getRecommendedTableTypeForPreset = (presetId, guestCount=150, roomSizeOption="recommended") => {
   const cfg = STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
@@ -7979,150 +7951,190 @@ const generateFixedElements = (presetId, W, H, guestCount, roomSizeOption="recom
     my:+clampStage2Box(el.my,0,Math.max(0,H-(el.eh||0))).toFixed(2)
   }));
 };
+
+const stage2MarginByType = {
+  pista:1.5, banios:4, entrada:3, bar:2, buffet:2, escenario:2,
+  novios:1.5, torta:1.5, photobooth:1.5, living:1.5, activacion:1.5,
+  cabina360:1.5, guardarropa:1.2, proveedores:1.2, mozos:1.2
+};
+const generateMainAisleZone = (layout={}) => {
+  const W=layout.salonW||22, H=layout.salonH||16, els=layout.elementos||[];
+  const entrada=els.find(e=>e.tipo==="entrada"), pista=els.find(e=>e.tipo==="pista");
+  if(!entrada||!pista) return null;
+  const ec=stage2FixedCollisionItem(entrada), pc=stage2FixedCollisionItem(pista);
+  return {id:"main_aisle",type:"forbidden",source:"pasillo_principal",x:(ec.x+pc.x)/2,y:(ec.y+pc.y)/2,width:2,height:Math.max(1,Math.abs(ec.y-pc.y)+1)};
+};
+const generateDjSightlineZone = (layout={}) => {
+  const els=layout.elementos||[];
+  const dj=els.find(e=>e.tipo==="escenario"), pista=els.find(e=>e.tipo==="pista");
+  if(!dj||!pista) return null;
+  const dc=stage2FixedCollisionItem(dj), pc=stage2FixedCollisionItem(pista);
+  return {id:"dj_sightline",type:"forbidden",source:"corredor_visual_dj",x:pc.x,y:(dc.y+pc.y)/2,width:Math.max(dj.ew||0,pista.ew||0)+1.5,height:Math.max(1,Math.abs(pc.y-dc.y))};
+};
 const generateForbiddenZones = (layout={}) => {
   const els = layout.elementos || [];
   const zones=[];
-  const marginByType = {pista:.45,banios:.45,entrada:.35,bar:.15,buffet:.15,escenario:.25,novios:.25,torta:.12,photobooth:.12,living:.12,activacion:.12};
   for(const el of els){
     if(el.nonPhysical) continue;
-    const margin = marginByType[el.tipo] ?? 0.3;
-    zones.push({...stage2ExpandBox(stage2ElementBox(el),margin), source:el.tipo, id:el.id});
+    const margin = stage2MarginByType[el.tipo] ?? 1.2;
+    zones.push(expandZone(el, margin));
   }
-  const entrada = els.find(e=>e.tipo==="entrada");
-  const pista = els.find(e=>e.tipo==="pista");
-  if(false&&entrada&&pista){
-    const ec={x:entrada.mx+entrada.ew/2,y:entrada.my+entrada.eh/2};
-    const pc={x:pista.mx+pista.ew/2,y:pista.my+pista.eh/2};
-    const w=.8;
-    zones.push({x1:Math.min(ec.x,pc.x)-w/2,y1:Math.min(ec.y,pc.y),x2:Math.max(ec.x,pc.x)+w/2,y2:Math.max(ec.y,pc.y),source:"pasillo_principal"});
-  }
-  const dj = els.find(e=>e.tipo==="escenario");
-  if(false&&dj&&pista){
-    const dc={x:dj.mx+dj.ew/2,y:dj.my+dj.eh/2};
-    const pc={x:pista.mx+pista.ew/2,y:pista.my+pista.eh/2};
-    zones.push({x1:Math.min(dc.x,pc.x)-.6,y1:Math.min(dc.y,pc.y)-.4,x2:Math.max(dc.x,pc.x)+.6,y2:Math.max(dc.y,pc.y)+.4,source:"corredor_visual_dj"});
-  }
+  const aisle=generateMainAisleZone(layout); if(aisle) zones.push(aisle);
+  const sight=generateDjSightlineZone(layout); if(sight) zones.push(sight);
   return zones;
 };
-
-const generateHardForbiddenZones = (layout={}) => {
-  const els = layout.elementos || [];
-  const zones=[];
-  const marginByType = {pista:.05,banios:.25,entrada:.15,bar:.03,buffet:.03,escenario:.03,novios:.03,torta:.03,photobooth:.03,living:.03,activacion:.03};
-  for(const el of els){
-    if(el.nonPhysical) continue;
-    // Las zonas decorativas secundarias no bloquean el cálculo de capacidad;
-    // la app prioriza no invadir pista, acceso, baños, DJ, novios, barra, buffet y torta.
-    if(!["pista","banios","entrada","bar","buffet","escenario","novios","torta"].includes(el.tipo)) continue;
-    const margin = marginByType[el.tipo] ?? .05;
-    zones.push({...stage2ExpandBox(stage2ElementBox(el),margin), source:el.tipo, id:el.id});
-  }
-  return zones;
-};
-const generateDenseFallbackSlots = (W,H,tableType,fixedElements=[]) => {
-  const visualW = tableType.realDiameter || tableType.width || 1.8;
-  const visualH = tableType.realDiameter || tableType.height || 1.8;
-  const stepX = Math.max(visualW + .12, 1.35);
-  const stepY = Math.max(visualH + .12, 1.35);
-  const pista = fixedElements.find(e=>e.tipo==="pista");
-  const pc = pista ? {x:pista.mx+pista.ew/2,y:pista.my+pista.eh/2} : {x:W/2,y:H/2};
-  const slots=[];
-  for(let y=visualH/2+.6; y<=H-visualH/2-.6; y+=stepY){
-    const offset = Math.round(y/stepY)%2 ? stepX/2 : 0;
-    for(let x=visualW/2+.6+offset; x<=W-visualW/2-.6; x+=stepX){
-      const dist = Math.hypot(x-pc.x,y-pc.y);
-      const edgeBonus = Math.min(x,W-x,y,H-y);
-      slots.push({x:+x.toFixed(2),y:+y.toFixed(2),priority:9,zoneId:"auto_extra",score:Math.abs(dist-7)-edgeBonus*.08});
-    }
-  }
-  return slots.sort((a,b)=>(a.score||0)-(b.score||0));
-};
+const generateHardForbiddenZones = (layout={}) => generateForbiddenZones(layout);
 
 const generateTableZonesForPreset = (presetId, W, H, fixedElements=[]) => {
   const cfg = STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
-  const base = (cfg.zones?.({W,H,fixedElements}) || []).filter(z=>z.xMax>z.xMin && z.yMax>z.yMin);
-  // Zona de respaldo determinística: no mueve elementos fijos ni invade zonas prohibidas;
-  // solo ofrece más slots cuando las zonas nominales quedan chicas por cantidad de invitados.
-  const fallbackAlign = cfg.pattern === "ring" ? "ring" : (cfg.pattern === "banquet_rows" ? "banquet_rows" : "organic");
-  return [...base, {id:"respaldo_perimetral", xMin:1.3, xMax:W-1.3, yMin:1.3, yMax:H-1.3, priority:8, align:fallbackAlign}];
+  const base = (cfg.zones?.({W,H,fixedElements}) || []).filter(z=>z.xMax>z.xMin && z.yMax>z.yMin).map((z,idx)=>({
+    ...z,
+    priority: z.priority ?? (idx+1),
+    align: z.align || cfg.pattern || "grid",
+    pattern: z.pattern || cfg.pattern || "grid"
+  }));
+  // La zona de desborde queda última. Solo se usa si faltan mesas.
+  const fallbackAlign = cfg.pattern === "ring" ? "ring" : (cfg.pattern === "banquet_rows" ? "banquet_rows" : (cfg.pattern === "symmetric" ? "symmetric" : "organic"));
+  return [...base, {id:"segunda_fila_exterior", xMin:1.5, xMax:W-1.5, yMin:1.5, yMax:H-1.5, priority:50, align:fallbackAlign, pattern:fallbackAlign, fallback:true}];
 };
-const generateRingSlots = (zone, tableType, W, H, fixedElements=[]) => {
+
+const generateRingSlots = (zone, tableType, W, H, fixedElements=[], spacing=1.5) => {
   const pista = fixedElements.find(e=>e.tipo==="pista");
   if(!pista) return [];
   const cx=pista.mx+pista.ew/2, cy=pista.my+pista.eh/2;
   const opW=tableType.operationalWidth||2.8, opH=tableType.operationalHeight||2.8;
+  const base=Math.max(opW,opH)+spacing;
   const slots=[];
-  const rings=[1.5, 1.5 + Math.max(opW,opH)+1.2, 1.5 + 2*(Math.max(opW,opH)+1.2)];
+  const rings=[1.5,1.5+base,1.5+base*2,1.5+base*3];
   for(let rIndex=0;rIndex<rings.length;rIndex++){
     const rx=pista.ew/2+rings[rIndex]+opW/2;
     const ry=pista.eh/2+rings[rIndex]+opH/2;
-    const count=Math.max(8,Math.round((Math.PI*2*Math.max(rx,ry))/(Math.max(opW,opH)+1.2)));
+    const count=Math.max(8,Math.round((Math.PI*2*Math.max(rx,ry))/base));
     for(let i=0;i<count;i++){
-      const a=(25 + (310*i/count))*Math.PI/180;
+      const angleDeg=25 + (310*i/count);
+      if(angleDeg>250 && angleDeg<290) continue; // deja libre la entrada inferior
+      const a=angleDeg*Math.PI/180;
       const x=cx+Math.cos(a)*rx, y=cy+Math.sin(a)*ry;
       if(x<zone.xMin||x>zone.xMax||y<zone.yMin||y>zone.yMax) continue;
-      if(y>H-3.6 && x>W*.40 && x<W*.60) continue;
-      slots.push({x,y,priority:zone.priority||1,zoneId:zone.id,ring:rIndex});
+      slots.push({x:+x.toFixed(2),y:+y.toFixed(2),priority:zone.priority||1,zoneId:zone.id,ring:rIndex,angle:angleDeg,pattern:"ring",score:rIndex*100+i});
     }
   }
   return slots;
 };
-const generateTableSlots = (tableZones=[], tableType=TABLE_TYPES.round_180_comfort, W=22, H=16, fixedElements=[]) => {
+const generateGridSlots = (zone, tableType, W, H, spacing=1.5) => {
+  const opW=tableType.operationalWidth || tableType.width || tableType.realDiameter || 2.8;
+  const opH=tableType.operationalHeight || tableType.height || tableType.realDiameter || 2.8;
+  const stepX=opW+spacing;
+  const stepY=opH+spacing;
   const slots=[];
-  const opW=tableType.realDiameter || tableType.width || tableType.operationalWidth || 2.8, opH=tableType.realDiameter || tableType.height || tableType.operationalHeight || 2.8;
-  const stepX=opW+0.6, stepY=opH+0.6; // la huella operativa ya incluye sillas; dejamos un pasillo adicional moderado para no deformar ni vaciar el salón
-  const zones=[...tableZones].sort((a,b)=>(a.priority||9)-(b.priority||9));
-  for(const z of zones){
-    if(z.align==="ring") { slots.push(...generateRingSlots(z,tableType,W,H,fixedElements)); continue; }
-    let row=0;
-    for(let y=z.yMin+opH/2; y<=z.yMax-opH/2+0.01; y+=stepY){
-      const offset = z.align==="organic" && row%2 ? stepX/2 : 0;
-      let xStart = z.xMin+opW/2+offset;
-      for(let x=xStart; x<=z.xMax-opW/2+0.01; x+=stepX){
-        slots.push({x:+x.toFixed(2),y:+y.toFixed(2),priority:z.priority||1,zoneId:z.id,label:z.label||""});
-      }
-      row++;
+  let row=0;
+  for(let y=zone.yMin+opH/2; y<=zone.yMax-opH/2+0.01; y+=stepY){
+    const organicOffset=(zone.align==="organic"||zone.pattern==="organic"||zone.pattern==="organic_controlled") && row%2===1 ? stepX/2 : 0;
+    for(let x=zone.xMin+opW/2+organicOffset; x<=zone.xMax-opW/2+0.01; x+=stepX){
+      const side=x<W/2?"L":(x>W/2?"R":"C");
+      slots.push({x:+x.toFixed(2),y:+y.toFixed(2),priority:zone.priority||1,zoneId:zone.id,label:zone.label||"",side,row,pattern:zone.pattern||zone.align||"grid",fallback:!!zone.fallback});
     }
+    row++;
   }
   return slots;
+};
+const generateTableSlots = (tableZones=[], tableType=TABLE_TYPES.round_180_comfort, W=22, H=16, fixedElements=[], opts={}) => {
+  const spacing=opts.spacing ?? 1.5;
+  const zones=[...tableZones].sort((a,b)=>(a.priority||9)-(b.priority||9));
+  const slots=[];
+  for(const z of zones){
+    if(z.align==="ring" || z.pattern==="ring") slots.push(...generateRingSlots(z,tableType,W,H,fixedElements,spacing));
+    else slots.push(...generateGridSlots(z,tableType,W,H,spacing));
+  }
+  return slots.map((s,idx)=>({...s,id:s.id||`${s.zoneId}_${idx}`,centerBias:Math.abs((s.x||0)-W/2)}));
+};
+const generateDenseFallbackSlots = (W,H,tableType,fixedElements=[]) => {
+  const zones=[{id:"desborde_exterior",xMin:1.2,xMax:W-1.2,yMin:1.2,yMax:H-1.2,priority:80,align:"organic",pattern:"organic",fallback:true}];
+  return generateTableSlots(zones,tableType,W,H,fixedElements,{spacing:1.2});
+};
+const sortSlotsByPresetLogic = (slots=[], presetId="jardin_romantico_central", W=22) => {
+  const cfg=STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
+  const pattern=cfg.pattern || "grid";
+  const base=[...slots];
+  if(pattern==="symmetric" || ["luxury_ballroom_simetrico","glam_black_gold","garden_tent_formal","romantic_circular_flow"].includes(presetId)){
+    return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || Math.round(a.y*2)-Math.round(b.y*2) || Math.abs(a.x-W/2)-Math.abs(b.x-W/2) || (a.x-b.x));
+  }
+  if(pattern==="ring") return base.sort((a,b)=>(a.ring||0)-(b.ring||0) || (a.angle||0)-(b.angle||0));
+  if(pattern==="banquet_rows") return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || (a.y-b.y) || (a.x-b.x));
+  if(pattern==="organic") return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || (a.score||0)-(b.score||0) || (a.y-b.y) || (a.x-b.x));
+  return base.sort((a,b)=>(a.priority||9)-(b.priority||9) || Math.abs(a.x-W/2)-Math.abs(b.x-W/2) || (a.y-b.y) || (a.x-b.x));
 };
 const slotIsValidForTable = (slot, placedTables, forbiddenZones, tableType, W, H) => {
   const temp = stage2TableFromSlot(slot,999,tableType);
-  const b = stage2MesaOperationalBox(temp);
-  if(b.x1<0.2||b.y1<0.2||b.x2>W-0.2||b.y2>H-0.2) return false;
-  if(forbiddenZones.some(z=>stage2BoxesHit(b,z))) return false;
-  return !placedTables.some(m=>stage2BoxesHit(stage2ExpandBox(b,.04), stage2ExpandBox(stage2MesaOperationalBox(m),.04)));
+  const candidate = stage2TableCollisionItem(temp);
+  if(!isInsideRoom(candidate,W,H)) return false;
+  if((forbiddenZones||[]).some(z=>boxesOverlap(candidate,z,0))) return false;
+  return !(placedTables||[]).some(m=>boxesOverlap(candidate,stage2TableCollisionItem(m),0.2));
 };
-const placeTablesInSlots = (requiredTables, slots=[], forbiddenZones=[], tableType=TABLE_TYPES.round_180_comfort, W=22, H=16, startId=1, labelPrefix="") => {
-  const placed=[];
-  const ordered=[...slots].sort((a,b)=>(a.priority||9)-(b.priority||9) || (a.y-b.y) || (a.x-b.x));
-  for(const s of ordered){
-    if(placed.length>=requiredTables) break;
-    if(!slotIsValidForTable(s,placed,forbiddenZones,tableType,W,H)) continue;
-    placed.push(stage2TableFromSlot(s,startId+placed.length,tableType,s.label||labelPrefix));
+const chooseBestSlot = (validSlots, placed, presetId, W) => {
+  if(!validSlots.length) return null;
+  const cfg=STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
+  const symmetric = cfg.pattern === "symmetric" || ["luxury_ballroom_simetrico","glam_black_gold","garden_tent_formal","romantic_circular_flow","jardin_romantico_central"].includes(presetId);
+  if(!symmetric) return validSlots[0];
+  const left=placed.filter(t=>t.mx<W/2-.15).length;
+  const right=placed.filter(t=>t.mx>W/2+.15).length;
+  const prefer = left>right ? "R" : right>left ? "L" : null;
+  if(prefer){
+    const preferred=validSlots.find(s=>s.side===prefer || (prefer==="L"?s.x<W/2:s.x>W/2));
+    if(preferred) return preferred;
   }
-  return placed;
+  return validSlots[0];
 };
-const checkCollisionUsingOperationalFootprint = (a,b) => stage2BoxesHit(stage2MesaOperationalBox(a), stage2MesaOperationalBox(b));
+const placeTablesInSlots = (requiredTables, slots=[], forbiddenZones=[], tableType=TABLE_TYPES.round_180_comfort, W=22, H=16, startId=1, labelPrefix="", opts={}) => {
+  const presetId=opts.presetId || "jardin_romantico_central";
+  const placed=[...(opts.existingTables||[])];
+  const newlyPlaced=[];
+  const ordered=sortSlotsByPresetLogic(slots,presetId,W).map(s=>({...s,used:false}));
+  for(let i=0;i<requiredTables;i++){
+    const candidates=ordered.filter(s=>!s.used && slotIsValidForTable(s,placed,forbiddenZones,tableType,W,H));
+    const chosen=chooseBestSlot(candidates,newlyPlaced,presetId,W);
+    if(!chosen) return {placed:newlyPlaced,success:false,missingTables:requiredTables-newlyPlaced.length};
+    chosen.used=true;
+    const t=stage2TableFromSlot(chosen,startId+newlyPlaced.length,tableType,chosen.label||labelPrefix);
+    newlyPlaced.push(t);
+    placed.push(t);
+  }
+  return {placed:newlyPlaced,success:true,missingTables:0};
+};
 const validateLayout = (layout={}) => {
   const warnings=[];
   const guestCount=layout.guestCount||0;
-  const capacity=calculateSeatedCapacity(layout.mesas||[]);
+  const mesas=layout.mesas||[];
+  const capacity=calculateSeatedCapacity(mesas);
   if(!layout.formatCocktail && capacity<guestCount) warnings.push(`Capacidad insuficiente: ${capacity}/${guestCount} asientos.`);
-  const forbidden=generateHardForbiddenZones(layout);
-  for(const m of (layout.mesas||[])){
-    const b=stage2MesaOperationalBox(m);
-    const hit=forbidden.find(z=>stage2BoxesHit(b,z));
-    if(hit) warnings.push(`Mesa ${m.id} invade zona prohibida: ${hit.source}.`);
+  const forbidden=generateForbiddenZones(layout);
+  for(const m of mesas){
+    const item=stage2TableCollisionItem(m);
+    if(!isInsideRoom(item,layout.salonW||22,layout.salonH||16)) warnings.push(`Mesa ${m.id} queda fuera del salón.`);
+    const hit=forbidden.find(z=>boxesOverlap(item,z,0));
+    if(hit) warnings.push(`Mesa ${m.id} invade zona prohibida: ${hit.source || hit.id}.`);
   }
-  for(let i=0;i<(layout.mesas||[]).length;i++) for(let j=i+1;j<(layout.mesas||[]).length;j++){
-    if(stage2BoxesHit(stage2MesaOperationalBox(layout.mesas[i]),stage2MesaOperationalBox(layout.mesas[j]))) warnings.push(`Mesas ${layout.mesas[i].id} y ${layout.mesas[j].id} están superpuestas.`);
+  for(let i=0;i<mesas.length;i++) for(let j=i+1;j<mesas.length;j++){
+    if(boxesOverlap(stage2TableCollisionItem(mesas[i]),stage2TableCollisionItem(mesas[j]),0.2)) warnings.push(`Mesas ${mesas[i].id} y ${mesas[j].id} están superpuestas.`);
   }
   const els=layout.elementos||[];
   const novios=els.find(e=>e.tipo==="novios"), dj=els.find(e=>e.tipo==="escenario"), pista=els.find(e=>e.tipo==="pista");
-  if(novios&&dj){ const nc={x:novios.mx+novios.ew/2,y:novios.my+novios.eh/2}; const dc={x:dj.mx+dj.ew/2,y:dj.my+dj.eh/2}; const overlapX=Math.abs(nc.x-dc.x)<(novios.ew+dj.ew)*0.32; if(novios.my>dj.my && overlapX) warnings.push("La mesa de novios quedó detrás o debajo del DJ."); }
-  if(dj&&pista&&Math.abs((dj.mx+dj.ew/2)-(pista.mx+pista.ew/2))>Math.max(7,layout.salonW*.55)) warnings.push("El DJ queda demasiado desconectado de la pista.");
-  return {valid:warnings.length===0,warnings,capacity};
+  if(novios&&dj){
+    const nc=stage2FixedCollisionItem(novios), dc=stage2FixedCollisionItem(dj);
+    const overlapX=Math.abs(nc.x-dc.x)<(novios.ew+dj.ew)*0.32;
+    if(nc.y>dc.y && overlapX) warnings.push("La mesa de novios quedó detrás o debajo del DJ.");
+  }
+  if(dj&&pista){
+    const dc=stage2FixedCollisionItem(dj), pc=stage2FixedCollisionItem(pista);
+    if(Math.hypot(dc.x-pc.x,dc.y-pc.y)>Math.max(8,(layout.salonW||22)*.55)) warnings.push("El DJ queda demasiado desconectado de la pista.");
+  }
+  const cfg=STAGE2_PRESET_CONFIGS[layout.presetId] || {};
+  if(cfg.pattern==="symmetric" || ["luxury_ballroom_simetrico","glam_black_gold","garden_tent_formal","romantic_circular_flow"].includes(layout.presetId)){
+    const left=mesas.filter(m=>m.mx<(layout.salonW||22)/2-.2).length;
+    const right=mesas.filter(m=>m.mx>(layout.salonW||22)/2+.2).length;
+    if(Math.abs(left-right)>1) warnings.push(`El preset simétrico quedó desbalanceado: ${left} mesas a la izquierda y ${right} a la derecha.`);
+  }
+  return {valid:warnings.length===0,warnings:[...new Set(warnings)],capacity};
 };
 const generateWeddingLayout = ({presetId="jardin_romantico_central",guestCount=150,roomSizeOption="recommended",tableType="auto",format="dinner",musicType="dj",coupleTableType="sweetheart"}={}) => {
   const cfg = STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.jardin_romantico_central;
@@ -8130,30 +8142,23 @@ const generateWeddingLayout = ({presetId="jardin_romantico_central",guestCount=1
   const W=room.W, H=room.H;
   const fixedElements=generateFixedElements(presetId,W,H,guestCount,roomSizeOption);
   const zones=generateTableZonesForPreset(presetId,W,H,fixedElements);
-  const forbidden=generateForbiddenZones({salonW:W,salonH:H,elementos:fixedElements,mesas:[],guestCount});
   const plan=getStage2TablePlan(presetId,guestCount,roomSizeOption,tableType);
   let allTables=[];
+  const placementWarnings=[];
   for(const part of plan){
-    const slots=generateTableSlots(zones,part.type,W,H,fixedElements);
-    const placed=placeTablesInSlots(part.count,slots,forbidden,part.type,W,H,allTables.length+1,part.label||"");
-    // incluir las mesas ya puestas como zonas a evitar para el siguiente tipo
-    forbidden.push(...placed.map(m=>stage2ExpandBox(stage2MesaOperationalBox(m),.25)));
-    allTables=[...allTables,...placed];
-  }
-  // Segunda pasada: si el patrón nominal no alcanza, completar con slots densos
-  // de respaldo. No mueve elementos fijos ni invade pista/baños/entrada; solo
-  // agrega mesas necesarias para no dejar invitados sin asiento.
-  let seatedNow = calculateSeatedCapacity(allTables);
-  if(seatedNow < guestCount){
-    const autoCompact = selected => selected === "auto" ? "round_180_compact" : selected;
-    const fallbackTypeId = autoCompact(tableType || "auto");
-    const fallbackType = {...(TABLE_TYPES[fallbackTypeId] || TABLE_TYPES.round_180_compact), id:fallbackTypeId};
-    const hardForbidden = generateHardForbiddenZones({salonW:W,salonH:H,elementos:fixedElements,mesas:allTables,guestCount});
-    hardForbidden.push(...allTables.map(m=>stage2ExpandBox(stage2MesaOperationalBox(m),.04)));
-    const missing = Math.ceil((guestCount - seatedNow) / Math.max(1,fallbackType.capacity||1));
-    const denseSlots = generateDenseFallbackSlots(W,H,fallbackType,fixedElements);
-    const extra = placeTablesInSlots(missing,denseSlots,hardForbidden,fallbackType,W,H,allTables.length+1,"Extra");
-    allTables=[...allTables,...extra];
+    const forbidden=generateForbiddenZones({salonW:W,salonH:H,elementos:fixedElements,mesas:allTables,guestCount});
+    const slots=generateTableSlots(zones,part.type,W,H,fixedElements,{spacing:1.5});
+    let result=placeTablesInSlots(part.count,slots,forbidden,part.type,W,H,allTables.length+1,part.label||"",{presetId,existingTables:allTables});
+    if(!result.success){
+      const relaxedSlots=generateTableSlots(zones,part.type,W,H,fixedElements,{spacing:1.2});
+      result=placeTablesInSlots(part.count,relaxedSlots,forbidden,part.type,W,H,allTables.length+1,part.label||"",{presetId,existingTables:allTables});
+    }
+    if(!result.success){
+      const extraSlots=generateDenseFallbackSlots(W,H,part.type,fixedElements);
+      result=placeTablesInSlots(part.count,extraSlots,forbidden,part.type,W,H,allTables.length+1,part.label||"",{presetId,existingTables:allTables});
+    }
+    allTables=[...allTables,...(result.placed||[])];
+    if(!result.success) placementWarnings.push(`Faltan ${result.missingTables} mesas de ${part.type.label} para este preset.`);
   }
   const layout={
     salonW:W, salonH:H, salonShape:"rectangulo", salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,
@@ -8168,11 +8173,12 @@ const generateWeddingLayout = ({presetId="jardin_romantico_central",guestCount=1
     preset:cfg.label, invitados:guestCount, salon:room.label, medidas:`${W} × ${H} m`, area:room.area,
     tipoMesa: plan.map(p=>`${p.type.label} × ${p.count}`).join(" + "), mesasRequeridas: requiredTables,
     mesasGeneradas: allTables.length, capacidadPorMesa: plan.map(p=>`${p.type.capacity || "cocktail"}`).join(" / "),
-    capacidadSentada:validation.capacity, estado:validation.valid?"válido":"revisar", alertas:[...validation.warnings]
+    capacidadSentada:validation.capacity, estado:validation.valid?"válido":"revisar", alertas:[...placementWarnings,...validation.warnings]
   };
-  if(allTables.length<requiredTables && summary.capacidadSentada<guestCount) summary.alertas.push("No entraron todas las mesas calculadas en slots válidos. Elegí un salón más grande, otra mesa o menos invitados.");
+  if(summary.capacidadSentada<guestCount) summary.alertas.push("Este preset necesita un salón más grande, mesas más compactas o menos invitados. No se invadió pista, baños, entrada ni corredor DJ/pista para forzar mesas.");
   if(cfg.warning250 && guestCount>=250) summary.alertas.push(cfg.warning250);
   if(plan.some(p=>p.type.warning)) summary.alertas.push(...plan.filter(p=>p.type.warning).map(p=>p.type.warning));
+  summary.alertas=[...new Set(summary.alertas)];
   return {...layout, layoutSummary:summary, overflowTables: allTables.length<requiredTables, maxPresetSeats:validation.capacity};
 };
 
