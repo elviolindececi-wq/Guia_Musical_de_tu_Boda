@@ -4316,6 +4316,104 @@ function GuestsModule({user, onBack, onGoDesigner}){
   </div>;
 }
 
+
+
+// ─── MÓDULO DISEÑO DEL SALÓN ──────────────────────────────────────────────────
+function SalonDesignerModule({user, onBack, onGoGuests}){
+  const [guests, setGuests] = useState(null);
+  const [tableSize, setTableSize] = useState(10);
+  const [budgetInvitados, setBudgetInvitados] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+
+  useEffect(()=>{
+    let alive = true;
+    if(!user){ setGuests([]); setLoading(false); return; }
+    (async()=>{
+      try{
+        const {data:row} = await supabase
+          .from("wedding_data")
+          .select("guests,table_size,budget")
+          .eq("user_id",user.id)
+          .maybeSingle();
+        if(!alive) return;
+        const list = Array.isArray(row?.guests) ? row.guests : [];
+        setGuests(list);
+        if(row?.table_size) setTableSize(row.table_size);
+        const bi = parseInt(row?.budget?.invitados||0);
+        setBudgetInvitados(bi>0 ? bi : list.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0));
+      }catch(err){
+        if(alive) setGuests([]);
+      }finally{
+        if(alive) setLoading(false);
+      }
+    })();
+    return ()=>{alive=false;};
+  },[user]);
+
+  const saveGuests = async(next, ts=tableSize)=>{
+    setGuests(next);
+    if(!user) return;
+    try{
+      const totalPersonas = next.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
+      let budgetUpdate = null;
+      try{
+        const {data:brow} = await supabase.from("wedding_data").select("budget").eq("user_id",user.id).maybeSingle();
+        if(brow?.budget) budgetUpdate = {...brow.budget, invitados:String(totalPersonas)};
+      }catch(err){}
+      const upsertData = {user_id:user.id,guests:next,table_size:ts,updated_at:new Date().toISOString()};
+      if(budgetUpdate) upsertData.budget = budgetUpdate;
+      await supabase.from("wedding_data").upsert(upsertData,{onConflict:"user_id"});
+      setBudgetInvitados(totalPersonas);
+    }catch(err){
+      console.warn("⚠️ No se pudieron guardar los invitados desde Diseño del salón:", err?.message||err);
+    }
+  };
+
+  if(loading){
+    return <div style={{minHeight:"70vh",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:THEME.font.body,color:"rgba(26,26,20,.55)"}}>Cargando diseño del salón...</div>;
+  }
+
+  return <div style={{minHeight:"100vh",background:THEME.color.cream,padding:isMobile?"12px":"24px"}}>
+    <div style={{maxWidth:1260,margin:"0 auto"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:14,flexWrap:"wrap"}}>
+        <div>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"rgba(74,94,58,.58)",marginBottom:4}}>Diseño del salón</div>
+          <h1 style={{fontFamily:THEME.font.display,fontSize:"clamp(1.55rem,3vw,2.35rem)",lineHeight:1.05,margin:0,color:THEME.color.ink}}>Plano, decoración y circulación</h1>
+          <p style={{fontFamily:THEME.font.body,fontSize:".9rem",color:"rgba(26,26,20,.52)",margin:"6px 0 0",maxWidth:720}}>Acá diseñás el salón completo. Las mesas se comparten con Invitados, pero la decoración queda fuera del canvas limpio de seating.</p>
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          {onGoGuests&&<button onClick={onGoGuests} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:10,padding:"10px 14px",fontFamily:THEME.font.body,color:THEME.color.sage,cursor:"pointer"}}>👥 Volver a invitados</button>}
+          {onBack&&<button onClick={onBack} style={{background:THEME.color.sage,border:"1px solid rgba(74,94,58,.18)",borderRadius:10,padding:"10px 14px",fontFamily:THEME.font.body,color:THEME.color.cream,cursor:"pointer"}}>Inicio</button>}
+        </div>
+      </div>
+      <SalonView
+        mode="designer"
+        user={user}
+        guests={guests||[]}
+        tableSize={tableSize}
+        budgetInvitados={budgetInvitados}
+        onGoGuests={onGoGuests}
+        onAssign={(guestId, mesa)=>{
+          const next=(guests||[]).map(g=>g.id===guestId?{...g,mesa:String(mesa)}:g);
+          saveGuests(next);
+        }}
+        onAssignMany={(pairs)=>{
+          const map=Object.fromEntries(pairs.map(p=>[String(p.guestId),String(p.mesa)]));
+          const next=(guests||[]).map(g=>map[g.id]!==undefined?{...g,mesa:map[g.id]}:g);
+          saveGuests(next);
+          if(typeof showToast==="function") showToast(`✓ Asignación de mesas actualizada (${pairs.length} invitaciones)`,"success");
+        }}
+        onRemove={(guestId)=>{
+          const next=(guests||[]).map(g=>g.id===guestId?{...g,mesa:""}:g);
+          saveGuests(next);
+        }}
+        onOpenGuia={()=>{}}
+      />
+    </div>
+  </div>;
+}
+
 // ─── SALON VIEW ──────────────────────────────────────────────────────────────
 const SALON_SHAPES = {
   cuadrado:   { label:"Cuadrado",   path:(w,h)=>`M0,0 L${w},0 L${w},${h} L0,${h} Z` },
