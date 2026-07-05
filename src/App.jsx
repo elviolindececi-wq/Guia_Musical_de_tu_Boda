@@ -4412,13 +4412,17 @@ const CAP_OPCIONES = {
 };
 
 const ESTILOS_DISTRIB = [
-  {id:"banquet",      label:"Banquete",       desc:"Mesas redondas en filas"},
-  {id:"pista_centro", label:"Pista al centro",desc:"Mesas alrededor de la pista"},
-  {id:"cabaret",      label:"Cabaret",        desc:"Filas mirando al escenario"},
-  {id:"cantine",      label:"Cantine",        desc:"Mesas largas en columnas"},
-  {id:"u_shape",      label:"Forma en U",     desc:"Mesas en U, todos al frente"},
-  {id:"chevrons",     label:"Chevrones",      desc:"Mesas en espiga diagonal"},
+  // Estas opciones complementan a las Plantillas: solo reordenan MESAS.
+  // La decoración, barra, DJ, torta, pista, entrada y servicios se conservan.
+  {id:"banquet",      label:"Redondas clásicas",      desc:"Mesas redondas equilibradas para cena tradicional"},
+  {id:"pista_centro", label:"Pista protagonista",     desc:"Mesas alrededor de una pista despejada"},
+  {id:"cantine",      label:"Imperial elegante",     desc:"Mesas largas/imperiales para estética moderna"},
+  {id:"cabaret",      label:"Cena show / escenario", desc:"Mesas orientadas hacia DJ, banda o escenario"},
 ];
+
+// Compatibilidad con versiones anteriores: si algún salón quedó guardado con
+// formatos más corporativos, lo llevamos a una opción útil para bodas.
+const NORMALIZE_DISTRIB = (v) => ["u_shape","chevrons"].includes(v) ? "banquet" : (v || "banquet");
 
 // ── Persistencia del layout del salón (localStorage) ────────────────────────
 const SALON_LS_KEY = "ceci_salon_layout_v1";
@@ -4490,71 +4494,165 @@ const mesasRedondas = (coords, offset=1) => coords.map(([mx,my],i)=>mesa(i+offse
 
 const PRESET_BUILDERS = {
   clasico_elegante: (decor="romantico_floral") => {
-    const W=40, H=20;
-    const filaX=[6.5,11,15.5,24.5,29,33.5];
-    const mesas=[
-      ...filaX.map((x,i)=>mesa(i+1,x,3,"round",{cap:10})),
-      ...filaX.map((x,i)=>mesa(i+7,x,17,"round",{cap:10})),
-      mesa(13,6.5,10,"round",{cap:10}), mesa(14,33.5,10,"round",{cap:10}), mesa(15,20,16.5,"round",{cap:10}),
-    ];
+    // Clásico: pista al centro como corazón del evento, DJ enfrentado a la pista,
+    // mesa de novios con visual limpia, mesas en perímetro y servicios en esquinas.
+    const W=44, H=24;
+    const mesas=mesasRedondas([
+      [9,7.2],[9,12.0],[9,16.8],
+      [14,5.6],[14,18.4],
+      [30,5.6],[30,18.4],
+      [35,7.2],[35,12.0],[35,16.8],
+      [20,20.4],[24,20.4]
+    ],1);
     return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
       elementos:[
-        elem("pista-1","pista",16,6,8,7), elem("presidencial-1","presidencial",16.8,1.3,6.4,1.0),
-        elem("escenario-1","escenario",24.8,7.6,2.2,4.8), elem("torta-1","torta",12.6,6.0,2.6,1.5),
-        elem("postres-1","postres",12.1,12.7,3.6,1.4), elem("bar-1","bar",36.2,2.0,2.8,4.2),
-        elem("cafeteria-1","cafeteria",36.2,14.6,2.8,1.6), elem("bienvenida-1","bienvenida",18.4,18.7,3.2,1.0),
-        elem("photobooth-1","photobooth",1.3,8.7,3,2), elem("regalos-1","regalos",1.4,12.0,2.6,1.4),
-        elem("banios-1","banios",0.8,0.8,3,2.2), elem("cocina-1","cocina",0.8,16.5,3.8,2.7),
+        elem("pista-1","pista",17.0,8.0,10.0,7.2),
+        elem("escenario-1","escenario",17.8,4.3,8.4,2.4),
+        elem("novios-1","novios",17.2,16.4,9.6,1.0),
+        elem("torta-1","torta",12.0,7.0,2.6,1.5),
+        elem("postres-1","postres",11.4,14.2,3.6,1.4),
+        elem("bar-1","bar",38.7,8.3,3.2,3.6),
+        elem("cafeteria-1","cafeteria",38.8,14.2,3.0,1.5),
+        elem("bienvenida-1","bienvenida",18.6,22.5,3.2,1.0),
+        elem("regalos-1","regalos",23.4,22.2,2.6,1.4),
+        elem("photobooth-1","photobooth",2.0,9.3,3,2),
+        elem("banios-1","banios",1.0,1.0,3,2.3),
+        elem("cocina-1","cocina",1.0,19.8,4.0,2.8),
+        elem("salida-1","salida",39.8,22.8,3,0.8),
         ...decorPack(decor,W,H),
       ]};
   },
   rectangular: (decor="elegante_clasico") => {
-    const W=48,H=18;
-    const mesas=[];
-    [6,11,16,21,27,32,37,42].forEach((x,i)=>mesas.push(mesa(i+1,x,4,"round",{cap:10})));
-    [6,11,16,21,27,32,37,42].forEach((x,i)=>mesas.push(mesa(i+9,x,14,"round",{cap:10})));
+    // Salón largo: eje central despejado; mesas a ambos lados, barra y buffet en perímetro,
+    // baños/cocina en extremos para no contaminar visual ni circulación de cena.
+    const W=52,H=21;
+    const mesas=mesasRedondas([
+      [9,6.0],[14,5.4],[19,6.0],[33,6.0],[38,5.4],[43,6.0],
+      [9,15.5],[14,16.0],[19,15.5],[33,15.5],[38,16.0],[43,15.5]
+    ],1);
     return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"banquet",estiloDecor:decor,mesas,
       elementos:[
-        elem("entrada-1","entrada",22.5,17.1,3,0.8), elem("presidencial-1","presidencial",20.8,1.2,6.4,1.0),
-        elem("pista-1","pista",20,5.4,8,7), elem("escenario-1","escenario",29.4,6.2,5.2,2.4),
-        elem("bar-1","bar",44.0,2.0,3.0,3.4), elem("postres-1","postres",44.0,12.8,3.0,1.4),
-        elem("torta-1","torta",17.0,7.0,2.5,1.4), elem("bienvenida-1","bienvenida",18.6,16.6,3.2,1.0),
-        elem("photobooth-1","photobooth",1.2,7.6,3,2), elem("banios-1","banios",1.0,1.0,3,2.2),
-        elem("cocina-1","cocina",1.0,14.0,4,2.8), ...decorPack(decor,W,H),
+        elem("entrada-1","entrada",24.5,20.1,3,0.8),
+        elem("bienvenida-1","bienvenida",20.2,19.4,3.2,1.0),
+        elem("presidencial-1","presidencial",21.5,1.4,9.0,1.0),
+        elem("pista-1","pista",22.0,7.2,8.0,6.4),
+        elem("escenario-1","escenario",22.2,4.1,7.6,2.4),
+        elem("torta-1","torta",18.2,9.2,2.6,1.4),
+        elem("bar-1","bar",47.0,3.0,3.4,3.4),
+        elem("postres-1","postres",46.8,13.2,3.4,1.4),
+        elem("photobooth-1","photobooth",2.0,8.6,3,2),
+        elem("banios-1","banios",1.0,1.0,3,2.2),
+        elem("cocina-1","cocina",1.0,17.0,4,2.8),
+        elem("salida-1","salida",48.0,20.1,3,0.8),
+        ...decorPack(decor,W,H),
       ]};
   },
   jardin_exterior: (decor="jardin") => {
-    const W=38,H=24;
-    const mesas=mesasRedondas([[7,12],[12,10],[17,12],[22,10],[27,12],[32,14],[8,18],[14,18],[20,18],[26,18]],1);
+    // Jardín: ceremonia al fondo, cocktail/living en lateral, recepción abierta abajo.
+    // La pista no corta el camino ceremonial ni bloquea el altar.
+    const W=42,H=28;
+    const mesas=mesasRedondas([
+      [7.5,15.0],[12.5,14.0],[29.5,14.0],[34.5,15.0],
+      [7.5,21.0],[13.5,22.0],[20.5,22.2],[28.5,22.0],[34.5,21.0]
+    ],1);
     return {salonW:W,salonH:H,salonShape:"oval",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
       elementos:[
-        elem("altar-1","altar",15.5,1.0,7,2.6), elem("camino-1","camino",18.4,3.4,1.2,6.5),
-        elem("sillascer-1","sillas_cer",13.5,3.8,9,4.2), elem("musicos-1","musicos",24.0,3.0,3,1.4),
-        elem("pista-1","pista",16,12.2,7,6), elem("novios-1","novios",15.8,9.6,6.2,1.0),
-        elem("bar-1","bar",31.8,5.8,3.4,2), elem("postres-1","postres",30.8,9.2,3.6,1.4),
-        elem("torta-1","torta",12.5,12.4,2.6,1.4), elem("living-1","living",2.0,16.5,3.8,2.2),
-        elem("bienvenida-1","bienvenida",17.5,22.4,3.2,1.0), elem("photobooth-1","photobooth",2.0,10.0,3,2),
-        elem("catering-1","catering",1.4,20.0,3.8,2), elem("banios-1","banios",33.8,20.0,3,2.2),
+        elem("altar-1","altar",15.5,1.0,11.0,2.6),
+        elem("camino-1","camino",20.4,3.8,1.2,7.0),
+        elem("sillascer-1","sillas_cer",13.4,4.5,14.2,5.0),
+        elem("musicos-1","musicos",28.8,3.7,3,1.4),
+        elem("novios-1","novios",16.2,11.0,9.2,1.0),
+        elem("pista-1","pista",16.5,15.5,9.0,6.2),
+        elem("escenario-1","escenario",17.4,12.4,7.2,2.1),
+        elem("bar-1","bar",36.0,8.7,3.4,2.4),
+        elem("postres-1","postres",35.8,12.0,3.6,1.4),
+        elem("torta-1","torta",11.6,15.5,2.6,1.4),
+        elem("living-1","living",2.0,17.2,3.8,2.2),
+        elem("bienvenida-1","bienvenida",18.8,26.4,3.2,1.0),
+        elem("photobooth-1","photobooth",2.0,11.5,3,2),
+        elem("catering-1","catering",1.4,24.2,3.8,2),
+        elem("banios-1","banios",37.2,24.0,3,2.2),
         ...decorPack(decor,W,H),
       ]};
   },
   moderno_minimalista: (decor="minimalista") => {
-    const W=36,H=20;
-    const mesas=[mesa(1,8,5,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(2,8,11,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(3,8,17,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(4,27,5,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(5,27,11,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"}),mesa(6,27,17,"rect_h",{cap:16,ew:5.4,eh:0.9,miraSide:"both"})];
+    // Moderno/family style: mesas imperiales/rectangulares en laterales,
+    // pasillo central limpio y pista como zona social, no como obstáculo.
+    const W=40,H=23;
+    const mesas=[
+      mesa(1,7.0,7.0,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
+      mesa(2,11.5,7.0,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
+      mesa(3,7.0,15.5,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
+      mesa(4,11.5,15.5,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
+      mesa(5,32.5,7.0,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
+      mesa(6,32.5,15.5,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
+    ];
     return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"cantine",estiloDecor:decor,mesas,
-      elementos:[elem("pista-1","pista",14,7,8,6),elem("novios-1","novios",14.6,1.4,6.8,1),elem("escenario-1","escenario",23.4,8.5,3.8,2.2),elem("bar-1","bar",30.8,2.2,3.6,2),elem("torta-1","torta",2.0,7.2,2.5,1.4),elem("postres-1","postres",2.0,10.6,3.3,1.3),elem("bienvenida-1","bienvenida",16.4,18.7,3.2,1.0),elem("banios-1","banios",31.8,16.5,3,2.2),elem("cocina-1","cocina",1.0,16.5,4,2.7),...decorPack(decor,W,H)]};
+      elementos:[
+        elem("novios-1","novios",15.4,2.0,9.2,1),
+        elem("pista-1","pista",15.0,8.4,10.0,6.4),
+        elem("escenario-1","escenario",15.8,5.2,8.4,2.2),
+        elem("bar-1","bar",35.4,3.0,3.2,2.6),
+        elem("torta-1","torta",2.0,10.0,2.5,1.4),
+        elem("postres-1","postres",2.0,13.4,3.3,1.3),
+        elem("bienvenida-1","bienvenida",18.4,21.8,3.2,1.0),
+        elem("banios-1","banios",35.8,19.2,3,2.2),
+        elem("cocina-1","cocina",1.0,19.0,4,2.7),
+        ...decorPack(decor,W,H)
+      ]};
   },
   fiesta_pista: (decor="fiesta_nocturna") => {
-    const W=40,H=22;
-    const mesas=mesasRedondas([[5.5,5],[10,4],[30,4],[34.5,5],[5.5,17],[10,18],[30,18],[34.5,17],[5.5,11],[34.5,11]],1);
+    // Fiesta: pista grande y central, DJ pegado a pista, barra accesible pero sin invadirla.
+    // Mesas quedan en perímetro para no romper la energía de baile.
+    const W=44,H=26;
+    const mesas=mesasRedondas([
+      [7.0,6.0],[12.0,5.4],[32.0,5.4],[37.0,6.0],
+      [7.0,20.0],[12.0,20.8],[32.0,20.8],[37.0,20.0],
+      [6.6,13.2],[37.4,13.2]
+    ],1);
     return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
-      elementos:[elem("pista-1","pista",13,5.2,14,11),elem("escenario-1","escenario",15.5,1.1,9,2.4),elem("novios-1","novios",16.4,18.8,7.2,1),elem("bar-1","bar",29.5,9.0,4.6,2),elem("bebidas-1","bebidas",29.8,11.5,3.2,1.3),elem("cabina360-1","cabina360",1.4,9.4,2.6,2.6),elem("photobooth-1","photobooth",1.2,13.0,3,2),elem("torta-1","torta",11.0,16.8,2.6,1.4),elem("postres-1","postres",24.5,16.8,3.6,1.4),elem("bienvenida-1","bienvenida",18.4,20.6,3.2,1.0),elem("banios-1","banios",35.8,18.5,3,2.2),elem("cocina-1","cocina",1.0,18.5,4,2.7),...decorPack(decor,W,H)]};
+      elementos:[
+        elem("pista-1","pista",13.0,7.0,18.0,11.0),
+        elem("escenario-1","escenario",15.0,3.0,14.0,2.4),
+        elem("novios-1","novios",16.2,21.7,11.6,1),
+        elem("bar-1","bar",33.8,10.0,4.4,2.4),
+        elem("bebidas-1","bebidas",33.8,13.1,3.2,1.3),
+        elem("cabina360-1","cabina360",2.0,11.0,2.6,2.6),
+        elem("photobooth-1","photobooth",2.0,15.0,3,2),
+        elem("torta-1","torta",9.8,19.0,2.6,1.4),
+        elem("postres-1","postres",28.8,19.0,3.6,1.4),
+        elem("bienvenida-1","bienvenida",20.2,24.5,3.2,1.0),
+        elem("banios-1","banios",39.2,22.8,3,2.2),
+        elem("cocina-1","cocina",1.0,22.6,4,2.7),
+        ...decorPack(decor,W,H)
+      ]};
   },
   ceremonia_fiesta: (decor="romantico_floral") => {
-    const W=42,H=26;
-    const mesas=mesasRedondas([[6,15],[11,15],[31,15],[36,15],[6,21],[12,21],[18,21],[24,21],[30,21],[36,21]],1);
+    // Ceremonia + fiesta: dos zonas claras. La ceremonia vive arriba; la fiesta abajo.
+    // No se ponen mesas pegadas al altar ni cerca del camino central.
+    const W=46,H=31;
+    const mesas=mesasRedondas([
+      [7.5,18.0],[12.5,18.2],[33.5,18.2],[38.5,18.0],
+      [7.5,25.0],[13.5,26.0],[20.5,26.2],[27.5,26.0],[33.5,26.0],[38.5,25.0]
+    ],1);
     return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
-      elementos:[elem("altar-1","altar",16.0,1.0,10,2.6),elem("camino-1","camino",20.4,3.8,1.2,7.0),elem("sillascer-1","sillas_cer",14.0,4.3,14,5.0),elem("musicos-1","musicos",29.4,3.5,3,1.4),elem("pista-1","pista",16.0,12.5,10,6.5),elem("novios-1","novios",17.0,10.2,8.0,1.0),elem("escenario-1","escenario",27.4,13.4,4.2,2.2),elem("bar-1","bar",35.8,8.5,4,2),elem("postres-1","postres",35.2,11.5,3.6,1.4),elem("torta-1","torta",11.2,12.5,2.6,1.4),elem("bienvenida-1","bienvenida",19.4,24.5,3.2,1.0),elem("photobooth-1","photobooth",2.0,10.5,3,2),elem("banios-1","banios",37.8,22.5,3,2.2),elem("cocina-1","cocina",1.0,22.2,4,2.7),...decorPack(decor,W,H)]};
+      elementos:[
+        elem("altar-1","altar",16.0,1.0,14.0,2.6),
+        elem("camino-1","camino",22.4,4.0,1.2,7.2),
+        elem("sillascer-1","sillas_cer",14.2,4.6,17.6,5.2),
+        elem("musicos-1","musicos",32.8,3.8,3,1.4),
+        elem("novios-1","novios",18.0,12.0,10.0,1.0),
+        elem("pista-1","pista",17.0,15.3,12.0,7.0),
+        elem("escenario-1","escenario",18.2,12.9,9.6,2.0),
+        elem("bar-1","bar",39.0,10.0,4,2.2),
+        elem("postres-1","postres",39.0,13.0,3.6,1.4),
+        elem("torta-1","torta",11.0,15.2,2.6,1.4),
+        elem("bienvenida-1","bienvenida",21.4,29.4,3.2,1.0),
+        elem("photobooth-1","photobooth",2.0,13.0,3,2),
+        elem("banios-1","banios",41.0,27.6,3,2.2),
+        elem("cocina-1","cocina",1.0,27.3,4,2.7),
+        ...decorPack(decor,W,H)
+      ]};
   },
   desde_cero: (decor="romantico_floral") => ({salonW:30,salonH:18,salonShape:"rectangulo",estiloDistrib:"banquet",estiloDecor:decor,mesas:[],elementos:[]}),
 };
@@ -4563,7 +4661,7 @@ const SALON_PRESETS = [
   {id:"clasico_elegante", emoji:"💍", label:"Clásico elegante", desc:"Pista central, presidencial, torta, mesa dulce y barra"},
   {id:"rectangular", emoji:"🏛️", label:"Salón rectangular", desc:"Ideal para espacios largos con circulación lateral"},
   {id:"jardin_exterior", emoji:"🌳", label:"Jardín / exterior", desc:"Ceremonia, cocktail, livings y mesas abiertas"},
-  {id:"moderno_minimalista", emoji:"◻️", label:"Moderno minimalista", desc:"Mesas largas, pocos elementos y diseño limpio"},
+  {id:"moderno_minimalista", emoji:"◻️", label:"Moderno minimalista", desc:"Mesas imperiales, pocos elementos y diseño limpio"},
   {id:"fiesta_pista", emoji:"🎧", label:"Fiesta / pista protagonista", desc:"Pista grande, DJ, barra y cabina 360"},
   {id:"ceremonia_fiesta", emoji:"🌸", label:"Ceremonia + fiesta", desc:"Altar, sillas, camino y salón en un mismo plano"},
   {id:"desde_cero", emoji:"＋", label:"Crear desde cero", desc:"Limpia el canvas y deja el salón vacío"},
@@ -4586,7 +4684,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const [zoom, setZoom]           = useState(1);
   const [mesas, setMesas]         = useState(()=> (S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas);
   const [elementos, setElementos] = useState(()=> (S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos);
-  const [estiloDistrib, setEstiloDistrib] = useState(S0?.estiloDistrib ?? M0.estiloDistrib ?? "banquet");
+  const [estiloDistrib, setEstiloDistrib] = useState(NORMALIZE_DISTRIB(S0?.estiloDistrib ?? M0.estiloDistrib ?? "banquet"));
   const [estiloDecor, setEstiloDecor] = useState(S0?.estiloDecor ?? M0.estiloDecor ?? "romantico_floral");
 
   // Guardado dual: localStorage (instantáneo, por dispositivo) + Supabase (sincronizado).
@@ -4632,7 +4730,7 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
           if(L.salonW) setSalonW(L.salonW);
           if(L.salonH) setSalonH(L.salonH);
           if(L.salonShape) setSalonShape(L.salonShape);
-          if(L.estiloDistrib) setEstiloDistrib(L.estiloDistrib);
+          if(L.estiloDistrib) setEstiloDistrib(NORMALIZE_DISTRIB(L.estiloDistrib));
           if(L.estiloDecor) setEstiloDecor(L.estiloDecor);
           if(Array.isArray(L.elementos)) setElementos(L.elementos);
           if(Array.isArray(L.mesas)&&L.mesas.length>0){
@@ -4748,18 +4846,82 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const salonMuyChico= totalInvWarn>0&&totalInvWarn>capacidadMax*1.3;
 
   // ── Fit to screen ──
+  // Reglas expertas de layout:
+  // - La pista queda libre y con aire alrededor.
+  // - DJ/escenario no debe quedar tapado por mesas.
+  // - Baños, cocina, entrada y salidas necesitan pasillos despejados.
+  // - Barras, buffet y estaciones generan fila: se les deja un colchón menor.
+  // Este sanitizador se aplica a plantillas y a “Distribuir mesas”, para que
+  // ninguna opción automática produzca ubicaciones sin sentido.
+  const mesaDimensiones=(m={})=>{
+    const tipo=m.tipo||"round";
+    if(tipo==="round") return {w:m.ew||MESA_R_M*2,h:m.eh||MESA_R_M*2};
+    if(tipo==="square") return {w:m.ew||2.0,h:m.eh||2.0};
+    if(tipo==="rect_h") return {w:m.ew||5.4,h:m.eh||0.9};
+    if(tipo==="rect_v") return {w:m.ew||0.9,h:m.eh||5.4};
+    if(tipo==="imperial") return {w:m.ew||8.4,h:m.eh||1.1};
+    return {w:m.ew||MESA_R_M*2,h:m.eh||MESA_R_M*2};
+  };
+  const mesaBox=(m)=>{const d=mesaDimensiones(m);return{x1:m.mx-d.w/2,y1:m.my-d.h/2,x2:m.mx+d.w/2,y2:m.my+d.h/2,w:d.w,h:d.h};};
+  const elemBox=(el)=>({x1:el.mx,y1:el.my,x2:el.mx+(el.ew||3),y2:el.my+(el.eh||2),w:el.ew||3,h:el.eh||2,tipo:el.tipo});
+  const expandBox=(b,g)=>({x1:b.x1-g,y1:b.y1-g,x2:b.x2+g,y2:b.y2+g});
+  const boxesHit=(a,b)=>a.x1<b.x2&&a.x2>b.x1&&a.y1<b.y2&&a.y2>b.y1;
+  const noGoMargin=(tipo)=>({
+    // Márgenes pensados como “zonas de circulación” para que los presets se comporten
+    // como un plano real de boda: pista libre, DJ visible, baños/cocina sin mesas encima,
+    // y barras/buffet con espacio para filas.
+    pista:1.55, escenario:2.35, banios:3.00, cocina:2.60, catering:2.10,
+    entrada:2.00, salida:2.00, emergencia:2.20, bar:1.55, buffet:1.60,
+    cafeteria:1.20, bebidas:1.20, torta:0.95, postres:1.05, photobooth:1.00,
+    cabina360:1.15, altar:1.35, camino:1.00, sillas_cer:0.95, musicos:1.15,
+    living:0.65, exterior:0.55, guardarropa:1.15, proveedores:1.10, mozos:1.10,
+  }[tipo] ?? 0);
+  const sanitizarMesasConZonas=(listaMesas=[], listaElementos=[], W=salonW, H=salonH)=>{
+    const elementosClave=(listaElementos||[]).filter(el=>noGoMargin(el.tipo)>0);
+    const zonasProhibidas=elementosClave.map(el=>expandBox(elemBox(el),noGoMargin(el.tipo)));
+    const clampMesa=(m)=>{
+      const d=mesaDimensiones(m);
+      return {...m,mx:Math.max(d.w/2+0.25,Math.min(W-d.w/2-0.25,m.mx)),my:Math.max(d.h/2+0.25,Math.min(H-d.h/2-0.25,m.my))};
+    };
+    const segura=(m,puestas=[])=>{
+      const b=mesaBox(m);
+      if(b.x1<0.2||b.y1<0.2||b.x2>W-0.2||b.y2>H-0.2) return false;
+      if(zonasProhibidas.some(z=>boxesHit(b,z))) return false;
+      const mesaConAire=expandBox(b,0.45);
+      return !puestas.some(pm=>boxesHit(mesaConAire,expandBox(mesaBox(pm),0.20)));
+    };
+    const candidatosPara=(m)=>{
+      const d=mesaDimensiones(m);
+      const xs=[],ys=[], step=0.7;
+      for(let x=d.w/2+0.5;x<=W-d.w/2-0.5;x+=step) xs.push(+x.toFixed(2));
+      for(let y=d.h/2+0.5;y<=H-d.h/2-0.5;y+=step) ys.push(+y.toFixed(2));
+      const cand=[];
+      for(const y of ys) for(const x of xs) cand.push({...m,mx:x,my:y});
+      return cand.sort((a,b)=>Math.hypot(a.mx-m.mx,a.my-m.my)-Math.hypot(b.mx-m.mx,b.my-m.my));
+    };
+    const puestas=[];
+    for(const original of (listaMesas||[])){
+      const base=clampMesa(original);
+      if(segura(base,puestas)){puestas.push(base);continue;}
+      const mejor=candidatosPara(base).find(c=>segura(c,puestas));
+      puestas.push(mejor||base);
+    }
+    return puestas.map(m=>({ ...m, mx:+m.mx.toFixed(2), my:+m.my.toFixed(2) }));
+  };
+
   // Aplicar el plano modelo (reemplaza el plano actual; las asignaciones
   // de invitados a mesas 1-15 se conservan por número)
   const aplicarPreset=(presetId, opts={})=>{
     const builder=PRESET_BUILDERS[presetId] || PRESET_BUILDERS.clasico_elegante;
     const P=builder(estiloDecor);
+    P.mesas = sanitizarMesasConZonas(P.mesas||[], P.elementos||[], P.salonW, P.salonH);
     const hayLayout=(mesas&&mesas.length>0)||(elementos&&elementos.length>0);
     if(!opts.skipConfirm&&hayLayout&&typeof window!=="undefined"){
       const ok=window.confirm("Esto reemplaza la disposición actual del salón, pero conserva los invitados asignados por número de mesa. ¿Querés continuar?");
       if(!ok) return;
     }
     setSalonW(P.salonW); setSalonH(P.salonH); setSalonShape(P.salonShape);
-    setEstiloDistrib(P.estiloDistrib||"banquet"); setEstiloDecor(P.estiloDecor||estiloDecor);
+    setEstiloDistrib(NORMALIZE_DISTRIB(P.estiloDistrib||"banquet")); setEstiloDecor(P.estiloDecor||estiloDecor);
     setMesas(P.mesas||[]); setElementos(P.elementos||[]);
     setSelectedMesa(null); setSelectedElem(null); setSelectedGuestForAssign(null);
     setShowPresetMenu(false); setShowShapeMenu(false); setShowElemMenu(false);
@@ -5118,11 +5280,10 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       });
 
     // ══════════════════════════════════════════════════════════════
-    // CABARET
+    // CENA SHOW / ESCENARIO
     // [mesa larga novios arriba]
-    // [fila 1: 2 mesas centradas]
-    // [fila 2: 3 mesas]
-    // [fila 3: 4 mesas]  etc.
+    // Mesas en filas abiertas, orientadas visualmente hacia escenario/DJ.
+    // Útil cuando hay show, banda, discursos o pantalla protagonista.
     // ══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="cabaret"){
       const novW=Math.min(W*0.4,6), novH=MW;
@@ -5149,10 +5310,10 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       pos=allPts.slice(0,N);
 
     // ══════════════════════════════════════════════════════════════
-    // CANTINE
+    // IMPERIAL ELEGANTE
     // [mesa larga novios arriba]
-    // [4 columnas de mesas largas verticales]
-    // Sillas a ambos lados de cada mesa larga
+    // Mesas rectangulares/imperiales en columnas con pasillos claros.
+    // Útil para boda moderna, minimalista o cena formal.
     // ══════════════════════════════════════════════════════════════
     } else if(estiloDistrib==="cantine"){
       const novW=Math.min(W*0.4,6), novH=MW;
@@ -5258,10 +5419,14 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       miraSide: pos[i]?.miraSide,
     }));
 
-    setMesas(nuevasMesas);
-    // Distribuir mesas no debe borrar la decoración agregada a mano ni la de una plantilla.
+    // Distribuir mesas no debe borrar la decoración agregada a mano ni la de una plantilla,
+    // pero sí debe respetar zonas sensibles ya existentes: pista, DJ, baños, cocina, entradas.
     const reemplazables=new Set(["novios","pista","escenario"]);
-    setElementos(actual=>[...elems,...(actual||[]).filter(el=>!reemplazables.has(el.tipo))]);
+    setElementos(actual=>{
+      const finalElementos=[...elems,...(actual||[]).filter(el=>!reemplazables.has(el.tipo))];
+      setMesas(sanitizarMesasConZonas(nuevasMesas, finalElementos, W, H));
+      return finalElementos;
+    });
     setTimeout(fitToScreen,50);
   };
 
@@ -5495,19 +5660,19 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       <div style={{display:"flex",gap:5,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none",flexShrink:0}}>
         {/* Plantillas prediseñadas */}
         <div style={{position:"relative"}}>
-          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Plantillas ▾</button>
+          <button title="Plantillas de salón: cargan una propuesta completa de layout + decoración" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Plantillas ▾</button>
         </div>
         {/* Agregar elemento */}
         <div style={{position:"relative"}}>
-          <button onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);setShowPresetMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
+          <button title="Agregar elemento puntual sin reemplazar la plantilla" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);setShowPresetMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
         </div>
         <button onClick={addMesa} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:9,padding:"9px 14px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:600,cursor:"pointer"}}>+ Mesa</button>
-        {/* Estilo + Distribuir */}
+        {/* Distribución de mesas: complementa la plantilla sin borrar decoración */}
         <div style={{display:"flex",border:"1px solid rgba(201,169,110,.4)",borderRadius:7,overflow:"hidden"}}>
-          <select value={estiloDistrib} onChange={e=>setEstiloDistrib(e.target.value)} style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",padding:"9px 8px",minHeight:40,border:"none",background:"rgba(201,169,110,.08)",color:"rgba(139,107,40,.9)",cursor:"pointer",outline:"none"}}>
+          <select value={estiloDistrib} onChange={e=>setEstiloDistrib(NORMALIZE_DISTRIB(e.target.value))} title="Distribución de mesas: reordena solo las mesas y conserva la decoración de la plantilla" style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",padding:"9px 8px",minHeight:40,border:"none",background:"rgba(201,169,110,.08)",color:"rgba(139,107,40,.9)",cursor:"pointer",outline:"none"}}>
             {ESTILOS_DISTRIB.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
           </select>
-          <button onClick={autoDistribuir} style={{background:"rgba(201,169,110,.15)",border:"none",borderLeft:"1px solid rgba(201,169,110,.3)",padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.95)",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Distribuir</button>
+          <button onClick={autoDistribuir} style={{background:"rgba(201,169,110,.15)",border:"none",borderLeft:"1px solid rgba(201,169,110,.3)",padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.95)",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Distribuir mesas</button>
         </div>
         <button onClick={sentarPorProtocolo} title="Sienta a los invitados según protocolo: familia directa cerca de los novios, amigos cerca de la pista, niños juntos cerca de la entrada" style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.3)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>👨‍👩‍👧 Sentar por protocolo</button>
         {prevAsignacion&&<button onClick={()=>{if(onAssignMany){onAssignMany(prevAsignacion);}setPrevAsignacion(null);}} title="Volver a la asignación de mesas anterior" style={{background:"transparent",border:"1px solid rgba(139,107,40,.4)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.9)",cursor:"pointer",whiteSpace:"nowrap"}}>↩ Deshacer</button>}
