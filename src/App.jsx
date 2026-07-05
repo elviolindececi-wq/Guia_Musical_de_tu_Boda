@@ -4573,6 +4573,7 @@ const ELEMENTOS_FIJOS = [
   {id:"regalos",      label:"Mesa regalos",       emoji:"🎁", color:"#8B6F93", w:2.6, h:1.4},
   {id:"photobooth",   label:"Photobooth",         emoji:"📸", color:"#6E6A8C", w:3,   h:2},
   {id:"cabina360",    label:"Cabina 360",         emoji:"🎥", color:"#6E6A8C", w:2.6, h:2.6},
+  {id:"activacion",    label:"Activación",         emoji:"✨", color:"#9A7B45", w:4.0, h:2.5},
   {id:"arco",         label:"Arco floral",        emoji:"🌸", color:"#8C5E7A", w:3.6, h:0.7},
   {id:"flores",       label:"Flores",             emoji:"💐", color:"#8C5E7A", w:1.3, h:1.3},
   {id:"centro_floral",label:"Centro floral",      emoji:"🌷", color:"#9A765E", w:1.6, h:1.6},
@@ -4799,183 +4800,2837 @@ const decorPackShape = (style, W, H, shape="rectangulo") => {
 
 const mesasRedondas = (coords, offset=1) => coords.map(([mx,my],i)=>mesa(i+offset,mx,my,"round",{cap:10}));
 
-const PRESET_BUILDERS = {
-  clasico_elegante: (decor="romantico_floral") => {
-    // Clásico: pista al centro como corazón del evento, DJ enfrentado a la pista,
-    // mesa de novios con visual limpia, mesas en perímetro y servicios en esquinas.
-    const W=44, H=24;
-    const mesas=mesasRedondas([
-      [9,7.2],[9,12.0],[9,16.8],
-      [14,5.6],[14,18.4],
-      [30,5.6],[30,18.4],
-      [35,7.2],[35,12.0],[35,16.8],
-      [20,20.4],[24,20.4]
-    ],1);
-    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
-      elementos:[
-        elem("pista-1","pista",17.0,8.0,10.0,7.2),
-        elem("escenario-1","escenario",17.8,4.3,8.4,2.4),
-        elem("novios-1","novios",17.2,16.4,9.6,1.0),
-        elem("torta-1","torta",12.0,7.0,2.6,1.5),
-        elem("postres-1","postres",11.4,14.2,3.6,1.4),
-        elem("bar-1","bar",38.7,8.3,3.2,3.6),
-        elem("cafeteria-1","cafeteria",38.8,14.2,3.0,1.5),
-        elem("bienvenida-1","bienvenida",18.6,22.5,3.2,1.0),
-        elem("regalos-1","regalos",23.4,22.2,2.6,1.4),
-        elem("photobooth-1","photobooth",2.0,9.3,3,2),
-        elem("banios-1","banios",1.0,1.0,3,2.3),
-        elem("cocina-1","cocina",1.0,19.8,4.0,2.8),
-        elem("salida-1","salida",39.8,22.8,3,0.8),
-        ...decorPack(decor,W,H),
-      ]};
+
+// ── Presets reales de boda (canvas normalizado 100 x 100) ────────────────
+// Regla de producto: los elementos fijos NO se recalculan ni se negocian.
+// Entrada, baños, pista, DJ, mesa de novios, barras y buffet quedan exactamente
+// en las coordenadas del preset. Lo único adaptable es cuántas mesas de invitados
+// se muestran, según cantidad de personas y capacidad disponible del patrón.
+const REFERENCE_WEDDING_PRESETS = [
+  {
+    "id": "jardin_romantico_central",
+    "title": "Jardín Romántico Central",
+    "rawTitle": "JARDÍN ROMÁNTICO CENTRAL",
+    "types": [
+      "rectangular",
+      "jardín techado",
+      "carpa blanca",
+      "salón claro"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 10.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 5.0,
+        "w": 28.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 50.0,
+        "y": 23.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 28.0,
+        "h": 22.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 75.0,
+        "y": 15.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 20.0,
+        "y": 22.0,
+        "w": 18.0,
+        "h": 12.0
+      },
+      {
+        "key": "barra_1",
+        "x": 15.0,
+        "y": 50.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 85.0,
+        "y": 33.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 18.0,
+        "y": 78.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 90.0,
+        "y": 88.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 30.0,
+        "y": 36.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2",
+        "x": 42.0,
+        "y": 32.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3",
+        "x": 58.0,
+        "y": 32.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4",
+        "x": 70.0,
+        "y": 36.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5",
+        "x": 28.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6",
+        "x": 42.0,
+        "y": 68.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7",
+        "x": 58.0,
+        "y": 68.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T8",
+        "x": 72.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T9",
+        "x": 28.0,
+        "y": 78.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10",
+        "x": 42.0,
+        "y": 82.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T11",
+        "x": 58.0,
+        "y": 82.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T12",
+        "x": 72.0,
+        "y": 78.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
   },
-  rectangular: (decor="elegante_clasico") => {
-    // Salón largo: eje central despejado; mesas a ambos lados, barra y buffet en perímetro,
-    // baños/cocina en extremos para no contaminar visual ni circulación de cena.
-    const W=52,H=21;
-    const mesas=mesasRedondas([
-      [9,6.0],[14,5.4],[19,6.0],[33,6.0],[38,5.4],[43,6.0],
-      [9,15.5],[14,16.0],[19,15.5],[33,15.5],[38,16.0],[43,15.5]
-    ],1);
-    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"banquet",estiloDecor:decor,mesas,
-      elementos:[
-        elem("entrada-1","entrada",24.5,20.1,3,0.8),
-        elem("bienvenida-1","bienvenida",20.2,19.4,3.2,1.0),
-        elem("pista-1","pista",22.0,7.2,8.0,6.4),
-        elem("escenario-1","escenario",22.2,4.1,7.6,2.4),
-        elem("novios-1","novios",21.5,17.8,9.0,1.0),
-        elem("torta-1","torta",18.2,9.2,2.6,1.4),
-        elem("bar-1","bar",47.0,3.0,3.4,3.4),
-        elem("postres-1","postres",46.8,13.2,3.4,1.4),
-        elem("photobooth-1","photobooth",2.0,8.6,3,2),
-        elem("banios-1","banios",1.0,1.0,3,2.2),
-        elem("cocina-1","cocina",1.0,17.0,4,2.8),
-        elem("salida-1","salida",48.0,20.1,3,0.8),
-        ...decorPack(decor,W,H),
-      ]};
+  {
+    "id": "luxury_ballroom_simetrico",
+    "title": "Luxury Ballroom Simétrico",
+    "rawTitle": "LUXURY BALLROOM SIMÉTRICO",
+    "types": [
+      "ballroom",
+      "hotel",
+      "salón premium rectangular"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 28.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 9.0,
+        "w": 26.0,
+        "h": 7.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 4.0,
+        "w": 34.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 50.0,
+        "y": 22.0,
+        "w": 22.0,
+        "h": 7.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 32.0,
+        "h": 24.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 78.0,
+        "y": 17.0,
+        "w": 12.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_1",
+        "x": 13.0,
+        "y": 42.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_2",
+        "x": 87.0,
+        "y": 42.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 50.0,
+        "y": 82.0,
+        "w": 24.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 15.0,
+        "y": 80.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "lounge",
+        "x": 85.0,
+        "y": 72.0,
+        "w": 18.0,
+        "h": 12.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 25.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2",
+        "x": 38.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3",
+        "x": 62.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4",
+        "x": 75.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5",
+        "x": 22.0,
+        "y": 50.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6",
+        "x": 78.0,
+        "y": 50.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7",
+        "x": 25.0,
+        "y": 70.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T8",
+        "x": 38.0,
+        "y": 72.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T9",
+        "x": 62.0,
+        "y": 72.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10",
+        "x": 75.0,
+        "y": 70.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T11",
+        "x": 15.0,
+        "y": 60.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T12",
+        "x": 85.0,
+        "y": 60.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T13",
+        "x": 15.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T14",
+        "x": 85.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
   },
-  jardin_exterior: (decor="jardin") => {
-    // Jardín: ceremonia al fondo, cocktail/living en lateral, recepción abierta abajo.
-    // La pista no corta el camino ceremonial ni bloquea el altar.
-    const W=42,H=28;
-    const mesas=mesasRedondas([
-      [7.5,15.0],[12.5,14.0],[29.5,14.0],[34.5,15.0],
-      [7.5,21.0],[13.5,22.0],[20.5,22.2],[28.5,22.0],[34.5,21.0]
-    ],1);
-    return {salonW:W,salonH:H,salonShape:"oval",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
-      elementos:[
-        elem("altar-1","altar",15.5,1.0,11.0,2.6),
-        elem("camino-1","camino",20.4,3.8,1.2,7.0),
-        elem("sillascer-1","sillas_cer",13.4,4.5,14.2,5.0),
-        elem("musicos-1","musicos",28.8,3.7,3,1.4),
-        elem("novios-1","novios",16.2,11.0,9.2,1.0),
-        elem("pista-1","pista",16.5,15.5,9.0,6.2),
-        elem("escenario-1","escenario",26.4,16.4,7.2,2.1),
-        elem("bar-1","bar",36.0,8.7,3.4,2.4),
-        elem("postres-1","postres",35.8,12.0,3.6,1.4),
-        elem("torta-1","torta",11.6,15.5,2.6,1.4),
-        elem("living-1","living",2.0,17.2,3.8,2.2),
-        elem("bienvenida-1","bienvenida",18.8,26.4,3.2,1.0),
-        elem("photobooth-1","photobooth",2.0,11.5,3,2),
-        elem("catering-1","catering",1.4,24.2,3.8,2),
-        elem("banios-1","banios",37.2,24.0,3,2.2),
-        ...decorPack(decor,W,H),
-      ]};
+  {
+    "id": "boho_garden_asimetrico",
+    "title": "Boho Garden Asimétrico",
+    "rawTitle": "BOHO GARDEN ASIMÉTRICO",
+    "types": [
+      "jardín",
+      "quinta",
+      "exterior",
+      "carpa relajada"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 35.0,
+        "y": 13.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 35.0,
+        "y": 7.0,
+        "w": 26.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 68.0,
+        "y": 20.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 58.0,
+        "y": 52.0,
+        "w": 28.0,
+        "h": 22.0
+      },
+      {
+        "key": "lounge",
+        "x": 20.0,
+        "y": 42.0,
+        "w": 24.0,
+        "h": 16.0
+      },
+      {
+        "key": "barra_1",
+        "x": 18.0,
+        "y": 78.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 84.0,
+        "y": 38.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 24.0,
+        "y": 62.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 48.0,
+        "y": 22.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "banos",
+        "x": 90.0,
+        "y": 88.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1 redonda",
+        "x": 42.0,
+        "y": 36.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2 redonda",
+        "x": 76.0,
+        "y": 42.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3 redonda",
+        "x": 78.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4 redonda",
+        "x": 44.0,
+        "y": 72.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5 rectangular",
+        "x": 32.0,
+        "y": 28.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T6 rectangular",
+        "x": 72.0,
+        "y": 75.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T7 rectangular",
+        "x": 42.0,
+        "y": 84.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T8 redonda",
+        "x": 28.0,
+        "y": 72.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T9 redonda",
+        "x": 84.0,
+        "y": 25.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10 rectangular",
+        "x": 55.0,
+        "y": 32.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      }
+    ]
   },
-  moderno_minimalista: (decor="minimalista") => {
-    // Moderno/family style: mesas imperiales/rectangulares en laterales,
-    // pasillo central limpio y pista como zona social, no como obstáculo.
-    const W=40,H=23;
-    const mesas=[
-      mesa(1,7.0,7.0,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
-      mesa(2,11.5,7.0,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
-      mesa(3,7.0,15.5,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
-      mesa(4,11.5,15.5,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
-      mesa(5,32.5,7.0,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
-      mesa(6,32.5,15.5,"rect_v",{cap:20,ew:0.9,eh:5.2,miraSide:"both"}),
-    ];
-    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"cantine",estiloDecor:decor,mesas,
-      elementos:[
-        elem("escenario-1","escenario",15.8,5.2,8.4,2.2),
-        elem("pista-1","pista",15.0,8.4,10.0,6.4),
-        elem("novios-1","novios",15.4,17.3,9.2,1),
-        elem("bar-1","bar",35.4,3.0,3.2,2.6),
-        elem("torta-1","torta",2.0,10.0,2.5,1.4),
-        elem("postres-1","postres",2.0,13.4,3.3,1.3),
-        elem("bienvenida-1","bienvenida",18.4,21.8,3.2,1.0),
-        elem("banios-1","banios",35.8,19.2,3,2.2),
-        elem("cocina-1","cocina",1.0,19.0,4,2.7),
-        ...decorPack(decor,W,H)
-      ]};
+  {
+    "id": "minimal_chic_blanco",
+    "title": "Minimal Chic Blanco",
+    "rawTitle": "MINIMAL CHIC BLANCO",
+    "types": [
+      "salón moderno",
+      "loft blanco",
+      "galería contemporánea"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 11.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 6.0,
+        "w": 24.0,
+        "h": 4.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 82.0,
+        "y": 45.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 30.0,
+        "h": 22.0
+      },
+      {
+        "key": "barra_1",
+        "x": 18.0,
+        "y": 78.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 82.0,
+        "y": 25.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 68.0,
+        "y": 16.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 18.0,
+        "y": 28.0,
+        "w": 18.0,
+        "h": 12.0
+      },
+      {
+        "key": "photobooth",
+        "x": 82.0,
+        "y": 76.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 30.0,
+        "y": 32.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T2",
+        "x": 50.0,
+        "y": 32.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T3",
+        "x": 70.0,
+        "y": 32.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T4",
+        "x": 30.0,
+        "y": 70.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T5",
+        "x": 50.0,
+        "y": 70.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T6",
+        "x": 70.0,
+        "y": 70.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T7",
+        "x": 25.0,
+        "y": 50.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T8",
+        "x": 75.0,
+        "y": 60.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      }
+    ]
   },
-  fiesta_pista: (decor="fiesta_nocturna") => {
-    // Fiesta: pista grande y central, DJ pegado a pista, barra accesible pero sin invadirla.
-    // Mesas quedan en perímetro para no romper la energía de baile.
-    const W=44,H=26;
-    const mesas=mesasRedondas([
-      [7.0,6.0],[12.0,5.4],[32.0,5.4],[37.0,6.0],
-      [7.0,20.0],[12.0,20.8],[32.0,20.8],[37.0,20.0],
-      [6.6,13.2],[37.4,13.2]
-    ],1);
-    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
-      elementos:[
-        elem("pista-1","pista",13.0,7.0,18.0,11.0),
-        elem("escenario-1","escenario",15.0,3.0,14.0,2.4),
-        elem("novios-1","novios",16.2,21.7,11.6,1),
-        elem("bar-1","bar",33.8,10.0,4.4,2.4),
-        elem("bebidas-1","bebidas",33.8,13.1,3.2,1.3),
-        elem("cabina360-1","cabina360",2.0,11.0,2.6,2.6),
-        elem("photobooth-1","photobooth",2.0,15.0,3,2),
-        elem("torta-1","torta",9.8,19.0,2.6,1.4),
-        elem("postres-1","postres",28.8,19.0,3.6,1.4),
-        elem("bienvenida-1","bienvenida",20.2,24.5,3.2,1.0),
-        elem("banios-1","banios",39.2,22.8,3,2.2),
-        elem("cocina-1","cocina",1.0,22.6,4,2.7),
-        ...decorPack(decor,W,H)
-      ]};
+  {
+    "id": "mediterraneo_familiar",
+    "title": "Mediterráneo Familiar",
+    "rawTitle": "MEDITERRÁNEO FAMILIAR",
+    "types": [
+      "terraza",
+      "patio",
+      "jardín",
+      "salón abierto"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios_imperial",
+        "x": 50.0,
+        "y": 14.0,
+        "w": 26.0,
+        "h": 7.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 8.0,
+        "w": 30.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 78.0,
+        "y": 48.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 68.0,
+        "y": 58.0,
+        "w": 26.0,
+        "h": 22.0
+      },
+      {
+        "key": "barra_1",
+        "x": 16.0,
+        "y": 62.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 84.0,
+        "y": 25.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 72.0,
+        "y": 18.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 18.0,
+        "y": 28.0,
+        "w": 20.0,
+        "h": 12.0
+      },
+      {
+        "key": "photobooth",
+        "x": 20.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 90.0,
+        "y": 88.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 30.0,
+        "y": 34.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T2",
+        "x": 30.0,
+        "y": 46.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T3",
+        "x": 30.0,
+        "y": 58.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T4",
+        "x": 30.0,
+        "y": 70.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T5",
+        "x": 52.0,
+        "y": 34.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T6",
+        "x": 52.0,
+        "y": 46.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T7",
+        "x": 52.0,
+        "y": 76.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T8",
+        "x": 70.0,
+        "y": 82.0,
+        "w": 22.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      }
+    ]
   },
-  ceremonia_fiesta: (decor="romantico_floral") => {
-    // Ceremonia + fiesta: dos zonas claras. La ceremonia vive arriba; la fiesta abajo.
-    // No se ponen mesas pegadas al altar ni cerca del camino central.
-    const W=46,H=31;
-    const mesas=mesasRedondas([
-      [7.5,18.0],[12.5,18.2],[33.5,18.2],[38.5,18.0],
-      [7.5,25.0],[13.5,26.0],[32.5,26.0],[38.5,25.0]
-    ],1);
-    return {salonW:W,salonH:H,salonShape:"rectangulo",estiloDistrib:"pista_centro",estiloDecor:decor,mesas,
-      elementos:[
-        elem("altar-1","altar",16.0,1.0,14.0,2.6),
-        elem("camino-1","camino",22.4,4.0,1.2,7.2),
-        elem("sillascer-1","sillas_cer",14.2,4.6,17.6,5.2),
-        elem("musicos-1","musicos",32.8,3.8,3,1.4),
-        elem("escenario-1","escenario",18.2,12.9,9.6,2.0),
-        elem("pista-1","pista",17.0,15.3,12.0,7.0),
-        elem("novios-1","novios",18.0,23.1,10.0,1.0),
-        elem("bar-1","bar",39.0,10.0,4,2.2),
-        elem("postres-1","postres",39.0,13.0,3.6,1.4),
-        elem("torta-1","torta",11.0,15.2,2.6,1.4),
-        elem("bienvenida-1","bienvenida",21.4,29.4,3.2,1.0),
-        elem("photobooth-1","photobooth",2.0,13.0,3,2),
-        elem("banios-1","banios",41.0,27.6,3,2.2),
-        elem("cocina-1","cocina",1.0,27.3,4,2.7),
-        ...decorPack(decor,W,H)
-      ]};
+  {
+    "id": "glam_black_gold",
+    "title": "Glam Black & Gold",
+    "rawTitle": "GLAM BLACK & GOLD",
+    "types": [
+      "salón nocturno",
+      "ballroom oscuro",
+      "rooftop premium"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 9.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 4.0,
+        "w": 30.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 50.0,
+        "y": 22.0,
+        "w": 22.0,
+        "h": 8.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 52.0,
+        "w": 34.0,
+        "h": 26.0
+      },
+      {
+        "key": "barra_1",
+        "x": 12.0,
+        "y": 48.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_2",
+        "x": 88.0,
+        "y": 48.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 20.0,
+        "y": 78.0,
+        "w": 22.0,
+        "h": 14.0
+      },
+      {
+        "key": "photobooth",
+        "x": 76.0,
+        "y": 76.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 75.0,
+        "y": 16.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 84.0,
+        "y": 30.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 25.0,
+        "y": 32.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2",
+        "x": 38.0,
+        "y": 34.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3",
+        "x": 62.0,
+        "y": 34.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4",
+        "x": 75.0,
+        "y": 32.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5",
+        "x": 22.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6",
+        "x": 78.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7",
+        "x": 35.0,
+        "y": 78.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T8",
+        "x": 50.0,
+        "y": 82.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T9",
+        "x": 65.0,
+        "y": 78.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10",
+        "x": 16.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T11",
+        "x": 84.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
   },
-  desde_cero: (decor="romantico_floral") => ({salonW:30,salonH:18,salonShape:"rectangulo",estiloDistrib:"banquet",estiloDecor:decor,mesas:[],elementos:[]}),
+  {
+    "id": "rustic_elegance",
+    "title": "Rustic Elegance",
+    "rawTitle": "RUSTIC ELEGANCE",
+    "types": [
+      "estancia",
+      "quincho elegante",
+      "granero chic",
+      "salón de madera"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 12.0,
+        "w": 22.0,
+        "h": 7.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 6.0,
+        "w": 30.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 82.0,
+        "y": 50.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 52.0,
+        "y": 56.0,
+        "w": 28.0,
+        "h": 22.0
+      },
+      {
+        "key": "barra_1",
+        "x": 16.0,
+        "y": 50.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 82.0,
+        "y": 25.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 20.0,
+        "y": 78.0,
+        "w": 20.0,
+        "h": 12.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 68.0,
+        "y": 18.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 78.0,
+        "y": 78.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1 rectangular",
+        "x": 30.0,
+        "y": 34.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T2 rectangular",
+        "x": 52.0,
+        "y": 34.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T3 rectangular",
+        "x": 30.0,
+        "y": 72.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T4 rectangular",
+        "x": 52.0,
+        "y": 78.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T5 redonda",
+        "x": 72.0,
+        "y": 36.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6 redonda",
+        "x": 26.0,
+        "y": 60.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7 redonda",
+        "x": 74.0,
+        "y": 64.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T8 redonda",
+        "x": 40.0,
+        "y": 86.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
+  },
+  {
+    "id": "cabaret_wedding",
+    "title": "Cabaret Wedding",
+    "rawTitle": "CABARET WEDDING",
+    "types": [
+      "salón íntimo",
+      "teatro pequeño",
+      "espacio cerrado con escenario"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 22.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 50.0,
+        "y": 10.0,
+        "w": 30.0,
+        "h": 9.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 30.0,
+        "w": 30.0,
+        "h": 18.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 22.0,
+        "y": 18.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 22.0,
+        "y": 12.0,
+        "w": 20.0,
+        "h": 5.0
+      },
+      {
+        "key": "barra_1",
+        "x": 14.0,
+        "y": 50.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_2",
+        "x": 86.0,
+        "y": 50.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 18.0,
+        "y": 75.0,
+        "w": 18.0,
+        "h": 12.0
+      },
+      {
+        "key": "photobooth",
+        "x": 38.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 78.0,
+        "y": 20.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 82.0,
+        "y": 72.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 28.0,
+        "y": 42.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T2",
+        "x": 42.0,
+        "y": 48.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T3",
+        "x": 58.0,
+        "y": 48.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T4",
+        "x": 72.0,
+        "y": 42.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T5",
+        "x": 28.0,
+        "y": 62.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T6",
+        "x": 42.0,
+        "y": 68.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T7",
+        "x": 58.0,
+        "y": 68.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      },
+      {
+        "label": "T8",
+        "x": 72.0,
+        "y": 62.0,
+        "w": 7.0,
+        "h": 7.0,
+        "type": "round",
+        "cap": 8
+      }
+    ]
+  },
+  {
+    "id": "cocktail_lounge_wedding",
+    "title": "Cocktail Lounge Wedding",
+    "rawTitle": "COCKTAIL LOUNGE WEDDING",
+    "types": [
+      "rooftop",
+      "terraza",
+      "salón moderno",
+      "jardín urbano"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 50.0,
+        "y": 18.0,
+        "w": 20.0,
+        "h": 7.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 48.0,
+        "w": 32.0,
+        "h": 24.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 22.0,
+        "y": 18.0,
+        "w": 14.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge_1",
+        "x": 18.0,
+        "y": 40.0,
+        "w": 22.0,
+        "h": 14.0
+      },
+      {
+        "key": "lounge_2",
+        "x": 78.0,
+        "y": 72.0,
+        "w": 22.0,
+        "h": 14.0
+      },
+      {
+        "key": "barra_1",
+        "x": 20.0,
+        "y": 82.0,
+        "w": 22.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_2",
+        "x": 84.0,
+        "y": 42.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 78.0,
+        "y": 22.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 42.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 66.0,
+        "y": 18.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "H1",
+        "x": 32.0,
+        "y": 32.0,
+        "w": 6.0,
+        "h": 6.0,
+        "type": "square",
+        "cap": 4
+      },
+      {
+        "label": "H2",
+        "x": 68.0,
+        "y": 34.0,
+        "w": 6.0,
+        "h": 6.0,
+        "type": "square",
+        "cap": 4
+      },
+      {
+        "label": "H3",
+        "x": 28.0,
+        "y": 62.0,
+        "w": 6.0,
+        "h": 6.0,
+        "type": "square",
+        "cap": 4
+      },
+      {
+        "label": "H4",
+        "x": 72.0,
+        "y": 58.0,
+        "w": 6.0,
+        "h": 6.0,
+        "type": "square",
+        "cap": 4
+      },
+      {
+        "label": "H5",
+        "x": 42.0,
+        "y": 76.0,
+        "w": 6.0,
+        "h": 6.0,
+        "type": "square",
+        "cap": 4
+      },
+      {
+        "label": "H6",
+        "x": 58.0,
+        "y": 76.0,
+        "w": 6.0,
+        "h": 6.0,
+        "type": "square",
+        "cap": 4
+      }
+    ]
+  },
+  {
+    "id": "classic_family_reception",
+    "title": "Classic Family Reception",
+    "rawTitle": "CLASSIC FAMILY RECEPTION",
+    "types": [
+      "salón tradicional",
+      "club",
+      "hotel",
+      "centro de eventos"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 10.0,
+        "w": 22.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 5.0,
+        "w": 30.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 78.0,
+        "y": 23.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 28.0,
+        "h": 22.0
+      },
+      {
+        "key": "barra_1",
+        "x": 16.0,
+        "y": 58.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 84.0,
+        "y": 58.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 72.0,
+        "y": 15.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 18.0,
+        "y": 26.0,
+        "w": 18.0,
+        "h": 12.0
+      },
+      {
+        "key": "photobooth",
+        "x": 24.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 90.0,
+        "y": 88.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "familia_cercana_1",
+        "x": 34.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "familia_cercana_2",
+        "x": 50.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "familia_cercana_3",
+        "x": 66.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "adultos_mayores_1",
+        "x": 28.0,
+        "y": 70.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "adultos_mayores_2",
+        "x": 42.0,
+        "y": 76.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "amigos_1",
+        "x": 72.0,
+        "y": 42.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "amigos_2",
+        "x": 72.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "amigos_3",
+        "x": 60.0,
+        "y": 76.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "ninos",
+        "x": 28.0,
+        "y": 42.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "invitados_generales_1",
+        "x": 18.0,
+        "y": 48.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "invitados_generales_2",
+        "x": 82.0,
+        "y": 74.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
+  },
+  {
+    "id": "festival_outdoor_wedding",
+    "title": "Festival Outdoor Wedding",
+    "rawTitle": "FESTIVAL OUTDOOR WEDDING",
+    "types": [
+      "campo",
+      "jardín amplio",
+      "quinta",
+      "espacio abierto"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 28.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 50.0,
+        "y": 12.0,
+        "w": 28.0,
+        "h": 9.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 36.0,
+        "w": 34.0,
+        "h": 24.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 22.0,
+        "y": 18.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 22.0,
+        "y": 12.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "barra_1",
+        "x": 16.0,
+        "y": 56.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_2",
+        "x": 84.0,
+        "y": 56.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet_1",
+        "x": 18.0,
+        "y": 78.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet_2",
+        "x": 82.0,
+        "y": 78.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge_1",
+        "x": 20.0,
+        "y": 38.0,
+        "w": 20.0,
+        "h": 12.0
+      },
+      {
+        "key": "lounge_2",
+        "x": 80.0,
+        "y": 38.0,
+        "w": 20.0,
+        "h": 12.0
+      },
+      {
+        "key": "photobooth",
+        "x": 50.0,
+        "y": 78.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 75.0,
+        "y": 20.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1 rectangular",
+        "x": 30.0,
+        "y": 65.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T2 rectangular",
+        "x": 50.0,
+        "y": 68.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T3 rectangular",
+        "x": 70.0,
+        "y": 65.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T4 redonda",
+        "x": 30.0,
+        "y": 84.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5 redonda",
+        "x": 70.0,
+        "y": 84.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6 redonda",
+        "x": 38.0,
+        "y": 52.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7 redonda",
+        "x": 62.0,
+        "y": 52.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
+  },
+  {
+    "id": "garden_tent_formal",
+    "title": "Garden Tent Formal",
+    "rawTitle": "GARDEN TENT FORMAL",
+    "types": [
+      "carpa blanca",
+      "carpa transparente",
+      "jardín formal"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 10.0,
+        "w": 22.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 5.0,
+        "w": 30.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 78.0,
+        "y": 24.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 30.0,
+        "h": 24.0
+      },
+      {
+        "key": "decoracion_aerea_pista",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 34.0,
+        "h": 28.0
+      },
+      {
+        "key": "barra_1",
+        "x": 15.0,
+        "y": 52.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 85.0,
+        "y": 52.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 18.0,
+        "y": 24.0,
+        "w": 20.0,
+        "h": 12.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 70.0,
+        "y": 16.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 22.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 90.0,
+        "y": 88.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 30.0,
+        "y": 32.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2",
+        "x": 44.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3",
+        "x": 62.0,
+        "y": 30.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4",
+        "x": 74.0,
+        "y": 36.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5",
+        "x": 28.0,
+        "y": 64.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6",
+        "x": 42.0,
+        "y": 72.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7",
+        "x": 58.0,
+        "y": 72.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T8",
+        "x": 72.0,
+        "y": 64.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T9",
+        "x": 36.0,
+        "y": 84.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10",
+        "x": 64.0,
+        "y": 84.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
+  },
+  {
+    "id": "urban_industrial",
+    "title": "Urban Industrial",
+    "rawTitle": "URBAN INDUSTRIAL",
+    "types": [
+      "galpón",
+      "loft",
+      "warehouse",
+      "espacio industrial"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 26.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 32.0,
+        "y": 13.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 32.0,
+        "y": 7.0,
+        "w": 26.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 68.0,
+        "y": 18.0,
+        "w": 20.0,
+        "h": 7.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 50.0,
+        "w": 32.0,
+        "h": 24.0
+      },
+      {
+        "key": "barra_1",
+        "x": 14.0,
+        "y": 52.0,
+        "w": 22.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 86.0,
+        "y": 30.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 82.0,
+        "y": 68.0,
+        "w": 22.0,
+        "h": 14.0
+      },
+      {
+        "key": "photobooth",
+        "x": 24.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 50.0,
+        "y": 24.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 28.0,
+        "y": 34.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T2",
+        "x": 50.0,
+        "y": 34.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T3",
+        "x": 72.0,
+        "y": 38.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T4",
+        "x": 28.0,
+        "y": 68.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T5",
+        "x": 50.0,
+        "y": 74.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T6",
+        "x": 70.0,
+        "y": 82.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T7",
+        "x": 22.0,
+        "y": 22.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T8",
+        "x": 78.0,
+        "y": 52.0,
+        "w": 16.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      }
+    ]
+  },
+  {
+    "id": "romantic_circular_flow",
+    "title": "Romantic Circular Flow",
+    "rawTitle": "ROMANTIC CIRCULAR FLOW",
+    "types": [
+      "salón cuadrado",
+      "salón amplio",
+      "espacio con buena centralidad"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 24.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 50.0,
+        "y": 10.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 50.0,
+        "y": 5.0,
+        "w": 28.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 78.0,
+        "y": 24.0,
+        "w": 16.0,
+        "h": 6.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 50.0,
+        "y": 52.0,
+        "w": 28.0,
+        "h": 28.0
+      },
+      {
+        "key": "barra_1",
+        "x": 15.0,
+        "y": 52.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 85.0,
+        "y": 52.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge",
+        "x": 18.0,
+        "y": 24.0,
+        "w": 18.0,
+        "h": 12.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 70.0,
+        "y": 16.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "photobooth",
+        "x": 20.0,
+        "y": 82.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "banos",
+        "x": 90.0,
+        "y": 88.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1",
+        "x": 50.0,
+        "y": 28.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2",
+        "x": 35.0,
+        "y": 34.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3",
+        "x": 65.0,
+        "y": 34.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4",
+        "x": 30.0,
+        "y": 50.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5",
+        "x": 70.0,
+        "y": 50.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6",
+        "x": 35.0,
+        "y": 68.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T7",
+        "x": 65.0,
+        "y": 68.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T8",
+        "x": 50.0,
+        "y": 76.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T9",
+        "x": 25.0,
+        "y": 76.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10",
+        "x": 75.0,
+        "y": 76.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
+  },
+  {
+    "id": "premium_experience_wedding",
+    "title": "Premium Experience Wedding",
+    "rawTitle": "PREMIUM EXPERIENCE WEDDING",
+    "types": [
+      "salón grande",
+      "venue premium",
+      "complejo con varias zonas",
+      "boda de alta producción"
+    ],
+    "elements": [
+      {
+        "key": "entrada",
+        "x": 50.0,
+        "y": 96.0,
+        "w": 30.0,
+        "h": 5.0
+      },
+      {
+        "key": "mesa_novios",
+        "x": 28.0,
+        "y": 14.0,
+        "w": 22.0,
+        "h": 7.0
+      },
+      {
+        "key": "decoracion_principal_back_novios",
+        "x": 28.0,
+        "y": 8.0,
+        "w": 28.0,
+        "h": 5.0
+      },
+      {
+        "key": "dj_escenario",
+        "x": 62.0,
+        "y": 14.0,
+        "w": 24.0,
+        "h": 8.0
+      },
+      {
+        "key": "pista_baile",
+        "x": 58.0,
+        "y": 38.0,
+        "w": 34.0,
+        "h": 26.0
+      },
+      {
+        "key": "barra_1",
+        "x": 15.0,
+        "y": 48.0,
+        "w": 22.0,
+        "h": 6.0
+      },
+      {
+        "key": "barra_2",
+        "x": 88.0,
+        "y": 48.0,
+        "w": 18.0,
+        "h": 6.0
+      },
+      {
+        "key": "buffet",
+        "x": 86.0,
+        "y": 25.0,
+        "w": 20.0,
+        "h": 6.0
+      },
+      {
+        "key": "lounge_after",
+        "x": 50.0,
+        "y": 78.0,
+        "w": 30.0,
+        "h": 16.0
+      },
+      {
+        "key": "photobooth",
+        "x": 18.0,
+        "y": 80.0,
+        "w": 12.0,
+        "h": 8.0
+      },
+      {
+        "key": "mesa_torta",
+        "x": 82.0,
+        "y": 15.0,
+        "w": 10.0,
+        "h": 6.0
+      },
+      {
+        "key": "activacion_experiencia",
+        "x": 22.0,
+        "y": 30.0,
+        "w": 16.0,
+        "h": 10.0
+      },
+      {
+        "key": "banos",
+        "x": 92.0,
+        "y": 90.0,
+        "w": 12.0,
+        "h": 8.0
+      }
+    ],
+    "tables": [
+      {
+        "label": "T1 redonda",
+        "x": 32.0,
+        "y": 42.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T2 redonda",
+        "x": 32.0,
+        "y": 60.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T3 redonda",
+        "x": 48.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T4 redonda",
+        "x": 70.0,
+        "y": 62.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T5 redonda",
+        "x": 78.0,
+        "y": 38.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T6 rectangular",
+        "x": 42.0,
+        "y": 26.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T7 rectangular",
+        "x": 70.0,
+        "y": 76.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T8 rectangular",
+        "x": 30.0,
+        "y": 74.0,
+        "w": 18.0,
+        "h": 6.0,
+        "type": "rect_h",
+        "cap": 18
+      },
+      {
+        "label": "T9 redonda",
+        "x": 58.0,
+        "y": 68.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      },
+      {
+        "label": "T10 redonda",
+        "x": 82.0,
+        "y": 70.0,
+        "w": 8.0,
+        "h": 8.0,
+        "type": "round",
+        "cap": 10
+      }
+    ]
+  }
+];
+
+const PRESET_ELEMENT_TYPE_MAP = {
+  entrada: "entrada",
+  mesa_novios: "novios",
+  mesa_novios_imperial: "novios",
+  pista_baile: "pista",
+  dj_escenario: "escenario",
+  barra_1: "bar",
+  barra_2: "bar",
+  buffet: "buffet",
+  buffet_1: "buffet",
+  buffet_2: "buffet",
+  banos: "banios",
+  photobooth: "photobooth",
+  lounge: "living",
+  lounge_1: "living",
+  lounge_2: "living",
+  lounge_after: "living",
+  mesa_torta: "torta",
+  decoracion_principal_back_novios: "backing",
+  decoracion_aerea_pista: "luces",
+  activacion_experiencia: "activacion",
 };
 
+const humanizePresetKey = (key="") => String(key)
+  .replace(/_/g," ")
+  .replace(/\w/g, c => c.toUpperCase());
+
+const presetElementToCanvas = (p, raw) => {
+  const tipo = PRESET_ELEMENT_TYPE_MAP[raw.key] || PRESET_ELEMENT_TYPE_MAP[String(raw.key).replace(/_\d+$/," ")] || "backing";
+  return elem(
+    `${p.id}-${raw.key}`,
+    tipo,
+    +(raw.x - raw.w/2).toFixed(2),
+    +(raw.y - raw.h/2).toFixed(2),
+    raw.w,
+    raw.h,
+    {
+      locked: true,
+      presetFixed: true,
+      presetKey: raw.key,
+      labelOverride: humanizePresetKey(raw.key),
+    }
+  );
+};
+
+const presetTableToCanvas = (raw, index, tableSize=10) => {
+  const round = raw.type === "round";
+  const cap = round ? tableSize : (raw.cap || tableSize);
+  return mesa(index + 1, raw.x, raw.y, raw.type || "round", {
+    ew: raw.w,
+    eh: raw.h,
+    cap,
+    etiqueta: raw.label && !/^T\d+/i.test(raw.label) && !/^H\d+/i.test(raw.label) ? raw.label.replace(/_/g," ") : "",
+    presetKey: raw.label,
+    presetOrder: index + 1,
+    miraSide: raw.type === "rect_h" || raw.type === "imperial" ? "both" : undefined,
+  });
+};
+
+const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=10) => {
+  const normalized = tablePattern.map((t,i)=>presetTableToCanvas(t,i,tableSize));
+  if(!totalPeople || totalPeople <= 0) return {tables: normalized, overflow:false, seats: normalized.reduce((s,m)=>s+(m.cap||tableSize),0)};
+  let seats = 0;
+  const selected = [];
+  for(const t of normalized) {
+    selected.push(t);
+    seats += t.cap || tableSize;
+    if(seats >= totalPeople) break;
+  }
+  const maxSeats = normalized.reduce((s,m)=>s+(m.cap||tableSize),0);
+  return {tables: selected, overflow: totalPeople > maxSeats, seats: Math.min(seats, maxSeats), maxSeats};
+};
+
+const buildReferenceWeddingPreset = (presetId, totalPeople=0, tableSize=10) => {
+  const p = REFERENCE_WEDDING_PRESETS.find(x=>x.id===presetId) || REFERENCE_WEDDING_PRESETS[0];
+  const picked = selectPresetTablesByGuests(p.tables || [], totalPeople, tableSize || 10);
+  return {
+    salonW: 100,
+    salonH: 100,
+    salonShape: "rectangulo",
+    salonShapeConfig: DEFAULT_SALON_SHAPE_CONFIG,
+    estiloDistrib: p.id,
+    estiloDecor: p.id,
+    presetId: p.id,
+    presetTitle: p.title,
+    overflowTables: picked.overflow,
+    maxPresetSeats: picked.maxSeats || picked.seats || 0,
+    mesas: picked.tables,
+    elementos: (p.elements || []).map(raw=>presetElementToCanvas(p, raw)),
+  };
+};
+
+const PRESET_BUILDERS = Object.fromEntries(
+  REFERENCE_WEDDING_PRESETS.map(p => [p.id, (_decor, totalPeople=0, tableSize=10) => buildReferenceWeddingPreset(p.id, totalPeople, tableSize)])
+);
+PRESET_BUILDERS.desde_cero = () => ({salonW:100,salonH:100,salonShape:"rectangulo",salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,estiloDistrib:"desde_cero",estiloDecor:"desde_cero",mesas:[],elementos:[]});
+
 const SALON_PRESETS = [
-  {id:"clasico_elegante", emoji:"💍", label:"Clásico elegante", desc:"Pista central, presidencial, torta, mesa dulce y barra"},
-  {id:"rectangular", emoji:"🏛️", label:"Salón rectangular", desc:"Espacios largos con pista central, DJ al frente y novios visibles"},
-  {id:"jardin_exterior", emoji:"🌳", label:"Jardín / exterior", desc:"Ceremonia, cocktail, livings y mesas abiertas"},
-  {id:"moderno_minimalista", emoji:"◻️", label:"Moderno minimalista", desc:"Mesas imperiales, pista limpia y mesa de novios sin interferencias"},
-  {id:"fiesta_pista", emoji:"🎧", label:"Fiesta / pista protagonista", desc:"Pista grande, DJ, barra y cabina 360"},
-  {id:"ceremonia_fiesta", emoji:"🌸", label:"Ceremonia + fiesta", desc:"Altar, sillas, camino y salón en un mismo plano"},
+  ...REFERENCE_WEDDING_PRESETS.map((p,idx)=>({
+    id:p.id,
+    emoji:["🌿","🏛️","🌾","◻️","🍋","🖤","🪵","🎭","🍸","👨‍👩‍👧","🎪","🤍","🏙️","⭕","✨"][idx] || "✨",
+    label:p.title,
+    desc:(p.types||[]).slice(0,3).join(" · ") || "Preset real de boda",
+  })),
   {id:"desde_cero", emoji:"＋", label:"Crear desde cero", desc:"Limpia el canvas y deja el salón vacío"},
 ];
 
 // Default actual: preset clásico editable para no arrancar con un salón vacío.
-const SALON_MODELO = () => PRESET_BUILDERS.clasico_elegante("romantico_floral");
+const SALON_MODELO = () => PRESET_BUILDERS.jardin_romantico_central(null, 0, 10);
 
 function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia, onGoDesigner, onGoGuests }){
   // Layout guardado de sesiones anteriores (se lee una sola vez)
@@ -5099,7 +7754,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [showShapeMenu, setShowShapeMenu] = useState(false);
   const [showElemMenu, setShowElemMenu]   = useState(false);
   const [showPresetMenu, setShowPresetMenu] = useState(false);
-  const [selectedSalonType, setSelectedSalonType] = useState("clasico_elegante");
+  const [selectedSalonType, setSelectedSalonType] = useState("jardin_romantico_central");
   const [selectedSalonShape, setSelectedSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
   const [selectedShapeConfig, setSelectedShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
@@ -5581,89 +8236,38 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     }
     return items;
   };
-  const buildCoherentPreset=(presetId,decor,shape,cfgInput)=>{
-    const shapeCfg=normalizeSalonShapeConfig(shape,cfgInput||salonShapeConfig);
-    const W=Math.max(22,Math.min(80,Number(salonW)||44));
-    const H=Math.max(16,Math.min(60,Number(salonH)||28));
-    if(presetId==="desde_cero") return {salonW:W,salonH:H,salonShape:shape||"rectangulo",salonShapeConfig:shapeCfg,estiloDistrib:"desde_cero",estiloDecor:decor,mesas:[],elementos:[]};
-    const rects=salonShapeRects(shape,W,H,shapeCfg).filter(r=>r.area>8);
-    const main=pickMainRect(rects,shape,shapeCfg);
-    const aux=[...rects].filter(r=>r!==main).sort((a,b)=>b.area-a.area);
-    const placed=[];
-    const add=(tipo,id,cands,size={})=>{ const el=placeElementSmart(placed,shape,W,H,shapeCfg,tipo,id,cands,size); placed.push(el); return el; };
-    const fiesta=presetId==="fiesta_pista";
-    const ceremony=presetId==="ceremonia_fiesta"||presetId==="jardin_exterior";
-    const modern=presetId==="moderno_minimalista";
-    const pistaW=Math.min(fiesta?16:modern?10:12, Math.max(7, main.w-4));
-    const pistaH=Math.min(fiesta?8.5:6.8, Math.max(5, main.h*.42));
-    if(ceremony){
-      const cer=aux[0]&&aux[0].area>main.area*.25?aux[0]:main;
-      add("altar","altar-1",[{rect:cer,anchor:"top"}],{ew:Math.min(14,cer.w-3),eh:2.4});
-      add("camino","camino-1",[{rect:cer,anchor:"center"}],{ew:1.2,eh:Math.min(6.5,cer.h*.45)});
-      add("sillas_cer","sillascer-1",[{rect:cer,anchor:"center"}],{ew:Math.min(16,cer.w-4),eh:Math.min(4.8,cer.h*.32)});
-    }
-    const pista=add("pista","pista-1",[{rect:main,anchor:ceremony?"bottom":"center"}],{ew:pistaW,eh:pistaH});
-    const pb=elBox(pista);
-    // Escenario/DJ siempre pegado a la pista pero nunca con la mesa de novios detrás.
-    const above={x:pb.x1+(pb.w-Math.min(10,pb.w*.95))/2,y:pb.y1-2.8};
-    const below={x:pb.x1+(pb.w-Math.min(10,pb.w*.95))/2,y:pb.y2+.55};
-    const left={x:pb.x1-7.4,y:pb.y1+(pb.h-2.3)/2};
-    const right={x:pb.x2+.55,y:pb.y1+(pb.h-2.3)/2};
-    const stageCandidates=[above,below,left,right].map(p=>({x:p.x,y:p.y}));
-    const stage=add("escenario","escenario-1",stageCandidates,{ew:Math.min(fiesta?13:9,Math.max(7,pistaW*.85)),eh:2.3});
-    const sb=elBox(stage);
-    const stageAbove = sb.y2 <= pb.y1 + .2;
-    const stageBelow = sb.y1 >= pb.y2 - .2;
-    const stageLeft = sb.x2 <= pb.x1 + .2;
-    let noviosCandidates=[];
-    if(stageAbove) noviosCandidates=[{x:pb.x1+(pb.w-11)/2,y:pb.y2+1.0},{rect:main,anchor:"bottom"}];
-    else if(stageBelow) noviosCandidates=[{x:pb.x1+(pb.w-11)/2,y:pb.y1-1.5},{rect:main,anchor:"top"}];
-    else if(stageLeft) noviosCandidates=[{x:pb.x2+1.0,y:pb.y1+(pb.h-1)/2},{rect:main,anchor:"right"}];
-    else noviosCandidates=[{x:pb.x1-12.0,y:pb.y1+(pb.h-1)/2},{rect:main,anchor:"left"}];
-    add("novios","novios-1",noviosCandidates,{ew:Math.min(11,Math.max(8,main.w*.28)),eh:1.0});
-    // Accesos y servicios al perímetro. Baños/cocina se mandan a esquinas opuestas.
-    add("entrada","entrada-1",[{rect:main,anchor:"bottom"},{rect:rects[0],anchor:"bottom"}],{ew:3,eh:.8});
-    add("bienvenida","bienvenida-1",[{rect:main,anchor:"bottomLeft"},{rect:main,anchor:"bottomRight"}],{ew:3.2,eh:1.0});
-    add("banios","banios-1",[{rect:aux[0]||main,anchor:"topRight"},{rect:main,anchor:"topRight"}],{ew:3,eh:2.2});
-    add("cocina","cocina-1",[{rect:aux[1]||aux[0]||main,anchor:"bottomLeft"},{rect:main,anchor:"bottomLeft"}],{ew:4,eh:2.7});
-    add("salida","salida-1",[{rect:main,anchor:"bottomRight"},{rect:main,anchor:"topRight"}],{ew:3,eh:.8});
-    add("bar","bar-1",[{rect:aux[0]||main,anchor:"right"},{rect:main,anchor:"right"},{rect:main,anchor:"topRight"}],{ew:3.8,eh:2.6});
-    if(fiesta) add("bebidas","bebidas-1",[{rect:aux[0]||main,anchor:"bottomRight"},{rect:main,anchor:"right"}],{ew:3.2,eh:1.3});
-    add("torta","torta-1",[{rect:main,anchor:"left"},{rect:main,anchor:"topLeft"}],{ew:2.6,eh:1.4});
-    add("postres","postres-1",[{rect:main,anchor:"bottomLeft"},{rect:main,anchor:"left"}],{ew:3.6,eh:1.4});
-    add(fiesta?"cabina360":"photobooth",fiesta?"cabina360-1":"photobooth-1",[{rect:aux[0]||main,anchor:"bottomRight"},{rect:main,anchor:"bottomRight"}],fiesta?{ew:2.6,eh:2.6}:{ew:3,eh:2});
-    const decorated=[...placed,...decorSmart(decor,shape,W,H,shapeCfg,placed)];
-    const tables=generateTablesSmart(decorated,shape,W,H,shapeCfg,presetId);
-    return {salonW:W,salonH:H,salonShape:shape||"rectangulo",salonShapeConfig:shapeCfg,estiloDistrib:presetId,estiloDecor:decor,mesas:tables,elementos:decorated};
-  };
-
-  // Aplicar el plano modelo (reemplaza el plano actual; las asignaciones
-  // de invitados a mesas se conservan por número)
+  // Aplicar preset real: respeta coordenadas fijas 100x100.
+  // Solo adapta mesas de invitados según cantidad de personas.
   const aplicarPreset=(presetId, opts={})=>{
-    const formaElegida=opts.shape || selectedSalonShape || salonShape;
-    const cfgElegida=normalizeSalonShapeConfig(formaElegida, opts.shapeConfig || selectedShapeConfig || salonShapeConfig);
-    let P=buildCoherentPreset(presetId, estiloDecor, formaElegida, cfgElegida);
-    P.mesas = sanitizarMesasConZonas(P.mesas||[], P.elementos||[], P.salonW, P.salonH, P.salonShape, P.salonShapeConfig);
+    const totalPersonasPreset = totalInvWarn || (guests||[]).reduce((s,g)=>s+(parseInt(g.cantidadInvitados||1)||1),0);
+    let P = presetId === "desde_cero"
+      ? PRESET_BUILDERS.desde_cero()
+      : buildReferenceWeddingPreset(presetId, totalPersonasPreset, tableSize || 10);
+
     const hayLayout=(mesas&&mesas.length>0)||(elementos&&elementos.length>0);
     if(!opts.skipConfirm&&hayLayout&&typeof window!=="undefined"){
-      const ok=window.confirm("Esto reemplaza la disposición actual del salón, pero conserva los invitados asignados por número de mesa. ¿Querés continuar?");
+      const ok=window.confirm("Esto reemplaza el plano actual. Los elementos fijos del preset quedarán bloqueados y solo se adaptarán las mesas según invitados. ¿Querés continuar?");
       if(!ok) return;
     }
+
     setSalonW(P.salonW); setSalonH(P.salonH); setSalonShape(P.salonShape); setSelectedSalonShape(P.salonShape);
-    setSalonShapeConfig(P.salonShapeConfig||cfgElegida); setSelectedShapeConfig(P.salonShapeConfig||cfgElegida);
-    setEstiloDistrib(NORMALIZE_DISTRIB(P.estiloDistrib||"banquet")); setEstiloDecor(P.estiloDecor||estiloDecor);
+    setSalonShapeConfig(P.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG); setSelectedShapeConfig(P.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG);
+    setEstiloDistrib(NORMALIZE_DISTRIB(P.estiloDistrib||presetId)); setEstiloDecor(P.estiloDecor||presetId);
     if(presetId!=="desde_cero") setSelectedSalonType(presetId);
     setMesas(P.mesas||[]); setElementos(P.elementos||[]);
     setSelectedMesa(null); setSelectedElem(null); setSelectedGuestForAssign(null);
     setShowPresetMenu(false); setShowShapeMenu(false); setShowElemMenu(false);
-    const formaLabel=SALON_SHAPES[P.salonShape]?.label||"forma";
-    const tipoLabel=SALON_PRESETS.find(x=>x.id===presetId)?.label||"salón";
-    const decorLabel=DECOR_STYLES.find(x=>x.id===(P.estiloDecor||estiloDecor))?.label||"decoración";
-    if(typeof showToast==="function") showToast(`✓ Diseño aplicado: ${formaLabel} + ${tipoLabel} + ${decorLabel}`,"success",2600);
+
+    const tipoLabel=SALON_PRESETS.find(x=>x.id===presetId)?.label||"preset";
+    if(P.overflowTables && typeof showToast==="function") {
+      showToast(`⚠️ ${tipoLabel}: el preset tiene capacidad máxima aproximada de ${P.maxPresetSeats} personas. No moví elementos fijos ni invadí circulación.`,"error",5200);
+    } else if(typeof showToast==="function") {
+      showToast(`✓ Preset aplicado: ${tipoLabel}. Elementos fijos bloqueados; mesas adaptadas.`,"success",3200);
+    }
     setTimeout(fitToScreen,80);
   };
 
-  const aplicarModelo=()=>aplicarPreset("clasico_elegante");
+  const aplicarModelo=()=>aplicarPreset("jardin_romantico_central",{skipConfirm:true});
 
   const fitToScreen=()=>{
     const el=viewportRef.current; if(!el) return;
@@ -5807,8 +8411,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
     } else if(type==="elem"){
       const item=elementos.find(el=>el.id===id); if(!item) return;
-      setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
       setSelectedElem(id);setSelectedMesa(null);
+      if(item.locked) return;
+      setDragging({type,id,ox:pos.x/PX-item.mx,oy:pos.y/PX-item.my});
     } else if(type==="rotate"){
       // Rotar mesa rectangular
       const item=mesas.find(m=>m.id===id); if(!item) return;
@@ -5816,7 +8421,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       const angle0=item.angle||0;
       setDragging({type:"rotate",id,cx,cy,angle0,startAng:Math.atan2(pos.y-cy,pos.x-cx)});
     } else if(type==="resize"){
-      const item=elementos.find(el=>el.id===id); if(!item) return;
+      const item=elementos.find(el=>el.id===id); if(!item || item.locked) return;
       setDragging({type:"resize",id,ox:pos.x,oy:pos.y,ew0:item.ew,eh0:item.eh});
     } else if(type==="resizeM"){
       const item=mesas.find(m=>m.id===id); if(!item) return;
@@ -6397,11 +9002,11 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         {isDesignerMode&&<>
           {/* Diseñador de salón: combina tipo de plano + estilo decorativo */}
           <div style={{position:"relative"}}>
-            <button title="Combinar forma del salón + tipo de experiencia + estilo decorativo" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setSelectedSalonShape(salonShape);setSelectedShapeConfig(salonShapeConfig);setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Diseñar salón ▾</button>
+            <button title="Elegir un preset real de boda con coordenadas fijas" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setSelectedSalonShape(salonShape);setSelectedShapeConfig(salonShapeConfig);setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Presets reales ▾</button>
           </div>
           {/* Agregar elemento */}
           <div style={{position:"relative"}}>
-            <button title="Agregar elemento puntual sin reemplazar la plantilla" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);setShowPresetMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
+            <button title="Agregar elemento manual opcional" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setShowElemMenu(s=>!s);setShowShapeMenu(false);setShowPresetMenu(false);}} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.6)",cursor:"pointer"}}>+ Elemento ▾</button>
           </div>
         </>}
         {isGuestMode&&onGoDesigner&&<button onClick={onGoDesigner} title="Ir al módulo de diseño del salón" style={{background:"white",border:"1px solid rgba(26,26,20,.16)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.72)",cursor:"pointer",whiteSpace:"nowrap"}}>🏛️ Diseño del salón</button>}
@@ -6412,68 +9017,24 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       </div>
 
       {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
-      {isDesignerMode&&showPresetMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:14,padding:10,zIndex:320,boxShadow:THEME.shadow.pop,minWidth:300,maxWidth:"min(460px,92vw)",maxHeight:"min(560px,72vh)",overflowY:"auto"}}>
-        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",padding:"5px 8px 8px"}}>Diseño del salón</div>
-        <div style={{display:"grid",gap:8}}>
-          <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
-            Forma del salón
-            <select value={selectedSalonShape} onChange={e=>{setSelectedSalonShape(e.target.value);setSelectedShapeConfig(c=>normalizeSalonShapeConfig(e.target.value,c));}} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
-              {Object.entries(SALON_SHAPES).map(([k,v])=><option key={k} value={k}>🏛️ {v.label}</option>)}
-            </select>
-          </label>
-          {selectedSalonShape==="L"&&<div style={{display:"grid",gap:7,background:"rgba(74,94,58,.045)",border:"1px solid rgba(74,94,58,.10)",borderRadius:10,padding:"9px 10px"}}>
-            <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
-              Tipo de L
-              <select value={normalizeSalonShapeConfig("L",selectedShapeConfig).L.orientation} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("L",c),L:{...normalizeSalonShapeConfig("L",c).L,orientation:e.target.value}}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.84rem)",padding:"9px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.18)",background:"white",outline:"none"}}>
-                {L_SHAPE_OPTIONS.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
-            </label>
-            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
-              Ancho del recorte interior: {Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutW*100)}%
-              <input type="range" min="25" max="65" value={Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutW*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("L",c),L:{...normalizeSalonShapeConfig("L",c).L,cutW:(parseInt(e.target.value)||42)/100}}))}/>
-            </label>
-            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
-              Alto/profundidad del recorte: {Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutH*100)}%
-              <input type="range" min="25" max="65" value={Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutH*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("L",c),L:{...normalizeSalonShapeConfig("L",c).L,cutH:(parseInt(e.target.value)||46)/100}}))}/>
-            </label>
-          </div>}
-          {selectedSalonShape==="U"&&<div style={{display:"grid",gap:7,background:"rgba(74,94,58,.045)",border:"1px solid rgba(74,94,58,.10)",borderRadius:10,padding:"9px 10px"}}>
-            <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
-              Tipo de U
-              <select value={normalizeSalonShapeConfig("U",selectedShapeConfig).U.orientation} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("U",c),U:{...normalizeSalonShapeConfig("U",c).U,orientation:e.target.value}}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.84rem)",padding:"9px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.18)",background:"white",outline:"none"}}>
-                {U_SHAPE_OPTIONS.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
-            </label>
-            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
-              Ancho de la abertura: {Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapW*100)}%
-              <input type="range" min="25" max="58" value={Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapW*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("U",c),U:{...normalizeSalonShapeConfig("U",c).U,gapW:(parseInt(e.target.value)||36)/100}}))}/>
-            </label>
-            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
-              Profundidad de la abertura: {Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapD*100)}%
-              <input type="range" min="28" max="68" value={Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapD*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("U",c),U:{...normalizeSalonShapeConfig("U",c).U,gapD:(parseInt(e.target.value)||55)/100}}))}/>
-            </label>
-          </div>}
-          <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
-            Tipo de experiencia
-            <select value={selectedSalonType} onChange={e=>setSelectedSalonType(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
-              {SALON_PRESETS.filter(pr=>pr.id!=="desde_cero").map(pr=><option key={pr.id} value={pr.id}>{pr.emoji} {pr.label}</option>)}
-            </select>
-          </label>
-          <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
-            Estilo decorativo
-            <select value={estiloDecor} onChange={e=>setEstiloDecor(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
-              {DECOR_STYLES.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}
-            </select>
-          </label>
-        </div>
+      {isDesignerMode&&showPresetMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:14,padding:10,zIndex:320,boxShadow:THEME.shadow.pop,minWidth:320,maxWidth:"min(520px,92vw)",maxHeight:"min(560px,72vh)",overflowY:"auto"}}>
+        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",padding:"5px 8px 8px"}}>Presets reales de boda</div>
+        <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
+          Base de plano
+          <select value={selectedSalonType} onChange={e=>setSelectedSalonType(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
+            {SALON_PRESETS.filter(pr=>pr.id!=="desde_cero").map(pr=><option key={pr.id} value={pr.id}>{pr.emoji} {pr.label}</option>)}
+          </select>
+        </label>
         <div style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.12)",borderRadius:11,padding:"10px 12px",marginTop:10}}>
           <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.62)",lineHeight:1.35}}>
-            Combinación: <strong style={{color:THEME.color.sage}}>{SALON_SHAPES[selectedSalonShape]?.label}</strong> + <strong style={{color:THEME.color.sage}}>{SALON_PRESETS.find(p=>p.id===selectedSalonType)?.label}</strong> + <strong style={{color:"rgba(139,107,40,.95)"}}>{DECOR_STYLES.find(d=>d.id===estiloDecor)?.label}</strong>
+            Preset: <strong style={{color:THEME.color.sage}}>{SALON_PRESETS.find(p=>p.id===selectedSalonType)?.label}</strong>
           </div>
-          <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:3}}>La forma define el contorno; la experiencia ordena pista, novios, DJ y servicios; el estilo suma ambientación. Son 240 combinaciones posibles, todas editables.</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:4}}>
+            Los elementos fijos usan coordenadas cerradas 100×100: entrada, baños, pista, DJ, mesa de novios, barra y buffet no se mueven. La app solo agrega o quita mesas siguiendo el patrón del preset según cantidad de invitados.
+          </div>
         </div>
-        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType,{shape:selectedSalonShape,shapeConfig:selectedShapeConfig})} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Aplicar forma + tipo + estilo</button>
-        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset("desde_cero",{shape:selectedSalonShape,shapeConfig:selectedShapeConfig})} style={{width:"100%",marginTop:7,background:"transparent",border:"1px solid rgba(200,60,60,.22)",borderRadius:10,padding:"10px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(200,60,60,.72)",cursor:"pointer"}}>＋ Crear desde cero</button>
+        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType)} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Aplicar preset real</button>
+        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset("desde_cero")} style={{width:"100%",marginTop:7,background:"transparent",border:"1px solid rgba(200,60,60,.22)",borderRadius:10,padding:"10px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(200,60,60,.72)",cursor:"pointer"}}>＋ Crear desde cero</button>
       </div>}
       {/* La forma ya no tiene menú suelto: se elige dentro de “Diseñar salón”. */}
       {isDesignerMode&&showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:200,maxHeight:"min(340px,50vh)",overflowY:"auto"}}>
@@ -6566,10 +9127,10 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                 onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
                 onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
                 onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,touchAction:"none",boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
+                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:el.locked?"not-allowed":"grab",zIndex:isSel?8:3,touchAction:"none",boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
                 <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
                 {elH>20&&<span style={{fontFamily:THEME.font.label,fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
-                {isSel&&<>
+                {isSel&&!el.locked&&<>
                   <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10}}>×</button>
                   <div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-7,right:-7,width:16,height:16,background:THEME.color.cream,border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <svg width="7" height="7" viewBox="0 0 7 7"><line x1="1" y1="6" x2="6" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3.5" y1="6" x2="6" y2="3.5" stroke={def.color} strokeWidth="1.5"/></svg>
@@ -6667,19 +9228,22 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               <div style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:700,color:THEME.color.ink}}>{def?.emoji} {def?.label||"Elemento"}</div>
               <button onClick={()=>setSelectedElem(null)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1rem",cursor:"pointer",lineHeight:1}}>×</button>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-              <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Medidas</span>
-              <input type="number" step="0.1" min="0.4" key={`ew-${el.id}-${el.ew}`} defaultValue={(el.ew||1).toFixed(1)}
-                onBlur={e=>setElDims(e.target.value,el.eh)} onMouseDown={e=>e.stopPropagation()}
-                style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
-              <span style={{color:"rgba(26,26,20,.35)",fontSize:".75rem"}}>×</span>
-              <input type="number" step="0.1" min="0.4" key={`eh-${el.id}-${el.eh}`} defaultValue={(el.eh||1).toFixed(1)}
-                onBlur={e=>setElDims(el.ew,e.target.value)} onMouseDown={e=>e.stopPropagation()}
-                style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
-              <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>m</span>
-            </div>
-            <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",margin:0,fontStyle:"italic"}}>También podés estirar la esquina ◲ en el plano</p>
-            <button onClick={()=>removeElemento(el.id)} style={{width:"100%",marginTop:10,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"8px",fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>Eliminar elemento</button>
+            {el.locked&&<p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.72)",margin:"0 0 9px",fontStyle:"italic"}}>Elemento fijo del preset: no se mueve ni se redimensiona. Solo las mesas se adaptan a la cantidad de invitados.</p>}
+            {!el.locked&&<>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Medidas</span>
+                <input type="number" step="0.1" min="0.4" key={`ew-${el.id}-${el.ew}`} defaultValue={(el.ew||1).toFixed(1)}
+                  onBlur={e=>setElDims(e.target.value,el.eh)} onMouseDown={e=>e.stopPropagation()}
+                  style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+                <span style={{color:"rgba(26,26,20,.35)",fontSize:".75rem"}}>×</span>
+                <input type="number" step="0.1" min="0.4" key={`eh-${el.id}-${el.eh}`} defaultValue={(el.eh||1).toFixed(1)}
+                  onBlur={e=>setElDims(el.ew,e.target.value)} onMouseDown={e=>e.stopPropagation()}
+                  style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
+                <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>m</span>
+              </div>
+              <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",margin:0,fontStyle:"italic"}}>También podés estirar la esquina ◲ en el plano</p>
+              <button onClick={()=>removeElemento(el.id)} style={{width:"100%",marginTop:10,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"8px",fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>Eliminar elemento</button>
+            </>}
           </div>;
         })()}
 
