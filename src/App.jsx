@@ -4433,47 +4433,54 @@ const elem = (id,tipo,mx,my,ew,eh,extra={}) => ({id,tipo,mx,my,ew,eh,...extra});
 const mesa = (id,mx,my,tipo="round",extra={}) => ({id,mx,my,tipo,cap:extra.cap||10,etiqueta:extra.etiqueta||"",...extra});
 
 const decorPack = (style, W, H) => {
+  // Regla de layout: la decoración nunca debe caer sobre la pista de baile.
+  // Los acentos decorativos se ubican en perímetro, entrada, mesa de novios,
+  // mesa de torta/postres o zonas fotográficas para mantener circulación limpia.
   const packs = {
     romantico_floral: [
-      elem("arco-1","arco",W/2-1.8,1.0,3.6,0.7),
-      elem("flores-1","flores",2.0,2.0,1.3,1.3), elem("flores-2","flores",W-3.3,2.0,1.3,1.3),
-      elem("centrofloral-1","centro_floral",W/2-0.8,H/2-0.8,1.6,1.6),
+      elem("arco-1","arco",W/2-2.0,0.35,4.0,0.7),
+      elem("flores-novios-izq","flores",W/2-5.4,1.05,1.3,1.3),
+      elem("flores-novios-der","flores",W/2+4.1,1.05,1.3,1.3),
+      elem("flores-entrada-izq","flores",W/2-4.2,H-2.0,1.2,1.2),
+      elem("flores-entrada-der","flores",W/2+3.0,H-2.0,1.2,1.2),
     ],
     elegante_clasico: [
-      elem("columnas-1","columnas",2.0,2.0,1.2,1.2), elem("columnas-2","columnas",W-3.2,2.0,1.2,1.2),
-      elem("backing-1","backing",W/2-2.1,0.8,4.2,0.8),
+      elem("columnas-entrada-izq","columnas",W/2-4.6,H-2.0,1.2,1.2),
+      elem("columnas-entrada-der","columnas",W/2+3.4,H-2.0,1.2,1.2),
+      elem("backing-1","backing",W/2-2.1,0.55,4.2,0.8),
     ],
     boho_chic: [
-      elem("alfombra-1","alfombra",W/2-0.6,1.3,1.2,6.2),
-      elem("living-1","living",W-5.2,H-4.0,3.8,2.2),
-      elem("luces-1","luces",W/2-4,H-1.8,8,0.6),
-      elem("flores-1","flores",2.0,H-3.0,1.3,1.3),
+      elem("alfombra-entrada","alfombra",W/2-0.6,H-8.3,1.2,6.6),
+      elem("living-boho","living",W-5.2,H-4.0,3.8,2.2),
+      elem("luces-perimetro","luces",W/2-4,H-1.15,8,0.6),
+      elem("flores-lounge","flores",W-6.2,H-4.8,1.3,1.3),
     ],
     minimalista: [
-      elem("backing-1","backing",W/2-2.1,0.8,4.2,0.8),
-      elem("flores-1","flores",W-3.0,H-3.0,1.1,1.1),
+      elem("backing-1","backing",W/2-2.1,0.55,4.2,0.8),
+      elem("flores-minimal","flores",W-3.0,H-3.0,1.1,1.1),
     ],
     rustico: [
-      elem("exterior-1","exterior",W-6,H-4.2,5,3),
-      elem("luces-1","luces",W/2-4,1.0,8,0.6),
-      elem("living-1","living",1.2,H-4.0,3.8,2.2),
+      elem("exterior-rustico","exterior",W-6,H-4.2,5,3),
+      elem("luces-rusticas","luces",W/2-4,0.55,8,0.6),
+      elem("living-rustico","living",1.2,H-4.0,3.8,2.2),
+      elem("flores-living-rustico","flores",4.6,H-4.4,1.2,1.2),
     ],
     glam_dorado: [
-      elem("backing-1","backing",W/2-2.4,0.7,4.8,0.8),
-      elem("cabina360-1","cabina360",W-4.2,H/2-1.3,2.6,2.6),
-      elem("luces-1","luces",W/2-4,H-1.7,8,0.6),
-      elem("columnas-1","columnas",W/2-3.2,1.8,1.2,1.2), elem("columnas-2","columnas",W/2+2.0,1.8,1.2,1.2),
+      elem("backing-glam","backing",W/2-2.4,0.5,4.8,0.8),
+      elem("luces-glam","luces",W/2-4,H-1.1,8,0.6),
+      elem("columnas-glam-izq","columnas",W/2-4.0,1.55,1.2,1.2),
+      elem("columnas-glam-der","columnas",W/2+2.8,1.55,1.2,1.2),
     ],
     jardin: [
-      elem("arco-1","arco",W/2-2.0,1.0,4.0,0.7),
-      elem("exterior-1","exterior",W-6.0,H-4.0,5,3),
-      elem("luces-1","luces",W/2-5.0,H-1.8,10,0.6),
-      elem("flores-1","flores",2.0,2.0,1.3,1.3), elem("flores-2","flores",W-3.3,2.0,1.3,1.3),
+      elem("arco-jardin","arco",W/2-2.0,0.35,4.0,0.7),
+      elem("exterior-jardin","exterior",W-6.0,H-4.0,5,3),
+      elem("luces-jardin","luces",W/2-5.0,H-1.15,10,0.6),
+      elem("flores-jardin-izq","flores",1.4,2.0,1.3,1.3),
+      elem("flores-jardin-der","flores",W-2.7,2.0,1.3,1.3),
     ],
     fiesta_nocturna: [
-      elem("cabina360-1","cabina360",W-4.0,H/2-1.3,2.6,2.6),
-      elem("luces-1","luces",W/2-5.0,H-1.8,10,0.6),
-      elem("photobooth-1","photobooth",1.3,H-4.0,3,2),
+      elem("luces-fiesta","luces",W/2-5.0,H-1.15,10,0.6),
+      elem("backing-fiesta","backing",W/2-2.4,0.55,4.8,0.8),
     ],
   };
   return packs[style] || packs.romantico_floral;
