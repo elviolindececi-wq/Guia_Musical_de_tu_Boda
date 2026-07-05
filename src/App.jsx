@@ -4423,6 +4423,134 @@ const SALON_SHAPES = {
   oval:{ label:"Oval",    path:(w,h)=>`M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z` },
 };
 
+
+// Configuración geométrica editable del salón.
+// La forma ya no es solo un recorte visual: define zonas válidas reales.
+const DEFAULT_SALON_SHAPE_CONFIG = {
+  L: { orientation: "cutTopRight", cutW: 0.42, cutH: 0.46 },
+  U: { orientation: "openTop", gapW: 0.36, gapD: 0.55 },
+};
+
+const L_SHAPE_OPTIONS = [
+  { id:"cutTopRight", label:"L con recorte arriba derecha" },
+  { id:"cutTopLeft", label:"L con recorte arriba izquierda" },
+  { id:"cutBottomRight", label:"L con recorte abajo derecha" },
+  { id:"cutBottomLeft", label:"L con recorte abajo izquierda" },
+];
+
+const U_SHAPE_OPTIONS = [
+  { id:"openTop", label:"U abierta arriba" },
+  { id:"openBottom", label:"U abierta abajo" },
+  { id:"openLeft", label:"U abierta izquierda" },
+  { id:"openRight", label:"U abierta derecha" },
+];
+
+const clamp01 = (v, min=0.22, max=0.68) => Math.max(min, Math.min(max, Number(v)||min));
+const normalizeSalonShapeConfig = (shape, cfg={}) => {
+  const base = cfg && typeof cfg === "object" ? cfg : {};
+  const L0 = DEFAULT_SALON_SHAPE_CONFIG.L;
+  const U0 = DEFAULT_SALON_SHAPE_CONFIG.U;
+  return {
+    ...DEFAULT_SALON_SHAPE_CONFIG,
+    ...base,
+    L: {
+      orientation: base?.L?.orientation || L0.orientation,
+      cutW: clamp01(base?.L?.cutW ?? L0.cutW, 0.25, 0.65),
+      cutH: clamp01(base?.L?.cutH ?? L0.cutH, 0.25, 0.65),
+    },
+    U: {
+      orientation: base?.U?.orientation || U0.orientation,
+      gapW: clamp01(base?.U?.gapW ?? U0.gapW, 0.25, 0.58),
+      gapD: clamp01(base?.U?.gapD ?? U0.gapD, 0.28, 0.68),
+    },
+  };
+};
+
+const salonShapePath = (shape, w, h, cfg={}) => {
+  const C = normalizeSalonShapeConfig(shape, cfg);
+  if(shape === "L"){
+    const c = C.L;
+    const cutW = w * c.cutW;
+    const cutH = h * c.cutH;
+    if(c.orientation === "cutTopLeft")
+      return `M${cutW},0 L${w},0 L${w},${h} L0,${h} L0,${cutH} L${cutW},${cutH} Z`;
+    if(c.orientation === "cutBottomLeft")
+      return `M0,0 L${w},0 L${w},${h} L${cutW},${h} L${cutW},${h-cutH} L0,${h-cutH} Z`;
+    if(c.orientation === "cutBottomRight")
+      return `M0,0 L${w},0 L${w},${h-cutH} L${w-cutW},${h-cutH} L${w-cutW},${h} L0,${h} Z`;
+    // cutTopRight
+    return `M0,0 L${w-cutW},0 L${w-cutW},${cutH} L${w},${cutH} L${w},${h} L0,${h} Z`;
+  }
+  if(shape === "U"){
+    const c = C.U;
+    const gapW = w * c.gapW;
+    const gapD = h * c.gapD;
+    const gapH = h * c.gapW;
+    const gapL = w * c.gapD;
+    const x1=(w-gapW)/2, x2=(w+gapW)/2;
+    const y1=(h-gapH)/2, y2=(h+gapH)/2;
+    if(c.orientation === "openBottom")
+      return `M0,0 L${w},0 L${w},${h} L${x2},${h} L${x2},${h-gapD} L${x1},${h-gapD} L${x1},${h} L0,${h} Z`;
+    if(c.orientation === "openLeft")
+      return `M0,0 L${w},0 L${w},${h} L0,${h} L0,${y2} L${gapL},${y2} L${gapL},${y1} L0,${y1} Z`;
+    if(c.orientation === "openRight")
+      return `M0,0 L${w},0 L${w},${y1} L${w-gapL},${y1} L${w-gapL},${y2} L${w},${y2} L${w},${h} L0,${h} Z`;
+    // openTop
+    return `M0,0 L${x1},0 L${x1},${gapD} L${x2},${gapD} L${x2},0 L${w},0 L${w},${h} L0,${h} Z`;
+  }
+  if(shape === "oval")
+    return `M${w*0.5},0 Q${w},0 ${w},${h*0.5} Q${w},${h} ${w*0.5},${h} Q0,${h} 0,${h*0.5} Q0,0 ${w*0.5},0 Z`;
+  return `M0,0 L${w},0 L${w},${h} L0,${h} Z`;
+};
+
+const salonShapePointInside = (shape, x, y, W, H, cfg={}) => {
+  const C = normalizeSalonShapeConfig(shape, cfg);
+  if(x < 0 || y < 0 || x > W || y > H) return false;
+  if(shape === "L"){
+    const c=C.L, cutW=W*c.cutW, cutH=H*c.cutH;
+    if(c.orientation === "cutTopRight") return !(x > W-cutW && y < cutH);
+    if(c.orientation === "cutTopLeft") return !(x < cutW && y < cutH);
+    if(c.orientation === "cutBottomRight") return !(x > W-cutW && y > H-cutH);
+    if(c.orientation === "cutBottomLeft") return !(x < cutW && y > H-cutH);
+  }
+  if(shape === "U"){
+    const c=C.U;
+    const gapW=W*c.gapW, gapD=H*c.gapD, x1=(W-gapW)/2, x2=(W+gapW)/2;
+    const gapH=H*c.gapW, y1=(H-gapH)/2, y2=(H+gapH)/2, gapL=W*c.gapD;
+    if(c.orientation === "openTop") return !(x > x1 && x < x2 && y < gapD);
+    if(c.orientation === "openBottom") return !(x > x1 && x < x2 && y > H-gapD);
+    if(c.orientation === "openLeft") return !(x < gapL && y > y1 && y < y2);
+    if(c.orientation === "openRight") return !(x > W-gapL && y > y1 && y < y2);
+  }
+  if(shape === "oval"){
+    const cx=W/2, cy=H/2, rx=W/2, ry=H/2;
+    return (((x-cx)*(x-cx))/(rx*rx)+((y-cy)*(y-cy))/(ry*ry)) <= .94;
+  }
+  return true;
+};
+
+const salonShapeRects = (shape, W, H, cfg={}) => {
+  const C=normalizeSalonShapeConfig(shape,cfg);
+  const clean = (r) => ({...r, area: Math.max(0,r.w)*Math.max(0,r.h)});
+  if(shape === "L"){
+    const c=C.L, cutW=W*c.cutW, cutH=H*c.cutH;
+    if(c.orientation === "cutTopRight") return [clean({id:"vertical",x:0,y:0,w:W-cutW,h:H}), clean({id:"horizontal",x:W-cutW,y:cutH,w:cutW,h:H-cutH})];
+    if(c.orientation === "cutTopLeft") return [clean({id:"vertical",x:cutW,y:0,w:W-cutW,h:H}), clean({id:"horizontal",x:0,y:cutH,w:cutW,h:H-cutH})];
+    if(c.orientation === "cutBottomRight") return [clean({id:"vertical",x:0,y:0,w:W-cutW,h:H}), clean({id:"horizontal",x:W-cutW,y:0,w:cutW,h:H-cutH})];
+    if(c.orientation === "cutBottomLeft") return [clean({id:"vertical",x:cutW,y:0,w:W-cutW,h:H}), clean({id:"horizontal",x:0,y:0,w:cutW,h:H-cutH})];
+  }
+  if(shape === "U"){
+    const c=C.U;
+    const gapW=W*c.gapW, gapD=H*c.gapD, side=(W-gapW)/2;
+    const gapH=H*c.gapW, gapL=W*c.gapD, top=(H-gapH)/2;
+    if(c.orientation === "openTop") return [clean({id:"leftArm",x:0,y:0,w:side,h:H}), clean({id:"rightArm",x:side+gapW,y:0,w:side,h:H}), clean({id:"base",x:0,y:gapD,w:W,h:H-gapD})];
+    if(c.orientation === "openBottom") return [clean({id:"leftArm",x:0,y:0,w:side,h:H}), clean({id:"rightArm",x:side+gapW,y:0,w:side,h:H}), clean({id:"base",x:0,y:0,w:W,h:H-gapD})];
+    if(c.orientation === "openLeft") return [clean({id:"topArm",x:0,y:0,w:W,h:top}), clean({id:"bottomArm",x:0,y:top+gapH,w:W,h:top}), clean({id:"base",x:gapL,y:0,w:W-gapL,h:H})];
+    if(c.orientation === "openRight") return [clean({id:"topArm",x:0,y:0,w:W,h:top}), clean({id:"bottomArm",x:0,y:top+gapH,w:W,h:top}), clean({id:"base",x:0,y:0,w:W-gapL,h:H})];
+  }
+  return [clean({id:"main",x:0,y:0,w:W,h:H})];
+};
+
 const ELEMENTOS_FIJOS = [
   // Principales
   {id:"novios",       label:"Mesa novios",       emoji:"💍", color:"#4A5E3A", w:3.4, h:0.9},
@@ -4862,6 +4990,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [salonW, setSalonW]       = useState(S0?.salonW ?? M0.salonW);
   const [salonH, setSalonH]       = useState(S0?.salonH ?? M0.salonH);
   const [salonShape, setSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
+  const [salonShapeConfig, setSalonShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [zoom, setZoom]           = useState(1);
   const [mesas, setMesas]         = useState(()=> (S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas);
   const [elementos, setElementos] = useState(()=> (S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos);
@@ -4874,7 +5003,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const remoteLoaded = useRef(false);
   useEffect(()=>{
     const t=setTimeout(()=>{
-      const layout={salonW,salonH,salonShape,estiloDistrib,estiloDecor,mesas,elementos};
+      const layout={salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos};
       try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layout)); } catch(err){}
       if(user&&remoteLoaded.current){
         supabase.from("wedding_data")
@@ -4883,12 +5012,12 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       }
     },800);
     return ()=>clearTimeout(t);
-  },[salonW,salonH,salonShape,estiloDistrib,estiloDecor,mesas,elementos]);
+  },[salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos]);
 
   // Flush al desmontar: el debounce de arriba se cancela al salir de la vista,
   // así que guardamos el estado final de forma inmediata para no perder el último cambio
   const layoutFlushRef = useRef(null);
-  layoutFlushRef.current = {salonW,salonH,salonShape,estiloDistrib,estiloDecor,mesas,elementos};
+  layoutFlushRef.current = {salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos};
   useEffect(()=>()=>{
     try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layoutFlushRef.current)); } catch(err){}
     if(user&&remoteLoaded.current){
@@ -4911,6 +5040,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           if(L.salonW) setSalonW(L.salonW);
           if(L.salonH) setSalonH(L.salonH);
           if(L.salonShape){ setSalonShape(L.salonShape); setSelectedSalonShape(L.salonShape); }
+          if(L.salonShapeConfig){ const cfg=normalizeSalonShapeConfig(L.salonShape||salonShape,L.salonShapeConfig); setSalonShapeConfig(cfg); setSelectedShapeConfig(cfg); }
           if(L.estiloDistrib) setEstiloDistrib(NORMALIZE_DISTRIB(L.estiloDistrib));
           if(L.estiloDecor) setEstiloDecor(L.estiloDecor);
           if(Array.isArray(L.elementos)) setElementos(L.elementos);
@@ -4971,6 +5101,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [showPresetMenu, setShowPresetMenu] = useState(false);
   const [selectedSalonType, setSelectedSalonType] = useState("clasico_elegante");
   const [selectedSalonShape, setSelectedSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
+  const [selectedShapeConfig, setSelectedShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
   const isMobile = useIsMobile();
   const isTouchAssignment = useIsMobile(1024); // smartphones y tablets: tocar invitado → tocar mesa
@@ -5061,7 +5192,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     cabina360:1.15, altar:1.35, camino:1.00, sillas_cer:0.95, musicos:1.15,
     living:0.65, exterior:0.55, guardarropa:1.15, proveedores:1.10, mozos:1.10,
   }[tipo] ?? 0);
-  const sanitizarMesasConZonas=(listaMesas=[], listaElementos=[], W=salonW, H=salonH)=>{
+  const sanitizarMesasConZonas=(listaMesas=[], listaElementos=[], W=salonW, H=salonH, shapeArg=salonShape, cfgArg=salonShapeConfig)=>{
     const elementosClave=(listaElementos||[]).filter(el=>noGoMargin(el.tipo)>0);
     const zonasProhibidas=elementosClave.map(el=>expandBox(elemBox(el),noGoMargin(el.tipo)));
     const clampMesa=(m)=>{
@@ -5071,6 +5202,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     const segura=(m,puestas=[])=>{
       const b=mesaBox(m);
       if(b.x1<0.2||b.y1<0.2||b.x2>W-0.2||b.y2>H-0.2) return false;
+      const pts=[[b.x1,b.y1],[b.x2,b.y1],[b.x1,b.y2],[b.x2,b.y2],[m.mx,m.my]];
+      if(!pts.every(([x,y])=>puntoDentroForma(shapeArg,x,y,W,H,cfgArg))) return false;
       if(zonasProhibidas.some(z=>boxesHit(b,z))) return false;
       const mesaConAire=expandBox(b,0.45);
       return !puestas.some(pm=>boxesHit(mesaConAire,expandBox(mesaBox(pm),0.20)));
@@ -5106,15 +5239,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     };
   };
 
-  const puntoDentroForma=(shape,x,y,W,H)=>{
-    if(shape==="L") return !(x>W*0.52 && y>H*0.52);
-    if(shape==="U") return !(x>W*0.35 && x<W*0.65 && y<H*0.58);
-    if(shape==="oval"){
-      const cx=W/2, cy=H/2, rx=W/2, ry=H/2;
-      return (((x-cx)*(x-cx))/(rx*rx)+((y-cy)*(y-cy))/(ry*ry))<=0.92;
-    }
-    return true;
-  };
+  const puntoDentroForma=(shape,x,y,W,H,cfg=salonShapeConfig)=>salonShapePointInside(shape,x,y,W,H,cfg);
 
   const mantenerElementoDentroForma=(el,shape,W,H)=>{
     const ew=el.ew||3, eh=el.eh||2;
@@ -5315,31 +5440,217 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     return O;
   };
 
-  const buildCoherentPreset=(presetId,decor,shape)=>{
-    if(presetId==="desde_cero") return {salonW:shape==="cuadrado"?28:30,salonH:shape==="cuadrado"?28:18,salonShape:shape||"rectangulo",estiloDistrib:"desde_cero",estiloDecor:decor,mesas:[],elementos:[]};
-    if(shape==="L") return buildLPlano(presetId,decor);
-    if(shape==="U") return buildUPlano(presetId,decor);
-    if(shape==="oval") return buildOvalPlano(presetId,decor);
-    let P=(PRESET_BUILDERS[presetId]||PRESET_BUILDERS.clasico_elegante)(decor);
-    if(shape==="cuadrado") P=adaptarPlanoAForma(P,"cuadrado");
-    else P={...P,salonShape:shape||P.salonShape||"rectangulo"};
-    return P;
+  // Motor v3: genera el plano desde la geometría real y configurable.
+  // No recorta un layout rectangular: calcula zonas válidas, ubica funciones
+  // por prioridad y solo después distribuye mesas y decoración.
+  const shapeCfg=(cfg=salonShapeConfig)=>normalizeSalonShapeConfig(selectedSalonShape||salonShape,cfg);
+  const elementoDim=(tipo, fallback={})=>{
+    const def=ELEMENTOS_FIJOS.find(e=>e.id===tipo);
+    return {w:fallback.ew||def?.w||3,h:fallback.eh||def?.h||2};
+  };
+  const elBox=(el)=>({x1:el.mx,y1:el.my,x2:el.mx+(el.ew||3),y2:el.my+(el.eh||2),w:el.ew||3,h:el.eh||2});
+  const elementInsideShape=(el,shape,W,H,cfg)=>{
+    const b=elBox(el), pad=0.08;
+    const pts=[[b.x1+pad,b.y1+pad],[b.x2-pad,b.y1+pad],[b.x1+pad,b.y2-pad],[b.x2-pad,b.y2-pad],[(b.x1+b.x2)/2,(b.y1+b.y2)/2]];
+    return pts.every(([x,y])=>puntoDentroForma(shape,x,y,W,H,cfg));
+  };
+  const rectCenter=(r)=>({x:r.x+r.w/2,y:r.y+r.h/2});
+  const rectAnchor=(r,where,w,h,margin=0.8)=>{
+    const mid=rectCenter(r);
+    const map={
+      center:{x:mid.x-w/2,y:mid.y-h/2},
+      top:{x:mid.x-w/2,y:r.y+margin},
+      bottom:{x:mid.x-w/2,y:r.y+r.h-h-margin},
+      left:{x:r.x+margin,y:mid.y-h/2},
+      right:{x:r.x+r.w-w-margin,y:mid.y-h/2},
+      topLeft:{x:r.x+margin,y:r.y+margin},
+      topRight:{x:r.x+r.w-w-margin,y:r.y+margin},
+      bottomLeft:{x:r.x+margin,y:r.y+r.h-h-margin},
+      bottomRight:{x:r.x+r.w-w-margin,y:r.y+r.h-h-margin},
+    };
+    const p=map[where]||map.center;
+    return {x:+Math.max(0.2,Math.min(r.x+r.w-w-0.2,p.x)).toFixed(2),y:+Math.max(0.2,Math.min(r.y+r.h-h-0.2,p.y)).toFixed(2)};
+  };
+  const pickMainRect=(rects,shape,cfg)=>{
+    const list=[...rects].sort((a,b)=>b.area-a.area);
+    if(shape==="U"){
+      const c=normalizeSalonShapeConfig(shape,cfg).U;
+      const base=list.find(r=>r.id==="base");
+      if(base) return base;
+    }
+    return list[0]||{x:0,y:0,w:salonW,h:salonH,area:salonW*salonH};
+  };
+  const placeElementSmart=(placed, shape, W, H, cfg, tipo, id, candidates, size={})=>{
+    const d=elementoDim(tipo,size);
+    const existing=placed.map(el=>expandBox(elBox(el),0.45));
+    const tryOne=(x,y)=>{
+      const el=elem(id,tipo,+x.toFixed(2),+y.toFixed(2),+(d.w||3).toFixed(2),+(d.h||2).toFixed(2));
+      if(!elementInsideShape(el,shape,W,H,cfg)) return null;
+      const b=expandBox(elBox(el),0.25);
+      if(existing.some(z=>boxesHit(b,z))) return null;
+      return el;
+    };
+    for(const c of candidates){
+      const pos=c.rect ? rectAnchor(c.rect,c.anchor||"center",d.w,d.h,c.margin??0.8) : {x:c.x,y:c.y};
+      const ok=tryOne(pos.x,pos.y); if(ok) return ok;
+    }
+    // Fallback: barrido dentro de todas las zonas válidas, de arriba hacia abajo.
+    const rects=salonShapeRects(shape,W,H,cfg).sort((a,b)=>b.area-a.area);
+    for(const r of rects){
+      for(let y=r.y+0.6;y<=r.y+r.h-d.h-0.6;y+=0.75){
+        for(let x=r.x+0.6;x<=r.x+r.w-d.w-0.6;x+=0.75){
+          const ok=tryOne(x,y); if(ok) return ok;
+        }
+      }
+    }
+    return elem(id,tipo,0.6,0.6,d.w,d.h);
+  };
+  const elementCenter=(el)=>({x:(el.mx||0)+(el.ew||3)/2,y:(el.my||0)+(el.eh||2)/2});
+  const nearestEl=(els,tipo)=>els.find(e=>e.tipo===tipo);
+  const generateTablesSmart=(placed, shape, W, H, cfg, presetId)=>{
+    const needed=Math.max(6,Math.min(16,Math.ceil((totalInvWarn||90)/(tableSize||10))||10));
+    const modern=presetId==="moderno_minimalista";
+    const imperial=presetId==="rectangular" && estiloDecor==="minimalista";
+    const tipoMesa=modern||imperial?"rect_v":"round";
+    const sample=mesa(0,0,0,tipoMesa,modern?{cap:18,ew:.9,eh:4.8}:{});
+    const d=mesaDimensiones(sample);
+    const zones=placed.filter(el=>noGoMargin(el.tipo)>0).map(el=>expandBox(elBox(el),noGoMargin(el.tipo)));
+    const pista=nearestEl(placed,"pista");
+    const banios=nearestEl(placed,"banios");
+    const pc=pista?elementCenter(pista):{x:W/2,y:H/2};
+    const bc=banios?elementCenter(banios):null;
+    const candidates=[];
+    const rects=salonShapeRects(shape,W,H,cfg).sort((a,b)=>b.area-a.area);
+    for(const r of rects){
+      const stepX=Math.max(3.2,d.w+2.2), stepY=Math.max(3.1,d.h+2.2);
+      for(let y=r.y+d.h/2+1.1;y<=r.y+r.h-d.h/2-1.1;y+=stepY){
+        for(let x=r.x+d.w/2+1.1;x<=r.x+r.w-d.w/2-1.1;x+=stepX){
+          const m=mesa(0,+x.toFixed(2),+y.toFixed(2),tipoMesa,modern?{cap:18,ew:.9,eh:4.8}:{});
+          const b=mesaBox(m);
+          const corners=[[b.x1,b.y1],[b.x2,b.y1],[b.x1,b.y2],[b.x2,b.y2],[m.mx,m.my]];
+          if(!corners.every(([cx,cy])=>puntoDentroForma(shape,cx,cy,W,H,cfg))) continue;
+          if(zones.some(z=>boxesHit(expandBox(b,.25),z))) continue;
+          const distP=Math.hypot(x-pc.x,y-pc.y);
+          const distBath=bc?Math.hypot(x-bc.x,y-bc.y):9;
+          // Preferir anillo social alrededor de pista, pero lejos de baños/servicio.
+          const score=Math.abs(distP-10.5) - Math.min(distBath,8)*0.35 + (y>H*0.78?0.8:0);
+          candidates.push({m,score});
+        }
+      }
+    }
+    candidates.sort((a,b)=>a.score-b.score);
+    const result=[];
+    for(const c of candidates){
+      const b=expandBox(mesaBox(c.m),0.45);
+      if(result.some(pm=>boxesHit(b,expandBox(mesaBox(pm),0.25)))) continue;
+      result.push({...c.m,id:result.length+1});
+      if(result.length>=needed) break;
+    }
+    // Si el salón es muy irregular y no entraron todas, completar sin tocar zonas críticas.
+    if(result.length<Math.min(needed,8)){
+      for(const c of candidates){
+        if(result.some(pm=>Math.hypot(pm.mx-c.m.mx,pm.my-c.m.my)<2.4)) continue;
+        result.push({...c.m,id:result.length+1});
+        if(result.length>=needed) break;
+      }
+    }
+    return result;
+  };
+  const decorSmart=(style,shape,W,H,cfg,placed)=>{
+    const main=pickMainRect(salonShapeRects(shape,W,H,cfg),shape,cfg);
+    const items=[];
+    const add=(tipo,id,cands,size={})=>{ const el=placeElementSmart([...placed,...items],shape,W,H,cfg,tipo,id,cands,size); items.push(el); };
+    if(style==="romantico_floral"||style==="jardin"){
+      add("arco","arco-decor",[{rect:main,anchor:"top",margin:.4}],{ew:4,eh:.7});
+      add("flores","flores-1",[{rect:main,anchor:"topLeft"}],{ew:1.2,eh:1.2});
+      add("flores","flores-2",[{rect:main,anchor:"topRight"}],{ew:1.2,eh:1.2});
+      add("flores","flores-3",[{rect:main,anchor:"bottomLeft"}],{ew:1.2,eh:1.2});
+    } else if(style==="boho_chic"||style==="rustico"){
+      add("living","living-decor",[{rect:main,anchor:"bottomLeft"},{rect:main,anchor:"left"}],{ew:3.8,eh:2.2});
+      add("luces","luces-decor",[{rect:main,anchor:"top"}],{ew:Math.min(9,main.w*.55),eh:.6});
+      add("alfombra","alfombra-decor",[{rect:main,anchor:"bottom"}],{ew:1.2,eh:Math.min(6,main.h*.35)});
+    } else if(style==="glam_dorado"||style==="fiesta_nocturna"){
+      add("backing","backing-decor",[{rect:main,anchor:"top"}],{ew:4.8,eh:.8});
+      add("luces","luces-glam",[{rect:main,anchor:"bottom"}],{ew:Math.min(10,main.w*.6),eh:.6});
+      add("columnas","columna-1",[{rect:main,anchor:"topLeft"}],{ew:1.1,eh:1.1});
+      add("columnas","columna-2",[{rect:main,anchor:"topRight"}],{ew:1.1,eh:1.1});
+    } else {
+      add("backing","backing-clasico",[{rect:main,anchor:"top"}],{ew:4.2,eh:.8});
+      add("columnas","columna-1",[{rect:main,anchor:"bottomLeft"}],{ew:1.1,eh:1.1});
+      add("columnas","columna-2",[{rect:main,anchor:"bottomRight"}],{ew:1.1,eh:1.1});
+    }
+    return items;
+  };
+  const buildCoherentPreset=(presetId,decor,shape,cfgInput)=>{
+    const shapeCfg=normalizeSalonShapeConfig(shape,cfgInput||salonShapeConfig);
+    const W=Math.max(22,Math.min(80,Number(salonW)||44));
+    const H=Math.max(16,Math.min(60,Number(salonH)||28));
+    if(presetId==="desde_cero") return {salonW:W,salonH:H,salonShape:shape||"rectangulo",salonShapeConfig:shapeCfg,estiloDistrib:"desde_cero",estiloDecor:decor,mesas:[],elementos:[]};
+    const rects=salonShapeRects(shape,W,H,shapeCfg).filter(r=>r.area>8);
+    const main=pickMainRect(rects,shape,shapeCfg);
+    const aux=[...rects].filter(r=>r!==main).sort((a,b)=>b.area-a.area);
+    const placed=[];
+    const add=(tipo,id,cands,size={})=>{ const el=placeElementSmart(placed,shape,W,H,shapeCfg,tipo,id,cands,size); placed.push(el); return el; };
+    const fiesta=presetId==="fiesta_pista";
+    const ceremony=presetId==="ceremonia_fiesta"||presetId==="jardin_exterior";
+    const modern=presetId==="moderno_minimalista";
+    const pistaW=Math.min(fiesta?16:modern?10:12, Math.max(7, main.w-4));
+    const pistaH=Math.min(fiesta?8.5:6.8, Math.max(5, main.h*.42));
+    if(ceremony){
+      const cer=aux[0]&&aux[0].area>main.area*.25?aux[0]:main;
+      add("altar","altar-1",[{rect:cer,anchor:"top"}],{ew:Math.min(14,cer.w-3),eh:2.4});
+      add("camino","camino-1",[{rect:cer,anchor:"center"}],{ew:1.2,eh:Math.min(6.5,cer.h*.45)});
+      add("sillas_cer","sillascer-1",[{rect:cer,anchor:"center"}],{ew:Math.min(16,cer.w-4),eh:Math.min(4.8,cer.h*.32)});
+    }
+    const pista=add("pista","pista-1",[{rect:main,anchor:ceremony?"bottom":"center"}],{ew:pistaW,eh:pistaH});
+    const pb=elBox(pista);
+    // Escenario/DJ siempre pegado a la pista pero nunca con la mesa de novios detrás.
+    const above={x:pb.x1+(pb.w-Math.min(10,pb.w*.95))/2,y:pb.y1-2.8};
+    const below={x:pb.x1+(pb.w-Math.min(10,pb.w*.95))/2,y:pb.y2+.55};
+    const left={x:pb.x1-7.4,y:pb.y1+(pb.h-2.3)/2};
+    const right={x:pb.x2+.55,y:pb.y1+(pb.h-2.3)/2};
+    const stageCandidates=[above,below,left,right].map(p=>({x:p.x,y:p.y}));
+    const stage=add("escenario","escenario-1",stageCandidates,{ew:Math.min(fiesta?13:9,Math.max(7,pistaW*.85)),eh:2.3});
+    const sb=elBox(stage);
+    const stageAbove = sb.y2 <= pb.y1 + .2;
+    const stageBelow = sb.y1 >= pb.y2 - .2;
+    const stageLeft = sb.x2 <= pb.x1 + .2;
+    let noviosCandidates=[];
+    if(stageAbove) noviosCandidates=[{x:pb.x1+(pb.w-11)/2,y:pb.y2+1.0},{rect:main,anchor:"bottom"}];
+    else if(stageBelow) noviosCandidates=[{x:pb.x1+(pb.w-11)/2,y:pb.y1-1.5},{rect:main,anchor:"top"}];
+    else if(stageLeft) noviosCandidates=[{x:pb.x2+1.0,y:pb.y1+(pb.h-1)/2},{rect:main,anchor:"right"}];
+    else noviosCandidates=[{x:pb.x1-12.0,y:pb.y1+(pb.h-1)/2},{rect:main,anchor:"left"}];
+    add("novios","novios-1",noviosCandidates,{ew:Math.min(11,Math.max(8,main.w*.28)),eh:1.0});
+    // Accesos y servicios al perímetro. Baños/cocina se mandan a esquinas opuestas.
+    add("entrada","entrada-1",[{rect:main,anchor:"bottom"},{rect:rects[0],anchor:"bottom"}],{ew:3,eh:.8});
+    add("bienvenida","bienvenida-1",[{rect:main,anchor:"bottomLeft"},{rect:main,anchor:"bottomRight"}],{ew:3.2,eh:1.0});
+    add("banios","banios-1",[{rect:aux[0]||main,anchor:"topRight"},{rect:main,anchor:"topRight"}],{ew:3,eh:2.2});
+    add("cocina","cocina-1",[{rect:aux[1]||aux[0]||main,anchor:"bottomLeft"},{rect:main,anchor:"bottomLeft"}],{ew:4,eh:2.7});
+    add("salida","salida-1",[{rect:main,anchor:"bottomRight"},{rect:main,anchor:"topRight"}],{ew:3,eh:.8});
+    add("bar","bar-1",[{rect:aux[0]||main,anchor:"right"},{rect:main,anchor:"right"},{rect:main,anchor:"topRight"}],{ew:3.8,eh:2.6});
+    if(fiesta) add("bebidas","bebidas-1",[{rect:aux[0]||main,anchor:"bottomRight"},{rect:main,anchor:"right"}],{ew:3.2,eh:1.3});
+    add("torta","torta-1",[{rect:main,anchor:"left"},{rect:main,anchor:"topLeft"}],{ew:2.6,eh:1.4});
+    add("postres","postres-1",[{rect:main,anchor:"bottomLeft"},{rect:main,anchor:"left"}],{ew:3.6,eh:1.4});
+    add(fiesta?"cabina360":"photobooth",fiesta?"cabina360-1":"photobooth-1",[{rect:aux[0]||main,anchor:"bottomRight"},{rect:main,anchor:"bottomRight"}],fiesta?{ew:2.6,eh:2.6}:{ew:3,eh:2});
+    const decorated=[...placed,...decorSmart(decor,shape,W,H,shapeCfg,placed)];
+    const tables=generateTablesSmart(decorated,shape,W,H,shapeCfg,presetId);
+    return {salonW:W,salonH:H,salonShape:shape||"rectangulo",salonShapeConfig:shapeCfg,estiloDistrib:presetId,estiloDecor:decor,mesas:tables,elementos:decorated};
   };
 
   // Aplicar el plano modelo (reemplaza el plano actual; las asignaciones
-  // de invitados a mesas 1-15 se conservan por número)
+  // de invitados a mesas se conservan por número)
   const aplicarPreset=(presetId, opts={})=>{
     const formaElegida=opts.shape || selectedSalonShape || salonShape;
-    let P=buildCoherentPreset(presetId, estiloDecor, formaElegida);
-    // Última validación: si el usuario cambia dimensiones luego, las mesas se reacomodan
-    // con zonas prohibidas para pista, DJ, baños, cocina, barra, entrada y salida.
-    P.mesas = sanitizarMesasConZonas(P.mesas||[], P.elementos||[], P.salonW, P.salonH);
+    const cfgElegida=normalizeSalonShapeConfig(formaElegida, opts.shapeConfig || selectedShapeConfig || salonShapeConfig);
+    let P=buildCoherentPreset(presetId, estiloDecor, formaElegida, cfgElegida);
+    P.mesas = sanitizarMesasConZonas(P.mesas||[], P.elementos||[], P.salonW, P.salonH, P.salonShape, P.salonShapeConfig);
     const hayLayout=(mesas&&mesas.length>0)||(elementos&&elementos.length>0);
     if(!opts.skipConfirm&&hayLayout&&typeof window!=="undefined"){
       const ok=window.confirm("Esto reemplaza la disposición actual del salón, pero conserva los invitados asignados por número de mesa. ¿Querés continuar?");
       if(!ok) return;
     }
     setSalonW(P.salonW); setSalonH(P.salonH); setSalonShape(P.salonShape); setSelectedSalonShape(P.salonShape);
+    setSalonShapeConfig(P.salonShapeConfig||cfgElegida); setSelectedShapeConfig(P.salonShapeConfig||cfgElegida);
     setEstiloDistrib(NORMALIZE_DISTRIB(P.estiloDistrib||"banquet")); setEstiloDecor(P.estiloDecor||estiloDecor);
     if(presetId!=="desde_cero") setSelectedSalonType(presetId);
     setMesas(P.mesas||[]); setElementos(P.elementos||[]);
@@ -6086,7 +6397,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         {isDesignerMode&&<>
           {/* Diseñador de salón: combina tipo de plano + estilo decorativo */}
           <div style={{position:"relative"}}>
-            <button title="Combinar forma del salón + tipo de experiencia + estilo decorativo" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setSelectedSalonShape(salonShape);setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Diseñar salón ▾</button>
+            <button title="Combinar forma del salón + tipo de experiencia + estilo decorativo" onMouseDown={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();setSelectedSalonShape(salonShape);setSelectedShapeConfig(salonShapeConfig);setShowPresetMenu(s=>!s);setShowElemMenu(false);setShowShapeMenu(false);}} style={{background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.25)",borderRadius:9,padding:"9px 12px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.sage,cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>✨ Diseñar salón ▾</button>
           </div>
           {/* Agregar elemento */}
           <div style={{position:"relative"}}>
@@ -6106,10 +6417,42 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         <div style={{display:"grid",gap:8}}>
           <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
             Forma del salón
-            <select value={selectedSalonShape} onChange={e=>setSelectedSalonShape(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
+            <select value={selectedSalonShape} onChange={e=>{setSelectedSalonShape(e.target.value);setSelectedShapeConfig(c=>normalizeSalonShapeConfig(e.target.value,c));}} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
               {Object.entries(SALON_SHAPES).map(([k,v])=><option key={k} value={k}>🏛️ {v.label}</option>)}
             </select>
           </label>
+          {selectedSalonShape==="L"&&<div style={{display:"grid",gap:7,background:"rgba(74,94,58,.045)",border:"1px solid rgba(74,94,58,.10)",borderRadius:10,padding:"9px 10px"}}>
+            <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
+              Tipo de L
+              <select value={normalizeSalonShapeConfig("L",selectedShapeConfig).L.orientation} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("L",c),L:{...normalizeSalonShapeConfig("L",c).L,orientation:e.target.value}}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.84rem)",padding:"9px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.18)",background:"white",outline:"none"}}>
+                {L_SHAPE_OPTIONS.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+            </label>
+            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
+              Ancho del recorte interior: {Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutW*100)}%
+              <input type="range" min="25" max="65" value={Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutW*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("L",c),L:{...normalizeSalonShapeConfig("L",c).L,cutW:(parseInt(e.target.value)||42)/100}}))}/>
+            </label>
+            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
+              Alto/profundidad del recorte: {Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutH*100)}%
+              <input type="range" min="25" max="65" value={Math.round(normalizeSalonShapeConfig("L",selectedShapeConfig).L.cutH*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("L",c),L:{...normalizeSalonShapeConfig("L",c).L,cutH:(parseInt(e.target.value)||46)/100}}))}/>
+            </label>
+          </div>}
+          {selectedSalonShape==="U"&&<div style={{display:"grid",gap:7,background:"rgba(74,94,58,.045)",border:"1px solid rgba(74,94,58,.10)",borderRadius:10,padding:"9px 10px"}}>
+            <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
+              Tipo de U
+              <select value={normalizeSalonShapeConfig("U",selectedShapeConfig).U.orientation} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("U",c),U:{...normalizeSalonShapeConfig("U",c).U,orientation:e.target.value}}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.84rem)",padding:"9px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.18)",background:"white",outline:"none"}}>
+                {U_SHAPE_OPTIONS.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+            </label>
+            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
+              Ancho de la abertura: {Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapW*100)}%
+              <input type="range" min="25" max="58" value={Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapW*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("U",c),U:{...normalizeSalonShapeConfig("U",c).U,gapW:(parseInt(e.target.value)||36)/100}}))}/>
+            </label>
+            <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.55)",display:"grid",gap:3}}>
+              Profundidad de la abertura: {Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapD*100)}%
+              <input type="range" min="28" max="68" value={Math.round(normalizeSalonShapeConfig("U",selectedShapeConfig).U.gapD*100)} onChange={e=>setSelectedShapeConfig(c=>({...normalizeSalonShapeConfig("U",c),U:{...normalizeSalonShapeConfig("U",c).U,gapD:(parseInt(e.target.value)||55)/100}}))}/>
+            </label>
+          </div>}
           <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
             Tipo de experiencia
             <select value={selectedSalonType} onChange={e=>setSelectedSalonType(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
@@ -6129,8 +6472,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           </div>
           <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:3}}>La forma define el contorno; la experiencia ordena pista, novios, DJ y servicios; el estilo suma ambientación. Son 240 combinaciones posibles, todas editables.</div>
         </div>
-        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType,{shape:selectedSalonShape})} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Aplicar forma + tipo + estilo</button>
-        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset("desde_cero",{shape:selectedSalonShape})} style={{width:"100%",marginTop:7,background:"transparent",border:"1px solid rgba(200,60,60,.22)",borderRadius:10,padding:"10px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(200,60,60,.72)",cursor:"pointer"}}>＋ Crear desde cero</button>
+        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType,{shape:selectedSalonShape,shapeConfig:selectedShapeConfig})} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Aplicar forma + tipo + estilo</button>
+        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset("desde_cero",{shape:selectedSalonShape,shapeConfig:selectedShapeConfig})} style={{width:"100%",marginTop:7,background:"transparent",border:"1px solid rgba(200,60,60,.22)",borderRadius:10,padding:"10px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(200,60,60,.72)",cursor:"pointer"}}>＋ Crear desde cero</button>
       </div>}
       {/* La forma ya no tiene menú suelto: se elige dentro de “Diseñar salón”. */}
       {isDesignerMode&&showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:200,maxHeight:"min(340px,50vh)",overflowY:"auto"}}>
@@ -6197,10 +6540,10 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                   <rect width={PX/2} height={PX/2} fill="#E8E0C8"/>
                   <rect x={PX/2} y={PX/2} width={PX/2} height={PX/2} fill="#E8E0C8"/>
                 </pattern>
-                <clipPath id="sClipS4"><path d={SALON_SHAPES[salonShape].path(CW,CH)}/></clipPath>
+                <clipPath id="sClipS4"><path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)}/></clipPath>
               </defs>
-              <path d={SALON_SHAPES[salonShape].path(CW,CH)} fill="#8a7e6e" transform="translate(3,3)"/>
-              <path d={SALON_SHAPES[salonShape].path(CW,CH)} fill="url(#pisoS4)" stroke="#5a4e3e" strokeWidth="2.5"/>
+              <path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)} fill="#8a7e6e" transform="translate(3,3)"/>
+              <path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)} fill="url(#pisoS4)" stroke="#5a4e3e" strokeWidth="2.5"/>
               {Array.from({length:salonW+1},(_,i)=><g key={"rx"+i}>
                 <line x1={i*PX} y1={-8} x2={i*PX} y2={-2} stroke="rgba(200,180,140,.45)" strokeWidth="1"/>
                 {i%5===0&&<text x={i*PX} y={-11} textAnchor="middle" fontSize={Math.max(7,9/zoom)} fill="rgba(200,180,140,.65)" fontFamily="Calibri">{i}m</text>}
