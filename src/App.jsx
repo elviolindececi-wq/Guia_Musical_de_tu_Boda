@@ -7931,352 +7931,146 @@ const stage2TableFromSlot = (slot, id, tableType, label="") => {
 
 
 const TOPDOWN_PRESET_DEFAULT_ID = "clasica_elegante";
-const stage2LockedElement = (id,tipo,mx,my,ew,eh,extra={}) => elem(id,tipo,+mx.toFixed(2),+my.toFixed(2),+ew.toFixed(2),+eh.toFixed(2),{
-  locked:true,
-  presetFixed:true,
-  stage2Fixed:true,
-  ...extra
+
+// ── Presets exactos basados en los JPG de referencia ─────────────────────
+// Los JPG fueron diseñados en 1800×1200 px con un área útil de salón de
+// 1660×970 px (x=70..1730, y=145..1115). Estos helpers convierten esa misma
+// grilla visual a metros, manteniendo proporción, simetría y disposición.
+const EXACT_REF = { x:70, y:145, w:1660, h:970 };
+const EXACT_ASPECT = EXACT_REF.h / EXACT_REF.w;
+const EXACT_ROOM_WIDTHS = { compact:26, recommended:30, spacious:34, premium:38 };
+const getExactReferenceRoomSize = (guestCount=150, roomSizeOption="recommended") => {
+  const baseW = EXACT_ROOM_WIDTHS[roomSizeOption] || EXACT_ROOM_WIDTHS.recommended;
+  const guestBoost = (Number(guestCount)||150) >= 250 ? 4 : (Number(guestCount)||150) >= 200 ? 2 : 0;
+  const W = +(baseW + guestBoost).toFixed(2);
+  const H = +(W * EXACT_ASPECT).toFixed(2);
+  return { W, H, area:+(W*H).toFixed(0), label:`Referencia exacta ${W} × ${H} m` };
+};
+const exX = (px,W) => +(((Number(px)-EXACT_REF.x) / EXACT_REF.w) * W).toFixed(2);
+const exY = (py,H) => +(((Number(py)-EXACT_REF.y) / EXACT_REF.h) * H).toFixed(2);
+const exW = (px,W) => +((Number(px) / EXACT_REF.w) * W).toFixed(2);
+const exH = (py,H) => +((Number(py) / EXACT_REF.h) * H).toFixed(2);
+const exClamp = (n,min,max) => Math.max(min, Math.min(max, n));
+const exactElement = (W,H,raw={}) => {
+  const [x1,y1,x2,y2] = raw.box || [0,0,0,0];
+  const ew = Math.max(.25, exW(x2-x1,W));
+  const eh = Math.max(.20, exH(y2-y1,H));
+  const mx = exClamp(exX(x1,W),0,Math.max(0,W-ew));
+  const my = exClamp(exY(y1,H),0,Math.max(0,H-eh));
+  return elem(raw.id, raw.tipo, +mx.toFixed(2), +my.toFixed(2), +ew.toFixed(2), +eh.toFixed(2), {
+    locked:true,
+    presetFixed:true,
+    stage2Fixed:true,
+    exactReference:true,
+    nonPhysical:!!raw.nonPhysical,
+    labelOverride:raw.label || undefined
+  });
+};
+const exactElements = (W,H,items=[]) => items.map(raw=>exactElement(W,H,raw));
+const exactTables = (W,H,items=[]) => items.map((raw,i)=>{
+  let mx,my,ew,eh;
+  if(raw.tipo === "round") {
+    ew = Math.max(.90, exW((raw.r||50)*2,W));
+    eh = ew;
+    mx = exX(raw.cx,W);
+    my = exY(raw.cy,H);
+  } else {
+    const [x1,y1,x2,y2] = raw.box || [0,0,0,0];
+    ew = Math.max(.90, exW(x2-x1,W));
+    eh = Math.max(.55, exH(y2-y1,H));
+    mx = exX((x1+x2)/2,W);
+    my = exY((y1+y2)/2,H);
+  }
+  const tipo = raw.tipo || "rect_h";
+  const t = mesa(i+1, +mx.toFixed(2), +my.toFixed(2), tipo, {
+    ew:+ew.toFixed(2),
+    eh:+eh.toFixed(2),
+    cap:raw.cap || (tipo==="round"?8:12),
+    etiqueta:raw.label || "",
+    presetKey:`exact-${i+1}`,
+    exactReference:true,
+    operationalWidth:+ew.toFixed(2),
+    operationalHeight:+eh.toFixed(2),
+    miraSide: tipo==="rect_h" || tipo==="imperial" ? "both" : undefined
+  });
+  return t;
 });
-const stage2CenterElement = (id,tipo,cx,cy,ew,eh,extra={}) => stage2LockedElement(id,tipo,cx-ew/2,cy-eh/2,ew,eh,extra);
-const stage2PctElement = (id,tipo,W,H,cxP,cyP,wP,hP,extra={}) => stage2CenterElement(id,tipo,W*cxP,H*cyP,W*wP,H*hP,extra);
-const stage2Zone = (id,xMin,xMax,yMin,yMax,priority=1,align="grid") => ({id,xMin,xMax,yMin,yMax,priority,align,pattern:align});
-const stage2TwoSideZones = (W,H,top,bottom,gap=4,priority=1,align="grid") => [
-  stage2Zone(`${priority}_izq`,3.5,W/2-gap,top,bottom,priority,align),
-  stage2Zone(`${priority}_der`,W/2+gap,W-3.5,top,bottom,priority,align),
-];
 
 const STAGE2_PRESET_CONFIGS = {
   clasica_elegante: {
-    label:"Clásica elegante", emoji:"💐", salon:"salón formal · hotel · ballroom claro", recommended:"round_180_comfort", compact:"round_180_compact", pattern:"symmetric",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-1","altar",W,H,.50,.08,.22,.11),
-      stage2PctElement("camino-1","camino",W,H,.50,.27,.055,.26,{nonPhysical:true}),
-      stage2PctElement("sillas-cer-izq","sillas_cer",W,H,.34,.27,.24,.25),
-      stage2PctElement("sillas-cer-der","sillas_cer",W,H,.66,.27,.24,.25),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.44),
-      elem("pista-1","pista",W/2-p.w/2,H*.63-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.84),
-      centerFixedElement("barra-1","barra",W*.84,H*.50),
-      centerFixedElement("buffet-1","buffet",W*.16,H*.50),
-      centerFixedElement("torta-1","mesa_torta",W*.78,H*.22),
-      centerFixedElement("photobooth-1","photobooth",W*.86,H*.82),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.52,H*.78,4.8,1,"symmetric"),
-      ...stage2TwoSideZones(W,H,H*.76,H-3.2,3.2,2,"symmetric"),
-      ...stage2TwoSideZones(W,H,H*.40,H*.54,4.8,3,"symmetric")
-    ]
+    label:"Clásica elegante", emoji:"💐", salon:"salón formal · hotel · ballroom claro", pattern:"symmetric", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-1","tipo":"altar","box":[785,165,1015,320],"label":"Altar floral"},{"id":"camino-1","tipo":"camino","box":[842,310,958,675],"label":"Camino central","nonPhysical":true},{"id":"sillas-cer-izq","tipo":"sillas_cer","box":[445,318,785,642],"label":"Sillas ceremonia"},{"id":"sillas-cer-der","tipo":"sillas_cer","box":[1015,318,1355,642],"label":"Sillas ceremonia"},{"id":"novios-1","tipo":"novios","box":[720,655,1080,695],"label":"Mesa novios"},{"id":"pista-1","tipo":"pista","box":[710,720,1090,1010],"label":"Pista central"},{"id":"dj-1","tipo":"escenario","box":[720,1018,1080,1090],"label":"DJ / Banda"},{"id":"barra-1","tipo":"bar","box":[1290,590,1600,690],"label":"Bar"},{"id":"buffet-1","tipo":"buffet","box":[200,590,510,690],"label":"Buffet"},{"id":"photobooth-1","tipo":"photobooth","box":[1460,950,1630,1090],"label":"Photo spot"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":360,"cy":780,"r":58,"cap":8,"label":""},{"tipo":"round","cx":520,"cy":810,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1280,"cy":780,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1440,"cy":810,"r":58,"cap":8,"label":""},{"tipo":"round","cx":410,"cy":980,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1390,"cy":980,"r":58,"cap":8,"label":""}])
   },
   boho_chic: {
-    label:"Boho chic", emoji:"🌾", salon:"jardín · terraza · carpa relajada", recommended:"rectangular_12", compact:"round_150_compact", mixed:{rectRatio:.55,roundType:"round_150_compact"}, pattern:"organic",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-textil-1","altar",W,H,.20,.13,.20,.12),
-      stage2PctElement("alfombra-cer-1","alfombra",W,H,.30,.28,.055,.28,{nonPhysical:true}),
-      stage2PctElement("alfombra-boho-1","alfombra",W,H,.46,.20,.25,.05,{nonPhysical:true}),
-      stage2PctElement("alfombra-boho-2","alfombra",W,H,.52,.30,.25,.05,{nonPhysical:true}),
-      elem("pista-1","pista",W*.72-p.w/2,H*.34-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W*.72,H*.18),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W*.42,H*.50),
-      centerFixedElement("lounge-1","lounge_grande",W*.80,H*.70),
-      centerFixedElement("barra-1","barra",W*.84,H*.88),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.88),
-      centerFixedElement("photobooth-1","photobooth",W*.18,H*.70),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("flores-1","flores",W,H,.08,.12,.05,.07,{nonPhysical:true}),
-      stage2PctElement("flores-2","flores",W,H,.90,.18,.05,.07,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("mesas_largas_izq",3.5,W*.43,H*.58,H*.82,1,"banquet_rows"),
-      stage2Zone("mesas_largas_der",W*.43,W*.70,H*.55,H*.82,1,"banquet_rows"),
-      stage2Zone("zona_inferior",3.5,W-3.5,H*.78,H-3.2,2,"organic"),
-      stage2Zone("laterales_altos",3.5,W*.62,H*.36,H*.58,3,"organic")
-    ]
+    label:"Boho chic", emoji:"🌾", salon:"jardín · terraza · carpa relajada", pattern:"organic", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-textil-1","tipo":"altar","box":[235,210,445,395],"label":"Altar textil"},{"id":"camino-1","tipo":"camino","box":[472,290,568,580],"label":"Camino boho","nonPhysical":true},{"id":"alfombra-1","tipo":"alfombra","box":[600,250,1030,340],"label":"Alfombra","nonPhysical":true},{"id":"alfombra-2","tipo":"alfombra","box":[680,370,1110,460],"label":"Alfombra","nonPhysical":true},{"id":"alfombra-3","tipo":"alfombra","box":[760,490,1190,580],"label":"Alfombra","nonPhysical":true},{"id":"pista-1","tipo":"pista","box":[1120,325,1510,595],"label":"Pista alfombra"},{"id":"lounge-1","tipo":"living","box":[1260,700,1590,850],"label":"Lounge bajo"},{"id":"barra-1","tipo":"bar","box":[1330,930,1600,1035],"label":"Bar gin"},{"id":"buffet-1","tipo":"buffet","box":[200,930,480,1035],"label":"Mesa dulce"},{"id":"flores-1","tipo":"flores","box":[144,194,216,266],"label":"Plantas","nonPhysical":true},{"id":"flores-2","tipo":"flores","box":[1465,205,1535,275],"label":"Plantas","nonPhysical":true}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"rect_h","box":[230,700,690,765],"cap":16,"label":"Mesa larga"},{"tipo":"rect_h","box":[820,690,1280,755],"cap":16,"label":"Mesa larga"},{"tipo":"rect_h","box":[480,860,940,925],"cap":16,"label":"Mesa larga"},{"tipo":"rect_h","box":[1070,850,1530,915],"cap":16,"label":"Mesa larga"}])
   },
   rustica_campo: {
-    label:"Rústica de campo", emoji:"🪵", salon:"estancia · quincho · jardín amplio", recommended:"rectangular_12", compact:"rectangular_12", mixed:{rectRatio:.75,roundType:"round_150_compact"}, pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-madera-1","altar",W,H,.50,.10,.24,.12),
-      stage2PctElement("camino-1","camino",W,H,.50,.28,.055,.25,{nonPhysical:true}),
-      stage2PctElement("sillas-campo-izq","sillas_cer",W,H,.34,.28,.28,.24),
-      stage2PctElement("sillas-campo-der","sillas_cer",W,H,.66,.28,.28,.24),
-      elem("pista-1","pista",W/2-p.w/2,H*.52-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.44),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.63),
-      centerFixedElement("buffet-1","buffet",W*.88,H*.32),
-      centerFixedElement("barra-1","barra",W*.12,H*.32),
-      centerFixedElement("lounge-1","lounge_grande",W*.86,H*.82),
-      centerFixedElement("torta-1","mesa_torta",W*.18,H*.82),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("tablones_superior_izq",3.5,W*.45,H*.58,H*.72,1,"banquet_rows"),
-      stage2Zone("tablones_superior_der",W*.55,W-3.5,H*.58,H*.72,1,"banquet_rows"),
-      stage2Zone("tablones_inferior_izq",3.5,W*.45,H*.76,H-3.2,2,"banquet_rows"),
-      stage2Zone("tablones_inferior_der",W*.55,W*.78,H*.76,H-3.2,2,"banquet_rows")
-    ]
+    label:"Rústica de campo", emoji:"🪵", salon:"estancia · quincho · jardín amplio", pattern:"banquet_rows", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-madera-1","tipo":"altar","box":[770,185,1030,365],"label":"Altar de madera"},{"id":"camino-1","tipo":"camino","box":[840,345,960,650],"label":"Camino rústico","nonPhysical":true},{"id":"sillas-campo-izq","tipo":"sillas_cer","box":[305,360,760,625],"label":"Sillas campo"},{"id":"sillas-campo-der","tipo":"sillas_cer","box":[1040,360,1495,625],"label":"Sillas campo"},{"id":"pista-1","tipo":"pista","box":[720,660,1080,760],"label":"Primer baile"},{"id":"barra-1","tipo":"bar","box":[170,370,350,650],"label":"Bar rústico"},{"id":"buffet-1","tipo":"buffet","box":[1450,370,1630,650],"label":"Parrilla / Buffet"},{"id":"lounge-1","tipo":"living","box":[1420,820,1630,1040],"label":"Fogón lounge"},{"id":"torta-1","tipo":"torta","box":[180,835,420,965],"label":"Mesa dulce"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"rect_h","box":[260,780,530,840],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[610,780,880,840],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[960,780,1230,840],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[1310,780,1580,840],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[260,925,530,985],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[610,925,880,985],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[960,925,1230,985],"cap":12,"label":"Comunitaria"},{"tipo":"rect_h","box":[1310,925,1580,985],"cap":12,"label":"Comunitaria"}])
   },
   minimalista_moderno: {
-    label:"Minimalista moderno", emoji:"◻️", salon:"loft blanco · galería · salón contemporáneo", recommended:"rectangular_12", compact:"round_150_compact", pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-geo-1","backing",W,H,.50,.10,.18,.035),
-      stage2PctElement("camino-min-1","camino",W,H,.50,.25,.05,.24,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.59-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.78),
-      centerFixedElement("barra-1","barra",W*.82,H*.20),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.20),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.38),
-      centerFixedElement("photobooth-1","photobooth",W*.85,H*.88),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.26,H*.44,3.8,1,"banquet_rows"),
-      ...stage2TwoSideZones(W,H,H*.64,H*.86,4.3,2,"banquet_rows"),
-      stage2Zone("inferior_limpio",3.5,W-3.5,H*.82,H-3.2,3,"banquet_rows")
-    ]
+    label:"Minimalista moderno", emoji:"◻️", salon:"loft blanco · galería · salón contemporáneo", pattern:"banquet_rows", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-geo-1","tipo":"backing","box":[760,220,1040,285],"label":"Altar geométrico"},{"id":"camino-1","tipo":"camino","box":[860,285,940,620],"label":"Eje central","nonPhysical":true},{"id":"sillas-min-izq","tipo":"sillas_cer","box":[320,310,680,535],"label":"Sillas lineales"},{"id":"sillas-min-der","tipo":"sillas_cer","box":[1170,310,1530,535],"label":"Sillas lineales"},{"id":"pista-1","tipo":"pista","box":[720,650,1080,930],"label":"Pista limpia"},{"id":"dj-1","tipo":"escenario","box":[720,950,1080,1020],"label":"DJ"},{"id":"barra-1","tipo":"bar","box":[1250,250,1550,335],"label":"Bar"},{"id":"buffet-1","tipo":"buffet","box":[250,250,550,335],"label":"Buffet"},{"id":"photobooth-1","tipo":"photobooth","box":[1420,960,1570,1080],"label":"Foto"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"rect_h","box":[260,730,600,790],"cap":12,"label":"Mesa A"},{"tipo":"rect_h","box":[260,880,600,940],"cap":12,"label":"Mesa B"},{"tipo":"rect_h","box":[1200,730,1540,790],"cap":12,"label":"Mesa C"},{"tipo":"rect_h","box":[1200,880,1540,940],"cap":12,"label":"Mesa D"}])
   },
   jardin_romantico: {
-    label:"Jardín romántico", emoji:"🌿", salon:"jardín · pérgola · carpa clara", recommended:"round_180_comfort", compact:"round_150_compact", pattern:"organic",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("pergola-1","altar",W,H,.50,.10,.23,.12),
-      stage2PctElement("camino-floral-1","camino",W,H,.50,.30,.06,.30,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.66-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.79),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.47),
-      centerFixedElement("lounge-1","lounge_chico",W*.18,H*.60),
-      centerFixedElement("barra-1","barra",W*.82,H*.60),
-      centerFixedElement("torta-1","mesa_torta",W*.80,H*.25),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.25),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("luces-1","luces",W,H,.50,.22,.70,.025,{nonPhysical:true}),
-      stage2PctElement("luces-2","luces",W,H,.50,.90,.70,.025,{nonPhysical:true}),
-      stage2PctElement("flores-1","flores",W,H,.08,.15,.05,.07,{nonPhysical:true}),
-      stage2PctElement("flores-2","flores",W,H,.92,.15,.05,.07,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.28,H*.54,4.2,1,"organic"),
-      ...stage2TwoSideZones(W,H,H*.70,H*.90,4.0,2,"organic"),
-      stage2Zone("centro_inferior",W*.38,W*.62,H*.78,H-3.2,3,"organic")
-    ]
+    label:"Jardín romántico", emoji:"🌿", salon:"jardín · pérgola · carpa clara", pattern:"organic", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"pergola-1","tipo":"altar","box":[775,175,1025,350],"label":"Pérgola"},{"id":"camino-floral-1","tipo":"camino","box":[835,300,965,720],"label":"Camino floral","nonPhysical":true},{"id":"pista-1","tipo":"pista","box":[735,725,1065,850],"label":"Pista / brindis"},{"id":"dj-1","tipo":"escenario","box":[735,875,1065,940],"label":"Música acústica"},{"id":"lounge-1","tipo":"living","box":[235,675,485,790],"label":"Lounge jardín"},{"id":"barra-1","tipo":"bar","box":[1315,675,1565,790],"label":"Bar floral"},{"id":"luces-1","tipo":"luces","box":[330,300,1470,390],"label":"Guirnalda","nonPhysical":true},{"id":"luces-2","tipo":"luces","box":[330,920,1470,1010],"label":"Guirnalda","nonPhysical":true},{"id":"flores-1","tipo":"flores","box":[165,195,255,285],"label":"Verde","nonPhysical":true},{"id":"flores-2","tipo":"flores","box":[1545,195,1635,285],"label":"Verde","nonPhysical":true}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":420,"cy":410,"r":55,"cap":8,"label":""},{"tipo":"round","cx":590,"cy":520,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1210,"cy":410,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1380,"cy":520,"r":55,"cap":8,"label":""},{"tipo":"round","cx":420,"cy":800,"r":55,"cap":8,"label":""},{"tipo":"round","cx":590,"cy":920,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1210,"cy":800,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1380,"cy":920,"r":55,"cap":8,"label":""},{"tipo":"round","cx":900,"cy":900,"r":55,"cap":8,"label":""}])
   },
   playa_tropical: {
-    label:"Playa tropical", emoji:"🌴", salon:"playa · deck · resort frente al mar", recommended:"round_150_compact", compact:"round_150_compact", pattern:"organic",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      stage2PctElement("horizonte-mar","exterior",W,H,.50,.05,.86,.07,{nonPhysical:true,labelOverride:"Horizonte / mar"}),
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-mar-1","altar",W,H,.50,.18,.24,.10),
-      stage2PctElement("camino-arena-1","camino",W,H,.50,.36,.06,.28,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.70-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.88),
-      centerFixedElement("barra-1","barra",W*.85,H*.24),
-      centerFixedElement("buffet-1","buffet",W*.15,H*.24),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.54),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("palmera-1","flores",W,H,.08,.57,.05,.08,{nonPhysical:true}),
-      stage2PctElement("palmera-2","flores",W,H,.92,.57,.05,.08,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.35,H*.56,4.4,1,"organic"),
-      ...stage2TwoSideZones(W,H,H*.72,H*.92,4.5,2,"organic"),
-      stage2Zone("arena_lateral",3.5,W-3.5,H*.82,H-3.0,3,"organic")
-    ]
+    label:"Playa tropical", emoji:"🌴", salon:"playa · deck · resort frente al mar", pattern:"organic", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"horizonte-mar","tipo":"exterior","box":[90,160,1710,250],"label":"Horizonte / mar","nonPhysical":true},{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-mar-1","tipo":"altar","box":[770,250,1030,380],"label":"Altar al mar"},{"id":"camino-arena-1","tipo":"camino","box":[832,395,968,690],"label":"Camino arena","nonPhysical":true},{"id":"sillas-playa-izq","tipo":"sillas_cer","box":[300,425,745,625],"label":"Sillas playa"},{"id":"sillas-playa-der","tipo":"sillas_cer","box":[1055,425,1500,625],"label":"Sillas playa"},{"id":"pista-1","tipo":"pista","box":[740,760,1060,970],"label":"Dance deck"},{"id":"dj-1","tipo":"escenario","box":[740,990,1060,1060],"label":"DJ sunset"},{"id":"barra-1","tipo":"bar","box":[1340,280,1580,380],"label":"Bar tropical"},{"id":"buffet-1","tipo":"buffet","box":[220,280,460,380],"label":"Ceviche / frutas"},{"id":"palmera-1","tipo":"flores","box":[175,615,245,685],"label":"Palmera","nonPhysical":true},{"id":"palmera-2","tipo":"flores","box":[1555,615,1625,685],"label":"Palmera","nonPhysical":true}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":340,"cy":820,"r":50,"cap":7,"label":""},{"tipo":"round","cx":520,"cy":920,"r":50,"cap":7,"label":""},{"tipo":"round","cx":1280,"cy":820,"r":50,"cap":7,"label":""},{"tipo":"round","cx":1460,"cy":920,"r":50,"cap":7,"label":""},{"tipo":"round","cx":450,"cy":1040,"r":50,"cap":7,"label":""},{"tipo":"round","cx":1350,"cy":1040,"r":50,"cap":7,"label":""}])
   },
   industrial_chic: {
-    label:"Industrial chic", emoji:"🏙️", salon:"galpón · warehouse · loft urbano", recommended:"rectangular_12", compact:"rectangular_12", pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      centerFixedElement("dj-1","escenario",W/2,H*.12),
-      elem("pista-1","pista",W/2-p.w/2,H*.44-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      stage2PctElement("truss-luces-1","luces",W,H,.50,.30,.42,.03,{nonPhysical:true}),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.67),
-      centerFixedElement("barra-1","barra",W*.82,H*.83),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.83),
-      centerFixedElement("photobooth-1","photobooth",W*.85,H*.18),
-      centerFixedElement("lounge-1","lounge_chico",W*.18,H*.18),
-      centerFixedElement("torta-1","mesa_torta",W*.50,H*.88),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.22,H*.58,4.8,1,"banquet_rows"),
-      stage2Zone("filas_inferiores",3.5,W-3.5,H*.70,H-3.2,2,"banquet_rows")
-    ]
+    label:"Industrial chic", emoji:"🏙️", salon:"galpón · warehouse · loft urbano", pattern:"banquet_rows", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"escenario-led-1","tipo":"escenario","box":[680,200,1120,305],"label":"Escenario / LED"},{"id":"pista-1","tipo":"pista","box":[660,390,1140,730],"label":"Pista central"},{"id":"truss-1","tipo":"luces","box":[620,350,1180,370],"label":"Truss de luces","nonPhysical":true},{"id":"barra-1","tipo":"bar","box":[1250,920,1630,1035],"label":"Bar de autor"},{"id":"buffet-1","tipo":"buffet","box":[170,920,550,1035],"label":"Food station"},{"id":"photobooth-1","tipo":"photobooth","box":[1300,190,1585,320],"label":"Neón / foto"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":310,"cy":385,"r":50,"cap":8,"label":""},{"tipo":"round","cx":470,"cy":515,"r":50,"cap":8,"label":""},{"tipo":"round","cx":310,"cy":645,"r":50,"cap":8,"label":""},{"tipo":"round","cx":470,"cy":775,"r":50,"cap":8,"label":""},{"tipo":"round","cx":1330,"cy":385,"r":50,"cap":8,"label":""},{"tipo":"round","cx":1490,"cy":515,"r":50,"cap":8,"label":""},{"tipo":"round","cx":1330,"cy":645,"r":50,"cap":8,"label":""},{"tipo":"round","cx":1490,"cy":775,"r":50,"cap":8,"label":""},{"tipo":"rect_h","box":[560,830,1240,895],"cap":18,"label":"Mesa industrial larga"},{"tipo":"rect_h","box":[560,970,1240,1035],"cap":18,"label":"Mesa industrial larga"}])
   },
   vintage_romantico: {
-    label:"Vintage romántico", emoji:"🕯️", salon:"salón íntimo · casa antigua · jardín boutique", recommended:"round_150_comfort", compact:"round_150_compact", pattern:"ring",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-vintage-1","altar",W,H,.50,.09,.20,.11),
-      stage2PctElement("camino-vintage-1","camino",W,H,.50,.28,.055,.25,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.60-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.75),
-      centerFixedElement("lounge-1","lounge_chico",W*.16,H*.43),
-      centerFixedElement("photobooth-1","photobooth",W*.84,H*.43),
-      centerFixedElement("buffet-1","buffet",W*.20,H*.88),
-      centerFixedElement("barra-1","barra",W*.80,H*.88),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.43),
-      centerFixedElement("torta-1","mesa_torta",W*.82,H*.22),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("anillo_vintage",3.2,W-3.2,H*.28,H*.88,1,"ring")
-    ]
+    label:"Vintage romántico", emoji:"🕯️", salon:"salón íntimo · casa antigua · jardín boutique", pattern:"ring", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-vintage-1","tipo":"altar","box":[785,165,1015,325],"label":"Altar vintage"},{"id":"camino-vintage-1","tipo":"camino","box":[845,315,955,590],"label":"Camino vintage","nonPhysical":true},{"id":"sillas-vintage-izq","tipo":"sillas_cer","box":[290,315,790,570],"label":"Sillas curvas"},{"id":"sillas-vintage-der","tipo":"sillas_cer","box":[1010,315,1510,570],"label":"Sillas curvas"},{"id":"pista-1","tipo":"pista","box":[745,650,1055,845],"label":"Pista"},{"id":"dj-1","tipo":"escenario","box":[745,860,1055,925],"label":"Trío / DJ"},{"id":"lounge-1","tipo":"living","box":[185,520,420,660],"label":"Lounge antiguo"},{"id":"photobooth-1","tipo":"photobooth","box":[1365,520,1600,660],"label":"Marco vintage"},{"id":"buffet-1","tipo":"buffet","box":[220,1000,560,1080],"label":"Mesa dulce"},{"id":"barra-1","tipo":"bar","box":[1240,1000,1580,1080],"label":"Champagne"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":300,"cy":760,"r":52,"cap":7,"label":""},{"tipo":"round","cx":500,"cy":900,"r":52,"cap":7,"label":""},{"tipo":"round","cx":720,"cy":780,"r":52,"cap":7,"label":""},{"tipo":"round","cx":1080,"cy":780,"r":52,"cap":7,"label":""},{"tipo":"round","cx":1300,"cy":900,"r":52,"cap":7,"label":""},{"tipo":"round","cx":1500,"cy":760,"r":52,"cap":7,"label":""},{"tipo":"round","cx":900,"cy":960,"r":52,"cap":7,"label":""}])
   },
   glam_lujo: {
-    label:"Glam lujo", emoji:"✨", salon:"ballroom premium · boda nocturna · gala", recommended:"round_180_comfort", compact:"round_180_compact", pattern:"symmetric",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      centerFixedElement("dj-1","escenario",W/2,H*.10),
-      stage2PctElement("backing-glam-1","backing",W,H,.50,.20,.36,.035),
-      elem("pista-1","pista",W/2-p.w/2,H*.48-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.70),
-      centerFixedElement("barra-1","barra",W*.82,H*.20),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.20),
-      centerFixedElement("photobooth-1","photobooth",W*.82,H*.88),
-      centerFixedElement("lounge-1","lounge_chico",W*.18,H*.88),
-      centerFixedElement("torta-1","mesa_torta",W*.82,H*.35),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("luces-glam-1","luces",W,H,.50,.50,.50,.025,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.24,H*.42,4.8,1,"symmetric"),
-      ...stage2TwoSideZones(W,H,H*.55,H*.74,4.8,2,"symmetric"),
-      ...stage2TwoSideZones(W,H,H*.74,H*.92,3.8,3,"symmetric")
-    ]
+    label:"Glam lujo", emoji:"✨", salon:"ballroom premium · boda nocturna · gala", pattern:"symmetric", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"eje-vertical","tipo":"alfombra","box":[850,160,950,1090],"label":"Eje dorado","nonPhysical":true},{"id":"eje-horizontal","tipo":"alfombra","box":[190,590,1610,690],"label":"Eje dorado","nonPhysical":true},{"id":"escenario-premium-1","tipo":"escenario","box":[635,190,1165,320],"label":"Escenario premium"},{"id":"pista-1","tipo":"pista","box":[650,440,1150,820],"label":"Gran pista"},{"id":"novios-1","tipo":"novios","box":[610,850,1190,920],"label":"Mesa principal"},{"id":"barra-1","tipo":"bar","box":[1260,250,1580,350],"label":"Bar dorado"},{"id":"buffet-1","tipo":"buffet","box":[220,250,540,350],"label":"Caviar / canapés"},{"id":"photobooth-1","tipo":"photobooth","box":[1260,990,1580,1080],"label":"Photocall"},{"id":"lounge-1","tipo":"living","box":[220,990,540,1080],"label":"VIP lounge"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":270,"cy":430,"r":58,"cap":8,"label":""},{"tipo":"round","cx":460,"cy":420,"r":58,"cap":8,"label":""},{"tipo":"round","cx":270,"cy":720,"r":58,"cap":8,"label":""},{"tipo":"round","cx":460,"cy":735,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1340,"cy":420,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1530,"cy":430,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1340,"cy":735,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1530,"cy":720,"r":58,"cap":8,"label":""},{"tipo":"round","cx":320,"cy":950,"r":58,"cap":8,"label":""},{"tipo":"round","cx":1480,"cy":950,"r":58,"cap":8,"label":""}])
   },
   mediterranea: {
-    label:"Mediterránea", emoji:"🍋", salon:"terraza · patio europeo · exterior cálido", recommended:"round_150_comfort", compact:"round_150_compact", mixed:{rectRatio:.25,roundType:"round_150_comfort"}, pattern:"ring",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("arco-olivos-1","altar",W,H,.50,.10,.20,.10),
-      stage2PctElement("plaza-central","exterior",W,H,.50,.45,.25,.22,{nonPhysical:true,labelOverride:"Plaza central"}),
-      elem("pista-1","pista",W/2-p.w/2,H*.62-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.88),
-      centerFixedElement("barra-1","barra",W*.82,H*.20),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.20),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.70),
-      centerFixedElement("torta-1","mesa_torta",W*.84,H*.38),
-      centerFixedElement("lounge-1","lounge_chico",W*.16,H*.38),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("olivo-1","flores",W,H,.08,.50,.05,.07,{nonPhysical:true}),
-      stage2PctElement("olivo-2","flores",W,H,.92,.50,.05,.07,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("plaza_anillo",3.5,W-3.5,H*.22,H*.88,1,"ring"),
-      stage2Zone("mesa_familiar",W*.35,W*.65,H*.70,H*.83,2,"banquet_rows")
-    ]
+    label:"Mediterránea", emoji:"🍋", salon:"terraza · patio europeo · exterior cálido", pattern:"ring", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"plaza-central","tipo":"exterior","box":[685,330,1115,760],"label":"Plaza central","nonPhysical":true},{"id":"arco-olivos-1","tipo":"altar","box":[785,180,1015,320],"label":"Arco olivos"},{"id":"camino-olivos-1","tipo":"camino","box":[850,320,950,475],"label":"Camino olivos","nonPhysical":true},{"id":"barra-1","tipo":"bar","box":[1260,230,1585,330],"label":"Aperol / vinos"},{"id":"buffet-1","tipo":"buffet","box":[215,230,540,330],"label":"Antipasti"},{"id":"dj-1","tipo":"escenario","box":[700,1040,1100,1090],"label":"Música italiana"},{"id":"olivo-1","tipo":"flores","box":[166,546,234,614],"label":"Olivo","nonPhysical":true},{"id":"olivo-2","tipo":"flores","box":[1566,546,1634,614],"label":"Olivo","nonPhysical":true}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":350,"cy":400,"r":53,"cap":8,"label":""},{"tipo":"round","cx":520,"cy":570,"r":53,"cap":8,"label":""},{"tipo":"round","cx":350,"cy":760,"r":53,"cap":8,"label":""},{"tipo":"round","cx":520,"cy":930,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1280,"cy":570,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1450,"cy":400,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1450,"cy":760,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1280,"cy":930,"r":53,"cap":8,"label":""},{"tipo":"round","cx":900,"cy":940,"r":53,"cap":8,"label":""},{"tipo":"rect_h","box":[670,805,1130,865],"cap":14,"label":"Mesa familiar"}])
   },
   japandi: {
-    label:"Japandi", emoji:"🎋", salon:"boutique · minimal cálido · ceremonia íntima", recommended:"rectangular_12", compact:"round_150_compact", mixed:{rectRatio:.65,roundType:"round_150_compact"}, pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-simple-1","altar",W,H,.50,.10,.18,.10),
-      stage2PctElement("jardin-zen-1","exterior",W,H,.50,.28,.14,.24,{nonPhysical:true,labelOverride:"Jardín zen"}),
-      stage2PctElement("camino-zen-1","camino",W,H,.50,.32,.045,.24,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.82-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.92),
-      centerFixedElement("lounge-1","lounge_chico",W*.18,H*.86),
-      centerFixedElement("barra-1","barra",W*.82,H*.86),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.50),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("plantas-1","flores",W,H,.18,.32,.04,.06,{nonPhysical:true}),
-      stage2PctElement("plantas-2","flores",W,H,.82,.32,.04,.06,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("mesas_bajas_superior",3.5,W-3.5,H*.50,H*.64,1,"banquet_rows"),
-      stage2Zone("mesas_bajas_media",3.5,W-3.5,H*.66,H*.78,2,"banquet_rows")
-    ]
+    label:"Japandi", emoji:"🎋", salon:"boutique · minimal cálido · ceremonia íntima", pattern:"banquet_rows", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"jardin-zen-1","tipo":"exterior","box":[790,190,1010,555],"label":"Jardín zen","nonPhysical":true},{"id":"altar-simple-1","tipo":"altar","box":[800,190,1000,325],"label":"Altar simple"},{"id":"camino-zen-1","tipo":"camino","box":[852,320,948,570],"label":"Camino zen","nonPhysical":true},{"id":"pista-1","tipo":"pista","box":[720,935,1080,1055],"label":"Espacio ritual"},{"id":"lounge-1","tipo":"living","box":[245,940,520,1060],"label":"Té / lounge"},{"id":"barra-1","tipo":"bar","box":[1280,940,1555,1060],"label":"Bar sake"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"rect_h","box":[260,680,510,735],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[570,680,820,735],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[970,680,1220,735],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[1280,680,1530,735],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[260,840,510,895],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[570,840,820,895],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[970,840,1220,895],"cap":8,"label":"Mesa baja"},{"tipo":"rect_h","box":[1280,840,1530,895],"cap":8,"label":"Mesa baja"}])
   },
   eco_sustentable: {
-    label:"Eco sustentable", emoji:"🌱", salon:"jardín · carpa natural · evento bajo residuo", recommended:"rectangular_12", compact:"round_150_compact", mixed:{rectRatio:.70,roundType:"round_150_compact"}, pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-vivo-1","altar",W,H,.50,.10,.22,.11),
-      stage2PctElement("camino-natural-1","camino",W,H,.50,.32,.055,.30,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.64-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.80),
-      centerFixedElement("buffet-1","buffet",W*.18,H*.35),
-      centerFixedElement("barra-1","barra",W*.82,H*.35),
-      centerFixedElement("activacion-reciclaje","activacion",W*.18,H*.48),
-      centerFixedElement("activacion-plantas","activacion",W*.82,H*.48),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.47),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("plantas-vivas-1","flores",W,H,.10,.15,.05,.07,{nonPhysical:true}),
-      stage2PctElement("plantas-vivas-2","flores",W,H,.90,.15,.05,.07,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.60,H*.76,4.5,1,"banquet_rows"),
-      ...stage2TwoSideZones(W,H,H*.78,H-3.0,4.5,2,"banquet_rows")
-    ]
+    label:"Eco sustentable", emoji:"♻️", salon:"jardín · carpa natural · venue sustentable", pattern:"banquet_rows", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-vivo-1","tipo":"altar","box":[780,175,1020,325],"label":"Altar vivo"},{"id":"camino-verde-1","tipo":"camino","box":[840,325,960,640],"label":"Camino verde","nonPhysical":true},{"id":"pista-1","tipo":"pista","box":[730,680,1070,930],"label":"Pista natural"},{"id":"dj-1","tipo":"escenario","box":[730,950,1070,1020],"label":"Música solar"},{"id":"buffet-1","tipo":"buffet","box":[190,345,470,470],"label":"Comida km 0"},{"id":"barra-1","tipo":"bar","box":[1330,345,1610,470],"label":"Agua / coctel"},{"id":"reciclaje-1","tipo":"backing","box":[190,520,470,620],"label":"Reciclaje + compost"},{"id":"plantas-regalo-1","tipo":"flores","box":[1330,520,1610,620],"label":"Regalos: plantas","nonPhysical":true}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"rect_h","box":[330,720,790,778],"cap":14,"label":"Mesa compartida"},{"tipo":"rect_h","box":[1010,720,1470,778],"cap":14,"label":"Mesa compartida"},{"tipo":"rect_h","box":[330,870,790,928],"cap":14,"label":"Mesa compartida"},{"tipo":"rect_h","box":[1010,870,1470,928],"cap":14,"label":"Mesa compartida"},{"tipo":"rect_h","box":[330,1020,790,1078],"cap":14,"label":"Mesa compartida"},{"tipo":"rect_h","box":[1010,1020,1470,1078],"cap":14,"label":"Mesa compartida"}])
   },
   fiesta_latina: {
-    label:"Fiesta latina", emoji:"🎉", salon:"salón social · fiesta con pista central", recommended:"round_180_comfort", compact:"round_150_compact", pattern:"ring",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      centerFixedElement("dj-1","escenario",W/2,H*.12),
-      elem("pista-1","pista",W/2-(p.w*1.15)/2,H*.48-(p.h*1.10)/2,p.w*1.15,p.h*1.10,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("barra-1","barra",W*.18,H*.88),
-      centerFixedElement("buffet-1","buffet",W*.82,H*.88),
-      centerFixedElement("photobooth-1","photobooth",W*.18,H*.18),
-      centerFixedElement("lounge-1","lounge_chico",W*.82,H*.18),
-      centerFixedElement("novios-1","mesa_novios_familiar",W/2,H*.72),
-      centerFixedElement("torta-1","mesa_torta",W*.84,H*.35),
-      centerFixedElement("banos-1","banos",W-2,H-1.5),
-      stage2PctElement("luces-fiesta-1","luces",W,H,.50,.28,.72,.025,{nonPhysical:true})
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("anillo_fiesta",3.2,W-3.2,H*.22,H*.88,1,"ring")
-    ]
+    label:"Fiesta latina", emoji:"🎉", salon:"salón social · fiesta con pista central", pattern:"ring", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"escenario-fiesta-1","tipo":"escenario","box":[665,190,1135,315],"label":"Banda / DJ visible"},{"id":"pista-1","tipo":"pista","box":[570,365,1230,780],"label":"Pista de fiesta"},{"id":"barra-1","tipo":"bar","box":[190,960,490,1070],"label":"Bar social"},{"id":"buffet-1","tipo":"buffet","box":[1310,960,1610,1070],"label":"Tacos / snacks"},{"id":"photobooth-1","tipo":"photobooth","box":[190,200,450,330],"label":"Photobooth color"},{"id":"lounge-1","tipo":"living","box":[1350,200,1610,330],"label":"Descanso"},{"id":"luces-1","tipo":"luces","box":[250,290,1550,350],"label":"Guirnalda","nonPhysical":true}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":250,"cy":430,"r":55,"cap":8,"label":""},{"tipo":"round","cx":420,"cy":570,"r":55,"cap":8,"label":""},{"tipo":"round","cx":250,"cy":730,"r":55,"cap":8,"label":""},{"tipo":"round","cx":420,"cy":875,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1380,"cy":570,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1550,"cy":430,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1550,"cy":730,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1380,"cy":875,"r":55,"cap":8,"label":""},{"tipo":"round","cx":690,"cy":940,"r":55,"cap":8,"label":""},{"tipo":"round","cx":1110,"cy":940,"r":55,"cap":8,"label":""}])
   },
   luces_fairy_noche: {
-    label:"Luces fairy / noche", emoji:"💡", salon:"jardín nocturno · exterior con guirnaldas", recommended:"round_150_comfort", compact:"round_150_compact", pattern:"organic",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-luz-1","altar",W,H,.50,.10,.20,.11),
-      stage2PctElement("camino-luz-1","camino",W,H,.50,.30,.055,.28,{nonPhysical:true}),
-      stage2PctElement("guirnalda-1","luces",W,H,.50,.20,.78,.025,{nonPhysical:true}),
-      stage2PctElement("guirnalda-2","luces",W,H,.50,.32,.78,.025,{nonPhysical:true}),
-      stage2PctElement("guirnalda-3","luces",W,H,.50,.48,.78,.025,{nonPhysical:true}),
-      stage2PctElement("guirnalda-4","luces",W,H,.50,.74,.78,.025,{nonPhysical:true}),
-      elem("pista-1","pista",W/2-p.w/2,H*.68-p.h/2,p.w,p.h,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.83),
-      centerFixedElement("lounge-1","lounge_chico",W*.18,H*.50),
-      centerFixedElement("barra-1","barra",W*.82,H*.50),
-      centerFixedElement("photobooth-1","photobooth",W/2,H*.90),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.46),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      ...stage2TwoSideZones(W,H,H*.52,H*.76,4.5,1,"organic"),
-      ...stage2TwoSideZones(W,H,H*.78,H*.92,4.0,2,"organic"),
-      stage2Zone("mesas_superiores_luces",3.5,W-3.5,H*.34,H*.50,3,"organic")
-    ]
+    label:"Luces fairy / noche", emoji:"💡", salon:"jardín nocturno · exterior con guirnaldas", pattern:"organic", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-luz-1","tipo":"altar","box":[782,185,1018,335],"label":"Altar luz"},{"id":"camino-luz-1","tipo":"camino","box":[842,330,958,610],"label":"Camino luz","nonPhysical":true},{"id":"guirnalda-1","tipo":"luces","box":[210,200,1590,280],"label":"Guirnalda","nonPhysical":true},{"id":"guirnalda-2","tipo":"luces","box":[210,320,1590,400],"label":"Guirnalda","nonPhysical":true},{"id":"guirnalda-3","tipo":"luces","box":[210,440,1590,520],"label":"Guirnalda","nonPhysical":true},{"id":"guirnalda-4","tipo":"luces","box":[210,560,1590,640],"label":"Guirnalda","nonPhysical":true},{"id":"guirnalda-5","tipo":"luces","box":[210,800,1590,880],"label":"Guirnalda","nonPhysical":true},{"id":"guirnalda-6","tipo":"luces","box":[210,920,1590,1000],"label":"Guirnalda","nonPhysical":true},{"id":"pista-1","tipo":"pista","box":[730,700,1070,940],"label":"Pista iluminada"},{"id":"dj-1","tipo":"escenario","box":[730,960,1070,1030],"label":"DJ / luces"},{"id":"lounge-1","tipo":"living","box":[195,525,460,645],"label":"Rincón cálido"},{"id":"barra-1","tipo":"bar","box":[1340,525,1605,645],"label":"Bar noche"},{"id":"photobooth-1","tipo":"photobooth","box":[760,1030,1040,1090],"label":"Foto neón"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"round","cx":320,"cy":720,"r":53,"cap":8,"label":""},{"tipo":"round","cx":510,"cy":820,"r":53,"cap":8,"label":""},{"tipo":"round","cx":700,"cy":720,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1100,"cy":720,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1290,"cy":820,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1480,"cy":720,"r":53,"cap":8,"label":""},{"tipo":"round","cx":450,"cy":990,"r":53,"cap":8,"label":""},{"tipo":"round","cx":1350,"cy":990,"r":53,"cap":8,"label":""}])
   },
   micro_wedding_boutique: {
-    label:"Micro wedding boutique", emoji:"🤍", salon:"boda íntima · restaurante · casa privada", recommended:"rectangular_12", compact:"rectangular_12", pattern:"banquet_rows",
-    fixed:({W,H,guestCount})=>{const p=getDanceFloorSize(guestCount);return[
-      centerFixedElement("entrada-1","entrada",W/2,H-.5),
-      stage2PctElement("altar-cercano-1","altar",W,H,.50,.12,.20,.10),
-      stage2PctElement("camino-intimo-1","camino",W,H,.50,.28,.045,.20,{nonPhysical:true}),
-      stage2PctElement("sillas-intimas-izq","sillas_cer",W,H,.36,.28,.22,.16),
-      stage2PctElement("sillas-intimas-der","sillas_cer",W,H,.64,.28,.22,.16),
-      centerFixedElement("novios-1","mesa_novios_sweetheart",W/2,H*.46),
-      elem("pista-1","pista",W/2-(p.w*.75)/2,H*.72-(p.h*.75)/2,p.w*.75,p.h*.75,{locked:true,presetFixed:true,stage2Fixed:true}),
-      centerFixedElement("dj-1","dj_chico",W/2,H*.89),
-      centerFixedElement("lounge-1","lounge_chico",W*.20,H*.76),
-      centerFixedElement("barra-1","barra",W*.82,H*.72),
-      centerFixedElement("buffet-1","buffet",W*.82,H*.84),
-      centerFixedElement("photobooth-1","photobooth",W*.20,H*.90),
-      centerFixedElement("banos-1","banos",W-2,H-1.5)
-    ]},
-    zones:({W,H})=>[
-      stage2Zone("mesa_imperial_central",W*.25,W*.75,H*.50,H*.62,1,"banquet_rows"),
-      stage2Zone("mesas_intimas_inferiores",3.5,W-3.5,H*.60,H*.70,2,"banquet_rows")
-    ]
+    label:"Micro wedding boutique", emoji:"🤍", salon:"boda íntima · restaurante · casa privada", pattern:"banquet_rows", exactReference:true,
+    fixed:({W,H})=>exactElements(W,H,[{"id":"entrada-1","tipo":"entrada","box":[850,1080,950,1115],"label":"Entrada"},{"id":"altar-cercano-1","tipo":"altar","box":[790,195,1010,335],"label":"Ceremonia cercana"},{"id":"camino-intimo-1","tipo":"camino","box":[855,340,945,520],"label":"Camino íntimo","nonPhysical":true},{"id":"sillas-intimas-izq","tipo":"sillas_cer","box":[500,355,785,475],"label":"Sillas íntimas"},{"id":"sillas-intimas-der","tipo":"sillas_cer","box":[1015,355,1300,475],"label":"Sillas íntimas"},{"id":"pista-1","tipo":"pista","box":[720,825,1080,995],"label":"Primer baile"},{"id":"dj-1","tipo":"escenario","box":[720,1015,1080,1080],"label":"Música en vivo"},{"id":"lounge-1","tipo":"living","box":[220,790,500,970],"label":"Mini lounge"},{"id":"barra-1","tipo":"bar","box":[1300,790,1580,900],"label":"Bar boutique"},{"id":"buffet-1","tipo":"buffet","box":[1300,925,1580,1035],"label":"Mesa dulce"},{"id":"photobooth-1","tipo":"photobooth","box":[220,990,500,1080],"label":"Libro de firmas"}]),
+    exactTables:({W,H})=>exactTables(W,H,[{"tipo":"imperial","box":[530,675,1270,760],"cap":30,"label":"Mesa imperial / 20–45 invitados"}])
   }
 };
 STAGE2_PRESET_CONFIGS.jardin_romantico_central = STAGE2_PRESET_CONFIGS.clasica_elegante;
@@ -8577,9 +8371,40 @@ const validateLayout = (layout={}) => {
 };
 const generateWeddingLayoutCore = ({presetId="clasica_elegante",guestCount=150,roomSizeOption="recommended",tableType="auto",format="dinner",musicType="dj",coupleTableType="sweetheart"}={}) => {
   const cfg = STAGE2_PRESET_CONFIGS[presetId] || STAGE2_PRESET_CONFIGS.clasica_elegante;
-  const room=getRoomSize(guestCount,roomSizeOption);
+  const room = cfg.exactReference ? getExactReferenceRoomSize(guestCount,roomSizeOption) : getRoomSize(guestCount,roomSizeOption);
   const W=room.W, H=room.H;
   const fixedElements=generateFixedElements(presetId,W,H,guestCount,roomSizeOption);
+
+  // Modo referencia exacta: se usa la misma disposición de los JPG, sin motor
+  // de slots ni fallback denso. Así no se rompen la simetría ni las relaciones
+  // entre altar, pista, mesas, barras, lounge y escenario.
+  if(cfg.exactReference && typeof cfg.exactTables === "function"){
+    const allTables = cfg.exactTables({W,H,guestCount,roomSizeOption,tableType}) || [];
+    const capacity = calculateSeatedCapacity(allTables);
+    const layout={
+      salonW:W, salonH:H, salonShape:"rectangulo", salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,
+      presetId, presetTitle:cfg.label, guestCount, roomSizeOption, roomSizeLabel:room.label,
+      area:room.area, tableTypeId:"referencia_exacta", tablePlan:[{id:"referencia_exacta",label:"Preset visual exacto",count:allTables.length,capacity}],
+      format, musicType, coupleTableType, estiloDistrib:presetId, estiloDecor:presetId,
+      elementos:fixedElements, mesas:allTables
+    };
+    const summary={
+      preset:cfg.label,
+      invitados:guestCount,
+      salon:room.label,
+      medidas:`${W} × ${H} m`,
+      area:room.area,
+      tipoMesa:"Disposición fija según JPG de referencia",
+      mesasRequeridas:allTables.length,
+      mesasGeneradas:allTables.length,
+      capacidadPorMesa:"según preset",
+      capacidadSentada:capacity,
+      estado:"referencia exacta",
+      alertas: capacity < guestCount ? ["Preset visual exacto: la disposición respeta la imagen. Si necesitás más capacidad, aumentá manualmente mesas/capacidad o elegí un salón más amplio."] : []
+    };
+    return {...layout, layoutSummary:summary, overflowTables:capacity<guestCount, maxPresetSeats:capacity};
+  }
+
   const zones=generateTableZonesForPreset(presetId,W,H,fixedElements);
   const plan=getStage2TablePlan(presetId,guestCount,roomSizeOption,tableType);
   let allTables=[];
