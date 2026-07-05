@@ -1676,7 +1676,7 @@ function Results({results,form,checked,setChecked,arquetipo,resultToken,onRestar
   const doneItems=Object.entries(checklistFull).flatMap(([k,items])=>items.map((_,i)=>checked[`${k}_${i}`])).filter(Boolean).length;
   const pct=totalItems>0?Math.round(doneItems/totalItems*100):0;
 
-  return <div style={{maxWidth:860,margin:"0 auto",background:"rgba(245,239,224,.88)",minHeight:"100dvh",padding:"0 0 100px"}}>
+  return <div style={{maxWidth:960,margin:"0 auto",background:"rgba(245,239,224,.88)",minHeight:"100dvh",padding:"0 0 100px"}}>
 
     {/* ══ NAV BAR ══ */}
     <div className="no-print" style={{background:"rgba(245,239,224,.95)",backdropFilter:"blur(8px)",borderBottom:"0.5px solid rgba(201,169,110,.2)",padding:"10px clamp(14px,3vw,32px)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,position:"sticky",top:0,zIndex:20}}>
@@ -2122,6 +2122,8 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
      action:()=>onGoModule("guests"), status:"Abrir →", done:false},
     {emoji:"⏰", label:"Cronograma", desc:"Timeline del día",
      action:()=>onGoModule("timeline"), status:"Abrir →", done:false},
+    {emoji:"📖", label:"Guía para novios", desc:"Protocolo, ceremonia y consejos",
+     action:()=>onGoModule("guia-novios"), status:"Abrir →", done:false},
   ];
 
   return <div style={{minHeight:"100svh",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"clamp(20px,4vw,48px)"}}>
@@ -2461,6 +2463,30 @@ const GUIA_SECCIONES = [
     {t:"¿Cómo pedir regalos con elegancia?", p:"Nunca en la invitación principal: usá una tarjeta aparte o la web/invitación digital. Opciones habituales: mesa de regalos en tiendas, lista de regalos online, o \"lluvia de sobres\" (aporte en efectivo, muy común en Paraguay) con una frase amable tipo \"tu presencia es nuestro mejor regalo; si querés hacernos uno, un aporte para nuestra nueva etapa nos ayuda muchísimo\". Datos bancarios solo si alguien los pide."},
     {t:"Confirmaciones (RSVP)", p:"Pedí confirmación con fecha límite (2-3 semanas antes) y un canal claro: WhatsApp, formulario o llamada. Una semana antes, repasá los \"pendientes\" de esta app y confirmalos uno a uno — el catering y las mesas dependen de ese número."},
   ]},
+  {id:"presupuesto", icon:"💰", titulo:"Presupuesto", bloques:[
+    {t:"Cómo se reparte un presupuesto típico", p:"Una referencia habitual: banquete y bebida 40-50%, salón 10-15%, fotografía y video 10%, música/DJ 5-8%, vestuario de ambos 8-10%, decoración y flores 8-10%, invitaciones y papelería 2-3%, y el resto para imprevistos. Ajustá los porcentajes a lo que más les importe: es SU fiesta."},
+    {t:"El colchón del 10%", p:"Reservá un 10% del total para imprevistos: siempre aparecen (una prueba extra de vestido, transporte de último momento, horas extra de barra). Si no lo usás, es el arranque de la luna de miel."},
+    {t:"Señas y pagos", p:"La mayoría de los proveedores reservan fecha con una seña del 20-50%. Pedí siempre recibo, acordá por escrito el cronograma de pagos y evitá pagar el 100% antes del evento: dejá un saldo para después, es tu garantía de servicio."},
+    {t:"Dónde rinde ahorrar (y dónde no)", p:"Suele rendir: invitaciones digitales, decoración DIY con ayuda de amigos, temporada baja o viernes/domingo. No suele rendir: fotografía (es lo que queda para siempre), comida y bebida (es lo que más recuerdan los invitados), y el sonido."},
+  ]},
+  {id:"dia", icon:"⏰", titulo:"El gran día", bloques:[
+    {t:"Cronograma típico de una boda de noche", p:"Peinado y maquillaje: 2-3 h antes. Fotos previas: 1 h. Ceremonia: 30-60 min. Recepción/cóctel: 60-90 min mientras los novios hacen fotos. Entrada al salón y primer baile. Cena: 90-120 min. Brindis y discursos: 20-30 min. Torta. Baile: 3-4 h. Fin de fiesta y despedida."},
+    {t:"Los tiempos que siempre se estiran", p:"Las fotos grupales (asigná a alguien con la lista de fotos para agilizar), los traslados y el maquillaje. Sumá 15-20 minutos de colchón entre bloques: un cronograma con aire se disfruta, uno al milímetro se sufre."},
+    {t:"Delegá el día D", p:"Los novios no coordinan su propia boda. Nombrá una persona de confianza (o wedding planner) como punto de contacto de todos los proveedores ese día, con el cronograma y los teléfonos. Ustedes solo tienen que estar presentes."},
+    {t:"Kit de emergencia", p:"Alguien del cortejo debería tener: costurero, curitas, tijera, analgésicos, desodorante, maquillaje de retoque, cargador de celular, snacks y agua para los novios (¡se olvidan de comer!)."},
+  ]},
+  {id:"vestimenta", icon:"🤵", titulo:"Dress code", bloques:[
+    {t:"Los códigos, del más al menos formal", p:"Etiqueta rigurosa (frac/vestido largo), Etiqueta o Black tie (esmoquin/vestido largo), Formal (traje oscuro/vestido largo o cóctel elegante), Cóctel (traje/vestido corto elegante), Semiformal y Casual elegante. Si no aclarás nada, la gente asume Formal para una boda de noche."},
+    {t:"Cómo comunicarlo", p:"Una línea en la invitación alcanza: \"Dress code: formal\". Si el lugar lo amerita, agregá una pista práctica: \"jardín — tacos finos no recomendados\" o \"a orillas del río, puede refrescar\". Los invitados lo agradecen."},
+    {t:"Colores reservados", p:"El blanco (y marfil/champán muy claro) es de la novia: evitalo como invitada salvo pedido expreso. Algunos también reservan un color para damas y madrinas — si es tu caso, avisalo en la invitación."},
+    {t:"Prueba de vestuario con tiempo", p:"Vestido: encargá 6-8 meses antes, con 2-3 pruebas (la última, 2 semanas antes). Traje: 3-4 meses. Zapatos: usalos en casa varias veces antes del día D."},
+  ]},
+  {id:"proveedores", icon:"🤝", titulo:"Proveedores", bloques:[
+    {t:"Qué preguntar antes de contratar", p:"¿Qué incluye exactamente el precio y qué se cobra aparte? ¿Cuántas horas de servicio y cuánto la hora extra? ¿Quién viene el día del evento (la misma persona que te atendió)? ¿Qué pasa si se enferman o llueve? ¿Tienen fotos/videos de eventos reales recientes?"},
+    {t:"Todo por escrito", p:"Contrato o al menos un correo/mensaje que detalle: fecha, horarios, servicios incluidos, precio final, cronograma de pagos y política de cancelación. \"Lo hablamos por teléfono\" no existe cuando algo sale mal."},
+    {t:"Plan B para el clima", p:"Si hay algo al aire libre, definí ANTES con el salón cuál es el plan de lluvia: qué espacio techado se usa, quién decide el cambio y con cuánta anticipación. Que no te lo estén inventando a las 18:00 del día D."},
+    {t:"Degustación y visita técnica", p:"Con el catering: degustá el menú real, no el de muestra. Con el salón: visitalo a la misma hora de tu evento (la luz cambia todo) y preguntá por generador, aire acondicionado, estacionamiento y accesibilidad."},
+  ]},
 ];
 
 function GuiaNupcial({abierta, seccionInicial="mesas", onClose}){
@@ -2498,6 +2524,41 @@ function GuiaNupcial({abierta, seccionInicial="mesas", onClose}){
           </div>
         )}
         <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",fontStyle:"italic",marginTop:18,borderTop:"0.5px solid rgba(74,94,58,.1)",paddingTop:10}}>Estas son costumbres y recomendaciones generales — cada boda es de ustedes: adapten lo que les sirva y descarten el resto.</p>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── MÓDULO GUÍA PARA NOVIOS (página completa) ────────────────────────────
+function GuiaModule({onBack}){
+  const [sec, setSec] = useState("mesas");
+  const actual = GUIA_SECCIONES.find(s=>s.id===sec)||GUIA_SECCIONES[0];
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
+    <div style={{background:THEME.color.sage,padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Guía</div>
+        <h1 style={{fontFamily:THEME.font.display,fontSize:"clamp(1.35rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>📖 Guía para novios</h1>
+        <p style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(245,239,224,.65)",margin:0}}>Protocolo, ceremonia, presupuesto y todo lo que se preguntan los novios</p>
+      </div>
+    </div>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box"}}>
+      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:8,marginBottom:12}}>
+        {GUIA_SECCIONES.map(s=>
+          <button key={s.id} onClick={()=>setSec(s.id)}
+            style={{background:sec===s.id?THEME.color.sage:THEME.color.cream2,color:sec===s.id?THEME.color.cream:"rgba(26,26,20,.55)",border:`1px solid ${sec===s.id?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"10px 15px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.82rem)",fontWeight:sec===s.id?700:400,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+            {s.icon} {s.titulo}
+          </button>
+        )}
+      </div>
+      <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.22)",borderRadius:16,padding:"clamp(16px,3.5vw,30px)"}}>
+        <div style={{fontFamily:THEME.font.display,fontSize:"clamp(1.15rem,3vw,1.5rem)",fontWeight:700,color:THEME.color.ink,marginBottom:14}}>{actual.icon} {actual.titulo}</div>
+        {actual.bloques.map((b,i)=>
+          <div key={i} style={{marginBottom:18}}>
+            <div style={{fontFamily:THEME.font.display,fontSize:"1.02rem",fontWeight:700,color:THEME.color.sage,marginBottom:5}}>{b.t}</div>
+            <p style={{fontFamily:THEME.font.body,fontSize:"max(14px,.92rem)",color:"rgba(26,26,20,.75)",lineHeight:1.7,margin:0}}>{b.p}</p>
+          </div>
+        )}
+        <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",fontStyle:"italic",marginTop:20,borderTop:"0.5px solid rgba(74,94,58,.1)",paddingTop:12,marginBottom:0}}>Costumbres y recomendaciones generales — cada boda es de ustedes: adapten lo que les sirva y descarten el resto.</p>
       </div>
     </div>
   </div>;
@@ -2782,12 +2843,12 @@ function BudgetModule({ user, onBack }){
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
-      <div style={{maxWidth:860,margin:"0 auto"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
             <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se sincronizan automáticamente desde Proveedores</div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",justifyContent:"flex-start"}}>
@@ -2802,7 +2863,7 @@ function BudgetModule({ user, onBack }){
       </div>
     </div>
 
-    <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(16px,3vw,32px) clamp(12px,4vw,48px) 0"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
 
       {/* Budget total input */}
       <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"clamp(18px,3vw,28px)",marginBottom:24}}>
@@ -3169,12 +3230,12 @@ function VendorsModule({user, onBack}){
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>🏢 Proveedores</h1>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>🏢 Proveedores</h1>
           </div>
           <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",marginTop:8}}>+ Agregar</button>
         </div>
@@ -3187,7 +3248,7 @@ function VendorsModule({user, onBack}){
       </div>
     </div>
 
-    <div style={{maxWidth:900,margin:"0 auto",padding:"clamp(16px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
       {/* Add form */}
       {adding && editId==="new" && <VendorForm onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
 
@@ -4299,29 +4360,47 @@ const cargarSalon = () => {
   catch(err){ return null; }
 };
 
+// Plano modelo: salón 40×20 m para 150 personas — 15 redondas de 10
+// alrededor de la pista central, mesa de novios junto a la pista,
+// escenario, dos barras, baños, cocina y entrada. Inspirado en los
+// planos clásicos de banquete.
+const SALON_MODELO = () => {
+  const filaX = [6.5, 11, 15.5, 20, 24.5, 29, 33.5];
+  const mesas = [
+    ...filaX.map((x,i)=>({id:i+1,  mx:x,  my:3,  tipo:"round", etiqueta:"", cap:10})),
+    ...filaX.map((x,i)=>({id:i+8,  mx:x,  my:17, tipo:"round", etiqueta:"", cap:10})),
+    {id:15, mx:6.5, my:10, tipo:"round", etiqueta:"", cap:10},
+  ];
+  return {
+    salonW: 40, salonH: 20, salonShape: "rectangulo", estiloDistrib: "banquet",
+    mesas,
+    elementos: [
+      {id:"pista-1",     tipo:"pista",     mx:16,   my:6,    ew:8,   eh:8},
+      {id:"novios-1",    tipo:"novios",    mx:12.4, my:9.5,  ew:2.6, eh:0.9},
+      {id:"escenario-1", tipo:"escenario", mx:24.6, my:7.5,  ew:2,   eh:5},
+      {id:"bar-1",       tipo:"bar",       mx:36.6, my:2,    ew:2.6, eh:4},
+      {id:"bar-2",       tipo:"bar",       mx:36.6, my:14,   ew:2.6, eh:4},
+      {id:"banios-1",    tipo:"banios",    mx:0.8,  my:0.8,  ew:3,   eh:2.5},
+      {id:"cocina-1",    tipo:"cocina",    mx:0.8,  my:16.6, ew:3.6, eh:2.6},
+      {id:"entrada-1",   tipo:"entrada",   mx:18.5, my:19.1, ew:3,   eh:0.8},
+    ],
+  };
+};
+
 function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAssignMany, onRemove, onOpenGuia }){
   // Layout guardado de sesiones anteriores (se lee una sola vez)
   const salonInitRef = useRef();
   if(salonInitRef.current===undefined) salonInitRef.current = cargarSalon();
   const S0 = salonInitRef.current;
+  const M0 = SALON_MODELO(); // default: plano modelo 40×20 para 150 personas
 
   // ── Estado general ──
-  const [salonW, setSalonW]       = useState(S0?.salonW ?? 20);
-  const [salonH, setSalonH]       = useState(S0?.salonH ?? 15);
-  const [salonShape, setSalonShape] = useState(S0?.salonShape ?? "cuadrado");
+  const [salonW, setSalonW]       = useState(S0?.salonW ?? M0.salonW);
+  const [salonH, setSalonH]       = useState(S0?.salonH ?? M0.salonH);
+  const [salonShape, setSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
   const [zoom, setZoom]           = useState(1);
-  const [mesas, setMesas]         = useState(()=>{
-    if(S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) return S0.mesas;
-    const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
-    const n=Math.max(maxM,1);
-    const cols=Math.ceil(Math.sqrt(n+1));
-    return Array.from({length:n},(_,i)=>({id:i+1,mx:3+(i%cols)*3.5,my:3+Math.floor(i/cols)*3.5,tipo:"round",etiqueta:""}));
-  });
-  const [elementos, setElementos] = useState(()=>S0?.elementos&&Array.isArray(S0.elementos)?S0.elementos:[
-    {id:"novios-1",  tipo:"novios",   mx:8.5,my:1,  ew:3,  eh:0.9},
-    {id:"pista-1",   tipo:"pista",    mx:6,  my:8,  ew:8,  eh:6},
-    {id:"entrada-1", tipo:"entrada",  mx:8,  my:13, ew:3,  eh:0.8},
-  ]);
+  const [mesas, setMesas]         = useState(()=> (S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas);
+  const [elementos, setElementos] = useState(()=> (S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos);
   const [estiloDistrib, setEstiloDistrib] = useState(S0?.estiloDistrib ?? "banquet");
 
   // Guardado dual: localStorage (instantáneo, por dispositivo) + Supabase (sincronizado).
@@ -4459,6 +4538,16 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
   const salonMuyChico= totalInvWarn>0&&totalInvWarn>capacidadMax*1.3;
 
   // ── Fit to screen ──
+  // Aplicar el plano modelo (reemplaza el plano actual; las asignaciones
+  // de invitados a mesas 1-15 se conservan por número)
+  const aplicarModelo=()=>{
+    const M=SALON_MODELO();
+    setSalonW(M.salonW); setSalonH(M.salonH); setSalonShape(M.salonShape);
+    setMesas(M.mesas); setElementos(M.elementos);
+    setSelectedMesa(null); setSelectedElem(null);
+    setTimeout(fitToScreen,80);
+  };
+
   const fitToScreen=()=>{
     const el=viewportRef.current; if(!el) return;
     const vpW=el.clientWidth-60, vpH=el.clientHeight-60;
@@ -5142,6 +5231,8 @@ function SalonView({ user, guests, tableSize, budgetInvitados=0, onAssign, onAss
       {/* Menús desplegables — anclados al toolbar, fuera de las filas con overflow */}
       {showShapeMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:170}}>
         {Object.entries(SALON_SHAPES).map(([k,v])=><button key={k} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSalonShape(k);if(k==="cuadrado"){const lado=Math.min(salonW,salonH);setSalonW(lado);setSalonH(lado);}setShowShapeMenu(false);}} style={{display:"flex",alignItems:"center",width:"100%",background:salonShape===k?"rgba(74,94,58,.08)":"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{v.label}</button>)}
+        <div style={{borderTop:"0.5px solid rgba(74,94,58,.12)",margin:"6px 0"}}/>
+        <button onMouseDown={e=>e.stopPropagation()} onClick={()=>{aplicarModelo();setShowShapeMenu(false);}} title="Reemplaza el plano actual por el modelo de banquete" style={{display:"flex",alignItems:"center",width:"100%",background:"rgba(201,169,110,.1)",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:700,color:"rgba(139,107,40,.95)",cursor:"pointer",textAlign:"left"}}>✨ Cargar salón modelo (40×20 · 150 pers.)</button>
       </div>}
       {showElemMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:10,padding:6,zIndex:300,boxShadow:THEME.shadow.pop,minWidth:200,maxHeight:"min(340px,50vh)",overflowY:"auto"}}>
         {ELEMENTOS_FIJOS.map(e=><button key={e.id} onMouseDown={ev=>ev.stopPropagation()} onClick={()=>{addElemento(e.id);setShowElemMenu(false);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",background:"transparent",border:"none",borderRadius:8,padding:"11px 12px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"}}>{e.emoji} {e.label}</button>)}
@@ -6029,12 +6120,12 @@ function TimelineModule({user, form, results, onBack}){
 
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
-      <div style={{maxWidth:860,margin:"0 auto"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>⏰ Cronograma del día</h1>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:"0 0 4px",lineHeight:1.1}}>⏰ Cronograma del día</h1>
             {fecha&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(245,239,224,.5)",textTransform:"capitalize"}}>{fecha}</div>}
           </div>
           <div style={{display:"flex",gap:8}}>
@@ -6044,7 +6135,7 @@ function TimelineModule({user, form, results, onBack}){
         </div>
       </div>
     </div>
-    <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(14px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
       {adding&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"18px",marginBottom:14}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(100px,45vw),1fr))",gap:6,marginBottom:8}}>
           {[{label:"Hora",key:"hora",type:"time"},{label:"Evento",key:"titulo",type:"text",placeholder:"ej: Primer baile"},{label:"Duración (min)",key:"duracion",type:"number"},{label:"Lugar",key:"lugar",type:"text",placeholder:"ej: Jardín"}].map(f=>
@@ -6519,12 +6610,12 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
-      <div style={{maxWidth:860,margin:"0 auto"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>📋 Checklist de la boda</h1>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>📋 Checklist de la boda</h1>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,4vw,3rem)",color:"#C9A96E",fontWeight:700,lineHeight:1}}>{pct}%</div>
@@ -6538,7 +6629,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
       </div>
     </div>
 
-    <div style={{maxWidth:860,margin:"0 auto",padding:"clamp(16px,3vw,28px) clamp(12px,4vw,48px) 0"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
 
       {/* ── CLIMA ── */}
       <WeatherWidget fechaBoda={form?.fechaBoda} ciudad={form?.ciudad}/>
@@ -6867,6 +6958,7 @@ function GlobalNav({view, setView, hasResults}){
     {id:"checklist-boda",icon:"📋", label:"Checklist"},
     {id:"guests",        icon:"👥", label:"Invitados"},
     {id:"timeline",      icon:"⏰", label:"Cronograma"},
+    {id:"guia-novios",   icon:"📖", label:"Guía"},
   ];
   return <nav style={{
     position:"fixed",bottom:0,left:0,right:0,zIndex:100,
@@ -7365,6 +7457,7 @@ export default function App(){
   />{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="landing") return <Landing onStart={()=>setView("guia")}/>;
   if(view==="guia") return <GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>
+  if(view==="guia-novios") return <><GuiaModule onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="budget") return <><BudgetModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="vendors") return <><VendorsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
   if(view==="guests") return <><GuestsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results}/>}</>
