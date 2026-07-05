@@ -8197,6 +8197,16 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [estiloDistrib, setEstiloDistrib] = useState(NORMALIZE_DISTRIB(S0?.estiloDistrib ?? M0.estiloDistrib ?? "banquet"));
   const [estiloDecor, setEstiloDecor] = useState(S0?.estiloDecor ?? M0.estiloDecor ?? "romantico_floral");
 
+  // Estado de Etapa 2: debe declararse ANTES del autoguardado.
+  // El error "Cannot access 'ia' before initialization" venía de que el
+  // useEffect de guardado armaba su dependency array con estas variables
+  // antes de que existieran en el cuerpo de SalonView.
+  const [selectedSalonType, setSelectedSalonType] = useState(S0?.selectedSalonType || "jardin_romantico_central");
+  const [selectedGuestCount, setSelectedGuestCount] = useState(nearestGuestOption(S0?.selectedGuestCount || totalInvitadosInicial || 150));
+  const [roomSizeOption, setRoomSizeOption] = useState(S0?.roomSizeOption || "recommended");
+  const [selectedTableTypeId, setSelectedTableTypeId] = useState(S0?.selectedTableTypeId || "auto");
+  const [layoutSummary, setLayoutSummary] = useState(S0?.layoutSummary || null);
+
   // Guardado dual: localStorage (instantáneo, por dispositivo) + Supabase (sincronizado).
   // remoteLoaded evita que el autoguardado con defaults pise el layout remoto
   // antes de que termine de cargar en un dispositivo nuevo.
@@ -8304,11 +8314,6 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [showShapeMenu, setShowShapeMenu] = useState(false);
   const [showElemMenu, setShowElemMenu]   = useState(false);
   const [showPresetMenu, setShowPresetMenu] = useState(false);
-  const [selectedSalonType, setSelectedSalonType] = useState("jardin_romantico_central");
-  const [selectedGuestCount, setSelectedGuestCount] = useState(nearestGuestOption(totalInvitadosInicial || 150));
-  const [roomSizeOption, setRoomSizeOption] = useState("recommended");
-  const [selectedTableTypeId, setSelectedTableTypeId] = useState("auto");
-  const [layoutSummary, setLayoutSummary] = useState(S0?.layoutSummary || null);
   const [selectedSalonShape, setSelectedSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
   const [selectedShapeConfig, setSelectedShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
