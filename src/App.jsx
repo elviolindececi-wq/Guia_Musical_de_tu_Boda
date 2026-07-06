@@ -3414,6 +3414,31 @@ const CONFIRMACIONES = [
   {id:"confirmado", label:"Confirmado", color:"rgba(74,94,58,.85)",   bg:"rgba(74,94,58,.1)"},
   {id:"no_va",      label:"No va",      color:"rgba(26,26,20,.35)",   bg:"rgba(26,26,20,.05)"},
 ];
+const PARENTESCO_HUMANO = {
+  "Familia directa":"familia directa",
+  "Familia":"familia",
+  "Amigos":"amigos",
+  "Trabajo":"compañeros de trabajo",
+  "Niños":"niños",
+  "Otro":"invitados afines"
+};
+const PARENTESCO_MESA_IDEAL = {
+  "Familia directa":"mesa familiar cercana a los novios",
+  "Familia":"mesa familiar",
+  "Amigos":"mesa de amigos o mesa cerca de la pista",
+  "Trabajo":"mesa de compañeros de trabajo",
+  "Niños":"mesa infantil o cerca de sus padres",
+  "Otro":"mesa con invitados compatibles"
+};
+const getConfirmacionStyle = (id) => CONFIRMACIONES.find(c=>c.id===id) || CONFIRMACIONES[0];
+const getGuestSoftStatusStyle = (id) => {
+  const c=getConfirmacionStyle(id);
+  return {
+    background:c.bg,
+    border:`1px solid ${c.color}`,
+    boxShadow:id==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.45)":id==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.55)":"inset 3px 0 0 rgba(26,26,20,.18)",
+  };
+};
 const LADOS = ["Novio","Novia","Ambos"];
 
 function GuestsModule({user, onBack, onGoDesigner}){
@@ -3760,6 +3785,41 @@ function GuestsModule({user, onBack, onGoDesigner}){
     return {mesa:String(maxM+1), motivo:`mesa nueva para ${parentesco}`};
   };
 
+  const guestsDeMesa = (mesa) => (guests||[]).filter(g=>String(g.mesa||"")===String(mesa||"") && g.confirmacion!=="no_va");
+  const mesaAffinityInfo = (mesa) => {
+    const list = guestsDeMesa(mesa);
+    const counts = {};
+    list.forEach(g=>{ const k=g.parentesco||"Otro"; counts[k]=(counts[k]||0)+(parseInt(g.cantidadInvitados||1)||1); });
+    const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    return {list, counts, top};
+  };
+  const getGuestSeatRecommendations = (g) => {
+    if(!g) return [];
+    const p = g.parentesco || "Otro";
+    const c = parseInt(g.cantidadInvitados||1)||1;
+    const tips = [];
+    if(g.confirmacion==="no_va") tips.push("Este invitado figura como ‘No va’. Podés dejarlo sin mesa hasta que cambie su estado.");
+    else if(g.confirmacion==="pendiente") tips.push("Está pendiente: mantenelo visible en color dorado y evitá cerrar el seating hasta confirmar.");
+    else tips.push("Confirmado: ya podés ubicarlo en una mesa definitiva.");
+    tips.push(`Por parentesco conviene ubicarlo en una ${PARENTESCO_MESA_IDEAL[p] || "mesa compatible"}.`);
+    const s = sugerirMesa(p, g.lado, c);
+    if(s?.mesa){
+      const info = mesaAffinityInfo(s.mesa);
+      const same = info.counts[p] || 0;
+      if(same>0) tips.push(`Mesa ${s.mesa} recomendada: ahí ya hay ${same} ${PARENTESCO_HUMANO[p] || "invitados afines"}.`);
+      else tips.push(`Mesa ${s.mesa} recomendada: ${s.motivo}.`);
+    }
+    if(g.mesa){
+      const info = mesaAffinityInfo(g.mesa);
+      const same = info.counts[p] || 0;
+      if(same>c) tips.push(`En la mesa ${g.mesa} comparte grupo con ${same-c} ${PARENTESCO_HUMANO[p] || "invitados afines"}.`);
+      const top = info.top;
+      if(top && top[0]!==p) tips.push(`Ojo: la mesa ${g.mesa} hoy tiene mayoría de ${PARENTESCO_HUMANO[top[0]] || top[0]}; revisá si se conocen o conviene moverlo.`);
+    }
+    if(g.restriccion && g.restriccion!=="Ninguna") tips.push(`Avisá al catering: ${g.restriccion}. Conviene sentarlo donde el servicio lo identifique fácil.`);
+    return tips.slice(0,4);
+  };
+
   // ── Drag real (mouse y dedo) en la vista Mesas ──────────────────
   // Ghost flotante que sigue el puntero; el destino se detecta con
   // elementFromPoint sobre atributos data-mesa-drop. Funciona en touch,
@@ -4043,7 +4103,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
           const s=sugerirMesa(newGuest.parentesco||"Otro",newGuest.lado,newGuest.cantidadInvitados);
           return <button onClick={()=>setNewGuest(x=>({...x,mesa:String(s.mesa)}))}
             style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(201,169,110,.1)",border:"1px dashed rgba(201,169,110,.5)",borderRadius:16,padding:"9px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(139,107,40,.95)",cursor:"pointer",marginBottom:10,textAlign:"left",maxWidth:"100%"}}>
-            💡 Sugerida: <strong>Mesa {s.mesa}</strong> · {s.motivo} — tocá para usar
+            💡 Sugerida: <strong>Mesa {s.mesa}</strong> · {s.motivo}. Ideal para {PARENTESCO_HUMANO[newGuest.parentesco||"Otro"]||"invitados afines"} — tocá para usar
           </button>;
         })()}
         <div style={{display:"flex",gap:8}}>
@@ -4104,7 +4164,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
           const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
           const isExpanded=expandedId===g.id;
           const cant=parseInt(g.cantidadInvitados||1);
-          return <div key={g.id} style={{background:THEME.color.cream2,border:`0.5px solid ${isExpanded?"rgba(74,94,58,.3)":"rgba(201,169,110,.18)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s"}}>
+          return <div key={g.id} style={{background:isExpanded?"rgba(74,94,58,.035)":(c.bg||THEME.color.cream2),border:`1px solid ${isExpanded?"rgba(74,94,58,.35)":(c.color||"rgba(201,169,110,.18)")}`,boxShadow:g.confirmacion==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.55)":g.confirmacion==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.7)":"inset 3px 0 0 rgba(26,26,20,.18)",borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s, background .2s"}}>
             <>
                   {/* Fila principal — siempre visible */}
                   <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}}
@@ -4173,6 +4233,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                         </select>
                       </div>
                     </div>
+                    <RecommendationBox title="Recomendaciones de mesa" items={getGuestSeatRecommendations(g)}/>
                     {/* Notas */}
                     <input type="text" defaultValue={g.notas||""} onBlur={e=>updateGuest(g.id,"notas",e.target.value)} placeholder="Notas (opcional)..."
                       style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:10}}/>
@@ -4204,7 +4265,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
               onDragStart={e=>{e.dataTransfer.setData("guestId",g.id);setMovingGuest(g.id);}}
               onDragEnd={()=>setMovingGuest(null)}
               onClick={e=>{e.stopPropagation();setMovingGuest(movingGuest===g.id?null:g.id);}}
-              style={{display:"flex",alignItems:"center",gap:4,background:movingGuest===g.id?"rgba(74,94,58,.18)":"rgba(201,169,110,.08)",border:movingGuest===g.id?"1px solid rgba(74,94,58,.5)":"1px solid transparent",borderRadius:100,padding:"5px 12px 5px 4px",minHeight:38,cursor:"grab",userSelect:"none"}}>
+              style={{display:"flex",alignItems:"center",gap:4,background:movingGuest===g.id?"rgba(74,94,58,.18)":(getConfirmacionStyle(g.confirmacion).bg),border:movingGuest===g.id?"1px solid rgba(74,94,58,.5)":`1px solid ${getConfirmacionStyle(g.confirmacion).color}`,borderRadius:100,padding:"5px 12px 5px 4px",minHeight:38,cursor:"grab",userSelect:"none",boxShadow:g.confirmacion==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.5)":g.confirmacion==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.6)":"inset 3px 0 0 rgba(26,26,20,.18)"}}>
               <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
                 style={{cursor:"grab",touchAction:"none",padding:"8px 6px",color:"rgba(26,26,20,.35)",fontSize:".85rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
               <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(26,26,20,.7)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
@@ -4239,6 +4300,12 @@ function GuestsModule({user, onBack, onGoDesigner}){
               <div style={{height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",marginBottom:10}}>
                 <div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:over?"rgba(200,80,60,.5)":pct>=80?THEME.color.gold:THEME.color.sage,borderRadius:4,transition:"width .3s"}}/>
               </div>
+              {(()=>{
+                const counts={};
+                t.guests.forEach(g=>{ const k=g.parentesco||"Otro"; counts[k]=(counts[k]||0)+(parseInt(g.cantidadInvitados||1)||1); });
+                const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+                return top?<div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.72)",background:"rgba(74,94,58,.06)",borderRadius:8,padding:"6px 8px",marginBottom:8}}>💡 Mesa {t.num}: mayoría de {PARENTESCO_HUMANO[top[0]]||top[0]} ({top[1]} pers.)</div>:null;
+              })()}
               {t.guests.map(g=>{
                 const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
                 const enMov=movingGuest===g.id;
@@ -4247,7 +4314,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                   onDragEnd={()=>setMovingGuest(null)}
                   onClick={e=>{e.stopPropagation();setMovingGuest(enMov?null:g.id);}}
                   title="Arrastrá desde ⠿ (o tocá y elegí mesa)"
-                  style={{display:"flex",alignItems:"center",gap:6,padding:"8px 6px 8px 0",minHeight:THEME.tap.min,borderBottom:"0.5px solid rgba(74,94,58,.06)",borderRadius:8,background:enMov?"rgba(74,94,58,.12)":"transparent",cursor:"grab",userSelect:"none",transition:"background .15s"}}>
+                  style={{display:"flex",alignItems:"center",gap:6,padding:"8px 6px 8px 0",minHeight:THEME.tap.min,borderBottom:"0.5px solid rgba(74,94,58,.06)",borderRadius:8,background:enMov?"rgba(74,94,58,.12)":(c.bg||"transparent"),border:`1px solid ${enMov?"rgba(74,94,58,.35)":(c.color||"rgba(74,94,58,.06)")}`,cursor:"grab",userSelect:"none",transition:"background .15s,border .15s",boxShadow:g.confirmacion==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.5)":g.confirmacion==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.6)":"inset 3px 0 0 rgba(26,26,20,.18)"}}>
                   <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
                     style={{cursor:"grab",touchAction:"none",padding:"10px 8px",color:"rgba(26,26,20,.3)",fontSize:".9rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
                   <div style={{flex:1,minWidth:0}}>
@@ -7946,7 +8013,7 @@ const getExactReferenceRoomSize = (guestCount=150, roomSizeOption="recommended")
   const guestBoost = (Number(guestCount)||150) >= 250 ? 4 : (Number(guestCount)||150) >= 200 ? 2 : 0;
   const W = +(baseW + guestBoost).toFixed(2);
   const H = +(W * EXACT_ASPECT).toFixed(2);
-  return { W, H, area:+(W*H).toFixed(0), label:`Referencia exacta ${W} × ${H} m` };
+  return { W, H, area:+(W*H).toFixed(0), label:`Plano editable ${W} × ${H} m` };
 };
 const exX = (px,W) => +(((Number(px)-EXACT_REF.x) / EXACT_REF.w) * W).toFixed(2);
 const exY = (py,H) => +(((Number(py)-EXACT_REF.y) / EXACT_REF.h) * H).toFixed(2);
@@ -8387,7 +8454,7 @@ const generateWeddingLayoutCore = ({presetId="clasica_elegante",guestCount=150,r
     const layout={
       salonW:W, salonH:H, salonShape:"rectangulo", salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,
       presetId, presetTitle:cfg.label, guestCount, roomSizeOption, roomSizeLabel:room.label,
-      area:room.area, tableTypeId:"referencia_exacta", tablePlan:[{id:"referencia_exacta",label:"Preset visual exacto",count:allTables.length,capacity}],
+      area:room.area, tableTypeId:"preset_editable", tablePlan:[{id:"preset_editable",label:"Distribución del estilo",count:allTables.length,capacity}],
       format, musicType, coupleTableType, estiloDistrib:presetId, estiloDecor:presetId,
       elementos:fixedElements, mesas:allTables
     };
@@ -8397,13 +8464,13 @@ const generateWeddingLayoutCore = ({presetId="clasica_elegante",guestCount=150,r
       salon:room.label,
       medidas:`${W} × ${H} m`,
       area:room.area,
-      tipoMesa:"Disposición fija según JPG de referencia",
+      tipoMesa:"Distribución base del estilo",
       mesasRequeridas:allTables.length,
       mesasGeneradas:allTables.length,
-      capacidadPorMesa:"según preset",
+      capacidadPorMesa:"editable por mesa",
       capacidadSentada:capacity,
-      estado:"referencia exacta",
-      alertas: capacity < guestCount ? ["Preset visual exacto: la disposición respeta la imagen. Si necesitás más capacidad, aumentá manualmente mesas/capacidad o elegí un salón más amplio."] : []
+      estado:"listo para editar",
+      alertas: capacity < guestCount ? ["Este estilo prioriza una pista amplia y zonas sociales. Para más capacidad, agregá mesas, aumentá la capacidad de algunas mesas o elegí un salón más amplio."] : []
     };
     return {...layout, layoutSummary:summary, overflowTables:capacity<guestCount, maxPresetSeats:capacity};
   }
@@ -8474,7 +8541,7 @@ const generateWeddingLayout = (params={}) => {
   if(best && (best.maxPresetSeats||0) < guestCount && best.format !== "cocktail"){
     best.layoutSummary = best.layoutSummary || {alertas:[]};
     best.layoutSummary.alertas = [...new Set([...(best.layoutSummary.alertas||[]),
-      `Aún en el salón más grande de este estilo entran ${best.maxPresetSeats} de ${guestCount} asientos. Probá con menos invitados, mesas más compactas o el estilo "Espiga Moderna"/"Minimal Chic" que rinden más mesas.`])];
+      `Este estilo, tal como está armado, queda corto para ${guestCount} invitados: hoy contempla ${best.maxPresetSeats} asientos. Podés agregar mesas, subir capacidad por mesa, reducir invitados o elegir un estilo con más mesas.`])];
   }
   return best || generateWeddingLayoutCore(params);
 };
@@ -8518,13 +8585,21 @@ const getElementRecommendations = (el={}, ctx={}) => {
   return [...base,...extra].slice(0,4);
 };
 
-const getMesaRecommendations = (mesa={}, personas=[], cap=10) => {
+const getMesaRecommendations = (mesa={}, personas=[], cap=10, guestList=[]) => {
   const tipo=mesa.tipo||"round";
   const tips=[];
   if(personas.length>cap) tips.push(`Está sobre capacidad: ${personas.length}/${cap}. Subí capacidad, agrandá la mesa o mové invitados.`);
   else if(personas.length===cap) tips.push("Mesa completa: revisá que los invitados tengan afinidad y que no quede demasiado apretada.");
   else if(personas.length===0) tips.push("Mesa libre: podés usarla para invitados pendientes o eliminarla si no aporta al layout.");
   else tips.push(`Todavía tiene ${Math.max(0,cap-personas.length)} lugar${cap-personas.length===1?"":"es"}: completala por afinidad o protocolo.`);
+  const counts={};
+  personas.forEach(p=>{
+    const g=Array.isArray(guestList) ? guestList.find(x=>x.id===p.guestId) : null;
+    const k=g?.parentesco||"Otro";
+    counts[k]=(counts[k]||0)+1;
+  });
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  if(top) tips.push(`Esta mesa tiene mayoría de ${PARENTESCO_HUMANO[top[0]]||top[0]} (${top[1]} personas).`);
   if(tipo==="round") tips.push("Redonda: ideal para conversación. Funciona mejor con 8–10 personas y paso alrededor.");
   if(tipo==="rect_h"||tipo==="rect_v"||tipo==="imperial") tips.push("Mesa larga/imperial: cuidá la orientación para que no bloquee la vista a pista o escenario.");
   if(!mesa.etiqueta) tips.push("Agregá una etiqueta como Familia, Amigos o Padrinos para entender rápido el plano.");
@@ -8701,9 +8776,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   });
   const sinMesa     = personas.filter(p=>!p.mesa);
   const sinMesaFilt = sinMesa.filter(p=>!searchSinMesa||p.nombre.toLowerCase().includes(searchSinMesa.toLowerCase()));
-  const CONF_COLORS = isGuestMode
-    ? {confirmado:"#1A1A14",pendiente:"#777",no_va:"rgba(26,26,20,.28)"}
-    : {confirmado:THEME.color.sage,pendiente:THEME.color.gold,no_va:"rgba(26,26,20,.3)"};
+  const CONF_COLORS = {confirmado:THEME.color.sage,pendiente:THEME.color.gold,no_va:"rgba(26,26,20,.3)"};
   const MESA_R_M    = 0.90;
   const ASIENTO_R_M = 0.28;
   const BASE_PX     = 30;
@@ -9955,7 +10028,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       {isDesignerMode&&showPresetMenu&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 4px)",left:10,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:14,padding:10,zIndex:320,boxShadow:THEME.shadow.pop,minWidth:320,maxWidth:"min(520px,92vw)",maxHeight:"min(560px,72vh)",overflowY:"auto"}}>
         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",padding:"5px 8px 4px"}}>Elegí un estilo</div>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.42)",padding:"0 8px 8px",lineHeight:1.4}}>
-          Cada estilo es <strong style={{color:"rgba(74,94,58,.7)"}}>referencial</strong>, pensado para inspirarte. Tocá uno para ver en qué espacio rinde mejor y cuántos invitados le quedan cómodos.
+          Cada estilo carga una base editable para empezar rápido. Tocá uno para ver en qué espacio rinde mejor y cuántos invitados le quedan cómodos.
         </div>
         <div style={{display:"grid",gap:6,maxHeight:"min(240px,38vh)",overflowY:"auto",padding:"2px 2px 4px"}}>
           {PRESET_STAGE2_ORDER.map(id=>{
@@ -10000,7 +10073,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             Preset: <strong style={{color:THEME.color.sage}}>{STAGE2_PRESET_CONFIGS[selectedSalonType]?.label}</strong>
           </div>
           <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:4}}>
-            {getRoomSize(selectedGuestCount,roomSizeOption).label} · Mesa recomendada: {getRecommendedTableTypeForPreset(selectedSalonType,selectedGuestCount,roomSizeOption).label}. El preset carga una referencia base editable: podés mover y redimensionar mesas, pista, barra, DJ, lounge y todos los elementos.
+            {getRoomSize(selectedGuestCount,roomSizeOption).label} · Mesa recomendada: {getRecommendedTableTypeForPreset(selectedSalonType,selectedGuestCount,roomSizeOption).label}. El preset carga una base editable: podés mover y redimensionar mesas, pista, barra, DJ, lounge y todos los elementos.
           </div>
         </div>
         <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType)} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Generar plano</button>
@@ -10265,7 +10338,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               <div style={{fontFamily:THEME.font.body,fontSize:"max(10px,.68rem)",color:"rgba(74,94,58,.55)",textAlign:"right",marginTop:3,fontStyle:"italic"}}>Sillas recomendadas: {capPorMedidas(selectedMesaObj.tipo||"round",selectedMesaObj.ew||MESA_R_M*2,selectedMesaObj.eh||MESA_R_M*2)}</div>
             </div>
 
-            <RecommendationBox items={getMesaRecommendations(selectedMesaObj, selectedPersonas, capDe(selectedMesaObj))}/>
+            <RecommendationBox items={getMesaRecommendations(selectedMesaObj, selectedPersonas, capDe(selectedMesaObj), guests)}/>
 
             {/* Etiqueta */}
             <div style={{marginBottom:8}}>
@@ -10426,7 +10499,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         </div>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.55)",textAlign:"right",marginTop:4,fontStyle:"italic"}}>Sillas recomendadas: {capPorMedidas(selectedMesaObj.tipo||"round",selectedMesaObj.ew||MESA_R_M*2,selectedMesaObj.eh||MESA_R_M*2)}</div>
       </div>
-      <RecommendationBox items={getMesaRecommendations(selectedMesaObj, selectedPersonas, capDe(selectedMesaObj))}/>
+      <RecommendationBox items={getMesaRecommendations(selectedMesaObj, selectedPersonas, capDe(selectedMesaObj), guests)}/>
       {/* Etiquetas rápidas */}
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
         {["Familia","Amigos","Presidencial","Padrinos","Testigos"].map(et=>(
