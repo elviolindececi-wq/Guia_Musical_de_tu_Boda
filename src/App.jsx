@@ -10684,6 +10684,46 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           </div>;
         })()}
 
+        {/* Lista sin mesa */}
+        <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:"0 0 auto",position:"sticky",top:0,zIndex:12,boxShadow:"0 10px 22px rgba(251,247,239,.92)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
+            {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>{isTouchAssignment?"tocá o arrastrá a una mesa":"arrastrá al plano"}</span>}
+          </div>
+          {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
+            <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
+              style={{width:"100%",fontFamily:THEME.font.body,fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
+            <span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",fontSize:".75rem",opacity:.4}}>🔍</span>
+            {searchSinMesa&&<button onClick={()=>setSearchSinMesa("")} style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)",fontSize:".8rem"}}>×</button>}
+          </div>}
+          {sinMesa.length===0
+            ?<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
+            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(300px,34vh)",overflowY:"auto"}}>
+              {sinMesaFilt.map(p=>{
+                const isGuestSelected=selectedGuestForAssign?.guestId===p.guestId;
+                return <div key={`${p.guestId}-${p.personIdx}`}
+                  onMouseDown={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
+                  onTouchStart={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
+                  onClick={e=>{
+                    e.stopPropagation();
+                    if(dragMoved.current){dragMoved.current=false;return;}
+                    if(isTouchAssignment) selectGuestForTapAssign(p);
+                  }}
+                  title={isTouchAssignment?"Tocá y luego elegí una mesa, o arrastrá hacia una mesa":"Arrastrá hacia una mesa en el canvas"}
+                  style={{display:"flex",alignItems:"center",gap:5,background:isGuestSelected?"rgba(74,94,58,.12)":"rgba(201,169,110,.06)",borderRadius:6,padding:"7px 8px",cursor:"grab",border:isGuestSelected?"1.5px solid rgba(74,94,58,.48)":"0.5px solid rgba(201,169,110,.15)",userSelect:"none",touchAction:"none",boxShadow:isGuestSelected?"0 0 0 2px rgba(74,94,58,.06)":"none"}}>
+                  <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
+                  </div>
+                  <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                  {isGuestSelected&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,color:THEME.color.sage,letterSpacing:".08em",textTransform:"uppercase"}}>mesa?</span>}
+                </div>;
+              })}
+              {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
+            </div>
+          }
+        </div>
+
+
         {/* Info mesa seleccionada — solo desktop; en mobile se usa el bottom sheet */}
         {!isMobile&&(selectedMesaObj
           ?<div style={{background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px",overflow:"hidden"}}>
@@ -10805,45 +10845,6 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             <div style={{fontFamily:THEME.font.body,fontSize:".8rem",color:"rgba(26,26,20,.38)",lineHeight:1.6}}>Tocá una mesa para editarla. Para moverla, mantené presionado y arrastrá.</div>
           </div>
         )}
-
-        {/* Lista sin mesa */}
-        <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:1}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
-            {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>{isTouchAssignment?"tocá o arrastrá":"← arrastrá al canvas"}</span>}
-          </div>
-          {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
-            <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
-              style={{width:"100%",fontFamily:THEME.font.body,fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
-            <span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",fontSize:".75rem",opacity:.4}}>🔍</span>
-            {searchSinMesa&&<button onClick={()=>setSearchSinMesa("")} style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)",fontSize:".8rem"}}>×</button>}
-          </div>}
-          {sinMesa.length===0
-            ?<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
-            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(200px,25vh)",overflowY:"auto"}}>
-              {sinMesaFilt.map(p=>{
-                const isGuestSelected=selectedGuestForAssign?.guestId===p.guestId;
-                return <div key={`${p.guestId}-${p.personIdx}`}
-                  onMouseDown={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
-                  onTouchStart={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
-                  onClick={e=>{
-                    e.stopPropagation();
-                    if(dragMoved.current){dragMoved.current=false;return;}
-                    if(isTouchAssignment) selectGuestForTapAssign(p);
-                  }}
-                  title={isTouchAssignment?"Tocá y luego elegí una mesa, o arrastrá hacia una mesa":"Arrastrá hacia una mesa en el canvas"}
-                  style={{display:"flex",alignItems:"center",gap:5,background:isGuestSelected?"rgba(74,94,58,.12)":"rgba(201,169,110,.06)",borderRadius:6,padding:"7px 8px",cursor:"grab",border:isGuestSelected?"1.5px solid rgba(74,94,58,.48)":"0.5px solid rgba(201,169,110,.15)",userSelect:"none",touchAction:"none",boxShadow:isGuestSelected?"0 0 0 2px rgba(74,94,58,.06)":"none"}}>
-                  <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
-                  </div>
-                  <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-                  {isGuestSelected&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,color:THEME.color.sage,letterSpacing:".08em",textTransform:"uppercase"}}>mesa?</span>}
-                </div>;
-              })}
-              {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
-            </div>
-          }
-        </div>
 
         {/* Resumen salón */}
         <div style={{background:"rgba(74,94,58,.05)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:8,padding:"8px 10px"}}>
@@ -11059,7 +11060,7 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
       style={{
         background:dragOver==="sin"?"rgba(200,80,60,.06)":"rgba(201,169,110,.06)",
         border:`0.5px solid ${dragOver==="sin"?"rgba(200,80,60,.3)":"rgba(201,169,110,.25)"}`,
-        borderRadius:14,padding:"14px 16px",marginBottom:16,transition:"all .2s"
+        borderRadius:14,padding:"14px 16px",marginBottom:16,transition:"all .2s",position:"sticky",top:8,zIndex:6,boxShadow:"0 10px 24px rgba(251,247,239,.86)",backdropFilter:"blur(8px)"
       }}
     >
       <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:10}}>
