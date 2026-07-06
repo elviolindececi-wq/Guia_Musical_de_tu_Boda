@@ -8754,8 +8754,10 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [selectedMesa, setSelectedMesa]   = useState(null);
   const [selectedElem, setSelectedElem]   = useState(null);
   const [dragging, setDragging]           = useState(null);
+  const draggingRef = useRef(null); // mantiene el drag activo disponible para listeners globales
   const dragMoved = useRef(false); // true si el mouse se movió durante el drag
   const [hoveredMesa, setHoveredMesa]     = useState(null);
+  const hoveredMesaRef = useRef(null);
   const [pinch, setPinch]                 = useState(null);
   const [showSheet, setShowSheet]         = useState(false); // mobile bottom sheet
   const [prevAsignacion, setPrevAsignacion] = useState(null); // snapshot para deshacer protocolo
@@ -8786,6 +8788,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
   const isMobile = useIsMobile();
   const isTouchAssignment = useIsMobile(1024); // smartphones y tablets: tocar invitado → tocar mesa
+  useEffect(()=>{ draggingRef.current = dragging; }, [dragging]);
+  useEffect(()=>{ hoveredMesaRef.current = hoveredMesa; }, [hoveredMesa]);
   const [hideDesktopTip, setHideDesktopTip] = useState(()=>{try{return localStorage.getItem("ceci_salon_desktop_tip")==="1";}catch(err){return false;}});
 
   const viewportRef = useRef(null);
@@ -9404,6 +9408,42 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     return{x:cx-r.left,y:cy-r.top};
   };
 
+  const getCanvasPosFromClient=(clientX,clientY)=>{
+    const r=canvasRef.current?.getBoundingClientRect()||{left:0,top:0};
+    return {x:clientX-r.left,y:clientY-r.top};
+  };
+
+  const mesaIdAtClient=(clientX,clientY,isTouchEvt=false)=>{
+    // Primero probamos con el DOM real. Esto corrige el caso de arrastrar
+    // desde el panel lateral hacia el canvas, donde el mouseup puede caer
+    // directamente sobre el div/SVG de la mesa.
+    const node=document.elementFromPoint?.(clientX,clientY);
+    const drop=node?.closest?.("[data-salon-mesa-drop]");
+    const domId=drop?.getAttribute?.("data-salon-mesa-drop");
+    if(domId) return parseInt(domId,10)||domId;
+
+    // Fallback por geometría: útil en SVG/touch si elementFromPoint devuelve
+    // un nodo interno o si el usuario suelta muy cerca del borde de la mesa.
+    const pos=getCanvasPosFromClient(clientX,clientY);
+    const detectR=(MESA_R_M+ASIENTO_R_M*2+(isTouchEvt?1.2:0.65))*PX;
+    let best=null;
+    let bestDist=Infinity;
+    mesas.forEach(m=>{
+      const dx=m.mx*PX-pos.x, dy=m.my*PX-pos.y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<detectR&&d<bestDist){best=m;bestDist=d;}
+    });
+    return best?best.id:null;
+  };
+
+  const moveDraggingGuestFromClient=(clientX,clientY,isTouchEvt=false)=>{
+    const pos=getCanvasPosFromClient(clientX,clientY);
+    setDragging(d=>d?.type==="guest"?{...d,cx:pos.x,cy:pos.y}:d);
+    const over=mesaIdAtClient(clientX,clientY,isTouchEvt);
+    setHoveredMesa(over||null);
+    hoveredMesaRef.current=over||null;
+  };
+
   // ── Touch/tablet: mover mesas con el dedo ─────────────────────
   // En mobile necesitamos dos gestos distintos sobre la mesa:
   // 1) tap corto = seleccionar mesa o asignar el invitado seleccionado;
@@ -9549,8 +9589,14 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   };
   const startDragGuest=(e,guestId)=>{
     e.stopPropagation();
+    if(!e.touches&&e.preventDefault) e.preventDefault();
     const pos=getCanvasPos(e);
-    setDragging({type:"guest",id:guestId,cx:pos.x,cy:pos.y});
+    const d={type:"guest",id:guestId,cx:pos.x,cy:pos.y};
+    draggingRef.current=d;
+    setDragging(d);
+    const cx=e.touches?.[0]?.clientX??e.clientX;
+    const cy=e.touches?.[0]?.clientY??e.clientY;
+    if(cx!==undefined&&cy!==undefined) moveDraggingGuestFromClient(cx,cy,!!e.touches);
   };
   const onMove=(e)=>{
     if(!dragging) return;
@@ -9598,18 +9644,56 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       }
       setMesas(ms=>ms.map(m=>m.id===dragging.id?{...m,ew,eh,cap:capPorMedidas(t,ew,eh)}:m));
     } else if(dragging.type==="guest"){
-      setDragging(d=>({...d,cx:pos.x,cy:pos.y}));
-      // Radio de detección generoso para touch: extra margen
-      const isTouchEvt=!!e.touches;
-      const detectR=(MESA_R_M+ASIENTO_R_M*2+(isTouchEvt?1.0:0.5))*PX;
-      const over=mesas.find(m=>{const dx=m.mx*PX-pos.x,dy=m.my*PX-pos.y;return Math.sqrt(dx*dx+dy*dy)<detectR;});
-      setHoveredMesa(over?over.id:null);
+      const clientX=e.touches?.[0]?.clientX??e.clientX;
+      const clientY=e.touches?.[0]?.clientY??e.clientY;
+      moveDraggingGuestFromClient(clientX,clientY,!!e.touches);
     }
   };
-  const onUp=()=>{
-    if(dragging?.type==="guest"&&hoveredMesa) onAssign(dragging.id,hoveredMesa);
+  const onUp=(e)=>{
+    if(dragging?.type==="guest"){
+      let drop=hoveredMesa;
+      const clientX=e?.changedTouches?.[0]?.clientX??e?.clientX;
+      const clientY=e?.changedTouches?.[0]?.clientY??e?.clientY;
+      if(clientX!==undefined&&clientY!==undefined) drop=mesaIdAtClient(clientX,clientY,!!e?.changedTouches);
+      if(drop) onAssign(dragging.id,drop);
+    }
+    draggingRef.current=null;
     setDragging(null);setHoveredMesa(null);
   };
+
+  useEffect(()=>{
+    if(dragging?.type!=="guest") return;
+    const handleMove=(ev)=>{
+      const p=ev.touches?.[0]||ev;
+      if(!p) return;
+      if(ev.cancelable) ev.preventDefault();
+      dragMoved.current=true;
+      moveDraggingGuestFromClient(p.clientX,p.clientY,!!ev.touches);
+    };
+    const handleUp=(ev)=>{
+      const d=draggingRef.current;
+      if(d?.type!=="guest") return;
+      const p=ev.changedTouches?.[0]||ev;
+      let drop=hoveredMesaRef.current;
+      if(p?.clientX!==undefined&&p?.clientY!==undefined) drop=mesaIdAtClient(p.clientX,p.clientY,!!ev.changedTouches);
+      if(drop&&onAssign) onAssign(d.id,drop);
+      draggingRef.current=null;
+      setDragging(null);
+      setHoveredMesa(null);
+    };
+    document.addEventListener("mousemove",handleMove);
+    document.addEventListener("mouseup",handleUp);
+    document.addEventListener("touchmove",handleMove,{passive:false});
+    document.addEventListener("touchend",handleUp,{passive:false});
+    document.addEventListener("touchcancel",handleUp,{passive:false});
+    return ()=>{
+      document.removeEventListener("mousemove",handleMove);
+      document.removeEventListener("mouseup",handleUp);
+      document.removeEventListener("touchmove",handleMove);
+      document.removeEventListener("touchend",handleUp);
+      document.removeEventListener("touchcancel",handleUp);
+    };
+  },[dragging?.type,mesas,zoom,salonW,salonH,onAssign]);
 
   const addMesa=()=>{
     const newId=Math.max(0,...mesas.map(m=>m.id))+1;
@@ -10575,8 +10659,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             {mesas.map(mesa=>{
               const {w,h,angle,jsx}=renderMesaSVG(mesa);
               const isSelected=selectedMesa===mesa.id;
-              return <div key={mesa.id}
-                style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center",touchAction:"none"}}
+              return <div key={mesa.id} data-salon-mesa-drop={String(mesa.id)}
+                style={{position:"absolute",left:30+mesa.mx*PX-w/2,top:30+mesa.my*PX-h/2,width:w,height:h,zIndex:isSelected?6:4,cursor:dragging?.type==="guest"?"copy":"pointer",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center",touchAction:"none"}}
                 onMouseEnter={()=>dragging?.type==="guest"&&setHoveredMesa(mesa.id)}
                 onMouseLeave={()=>dragging?.type==="guest"&&setHoveredMesa(null)}
                 onMouseDown={e=>{
