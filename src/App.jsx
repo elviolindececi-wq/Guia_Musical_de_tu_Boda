@@ -9428,6 +9428,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       const cx=item.mx*PX, cy=item.my*PX;
       const angle0=item.angle||0;
       setDragging({type:"rotate",id,cx,cy,angle0,startAng:Math.atan2(pos.y-cy,pos.x-cx)});
+    } else if(type==="rotateE"){
+      // Rotar cualquier elemento del salón
+      const item=elementos.find(el=>el.id===id); if(!item) return;
+      setSelectedElem(id);setSelectedMesa(null);
+      const cx=(item.mx+(item.ew||1)/2)*PX, cy=(item.my+(item.eh||1)/2)*PX;
+      const angle0=item.angle||0;
+      setDragging({type:"rotateE",id,cx,cy,angle0,startAng:Math.atan2(pos.y-cy,pos.x-cx)});
     } else if(type==="resize"){
       const item=elementos.find(el=>el.id===id); if(!item) return;
       setDragging({type:"resize",id,ox:pos.x,oy:pos.y,ew0:item.ew,eh0:item.eh});
@@ -9470,6 +9477,11 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       // Snap a múltiplos de 15°
       const newAngle=Math.round((dragging.angle0+delta)/15)*15;
       setMesas(ms=>ms.map(m=>m.id===dragging.id?{...m,angle:newAngle}:m));
+    } else if(dragging.type==="rotateE"){
+      const ang=Math.atan2(pos.y-dragging.cy,pos.x-dragging.cx);
+      const delta=(ang-dragging.startAng)*(180/Math.PI);
+      const newAngle=Math.round((dragging.angle0+delta)/15)*15;
+      setElementos(es=>es.map(x=>x.id===dragging.id?{...x,angle:newAngle}:x));
     } else if(dragging.type==="resize"){
       const ew=Math.max(0.5,+(dragging.ew0+(pos.x-dragging.ox)/PX).toFixed(2));
       const eh=Math.max(0.5,+(dragging.eh0+(pos.y-dragging.oy)/PX).toFixed(2));
@@ -9889,87 +9901,271 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     return `${(m.ew||0).toFixed(1)} × ${(m.eh||0).toFixed(1)} m`;
   };
 
+  // ── Render premium: el canvas ya no usa bloques genéricos.
+  // Cada objeto se dibuja como un asset vectorial top-down editable, manteniendo
+  // las coordenadas del preset y permitiendo mover, redimensionar y rotar.
+  const safeSvgId=(v)=>String(v||"x").replace(/[^a-zA-Z0-9_-]/g,"_");
+  const activeVisualId = selectedSalonType || estiloDecor || "fiesta_latina";
+  const CANVAS_VISUALS = {
+    clasica_elegante:{linen:"#FFFDF7",wood:"#C8AA73",metal:"#B7934C",accent:"#EAD9B8",flower:"#F7F1E5",leaf:"#7B8E5A",floorA:"#F3EBDD",floorB:"#E9DDC5",stroke:"#8F7650",chair:"#EEE0C5",text:"#4F3B23"},
+    boho_chic:{linen:"#F9E7D4",wood:"#8F5D37",metal:"#C47A48",accent:"#DFA06D",flower:"#D87545",leaf:"#788B55",floorA:"#F4DFCB",floorB:"#E8C8A6",stroke:"#7A4F34",chair:"#B77A43",text:"#5A3523"},
+    rustica_campo:{linen:"#D9BE85",wood:"#7C5430",metal:"#9C6B3D",accent:"#B7955D",flower:"#F0E0B0",leaf:"#607747",floorA:"#B99660",floorB:"#9A7547",stroke:"#553A21",chair:"#8A623A",text:"#332515"},
+    minimalista_moderno:{linen:"#FFFFFF",wood:"#D9D7CE",metal:"#9FA09B",accent:"#EFEDE7",flower:"#F4F3EE",leaf:"#A2B09A",floorA:"#F7F7F3",floorB:"#E9E8E2",stroke:"#696862",chair:"#D9D6CC",text:"#353531"},
+    jardin_romantico:{linen:"#FFF7F7",wood:"#C6935D",metal:"#C88A9E",accent:"#F0B8C5",flower:"#F4B7C4",leaf:"#5D8B4A",floorA:"#6D8A42",floorB:"#527332",stroke:"#496D3C",chair:"#EAD5C5",text:"#344C2B"},
+    playa_tropical:{linen:"#FFF8E2",wood:"#CFA96A",metal:"#62B8AF",accent:"#F2C970",flower:"#F8F1D2",leaf:"#2E9A73",floorA:"#F6D899",floorB:"#E9C476",stroke:"#3F7A7F",chair:"#D6A85D",text:"#234E55"},
+    industrial_chic:{linen:"#2F2F2D",wood:"#7A4D2E",metal:"#414141",accent:"#B1784C",flower:"#C0A36B",leaf:"#556B3D",floorA:"#4A4A48",floorB:"#333331",stroke:"#1D1D1B",chair:"#1F1F1D",text:"#F2E7D1"},
+    vintage_romantico:{linen:"#F7D9DF",wood:"#9A6247",metal:"#B98A5E",accent:"#E7A3B3",flower:"#EDB0C0",leaf:"#74815C",floorA:"#F7E7E9",floorB:"#E9CFD4",stroke:"#935E6D",chair:"#C99AA0",text:"#593642"},
+    glam_lujo:{linen:"#FFF9EC",wood:"#111113",metal:"#D3A83F",accent:"#DCC078",flower:"#FFF6DF",leaf:"#647246",floorA:"#1B1B1D",floorB:"#101012",stroke:"#6F5520",chair:"#D4AA52",text:"#F9EAC7"},
+    mediterranea:{linen:"#FFFDF1",wood:"#B68753",metal:"#D9B646",accent:"#E2C55A",flower:"#F0DA6E",leaf:"#4C7A5F",floorA:"#F4EBD3",floorB:"#E5D7B9",stroke:"#486F5C",chair:"#D7A73B",text:"#2F513F"},
+    japandi:{linen:"#FBFAF4",wood:"#A48562",metal:"#8E8B7B",accent:"#D4DCCB",flower:"#EFEDE1",leaf:"#91A082",floorA:"#EDEAE0",floorB:"#DDD8C9",stroke:"#505849",chair:"#C7BBA7",text:"#2F362E"},
+    eco_sustentable:{linen:"#FCFFF2",wood:"#9A6B43",metal:"#73A55C",accent:"#B5D8A7",flower:"#E5F3D5",leaf:"#4F934A",floorA:"#E4F0DB",floorB:"#D0E4C4",stroke:"#4E7846",chair:"#A4784A",text:"#33552F"},
+    fiesta_latina:{linen:"#FFF2E6",wood:"#B35D38",metal:"#E6A23A",accent:"#F3C144",flower:"#F4774B",leaf:"#4F8B58",floorA:"#F8D4B5",floorB:"#F0B98D",stroke:"#9A4734",chair:"#D9844B",text:"#5C2B20"},
+    luces_fairy_noche:{linen:"#F8F6FF",wood:"#5F5688",metal:"#EAC05A",accent:"#D8C06B",flower:"#E8D9FF",leaf:"#6B7B5B",floorA:"#2A2540",floorB:"#1B1730",stroke:"#453E69",chair:"#776DA1",text:"#F8F2D8"},
+    micro_wedding_boutique:{linen:"#FFF7EF",wood:"#A46E4C",metal:"#BD825D",accent:"#DABDA3",flower:"#F1D2C1",leaf:"#74875E",floorA:"#F3E5D6",floorB:"#E3CFBA",stroke:"#74533E",chair:"#C79A78",text:"#4A3325"}
+  };
+  const visual = CANVAS_VISUALS[activeVisualId] || CANVAS_VISUALS.fiesta_latina;
+  const isDarkVisual = ["industrial_chic","glam_lujo","luces_fairy_noche"].includes(activeVisualId);
+  const tableTextColor = (sel=false)=> sel ? THEME.color.cream : (isDarkVisual ? "#F8F2DE" : visual.text);
+  const occupancyStats=(mesa)=>{
+    const ps=mesaPersonas(mesa.id);
+    return {
+      confirmados:ps.filter(p=>String(p.confirmacion||"").toLowerCase().includes("confirm")).length,
+      pendientes:ps.filter(p=>String(p.confirmacion||"").toLowerCase().includes("pend")||!p.confirmacion).length,
+      noVan:ps.filter(p=>String(p.confirmacion||"").toLowerCase().includes("no")||String(p.confirmacion||"").toLowerCase().includes("rech")).length,
+      total:ps.length
+    };
+  };
+  const mesaHasOverlap=(mesa)=>{
+    const b=mesaBox(mesa);
+    const mesaHit=mesas.some(o=>o.id!==mesa.id&&boxesHit(expandBox(b,0.05),expandBox(mesaBox(o),0.05)));
+    const elemHit=elementos.some(el=>!el.nonPhysical&&!['camino','alfombra','luces','flores','centro_floral'].includes(el.tipo)&&boxesHit(b,expandBox(elemBox(el),0.02)));
+    return mesaHit||elemHit;
+  };
+  const elemHasOverlap=(el)=>{
+    if(el.nonPhysical||['camino','alfombra','luces','flores','centro_floral'].includes(el.tipo)) return false;
+    const b=elemBox(el);
+    return mesas.some(m=>boxesHit(expandBox(b,0.02),mesaBox(m))) || elementos.some(o=>o.id!==el.id&&!o.nonPhysical&&!['camino','alfombra','luces','flores','centro_floral'].includes(o.tipo)&&boxesHit(expandBox(b,0.02),elemBox(o)));
+  };
+  const professionalOverlapWarnings=()=>{
+    const warnings=[];
+    mesas.forEach(m=>{ if(mesaHasOverlap(m)) warnings.push(`Mesa ${m.etiqueta||m.id}: revisar superposición o circulación.`); });
+    elementos.forEach(el=>{ if(elemHasOverlap(el)) warnings.push(`${el.labelOverride||ELEMENTOS_FIJOS.find(d=>d.id===el.tipo)?.label||'Elemento'}: revisar superposición con mesas u otro elemento.`); });
+    return [...new Set(warnings)].slice(0,5);
+  };
+
+  const renderElementSVG=(el,def,elW,elH,isSel,conflict=false)=>{
+    const Wv=Math.max(36,elW), Hv=Math.max(28,elH);
+    const id=safeSvgId(el.id);
+    const label=el.labelOverride||def?.label||"Elemento";
+    const stroke=conflict?"#D94B3D":isSel?THEME.color.gold:visual.stroke;
+    const fontSize=Math.max(7,Math.min(15,Math.min(Wv,Hv)*0.18));
+    const showLabel=Wv>44&&Hv>26;
+    const labelY=Hv/2+fontSize*.35;
+    const commonText={fontFamily:"'Lora',serif",fontWeight:700,fill:tableTextColor(isSel),textAnchor:"middle",style:{pointerEvents:"none",userSelect:"none"}};
+    const flower=(cx,cy,r=5)=><g>
+      <circle cx={cx} cy={cy} r={r*1.45} fill={visual.leaf} opacity=".78"/>
+      {[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*r*.95} cy={cy+Math.sin(a*Math.PI/180)*r*.95} rx={r*.42} ry={r*.65} fill={visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*r*.95},${cy+Math.sin(a*Math.PI/180)*r*.95})`}/>) }
+      <circle cx={cx} cy={cy} r={r*.35} fill={visual.metal}/>
+    </g>;
+    const candle=(cx,cy)=><g><ellipse cx={cx} cy={cy} rx="4" ry="4" fill="#F8DFA0" opacity=".9"/><circle cx={cx} cy={cy} r="1.5" fill="#FFF7D9"/></g>;
+    const baseRect=(rx=8,fill=visual.linen)=><rect x="3" y="3" width={Wv-6} height={Hv-6} rx={rx} fill={fill} stroke={stroke} strokeWidth={isSel?3:1.8} filter={`url(#shadow-${id})`}/>;
+
+    let body=null;
+    if(el.tipo==="pista"){
+      const grid=Math.max(18,Math.min(44,Wv/6));
+      body=<>
+        {baseRect(8, isDarkVisual?"#171719":"#F7ECDD")}
+        <pattern id={`grid-${id}`} width={grid} height={grid} patternUnits="userSpaceOnUse"><path d={`M ${grid} 0 L 0 0 0 ${grid}`} fill="none" stroke={isDarkVisual?"rgba(255,236,190,.18)":"rgba(120,92,54,.18)"} strokeWidth="1"/></pattern>
+        <rect x="6" y="6" width={Wv-12} height={Hv-12} rx="6" fill={`url(#grid-${id})`}/>
+        {[.18,.38,.62,.82].map((k,i)=><circle key={i} cx={Wv*k} cy={Hv*.18+(i%2)*Hv*.56} r={Math.max(2,Math.min(4,Wv*.015))} fill={visual.metal} opacity=".8"/>)}
+        {showLabel&&<text x={Wv/2} y={labelY} fontSize={fontSize*1.2} {...commonText}>{label}</text>}
+      </>;
+    } else if(["escenario","musicos"].includes(el.tipo)){
+      body=<>
+        {baseRect(8,isDarkVisual?"#202024":"#F7F2E8")}
+        <rect x={Wv*.13} y={Hv*.25} width={Wv*.74} height={Hv*.08} rx="4" fill={visual.metal} opacity=".75"/>
+        <circle cx={Wv*.27} cy={Hv*.63} r={Math.min(Wv,Hv)*.13} fill={isDarkVisual?"#080809":"#2F2D2B"}/>
+        <circle cx={Wv*.73} cy={Hv*.63} r={Math.min(Wv,Hv)*.13} fill={isDarkVisual?"#080809":"#2F2D2B"}/>
+        <rect x={Wv*.42} y={Hv*.51} width={Wv*.16} height={Hv*.22} rx="3" fill={isDarkVisual?"#111":"#5A544D"}/>
+        {showLabel&&<text x={Wv/2} y={Hv*.42} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(["bar","buffet","torta","postres","bebidas","cafeteria","catering"].includes(el.tipo)){
+      body=<>
+        {baseRect(8,el.tipo==="bar"&&isDarkVisual?"#26211D":visual.linen)}
+        <rect x={Wv*.09} y={Hv*.23} width={Wv*.82} height={Math.max(3,Hv*.06)} rx="4" fill={visual.wood} opacity=".86"/>
+        {[.18,.34,.50,.66,.82].map((k,i)=><circle key={i} cx={Wv*k} cy={Hv*.47} r={Math.max(4,Math.min(10,Hv*.12))} fill={i%2?visual.metal:visual.accent} stroke={visual.stroke} strokeWidth="1"/>)}
+        {flower(Wv*.12,Hv*.76,Math.max(3,Math.min(7,Hv*.07)))}{flower(Wv*.88,Hv*.76,Math.max(3,Math.min(7,Hv*.07)))}
+        {showLabel&&<text x={Wv/2} y={Hv*.78} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(["novios","presidencial"].includes(el.tipo)){
+      body=<>
+        {baseRect(10,visual.linen)}
+        <rect x={Wv*.08} y={Hv*.52} width={Wv*.84} height={Math.max(3,Hv*.08)} rx="4" fill={visual.accent} opacity=".7"/>
+        {[.18,.30,.42,.58,.70,.82].map((k,i)=><rect key={i} x={Wv*k-5} y={Hv*.15} width="10" height={Math.max(8,Hv*.22)} rx="4" fill={visual.chair} stroke={visual.stroke} strokeWidth="1"/>)}
+        {flower(Wv*.16,Hv*.55,Math.max(3,Math.min(6,Hv*.08)))}{flower(Wv*.84,Hv*.55,Math.max(3,Math.min(6,Hv*.08)))}
+        {showLabel&&<text x={Wv/2} y={Hv*.48} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(["altar","arco"].includes(el.tipo)){
+      const aw=Wv*.58, ah=Hv*.62;
+      body=<>
+        <rect x="1" y="1" width={Wv-2} height={Hv-2} rx="10" fill="rgba(255,255,255,.04)" stroke={stroke} strokeWidth={isSel?2.5:1} strokeDasharray="5 5" opacity=".65"/>
+        <path d={`M ${Wv/2-aw/2} ${Hv*.66} V ${Hv*.38} C ${Wv/2-aw/2} ${Hv*.12}, ${Wv/2+aw/2} ${Hv*.12}, ${Wv/2+aw/2} ${Hv*.38} V ${Hv*.66}`} fill="none" stroke={visual.wood} strokeWidth={Math.max(4,Math.min(9,Wv*.035))} strokeLinecap="round"/>
+        {flower(Wv/2-aw/2,Hv*.38,Math.max(4,Math.min(9,Wv*.035)))}{flower(Wv/2,Hv*.18,Math.max(4,Math.min(9,Wv*.035)))}{flower(Wv/2+aw/2,Hv*.38,Math.max(4,Math.min(9,Wv*.035)))}
+        {showLabel&&<text x={Wv/2} y={Hv*.82} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(["camino","alfombra"].includes(el.tipo)){
+      body=<>
+        <rect x="3" y="3" width={Wv-6} height={Hv-6} rx="12" fill={el.tipo==="alfombra"?visual.accent:visual.linen} opacity={el.tipo==="alfombra"?.72:.84} stroke={stroke} strokeWidth={isSel?2.5:1.4}/>
+        <line x1={Wv/2} y1="10" x2={Wv/2} y2={Hv-10} stroke={visual.stroke} strokeWidth="1.2" opacity=".45"/>
+        {Array.from({length:18},(_,i)=>{const x=Wv*(.25+((i*37)%50)/100), y=Hv*(.08+i*.048);return <circle key={i} cx={x} cy={y} r={Math.max(1.5,Math.min(4,Wv*.018))} fill={visual.flower} opacity=".85"/>})}
+        {showLabel&&Hv>80&&<text x={Wv/2} y={Hv*.52} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(el.tipo==="sillas_cer"){
+      const rows=4, cols=6;
+      body=<>
+        <rect x="1" y="1" width={Wv-2} height={Hv-2} rx="8" fill="rgba(255,255,255,.06)" stroke={stroke} strokeWidth={isSel?2.5:1} strokeDasharray="5 4"/>
+        {Array.from({length:rows*cols},(_,i)=>{const c=i%cols,r=Math.floor(i/cols);return <rect key={i} x={Wv*(.12+c*.15)} y={Hv*(.16+r*.20)} width={Wv*.08} height={Hv*.09} rx="4" fill={visual.chair} stroke={visual.stroke} strokeWidth="1"/>})}
+        {showLabel&&<text x={Wv/2} y={Hv*.92} fontSize={fontSize*.86} {...commonText}>{label}</text>}
+      </>;
+    } else if(el.tipo==="living"){
+      body=<>
+        {baseRect(10,isDarkVisual?"#2A2630":"#F4E8DD")}
+        <rect x={Wv*.10} y={Hv*.16} width={Wv*.80} height={Hv*.20} rx="8" fill={visual.chair} stroke={visual.stroke} strokeWidth="1"/>
+        <rect x={Wv*.10} y={Hv*.64} width={Wv*.80} height={Hv*.20} rx="8" fill={visual.chair} stroke={visual.stroke} strokeWidth="1"/>
+        <circle cx={Wv/2} cy={Hv/2} r={Math.min(Wv,Hv)*.14} fill={visual.linen} stroke={visual.stroke} strokeWidth="1"/>
+        {flower(Wv*.12,Hv*.84,Math.max(3,Math.min(6,Hv*.06)))}{flower(Wv*.88,Hv*.16,Math.max(3,Math.min(6,Hv*.06)))}
+        {showLabel&&<text x={Wv/2} y={Hv*.54} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(["photobooth","backing","cabina360","bienvenida","regalos"].includes(el.tipo)){
+      body=<>
+        {baseRect(8,visual.linen)}
+        <rect x={Wv*.18} y={Hv*.18} width={Wv*.64} height={Hv*.46} rx="4" fill="none" stroke={visual.wood} strokeWidth={Math.max(2,Wv*.015)}/>
+        {flower(Wv*.20,Hv*.20,Math.max(3,Math.min(7,Hv*.07)))}{flower(Wv*.80,Hv*.64,Math.max(3,Math.min(7,Hv*.07)))}
+        {showLabel&&<text x={Wv/2} y={Hv*.82} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else if(["luces"].includes(el.tipo)){
+      body=<>
+        <rect x="1" y="1" width={Wv-2} height={Hv-2} rx="10" fill="rgba(255,255,255,.02)" stroke={stroke} strokeWidth={isSel?2.5:1} strokeDasharray="6 5" opacity=".85"/>
+        <path d={`M ${Wv*.08} ${Hv*.38} C ${Wv*.30} ${Hv*.10}, ${Wv*.70} ${Hv*.66}, ${Wv*.92} ${Hv*.34}`} fill="none" stroke={visual.stroke} strokeWidth="2"/>
+        {[.10,.24,.38,.52,.66,.80,.92].map((k,i)=><g key={i}>{candle(Wv*k,Hv*(.38+Math.sin(i)*.14))}</g>)}
+        {showLabel&&<text x={Wv/2} y={Hv*.82} fontSize={fontSize*.9} {...commonText}>{label}</text>}
+      </>;
+    } else if(["flores","centro_floral","exterior","columnas"].includes(el.tipo)){
+      body=<>
+        <ellipse cx={Wv/2+2} cy={Hv/2+3} rx={Wv*.32} ry={Hv*.32} fill="rgba(0,0,0,.14)"/>
+        <circle cx={Wv/2} cy={Hv/2} r={Math.min(Wv,Hv)*.32} fill={visual.leaf} stroke={stroke} strokeWidth={isSel?2.5:1.5}/>
+        {flower(Wv/2,Hv/2,Math.max(5,Math.min(12,Math.min(Wv,Hv)*.10)))}
+        {showLabel&&Wv>80&&<text x={Wv/2} y={Hv*.88} fontSize={fontSize*.8} {...commonText}>{label}</text>}
+      </>;
+    } else if(["entrada","salida","emergencia"].includes(el.tipo)){
+      body=<>
+        <rect x="3" y="3" width={Wv-6} height={Hv-6} rx="8" fill={visual.linen} stroke={stroke} strokeWidth={isSel?2.5:1.5}/>
+        <path d={`M ${Wv*.22} ${Hv*.50} H ${Wv*.68} M ${Wv*.55} ${Hv*.32} L ${Wv*.72} ${Hv*.50} L ${Wv*.55} ${Hv*.68}`} fill="none" stroke={visual.metal} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+        {showLabel&&<text x={Wv/2} y={Hv*.82} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    } else {
+      body=<>
+        {baseRect(8,visual.linen)}
+        <text x={Wv/2} y={Hv*.42} textAnchor="middle" fontSize={Math.max(14,Math.min(26,Hv*.35))} style={{pointerEvents:"none"}}>{def?.emoji||"✦"}</text>
+        {showLabel&&<text x={Wv/2} y={Hv*.72} fontSize={fontSize} {...commonText}>{label}</text>}
+      </>;
+    }
+
+    return <svg width={Wv} height={Hv} viewBox={`0 0 ${Wv} ${Hv}`} style={{display:"block",width:"100%",height:"100%",overflow:"visible",pointerEvents:"none"}}>
+      <defs><filter id={`shadow-${id}`} x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity=".20"/></filter></defs>
+      {body}
+      {conflict&&<text x={Wv/2} y={Math.max(12,fontSize+2)} textAnchor="middle" fontSize={Math.max(8,fontSize*.8)} fill="#D94B3D" fontWeight="800" fontFamily="Arial">revisar</text>}
+    </svg>;
+  };
+
   const renderMesaSVG=(mesa)=>{
     const ps=mesaPersonas(mesa.id);
     const isSelected=selectedMesa===mesa.id,isHovered=hoveredMesa===mesa.id;
     const tipoM=mesa.tipo||"round";
     const capM=capDe(mesa);
     const over=ps.length>capM;
+    const overlap=mesaHasOverlap(mesa);
     const libres=Math.max(0,capM-ps.length);
-    const fillC=isGuestMode
-      ? (isSelected?"#1A1A14":isHovered?"#E8E8E8":"#F7F7F7")
-      : (isSelected?THEME.color.sage:isHovered?"#5a7a48":"#D4C4A0");
-    const strokeC=isGuestMode
-      ? (isSelected?"#1A1A14":over?"rgba(200,60,60,.8)":"rgba(26,26,20,.55)")
-      : (isSelected?"#2D3D1C":over?"rgba(200,60,60,.8)":"rgba(90,78,62,.6)");
+    const stats=occupancyStats(mesa);
+    const fillC=isSelected?THEME.color.sage:(isDarkVisual?visual.linen:visual.linen);
+    const strokeC=over||overlap?"#D94B3D":isSelected?"#2D3D1C":visual.stroke;
     const dh={
       onMouseDown:e=>{
         e.stopPropagation();
         if(selectedGuestForAssign) return;
         startDrag(e,"mesa",mesa.id);
       },
-      // En touch/tablet: tap selecciona/asigna; mantener y arrastrar mueve la mesa.
       onTouchStart:e=>{ e.stopPropagation(); beginMesaTouchDrag(e,mesa); }
     };
+    const seatFill=(p)=>p?(CONF_COLORS[p.confirmacion]||"#999"):(isDarkVisual?"rgba(255,255,255,.20)":"rgba(255,255,255,.70)");
+    const chairStroke=isDarkVisual?"rgba(255,245,210,.35)":"rgba(90,78,62,.28)";
 
     if(tipoM==="round"){
       const R=(((mesa.ew||MESA_R_M*2))/2)*PX,AR=ASIENTO_R_M*PX,ts=Math.max(ps.length,capM);
-      const pts=circlePts(ts,R+AR),sv=(R+AR*2+6)*2,cx=sv/2,cy=sv/2;
+      const pts=circlePts(ts,R+AR),sv=(R+AR*2+10)*2,cx=sv/2,cy=sv/2;
+      const gid=safeSvgId(`mesa_${mesa.id}`);
       return{w:sv,h:sv,jsx:<svg width={sv} height={sv} style={{overflow:"visible",display:"block"}}>
-        <circle cx={cx+2} cy={cy+2} r={R} fill="rgba(0,0,0,.18)"/>
-        <circle cx={cx} cy={cy} r={R} fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
-        {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill="#fff" fontFamily="'Lora',serif" fontWeight="600" style={{pointerEvents:"none"}}>soltar</text>}
-        {mesa.etiqueta
-          ?<><text x={cx} y={cy-R*0.2} textAnchor="middle" fontSize={Math.max(6,R*0.18)} fill={isSelected?"rgba(245,239,224,.8)":"rgba(74,94,58,.6)"} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
-            <text x={cx} y={cy+R*0.3} textAnchor="middle" fontSize={Math.max(9,R*0.4)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
-          :<><text x={cx} y={cy-R*0.1} textAnchor="middle" fontSize={Math.max(7,R*0.24)} fill={isSelected?THEME.color.cream:THEME.color.sage} fontFamily="'Cinzel',serif" fontWeight="600" style={{pointerEvents:"none"}}>Mesa</text>
-            <text x={cx} y={cy+R*0.38} textAnchor="middle" fontSize={Math.max(9,R*0.44)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.id}</text></>
-        }
-        {!isSelected&&<text x={cx} y={cy+R*0.72} textAnchor="middle" fontSize={Math.max(7,R*0.21)} fill={over?"rgba(200,60,60,.9)":libres===0?"rgba(74,94,58,.85)":"rgba(74,94,58,.6)"} fontFamily="'Lora',serif" fontWeight="600" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
-        {pts.map((pt,i)=>{const p=ps[i];const hitR=Math.max(AR+4,16);return<g key={i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
-          {/* Hit area invisible más grande */}
-          {p&&<circle cx={cx+pt.x} cy={cy+pt.y} r={hitR} fill="transparent"/>}
-          <circle cx={cx+pt.x} cy={cy+pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
-          {p&&<text x={cx+pt.x} y={cy+pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(6,AR*0.62)} fill="#fff" fontWeight="700" fontFamily="Calibri" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
+        <defs>
+          <radialGradient id={`linen-${gid}`} cx="42%" cy="36%" r="75%"><stop offset="0%" stopColor="#FFFFFF" stopOpacity=".95"/><stop offset="70%" stopColor={fillC}/><stop offset="100%" stopColor={visual.accent} stopOpacity=".55"/></radialGradient>
+          <filter id={`shadow-table-${gid}`} x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000" floodOpacity=".22"/></filter>
+        </defs>
+        <circle cx={cx+2} cy={cy+4} r={R+2} fill="rgba(0,0,0,.16)"/>
+        {pts.map((pt,i)=>{const p=ps[i];const a=Math.atan2(pt.y,pt.x)*180/Math.PI;return<g key={i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
+          {p&&<circle cx={cx+pt.x} cy={cy+pt.y} r={Math.max(AR+6,18)} fill="transparent"/>}
+          <rect x={cx+pt.x-AR*.85} y={cy+pt.y-AR*.85} width={AR*1.7} height={AR*1.7} rx={AR*.42} fill={visual.chair} stroke={chairStroke} strokeWidth="1.1" transform={`rotate(${a+90},${cx+pt.x},${cy+pt.y})`}/>
+          <circle cx={cx+pt.x} cy={cy+pt.y} r={AR*.64} fill={seatFill(p)} stroke={p?"rgba(255,255,255,.85)":chairStroke} strokeWidth="1.5"/>
+          {p&&<text x={cx+pt.x} y={cy+pt.y+AR*.24} textAnchor="middle" fontSize={Math.max(6,AR*.55)} fill="#fff" fontWeight="800" fontFamily="Arial" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
         </g>;})}
+        <circle cx={cx} cy={cy} r={R} fill={`url(#linen-${gid})`} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-table-${gid})`} style={{cursor:"grab"}} {...dh}/>
+        {Array.from({length:Math.min(12,capM)},(_,i)=>{const a=(i/Math.min(12,capM))*2*Math.PI-Math.PI/2;return <circle key={i} cx={cx+Math.cos(a)*R*.72} cy={cy+Math.sin(a)*R*.72} r={Math.max(1.5,R*.045)} fill={isDarkVisual?"rgba(255,245,220,.7)":"rgba(255,255,255,.85)"} stroke={visual.stroke} strokeWidth=".5"/>})}
+        <g>{[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*R*.10} cy={cy+Math.sin(a*Math.PI/180)*R*.10} rx={R*.065} ry={R*.105} fill={visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*R*.10},${cy+Math.sin(a*Math.PI/180)*R*.10})`}/>) }<circle cx={cx} cy={cy} r={R*.055} fill={visual.metal}/></g>
+        {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill={tableTextColor(isSelected)} fontFamily="'Lora',serif" fontWeight="800" style={{pointerEvents:"none"}}>soltar</text>}
+        {mesa.etiqueta
+          ?<><text x={cx} y={cy-R*.18} textAnchor="middle" fontSize={Math.max(6,R*.18)} fill={tableTextColor(isSelected)} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
+            <text x={cx} y={cy+R*.31} textAnchor="middle" fontSize={Math.max(9,R*.38)} fill={tableTextColor(isSelected)} fontFamily="'Playfair Display',serif" fontWeight="800" style={{pointerEvents:"none"}}>{mesa.id}</text></>
+          :<><text x={cx} y={cy-R*.08} textAnchor="middle" fontSize={Math.max(7,R*.22)} fill={tableTextColor(isSelected)} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>Mesa</text>
+            <text x={cx} y={cy+R*.36} textAnchor="middle" fontSize={Math.max(9,R*.42)} fill={tableTextColor(isSelected)} fontFamily="'Playfair Display',serif" fontWeight="800" style={{pointerEvents:"none"}}>{mesa.id}</text></>}
+        {!isSelected&&<text x={cx} y={cy+R*.72} textAnchor="middle" fontSize={Math.max(7,R*.20)} fill={over||overlap?"#D94B3D":libres===0?visual.leaf:visual.stroke} fontFamily="'Lora',serif" fontWeight="700" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
+        {stats.total>0&&<g transform={`translate(${cx-R*.45},${cy+R*.88})`}>
+          {[{c:CONF_COLORS.Confirmado||THEME.color.sage,n:stats.confirmados},{c:CONF_COLORS.Pendiente||THEME.color.gold,n:stats.pendientes},{c:"rgba(26,26,20,.35)",n:stats.noVan}].map((s,i)=>s.n>0?<circle key={i} cx={i*R*.23} cy="0" r={Math.max(2,R*.045)} fill={s.c}/>:null)}
+        </g>}
       </svg>};
     }
 
-    // Mesa rectangular
     const rW=(mesa.ew||2.4)*PX, rH=(mesa.eh||0.8)*PX;
-    const isV=rH>rW, AR=ASIENTO_R_M*PX, pad=AR+5;
+    const isV=rH>rW, AR=ASIENTO_R_M*PX, pad=AR+8;
     const wD=rW+pad*2, hD=rH+pad*2;
     const mira=mesa.miraSide||"both";
-    // Sillas alrededor de los 4 lados: ~1 cada 55 cm de borde (cabeceras incluidas)
     const SILLA_PASO=0.55*PX;
     const nH=Math.max(rW>=rH?1:0,Math.floor(rW/SILLA_PASO));
     const nV=Math.max(rH>rW?1:0,Math.floor(rH/SILLA_PASO));
     let seatPts=[];
-    const addT=()=>{for(let i=0;i<nH;i++)seatPts.push({x:pad+rW/(nH+1)*(i+1),y:pad-AR-1});};
-    const addB=()=>{for(let i=0;i<nH;i++)seatPts.push({x:pad+rW/(nH+1)*(i+1),y:pad+rH+AR+1});};
-    const addL=()=>{for(let i=0;i<nV;i++)seatPts.push({x:pad-AR-1,y:pad+rH/(nV+1)*(i+1)});};
-    const addR=()=>{for(let i=0;i<nV;i++)seatPts.push({x:pad+rW+AR+1,y:pad+rH/(nV+1)*(i+1)});};
+    const addT=()=>{for(let i=0;i<nH;i++)seatPts.push({x:pad+rW/(nH+1)*(i+1),y:pad-AR-2,rot:0});};
+    const addB=()=>{for(let i=0;i<nH;i++)seatPts.push({x:pad+rW/(nH+1)*(i+1),y:pad+rH+AR+2,rot:180});};
+    const addL=()=>{for(let i=0;i<nV;i++)seatPts.push({x:pad-AR-2,y:pad+rH/(nV+1)*(i+1),rot:-90});};
+    const addR=()=>{for(let i=0;i<nV;i++)seatPts.push({x:pad+rW+AR+2,y:pad+rH/(nV+1)*(i+1),rot:90});};
     if(mira==="both"){addT();addR();addB();addL();}
     else if(mira==="left"){ if(isV) addR(); else addB(); }
     else { if(isV) addL(); else addT(); }
     seatPts=seatPts.slice(0,Math.max(ps.length,capM));
     const angle=mesa.angle||0;
+    const gid=safeSvgId(`mesa_rect_${mesa.id}`);
     return{w:wD,h:hD,angle,jsx:<svg width={wD} height={hD} style={{overflow:"visible",display:"block"}}>
-      <rect x={pad+2} y={pad+2} width={rW} height={rH} rx="3" fill="rgba(0,0,0,.18)"/>
-      <rect x={pad} y={pad} width={rW} height={rH} rx="3" fill={fillC} stroke={strokeC} strokeWidth={isSelected?2.5:1.5} style={{cursor:"grab"}} {...dh}/>
-      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.22)} fill={isSelected?THEME.color.cream:THEME.color.ink} fontFamily="'Playfair Display',serif" fontWeight="700" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||mesa.id}</text>
-      {/* Sillas alrededor de los 4 lados */}
-      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={"s"+i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
-        {p&&<circle cx={pt.x} cy={pt.y} r={Math.max(AR+4,14)} fill="transparent"/>}
-        <circle cx={pt.x} cy={pt.y} r={AR} fill={p?(CONF_COLORS[p.confirmacion]||"#999"):"rgba(255,255,255,.45)"} stroke={p?"rgba(255,255,255,.8)":"rgba(90,78,62,.25)"} strokeWidth="1.5"/>
-        {p&&<text x={pt.x} y={pt.y+AR*0.38} textAnchor="middle" fontSize={Math.max(5,AR*0.58)} fill="#fff" fontWeight="700" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
+      <defs><filter id={`shadow-rect-${gid}`} x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000" floodOpacity=".24"/></filter></defs>
+      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={'s'+i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
+        {p&&<circle cx={pt.x} cy={pt.y} r={Math.max(AR+5,16)} fill="transparent"/>}
+        <rect x={pt.x-AR*.75} y={pt.y-AR*.75} width={AR*1.5} height={AR*1.5} rx={AR*.35} fill={visual.chair} stroke={chairStroke} strokeWidth="1.1" transform={`rotate(${pt.rot},${pt.x},${pt.y})`}/>
+        <circle cx={pt.x} cy={pt.y} r={AR*.58} fill={seatFill(p)} stroke={p?"rgba(255,255,255,.85)":chairStroke} strokeWidth="1.4"/>
+        {p&&<text x={pt.x} y={pt.y+AR*.24} textAnchor="middle" fontSize={Math.max(5,AR*.52)} fill="#fff" fontWeight="800" fontFamily="Arial" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
       </g>;})}
-          {/* Handle rotación ↻ — esquina inferior izq */}
-          <circle cx={pad/2+2} cy={hD-pad/2-2} r={9} fill="rgba(201,169,110,.85)" stroke="#FBF7EF" strokeWidth="1.5"
-            style={{cursor:"crosshair"}}
-            onMouseDown={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}}
-            onTouchStart={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}}/>
-          <text x={pad/2+2} y={hD-pad/2+2} textAnchor="middle" fontSize="10" fill="#FFF" fontWeight="bold" style={{pointerEvents:"none",userSelect:"none"}}>↻</text>
+      <rect x={pad+2} y={pad+3} width={rW} height={rH} rx="7" fill="rgba(0,0,0,.16)"/>
+      <rect x={pad} y={pad} width={rW} height={rH} rx="7" fill={fillC} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-rect-${gid})`} style={{cursor:"grab"}} {...dh}/>
+      <rect x={pad+rW*.08} y={pad+rH*.42} width={rW*.84} height={Math.max(3,rH*.12)} rx="4" fill={visual.accent} opacity=".58"/>
+      {[.18,.30,.42,.58,.70,.82].map((k,i)=><circle key={i} cx={pad+rW*k} cy={pad+rH*.50} r={Math.max(1.6,Math.min(5,rH*.12))} fill={visual.flower} opacity=".86"/>)}
+      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.25)} fill={tableTextColor(isSelected)} fontFamily="'Playfair Display',serif" fontWeight="800" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||`Mesa ${mesa.id}`}</text>
+      {!isSelected&&<text x={pad+rW-5} y={pad+rH-5} textAnchor="end" fontSize={Math.max(7,Math.min(rW,rH)*.18)} fill={over||overlap?"#D94B3D":visual.stroke} fontWeight="800" fontFamily="Arial" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
+      <circle cx={pad/2+2} cy={hD-pad/2-2} r={9} fill="rgba(201,169,110,.90)" stroke="#FBF7EF" strokeWidth="1.5" style={{cursor:"crosshair"}} onMouseDown={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}}/>
+      <text x={pad/2+2} y={hD-pad/2+2} textAnchor="middle" fontSize="10" fill="#FFF" fontWeight="bold" style={{pointerEvents:"none",userSelect:"none"}}>↻</text>
     </svg>};
   };
 
@@ -10033,8 +10229,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         <div style={{display:"grid",gap:6,maxHeight:"min(240px,38vh)",overflowY:"auto",padding:"2px 2px 4px"}}>
           {PRESET_STAGE2_ORDER.map(id=>{
             const p=STAGE2_PRESET_CONFIGS[id]; const g=getPresetGuide(id); const sel=selectedSalonType===id;
-            return <button key={id} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSelectedSalonType(id);setSelectedTableTypeId("auto");}} style={{textAlign:"left",display:"grid",gridTemplateColumns:"auto 1fr",gap:9,alignItems:"start",width:"100%",background:sel?"rgba(74,94,58,.1)":"white",border:sel?"1.5px solid rgba(74,94,58,.55)":"1px solid rgba(74,94,58,.16)",borderRadius:11,padding:"10px 11px",cursor:"pointer"}}>
-              <span style={{fontSize:"1.15rem",lineHeight:1.1,marginTop:1}}>{p?.emoji||"✨"}</span>
+            return <button key={id} onMouseDown={e=>e.stopPropagation()} onClick={()=>{setSelectedSalonType(id);setSelectedTableTypeId("auto");}} style={{textAlign:"left",display:"grid",gridTemplateColumns:"78px 1fr",gap:10,alignItems:"start",width:"100%",background:sel?"rgba(74,94,58,.1)":"white",border:sel?"1.5px solid rgba(74,94,58,.55)":"1px solid rgba(74,94,58,.16)",borderRadius:12,padding:"9px 10px",cursor:"pointer"}}>
+              <span style={{height:54,borderRadius:9,overflow:"hidden",background:`url(/presets/${id}.jpg) center/cover`,border:"1px solid rgba(74,94,58,.16)",boxShadow:sel?"0 0 0 2px rgba(74,94,58,.12)":"none",position:"relative"}}><span style={{position:"absolute",left:6,top:5,fontSize:"1rem",filter:"drop-shadow(0 1px 2px rgba(0,0,0,.3))"}}>{p?.emoji||"✨"}</span></span>
               <span style={{display:"grid",gap:2}}>
                 <span style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                   <strong style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:THEME.color.ink,fontWeight:700}}>{p?.label||id}</strong>
@@ -10111,6 +10307,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       {layoutSummary.alertas?.length>0&&<div style={{gridColumn:"1 / -1",background:"rgba(200,90,50,.07)",border:"1px solid rgba(200,90,50,.22)",borderRadius:9,padding:"8px 10px",fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(170,70,40,.9)",lineHeight:1.45}}>⚠️ {layoutSummary.alertas.slice(0,4).join(" · ")}{layoutSummary.alertas.length>4?` · +${layoutSummary.alertas.length-4} alertas más`:""}</div>}
     </div>}
 
+    {isDesignerMode&&professionalOverlapWarnings().length>0&&<div style={{display:"flex",alignItems:"flex-start",gap:8,background:"rgba(217,75,61,.07)",border:"1px solid rgba(217,75,61,.24)",borderRadius:10,padding:"9px 12px",marginBottom:8}}>
+      <span style={{fontSize:"1rem",lineHeight:1.2}}>⚠️</span>
+      <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.74rem)",color:"rgba(160,54,42,.92)",lineHeight:1.45}}>
+        <strong>Revisión de layout:</strong> {professionalOverlapWarnings().join(" · ")}
+      </div>
+    </div>}
+
     {/* ── TIP MOBILE: recomendar pantalla grande ── */}
     {isMobile&&!hideDesktopTip&&<div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.2)",borderRadius:10,padding:"8px 6px 8px 12px",marginBottom:8}}>
       <span style={{fontSize:"1rem",flexShrink:0}}>💻</span>
@@ -10149,14 +10352,14 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             <svg style={{position:"absolute",left:30,top:30,width:CW,height:CH,overflow:"visible",pointerEvents:"none"}}>
               <defs>
                 <pattern id="pisoS4" width={PX} height={PX} patternUnits="userSpaceOnUse">
-                  <rect width={PX} height={PX} fill="#F0EAD8"/>
-                  <rect width={PX/2} height={PX/2} fill="#E8E0C8"/>
-                  <rect x={PX/2} y={PX/2} width={PX/2} height={PX/2} fill="#E8E0C8"/>
+                  <rect width={PX} height={PX} fill={visual.floorA}/>
+                  <rect width={PX/2} height={PX/2} fill={visual.floorB}/>
+                  <rect x={PX/2} y={PX/2} width={PX/2} height={PX/2} fill={visual.floorB}/>
                 </pattern>
                 <clipPath id="sClipS4"><path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)}/></clipPath>
               </defs>
-              <path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)} fill="#8a7e6e" transform="translate(3,3)"/>
-              <path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)} fill="url(#pisoS4)" stroke="#5a4e3e" strokeWidth="2.5"/>
+              <path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)} fill="rgba(0,0,0,.22)" transform="translate(3,3)"/>
+              <path d={salonShapePath(salonShape,CW,CH,salonShapeConfig)} fill="url(#pisoS4)" stroke={visual.stroke} strokeWidth="2.5"/>
               {Array.from({length:salonW+1},(_,i)=><g key={"rx"+i}>
                 <line x1={i*PX} y1={-8} x2={i*PX} y2={-2} stroke="rgba(200,180,140,.45)" strokeWidth="1"/>
                 {i%5===0&&<text x={i*PX} y={-11} textAnchor="middle" fontSize={Math.max(7,9/zoom)} fill="rgba(200,180,140,.65)" fontFamily="Calibri">{i}m</text>}
@@ -10171,21 +10374,23 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               </g>
             </svg>
 
-            {/* Elementos editables del preset */}
+            {/* Elementos editables del preset: assets vectoriales premium */}
             {isDesignerMode&&elementos.map(el=>{
               const def=ELEMENTOS_FIJOS.find(e=>e.id===el.tipo); if(!def) return null;
               const elW=el.ew*PX,elH=el.eh*PX,isSel=selectedElem===el.id;
+              const conflict=elemHasOverlap(el);
+              const angle=el.angle||0;
               return <div key={el.id}
                 onClick={e=>{e.stopPropagation();setSelectedElem(el.id);setSelectedMesa(null);}}
                 onMouseDown={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
                 onTouchStart={e=>{e.stopPropagation();startDrag(e,"elem",el.id);}}
-                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",background:`${def.color}cc`,border:`2px solid ${isSel?THEME.color.cream:def.color}`,borderRadius:Math.min(8,elW*0.08),display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"grab",zIndex:isSel?8:3,touchAction:"none",boxShadow:isSel?"0 0 0 2px rgba(245,239,224,.4),0 3px 12px rgba(0,0,0,.3)":"0 2px 6px rgba(0,0,0,.2)"}}>
-                <span style={{fontSize:Math.max(10,Math.min(22,elH*0.38))+"px",pointerEvents:"none"}}>{def.emoji}</span>
-                {elH>20&&<span style={{fontFamily:THEME.font.label,fontSize:Math.max(6,Math.min(9,elH*0.13))+"px",letterSpacing:".04em",textTransform:"uppercase",color:"rgba(255,255,255,.9)",textAlign:"center",lineHeight:1.2,padding:"0 3px",pointerEvents:"none"}}>{def.label}</span>}
+                style={{position:"absolute",left:30+el.mx*PX,top:30+el.my*PX,width:elW,height:elH,boxSizing:"border-box",cursor:"grab",zIndex:isSel?9:3,touchAction:"none",transform:angle?`rotate(${angle}deg)`:undefined,transformOrigin:"center center",filter:isSel?"drop-shadow(0 8px 16px rgba(0,0,0,.25))":"drop-shadow(0 4px 9px rgba(0,0,0,.15))"}}>
+                {renderElementSVG(el,def,elW,elH,isSel,conflict)}
                 {isSel&&<>
-                  <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-8,right:-8,background:"rgba(200,60,60,.9)",border:"none",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"10px",zIndex:10}}>×</button>
-                  <div onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-7,right:-7,width:16,height:16,background:THEME.color.cream,border:`1.5px solid ${def.color}`,borderRadius:3,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <svg width="7" height="7" viewBox="0 0 7 7"><line x1="1" y1="6" x2="6" y2="1" stroke={def.color} strokeWidth="1.5"/><line x1="3.5" y1="6" x2="6" y2="3.5" stroke={def.color} strokeWidth="1.5"/></svg>
+                  <button onClick={e=>{e.stopPropagation();removeElemento(el.id);}} style={{position:"absolute",top:-10,right:-10,background:"rgba(200,60,60,.95)",border:"2px solid #FBF7EF",borderRadius:"50%",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:"11px",zIndex:10,lineHeight:1}}>×</button>
+                  <div title="Rotar" onMouseDown={e=>{e.stopPropagation();startDrag(e,"rotateE",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"rotateE",el.id);}} style={{position:"absolute",bottom:-10,left:-10,width:22,height:22,background:"rgba(201,169,110,.94)",border:"2px solid #FBF7EF",borderRadius:"50%",cursor:"crosshair",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:800}}>↻</div>
+                  <div title="Redimensionar" onMouseDown={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"resize",el.id);}} style={{position:"absolute",bottom:-9,right:-9,width:20,height:20,background:THEME.color.cream,border:`1.5px solid ${conflict?"#D94B3D":visual.stroke}`,borderRadius:4,cursor:"nwse-resize",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <svg width="8" height="8" viewBox="0 0 8 8"><line x1="1" y1="7" x2="7" y2="1" stroke={conflict?"#D94B3D":visual.stroke} strokeWidth="1.5"/><line x1="4" y1="7" x2="7" y2="4" stroke={conflict?"#D94B3D":visual.stroke} strokeWidth="1.5"/></svg>
                   </div>
                 </>}
               </div>;
@@ -10281,6 +10486,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               <button onClick={()=>setSelectedElem(null)} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",fontSize:"1rem",cursor:"pointer",lineHeight:1}}>×</button>
             </div>
             <RecommendationBox items={getElementRecommendations(el,{salonW,salonH,mesas,elementos})}/>
+            <div style={{display:"grid",gap:6,margin:"8px 0"}}>
+              <label style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Nombre visible</label>
+              <input type="text" defaultValue={el.labelOverride||def?.label||""} placeholder="Ej: Barra principal, Pista central..."
+                onChange={e=>setElementos(es=>es.map(x=>x.id===el.id?{...x,labelOverride:e.target.value}:x))}
+                onMouseDown={e=>e.stopPropagation()}
+                style={{width:"100%",boxSizing:"border-box",fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"8px 9px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,outline:"none"}}/>
+            </div>
             <>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                 <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Medidas</span>
@@ -10294,6 +10506,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                 <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>m</span>
               </div>
               <p style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.35)",margin:0,fontStyle:"italic"}}>También podés estirar la esquina ◲ en el plano</p>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginTop:9,marginBottom:8}}>
+                <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",minWidth:58}}>Rotación</span>
+                <button onClick={()=>setElementos(es=>es.map(x=>x.id===el.id?{...x,angle:((x.angle||0)-15+360)%360}:x))} style={{background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px 9px",cursor:"pointer",color:THEME.color.sage}}>−15°</button>
+                <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",minWidth:38,textAlign:"center"}}>{el.angle||0}°</span>
+                <button onClick={()=>setElementos(es=>es.map(x=>x.id===el.id?{...x,angle:((x.angle||0)+15)%360}:x))} style={{background:THEME.color.cream,border:"1px solid rgba(74,94,58,.2)",borderRadius:7,padding:"6px 9px",cursor:"pointer",color:THEME.color.sage}}>+15°</button>
+                <button onClick={()=>setElementos(es=>es.map(x=>x.id===el.id?{...x,angle:0}:x))} style={{marginLeft:"auto",background:"transparent",border:"1px solid rgba(74,94,58,.18)",borderRadius:7,padding:"6px 8px",cursor:"pointer",color:"rgba(26,26,20,.45)"}}>reset</button>
+              </div>
               <button onClick={()=>removeElemento(el.id)} style={{width:"100%",marginTop:10,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"8px",fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>Eliminar elemento</button>
             </>
           </div>;
