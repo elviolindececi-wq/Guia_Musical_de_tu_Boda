@@ -8802,6 +8802,11 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   });
   const sinMesa     = personas.filter(p=>!p.mesa);
   const sinMesaFilt = sinMesa.filter(p=>!searchSinMesa||p.nombre.toLowerCase().includes(searchSinMesa.toLowerCase()));
+  // UX: cuando hay muchos invitados sin mesa, no renderizamos una lista infinita.
+  // Mostramos los primeros resultados y empujamos al usuario a buscar/filtrar.
+  const SIN_MESA_CANVAS_LIMIT = searchSinMesa ? 80 : 50;
+  const sinMesaVisible = sinMesaFilt.slice(0, SIN_MESA_CANVAS_LIMIT);
+  const sinMesaHiddenCount = Math.max(0, sinMesaFilt.length - sinMesaVisible.length);
   const CONF_COLORS = {confirmado:THEME.color.sage,pendiente:THEME.color.gold,no_va:"rgba(26,26,20,.3)"};
   const MESA_R_M    = 0.90;
   const ASIENTO_R_M = 0.28;
@@ -10216,7 +10221,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         </g>;})}
         <circle cx={cx} cy={cy} r={R} fill={isSelected?fillC:`url(#linen-${gid})`} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-table-${gid})`} style={{cursor:"grab"}} {...dh}/>
         {Array.from({length:Math.min(12,capM)},(_,i)=>{const a=(i/Math.min(12,capM))*2*Math.PI-Math.PI/2;return <circle key={i} cx={cx+Math.cos(a)*R*.72} cy={cy+Math.sin(a)*R*.72} r={Math.max(1.5,R*.045)} fill={isSelected?"rgba(255,255,255,.82)":(isDarkVisual?"rgba(255,245,220,.7)":"rgba(255,255,255,.85)")} stroke={isSelected?"rgba(255,255,255,.55)":visual.stroke} strokeWidth=".5"/>})}
-        <g>{[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*R*.10} cy={cy+Math.sin(a*Math.PI/180)*R*.10} rx={R*.065} ry={R*.105} fill={isSelected?"rgba(255,255,255,.72)":visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*R*.10},${cy+Math.sin(a*Math.PI/180)*R*.10})`}/>) }<circle cx={cx} cy={cy} r={R*.055} fill={visual.metal}/></g>
+        {/* Centro limpio: sin decoración encima del texto para mantener legibilidad */}
         {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Lora',serif" fontWeight="800" style={{pointerEvents:"none"}}>soltar</text>}
         {mesa.etiqueta
           ?<><text x={cx} y={cy-R*.18} textAnchor="middle" fontSize={Math.max(6,R*.18)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
@@ -10258,8 +10263,10 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       </g>;})}
       <rect x={pad+2} y={pad+3} width={rW} height={rH} rx="7" fill="rgba(0,0,0,.16)"/>
       <rect x={pad} y={pad} width={rW} height={rH} rx="7" fill={fillC} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-rect-${gid})`} style={{cursor:"grab"}} {...dh}/>
-      <rect x={pad+rW*.08} y={pad+rH*.42} width={rW*.84} height={Math.max(3,rH*.12)} rx="4" fill={isSelected?"rgba(255,255,255,.22)":visual.accent} opacity={isSelected?".22":".58"}/>
-      {[.18,.30,.42,.58,.70,.82].map((k,i)=><circle key={i} cx={pad+rW*k} cy={pad+rH*.50} r={Math.max(1.6,Math.min(5,rH*.12))} fill={isSelected?"rgba(255,255,255,.65)":visual.flower} opacity={isSelected?".38":".86"}/>)}
+      {!isSelected&&<>
+        <rect x={pad+rW*.08} y={pad+rH*.42} width={rW*.84} height={Math.max(3,rH*.12)} rx="4" fill={visual.accent} opacity=".46"/>
+        {[.18,.30,.42,.58,.70,.82].map((k,i)=><circle key={i} cx={pad+rW*k} cy={pad+rH*.50} r={Math.max(1.6,Math.min(5,rH*.12))} fill={visual.flower} opacity=".72"/>)}
+      </>}
       <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.25)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Playfair Display',serif" fontWeight="800" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||`Mesa ${mesa.id}`}</text>
       {!isSelected&&<text x={pad+rW-5} y={pad+rH-5} textAnchor="end" fontSize={Math.max(7,Math.min(rW,rH)*.18)} fill={over||overlap?"#D94B3D":visual.stroke} fontWeight="800" fontFamily="Arial" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
       <circle cx={pad/2+2} cy={hD-pad/2-2} r={9} fill="rgba(201,169,110,.90)" stroke="#FBF7EF" strokeWidth="1.5" style={{cursor:"crosshair"}} onMouseDown={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}}/>
@@ -10700,8 +10707,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           </div>}
           {sinMesa.length===0
             ?<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
-            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(300px,34vh)",overflowY:"auto"}}>
-              {sinMesaFilt.map(p=>{
+            :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(420px,46vh)",overflowY:"auto"}}>
+              {sinMesaVisible.map(p=>{
                 const isGuestSelected=selectedGuestForAssign?.guestId===p.guestId;
                 return <div key={`${p.guestId}-${p.personIdx}`}
                   onMouseDown={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
@@ -10721,6 +10728,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                 </div>;
               })}
               {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
+              {sinMesaHiddenCount>0&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.42)",fontStyle:"italic",padding:"6px 2px 2px"}}>Mostrando {sinMesaVisible.length} de {sinMesaFilt.length}. Usá el buscador para encontrar más rápido.</div>}
             </div>
           }
         </div>
@@ -10946,6 +10954,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
   const [dragging, setDragging] = useState(null); // {guestId, personIdx}
   const [dragOver, setDragOver] = useState(null); // {tableNum, seatIdx}
+  const [searchSinMesaCircle, setSearchSinMesaCircle] = useState("");
 
   // Expandir cada invitado en personas individuales
   const personas = [];
@@ -10963,6 +10972,10 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
   });
 
   const sinMesa = personas.filter(p=>!p.mesa);
+  const sinMesaFilt = sinMesa.filter(p=>!searchSinMesaCircle||p.nombre.toLowerCase().includes(searchSinMesaCircle.toLowerCase()));
+  const SIN_MESA_VIEW_LIMIT = searchSinMesaCircle ? 100 : 60;
+  const sinMesaVisible = sinMesaFilt.slice(0, SIN_MESA_VIEW_LIMIT);
+  const sinMesaHiddenCount = Math.max(0, sinMesaFilt.length - sinMesaVisible.length);
   const maxMesa = Math.max(0, ...personas.filter(p=>p.mesa).map(p=>p.mesa));
   const numMesas = Math.max(maxMesa, 1);
 
@@ -11065,11 +11078,20 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
         borderRadius:14,padding:"14px 16px",marginBottom:16,transition:"all .2s",position:"sticky",top:8,zIndex:6,boxShadow:"0 10px 24px rgba(251,247,239,.86)",backdropFilter:"blur(8px)"
       }}
     >
-      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)",marginBottom:10}}>
-        Sin mesa asignada ({sinMesa.length} {sinMesa.length===1?"persona":"personas"})
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:8}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>
+          Sin mesa asignada ({sinMesa.length} {sinMesa.length===1?"persona":"personas"})
+        </div>
+        {sinMesa.length>12&&<span style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(26,26,20,.42)",whiteSpace:"nowrap"}}>buscar y arrastrar</span>}
       </div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-        {sinMesa.map((p,i)=>{
+      {sinMesa.length>12&&<div style={{position:"relative",marginBottom:10}}>
+        <input value={searchSinMesaCircle} onChange={e=>setSearchSinMesaCircle(e.target.value)} placeholder="Buscar invitado sin mesa..."
+          style={{width:"100%",boxSizing:"border-box",fontFamily:"'Lora',serif",fontSize:".84rem",padding:"8px 12px 8px 30px",borderRadius:100,border:"1px solid rgba(201,169,110,.28)",background:"#FBF7EF",outline:"none",color:"#1A1A14"}}/>
+        <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:".82rem",opacity:.38}}>🔍</span>
+        {searchSinMesaCircle&&<button onClick={()=>setSearchSinMesaCircle("")} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.45)",fontSize:".9rem"}}>×</button>}
+      </div>}
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,maxHeight:sinMesa.length>18?"min(260px,36vh)":"none",overflowY:sinMesa.length>18?"auto":"visible",paddingRight:sinMesa.length>18?4:0}}>
+        {sinMesaVisible.map((p,i)=>{
           const color = CONF_COLORS[p.confirmacion]||"#999";
           return <div key={`${p.guestId}-${p.personIdx}`}
             draggable
@@ -11088,6 +11110,8 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
             <span style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"#1A1A14",whiteSpace:"nowrap"}}>{p.nombre}</span>
           </div>;
         })}
+        {sinMesaFilt.length===0&&searchSinMesaCircle&&<div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.35)",fontStyle:"italic",padding:"8px 2px"}}>No hay resultados para esa búsqueda.</div>}
+        {sinMesaHiddenCount>0&&<div style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.42)",fontStyle:"italic",padding:"6px 2px"}}>Mostrando {sinMesaVisible.length} de {sinMesaFilt.length}. Usá el buscador para ubicar a alguien específico.</div>}
       </div>
       {sinMesa.length>0&&<p style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.35)",marginTop:10,marginBottom:0,fontStyle:"italic"}}>
         Arrastrá una persona a una mesa para asignarla
