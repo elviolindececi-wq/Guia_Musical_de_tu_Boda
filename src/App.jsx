@@ -10060,7 +10060,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     const commonText={fontFamily:"'Lora',serif",fontWeight:700,fill:tableTextColor(isSel),textAnchor:"middle",style:{pointerEvents:"none",userSelect:"none"}};
     const flower=(cx,cy,r=5)=><g>
       <circle cx={cx} cy={cy} r={r*1.45} fill={visual.leaf} opacity=".78"/>
-      {[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*r*.95} cy={cy+Math.sin(a*Math.PI/180)*r*.95} rx={r*.42} ry={r*.65} fill={isSelected?"rgba(255,255,255,.72)":visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*r*.95},${cy+Math.sin(a*Math.PI/180)*r*.95})`}/>) }
+      {[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*r*.95} cy={cy+Math.sin(a*Math.PI/180)*r*.95} rx={r*.42} ry={r*.65} fill={isSel?"rgba(255,255,255,.72)":visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*r*.95},${cy+Math.sin(a*Math.PI/180)*r*.95})`}/>) }
       <circle cx={cx} cy={cy} r={r*.35} fill={visual.metal}/>
     </g>;
     const candle=(cx,cy)=><g><ellipse cx={cx} cy={cy} rx="4" ry="4" fill="#F8DFA0" opacity=".9"/><circle cx={cx} cy={cy} r="1.5" fill="#FFF7D9"/></g>;
