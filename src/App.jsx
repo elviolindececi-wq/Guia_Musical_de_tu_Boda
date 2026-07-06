@@ -8767,22 +8767,27 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [showPresetMenu, setShowPresetMenu] = useState(false);
   const [previewPresetId, setPreviewPresetId] = useState(S0?.selectedSalonType || "fiesta_latina");
   const [previewModalPresetId, setPreviewModalPresetId] = useState(null);
-  const presetHoldTimerRef = useRef(null);
-  const clearPresetHoldTimer = () => {
-    if(presetHoldTimerRef.current){
-      clearTimeout(presetHoldTimerRef.current);
-      presetHoldTimerRef.current = null;
-    }
+  const presetTouchRef = useRef(null);
+  const onPresetTouchStart = (e,id) => {
+    const t=e.touches?.[0];
+    if(!t) return;
+    presetTouchRef.current={id,x:t.clientX,y:t.clientY,moved:false};
   };
-  const startPresetLongPress = (id) => {
-    clearPresetHoldTimer();
-    presetHoldTimerRef.current = setTimeout(()=>{
-      setPreviewPresetId(id);
-      setPreviewModalPresetId(id);
-      presetHoldTimerRef.current = null;
-    }, 560);
+  const onPresetTouchMove = (e) => {
+    const t=e.touches?.[0];
+    const p=presetTouchRef.current;
+    if(!t||!p) return;
+    if(Math.hypot(t.clientX-p.x,t.clientY-p.y)>10) p.moved=true;
   };
-  useEffect(()=>()=>clearPresetHoldTimer(),[]);
+  const onPresetTouchEnd = (e,id) => {
+    const p=presetTouchRef.current;
+    presetTouchRef.current=null;
+    if(p?.moved) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setPreviewPresetId(id);
+    setPreviewModalPresetId(id);
+  };
   const [selectedSalonShape, setSelectedSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
   const [selectedShapeConfig, setSelectedShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
@@ -10367,9 +10372,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:10,flexWrap:"wrap"}}>
         <div>
           <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)"}}>Inspiración visual</div>
-          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Elegí una miniatura para previsualizar. Mantené presionado para verla grande.</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Elegí una miniatura para previsualizar. Doble clic en computadora o toque en tablet/celular para verla grande.</div>
         </div>
-        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.45)",whiteSpace:"nowrap"}}>Doble clic = ver opción de usar</div>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.45)",whiteSpace:"nowrap"}}>Doble clic / touch = ver grande</div>
       </div>
       <div style={{display:"grid",gridAutoFlow:"column",gridAutoColumns:isMobile?"148px":"172px",gap:10,overflowX:"auto",paddingBottom:4,WebkitOverflowScrolling:"touch",scrollSnapType:"x proximity"}}>
         {PRESET_STAGE2_ORDER.map(id=>{
@@ -10378,18 +10383,16 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           const preview=previewPresetId===id;
           return <button
             key={id}
-            onClick={()=>{setPreviewPresetId(id);setSelectedSalonType(id);setSelectedTableTypeId("auto");}}
-            onDoubleClick={(e)=>{e.preventDefault();e.stopPropagation();clearPresetHoldTimer();setPreviewPresetId(id);setSelectedSalonType(id);setSelectedTableTypeId("auto");setPreviewModalPresetId(id);}}
-            onMouseDown={()=>startPresetLongPress(id)}
-            onMouseUp={clearPresetHoldTimer}
-            onMouseLeave={clearPresetHoldTimer}
-            onTouchStart={()=>startPresetLongPress(id)}
-            onTouchEnd={clearPresetHoldTimer}
+            onClick={()=>{setPreviewPresetId(id);}}
+            onDoubleClick={(e)=>{e.preventDefault();e.stopPropagation();setPreviewPresetId(id);setPreviewModalPresetId(id);}}
+            onTouchStart={(e)=>onPresetTouchStart(e,id)}
+            onTouchMove={onPresetTouchMove}
+            onTouchEnd={(e)=>onPresetTouchEnd(e,id)}
             style={{scrollSnapAlign:"start",textAlign:"left",background:preview?"rgba(74,94,58,.08)":"white",border:active?"1.5px solid rgba(74,94,58,.55)":preview?"1.5px solid rgba(201,169,110,.65)":"1px solid rgba(74,94,58,.16)",borderRadius:14,padding:7,cursor:"pointer",boxShadow:preview?"0 8px 22px rgba(74,94,58,.12)":"none",position:"relative"}}>
             <span style={{display:"block",height:isMobile?82:96,borderRadius:10,background:`url(/presets/${id}.jpg) center/cover`,border:"1px solid rgba(74,94,58,.12)",position:"relative",overflow:"hidden"}}>
               {active&&<span style={{position:"absolute",right:6,top:6,background:THEME.color.sage,color:THEME.color.cream,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em"}}>ACTIVO</span>}
               {preview&&!active&&<span style={{position:"absolute",right:6,top:6,background:"rgba(251,247,239,.92)",color:THEME.color.sage,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em",boxShadow:"0 2px 8px rgba(0,0,0,.12)"}}>VISTA</span>}
-              <span style={{position:"absolute",left:6,bottom:6,background:"rgba(26,26,20,.58)",color:"white",borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.body,fontSize:"10px",opacity:preview?1:.0,transition:"opacity .15s"}}>doble clic</span>
+              <span style={{position:"absolute",left:6,bottom:6,background:"rgba(26,26,20,.58)",color:"white",borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.body,fontSize:"10px",opacity:preview?1:.0,transition:"opacity .15s"}}>doble clic / touch</span>
             </span>
             <span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:800,color:THEME.color.ink,marginTop:7,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p?.emoji||"✨"} {p?.label||id}</span>
           </button>;
@@ -10397,7 +10400,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       </div>
       {previewPresetId&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginTop:9,background:"rgba(255,255,255,.62)",border:"1px solid rgba(74,94,58,.12)",borderRadius:12,padding:"8px 10px",flexWrap:"wrap"}}>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.58)",lineHeight:1.35}}>
-          Previsualizando <strong style={{color:THEME.color.ink}}>{STAGE2_PRESET_CONFIGS[previewPresetId]?.label}</strong>. Un clic solo selecciona la vista; no cambia el plano todavía.
+          Previsualizando <strong style={{color:THEME.color.ink}}>{STAGE2_PRESET_CONFIGS[previewPresetId]?.label}</strong>. Un clic solo previsualiza; doble clic o toque abre la vista grande antes de usar.
         </div>
         <button onClick={()=>setPreviewModalPresetId(previewPresetId)} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:999,padding:"7px 12px",fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:800,color:THEME.color.sage,cursor:"pointer"}}>Ver grande / usar</button>
       </div>}
