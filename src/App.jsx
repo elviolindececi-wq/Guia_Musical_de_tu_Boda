@@ -8763,6 +8763,24 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [showShapeMenu, setShowShapeMenu] = useState(false);
   const [showElemMenu, setShowElemMenu]   = useState(false);
   const [showPresetMenu, setShowPresetMenu] = useState(false);
+  const [previewPresetId, setPreviewPresetId] = useState(S0?.selectedSalonType || "fiesta_latina");
+  const [previewModalPresetId, setPreviewModalPresetId] = useState(null);
+  const presetHoldTimerRef = useRef(null);
+  const clearPresetHoldTimer = () => {
+    if(presetHoldTimerRef.current){
+      clearTimeout(presetHoldTimerRef.current);
+      presetHoldTimerRef.current = null;
+    }
+  };
+  const startPresetLongPress = (id) => {
+    clearPresetHoldTimer();
+    presetHoldTimerRef.current = setTimeout(()=>{
+      setPreviewPresetId(id);
+      setPreviewModalPresetId(id);
+      presetHoldTimerRef.current = null;
+    }, 560);
+  };
+  useEffect(()=>()=>clearPresetHoldTimer(),[]);
   const [selectedSalonShape, setSelectedSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
   const [selectedShapeConfig, setSelectedShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
@@ -10256,22 +10274,71 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:10,flexWrap:"wrap"}}>
         <div>
           <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)"}}>Inspiración visual</div>
-          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Tocá una miniatura realista para aplicar ese estilo al plano editable.</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Elegí una miniatura para previsualizar. Mantené presionado para verla grande.</div>
         </div>
-        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.45)",whiteSpace:"nowrap"}}>Click en una miniatura = aplicar preset</div>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.45)",whiteSpace:"nowrap"}}>Doble clic = ver opción de usar</div>
       </div>
       <div style={{display:"grid",gridAutoFlow:"column",gridAutoColumns:isMobile?"148px":"172px",gap:10,overflowX:"auto",paddingBottom:4,WebkitOverflowScrolling:"touch",scrollSnapType:"x proximity"}}>
         {PRESET_STAGE2_ORDER.map(id=>{
-          const p=STAGE2_PRESET_CONFIGS[id]; const sel=selectedSalonType===id;
-          return <button key={id} onClick={()=>{setSelectedSalonType(id);aplicarPreset(id);}} style={{scrollSnapAlign:"start",textAlign:"left",background:sel?"rgba(74,94,58,.08)":"white",border:sel?"1.5px solid rgba(74,94,58,.55)":"1px solid rgba(74,94,58,.16)",borderRadius:14,padding:7,cursor:"pointer",boxShadow:sel?"0 8px 22px rgba(74,94,58,.12)":"none"}}>
+          const p=STAGE2_PRESET_CONFIGS[id];
+          const active=selectedSalonType===id;
+          const preview=previewPresetId===id;
+          return <button
+            key={id}
+            onClick={()=>{setPreviewPresetId(id);setSelectedSalonType(id);setSelectedTableTypeId("auto");}}
+            onDoubleClick={(e)=>{e.preventDefault();e.stopPropagation();clearPresetHoldTimer();setPreviewPresetId(id);setSelectedSalonType(id);setSelectedTableTypeId("auto");setPreviewModalPresetId(id);}}
+            onMouseDown={()=>startPresetLongPress(id)}
+            onMouseUp={clearPresetHoldTimer}
+            onMouseLeave={clearPresetHoldTimer}
+            onTouchStart={()=>startPresetLongPress(id)}
+            onTouchEnd={clearPresetHoldTimer}
+            style={{scrollSnapAlign:"start",textAlign:"left",background:preview?"rgba(74,94,58,.08)":"white",border:active?"1.5px solid rgba(74,94,58,.55)":preview?"1.5px solid rgba(201,169,110,.65)":"1px solid rgba(74,94,58,.16)",borderRadius:14,padding:7,cursor:"pointer",boxShadow:preview?"0 8px 22px rgba(74,94,58,.12)":"none",position:"relative"}}>
             <span style={{display:"block",height:isMobile?82:96,borderRadius:10,background:`url(/presets/${id}.jpg) center/cover`,border:"1px solid rgba(74,94,58,.12)",position:"relative",overflow:"hidden"}}>
-              {sel&&<span style={{position:"absolute",right:6,top:6,background:THEME.color.sage,color:THEME.color.cream,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em"}}>ACTIVO</span>}
+              {active&&<span style={{position:"absolute",right:6,top:6,background:THEME.color.sage,color:THEME.color.cream,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em"}}>ACTIVO</span>}
+              {preview&&!active&&<span style={{position:"absolute",right:6,top:6,background:"rgba(251,247,239,.92)",color:THEME.color.sage,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em",boxShadow:"0 2px 8px rgba(0,0,0,.12)"}}>VISTA</span>}
+              <span style={{position:"absolute",left:6,bottom:6,background:"rgba(26,26,20,.58)",color:"white",borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.body,fontSize:"10px",opacity:preview?1:.0,transition:"opacity .15s"}}>doble clic</span>
             </span>
             <span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:800,color:THEME.color.ink,marginTop:7,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p?.emoji||"✨"} {p?.label||id}</span>
           </button>;
         })}
       </div>
+      {previewPresetId&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginTop:9,background:"rgba(255,255,255,.62)",border:"1px solid rgba(74,94,58,.12)",borderRadius:12,padding:"8px 10px",flexWrap:"wrap"}}>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.58)",lineHeight:1.35}}>
+          Previsualizando <strong style={{color:THEME.color.ink}}>{STAGE2_PRESET_CONFIGS[previewPresetId]?.label}</strong>. Un clic solo selecciona la vista; no cambia el plano todavía.
+        </div>
+        <button onClick={()=>setPreviewModalPresetId(previewPresetId)} style={{background:"white",border:"1px solid rgba(74,94,58,.2)",borderRadius:999,padding:"7px 12px",fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:800,color:THEME.color.sage,cursor:"pointer"}}>Ver grande / usar</button>
+      </div>}
     </div>}
+
+    {isDesignerMode&&previewModalPresetId&&(()=>{
+      const id=previewModalPresetId;
+      const p=STAGE2_PRESET_CONFIGS[id]||{};
+      const g=getPresetGuide(id);
+      return <div onMouseDown={(e)=>{if(e.target===e.currentTarget)setPreviewModalPresetId(null);}} style={{position:"fixed",inset:0,background:"rgba(18,18,14,.58)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:isMobile?12:28,backdropFilter:"blur(5px)",WebkitBackdropFilter:"blur(5px)"}}>
+        <div onMouseDown={e=>e.stopPropagation()} style={{width:"min(1120px,96vw)",maxHeight:"92vh",overflow:"hidden",background:THEME.color.cream2,border:"1px solid rgba(251,247,239,.35)",borderRadius:20,boxShadow:"0 24px 80px rgba(0,0,0,.34)",display:"grid",gridTemplateRows:"auto minmax(0,1fr) auto"}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12,padding:isMobile?"12px 14px":"16px 18px",borderBottom:"1px solid rgba(74,94,58,.12)"}}>
+            <div>
+              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)"}}>Previsualización de estilo</div>
+              <div style={{fontFamily:THEME.font.title,fontSize:isMobile?"1.15rem":"1.45rem",fontWeight:800,color:THEME.color.ink,marginTop:2}}>{p.emoji||"✨"} {p.label||id}</div>
+              <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.82rem)",color:"rgba(26,26,20,.56)",marginTop:3}}>Ideal {g.idealPax} invitados · {g.espacio}</div>
+            </div>
+            <button onClick={()=>setPreviewModalPresetId(null)} style={{width:38,height:38,borderRadius:999,border:"1px solid rgba(26,26,20,.14)",background:"white",fontSize:"1.1rem",cursor:"pointer",color:"rgba(26,26,20,.7)"}}>×</button>
+          </div>
+          <div style={{overflow:"auto",padding:isMobile?10:16,background:"rgba(255,255,255,.45)"}}>
+            <img src={`/presets/${id}.jpg`} alt={p.label||id} draggable={false} style={{display:"block",width:"100%",height:"auto",maxHeight:isMobile?"62vh":"68vh",objectFit:"contain",borderRadius:16,border:"1px solid rgba(26,26,20,.10)",boxShadow:"0 12px 34px rgba(26,26,20,.12)",background:"white"}}/>
+          </div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:isMobile?"12px 14px":"14px 18px",borderTop:"1px solid rgba(74,94,58,.12)",flexWrap:"wrap"}}>
+            <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.55)",lineHeight:1.4,maxWidth:620}}>
+              {g.tip||"Usá esta imagen para imaginar el estilo. Al usar el preset, el plano editable cargará sus mesas y elementos correspondientes."}
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <button onClick={()=>setPreviewModalPresetId(null)} style={{background:"white",border:"1px solid rgba(26,26,20,.14)",borderRadius:11,padding:"10px 13px",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:700,color:"rgba(26,26,20,.68)",cursor:"pointer"}}>Solo mirar</button>
+              <button onClick={()=>{setSelectedSalonType(id);setSelectedTableTypeId("auto");setPreviewPresetId(id);setPreviewModalPresetId(null);aplicarPreset(id);}} style={{background:THEME.color.sage,border:"none",borderRadius:11,padding:"11px 15px",fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:900,color:"white",cursor:"pointer",boxShadow:"0 10px 24px rgba(74,94,58,.22)"}}>Usar este preset</button>
+            </div>
+          </div>
+        </div>
+      </div>;
+    })()}
 
     {/* ── TOOLBAR ── */}
     <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:5,position:"relative"}}>
