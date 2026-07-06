@@ -2544,7 +2544,7 @@ function GuiaNupcial({abierta, seccionInicial="mesas", onClose}){
 function GuiaModule({onBack}){
   const [sec, setSec] = useState("mesas");
   const actual = GUIA_SECCIONES.find(s=>s.id===sec)||GUIA_SECCIONES[0];
-  return <div style={{minHeight:"100dvh",background:"#F7F7F5",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     <div style={{background:THEME.color.sage,padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Guía</div>
@@ -3944,12 +3944,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
 
   if(guests===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:THEME.font.body,color:THEME.color.sage}}>Cargando invitados...</p></div>;
 
-  const GUEST_STATUS_BW = {
-    pendiente:  {color:"#1A1A14", bg:"#F2F2EF", border:"rgba(26,26,20,.22)"},
-    confirmado: {color:"#1A1A14", bg:"#FFFFFF", border:"rgba(26,26,20,.38)"},
-    no_va:      {color:"rgba(26,26,20,.45)", bg:"#EEEEEA", border:"rgba(26,26,20,.14)"},
-  };
-  const confMap = Object.fromEntries(CONFIRMACIONES.map(c=>[c.id,{...c,...(GUEST_STATUS_BW[c.id]||{})}]));
+  const confMap = Object.fromEntries(CONFIRMACIONES.map(c=>[c.id,c]));
   const filtered = guests.filter(g=>{
     if(filter.lado&&g.lado!==filter.lado) return false;
     if(filter.conf&&g.confirmacion!==filter.conf) return false;
@@ -3996,27 +3991,27 @@ function GuestsModule({user, onBack, onGoDesigner}){
     <button onClick={()=>{setGuia("ceremonia");setShowGuestMenu(false);}} style={menuItemStyle}>📖 Guía nupcial (ceremonia, invitaciones...)</button>
   </>;
 
-  return <div style={{minHeight:"100dvh",background:"#F7F7F5",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
+  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     {showGuestMenu&&isMobile&&<BottomSheet title="Opciones de invitados" onClose={()=>setShowGuestMenu(false)}>{guestMenuContent}</BottomSheet>}
     <GuiaNupcial abierta={!!guia} seccionInicial={guia||"mesas"} onClose={()=>setGuia(null)}/>
     {confirmDelete&&<ConfirmModal
       msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
       onCancel={()=>setConfirmDelete(null)}/>}
-    <div style={{background:"#FFFFFF",borderBottom:"1px solid rgba(26,26,20,.10)",padding:isMobile?"10px 12px 12px":"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
+    <div style={{background:THEME.color.sage,padding:isMobile?"10px 12px 12px":"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",transition:"max-width .25s ease"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
-            <div style={{fontFamily:THEME.font.label,fontSize:isMobile?"max(10px,.6rem)":THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(26,26,20,.45)",marginBottom:isMobile?3:8}}>Módulo · Planning</div>
-            <h1 style={{fontFamily:THEME.font.display,fontSize:isMobile?"1.35rem":"clamp(1.8rem,4vw,2.6rem)",color:"#1A1A14",margin:"0 0 4px",lineHeight:1.1}}>Invitados</h1>
+            <div style={{fontFamily:THEME.font.label,fontSize:isMobile?"max(10px,.6rem)":THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:isMobile?3:8}}>Módulo · Planning</div>
+            <h1 style={{fontFamily:THEME.font.display,fontSize:isMobile?"1.35rem":"clamp(1.8rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             {/* Acción principal siempre visible */}
-            <button onClick={()=>setAddMode(true)} style={{background:"#1A1A14",color:"#FFFFFF",border:"1px solid #1A1A14",padding:isMobile?"8px 14px":"11px 22px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:isMobile?"13px":"max(14px,.95rem)",borderRadius:THEME.radius.pill,cursor:"pointer",boxShadow:"none",whiteSpace:"nowrap"}}>+ Agregar</button>
+            <button onClick={()=>setAddMode(true)} style={{background:THEME.color.gold,color:THEME.color.ink,border:"none",padding:isMobile?"8px 14px":"11px 22px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:isMobile?"13px":"max(14px,.95rem)",borderRadius:THEME.radius.pill,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
             {/* Menú de opciones secundarias — dropdown en desktop, bottom sheet en mobile */}
             <div style={{position:"relative"}}>
-              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"#FFFFFF",color:"#1A1A14",border:"1px solid rgba(26,26,20,.16)",padding:isMobile?"7px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontSize:isMobile?"12px":"max(13px,.85rem)",borderRadius:THEME.radius.pill,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:THEME.color.cream,border:"1px solid rgba(245,239,224,.3)",padding:isMobile?"7px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontSize:isMobile?"12px":"max(13px,.85rem)",borderRadius:THEME.radius.pill,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
                 ⚙️ Opciones ▾
               </button>
               {showGuestMenu&&!isMobile&&<div onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:THEME.radius.md,padding:8,zIndex:THEME.z.sheet,boxShadow:THEME.shadow.pop,minWidth:250}}>
@@ -4030,37 +4025,37 @@ function GuestsModule({user, onBack, onGoDesigner}){
           ?{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:5,marginTop:8}
           :{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",rowGap:4}}>
           {[
-            {v:inv,  l:"Invitaciones", icon:"✉️", bg:"#FFFFFF"},
-            {v:total,l:"Personas",     icon:"👥", bg:"#FFFFFF"},
-            {v:conf, l:"Confirmados",  icon:"✓",  bg:"#FFFFFF", bold:true},
-            {v:pend, l:"Pendientes",   icon:"⏳", bg:"#F2F2EF"},
-            {v:noVa, l:"No van",       icon:"✗",  bg:"#EEEEEA"},
+            {v:inv,  l:"Invitaciones", icon:"✉️", bg:"rgba(245,239,224,.12)"},
+            {v:total,l:"Personas",     icon:"👥", bg:"rgba(245,239,224,.12)"},
+            {v:conf, l:"Confirmados",  icon:"✓",  bg:"rgba(74,94,58,.3)",  bold:true},
+            {v:pend, l:"Pendientes",   icon:"⏳", bg:"rgba(201,169,110,.25)"},
+            {v:noVa, l:"No van",       icon:"✗",  bg:"rgba(200,60,60,.2)"},
           ].map(s=>(
-            <div key={s.l} style={{background:s.bg,border:"1px solid rgba(26,26,20,.10)",borderRadius:10,padding:isMobile?"6px 4px":"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",...(isMobile?{width:"100%",boxSizing:"border-box"}:{minWidth:56,flex:"0 0 auto"})}}>
-              <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:"#1A1A14",lineHeight:1}}>{s.v}</div>
-              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(26,26,20,.42)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
+            <div key={s.l} style={{background:s.bg,borderRadius:10,padding:isMobile?"6px 4px":"7px 10px",display:"flex",flexDirection:"column",alignItems:"center",...(isMobile?{width:"100%",boxSizing:"border-box"}:{minWidth:56,flex:"0 0 auto"})}}>
+              <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"clamp(1rem,4vw,1.3rem)",fontWeight:700,color:THEME.color.cream,lineHeight:1}}>{s.v}</div>
+              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",textTransform:"uppercase",color:"rgba(245,239,224,.55)",marginTop:3,whiteSpace:"nowrap"}}>{s.l}</div>
             </div>
           ))}
-          {total>0&&<div style={{background:"#FFFFFF",border:"1px solid rgba(26,26,20,.10)",borderRadius:10,padding:isMobile?"6px 4px":"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",...(isMobile?{width:"100%",boxSizing:"border-box"}:{minWidth:64})}}>
-            <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"1.3rem",fontWeight:700,color:"#1A1A14",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
-            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.42)",marginTop:3}}>Confirmado</div>
+          {total>0&&<div style={{background:"rgba(245,239,224,.08)",borderRadius:10,padding:isMobile?"6px 4px":"8px 12px",display:"flex",flexDirection:"column",alignItems:"center",...(isMobile?{width:"100%",boxSizing:"border-box"}:{minWidth:64})}}>
+            <div style={{fontFamily:THEME.font.display,fontSize:isMobile?".95rem":"1.3rem",fontWeight:700,color:"rgba(201,169,110,.8)",lineHeight:1}}>{Math.round(conf/total*100)}%</div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(245,239,224,.45)",marginTop:3}}>Confirmado</div>
           </div>}
         </div>
         {/* Barra de progreso confirmaciones */}
-        {total>0&&<div style={{marginTop:10,height:6,background:"rgba(26,26,20,.08)",borderRadius:6,overflow:"hidden",display:"flex"}}>
-          <div style={{width:`${Math.round(conf/total*100)}%`,background:"#1A1A14",transition:"width .4s",borderRadius:"6px 0 0 6px"}}/>
-          <div style={{width:`${Math.round(pend/total*100)}%`,background:"rgba(26,26,20,.35)",transition:"width .4s"}}/>
-          <div style={{width:`${Math.round(noVa/total*100)}%`,background:"rgba(26,26,20,.16)",transition:"width .4s",borderRadius:"0 6px 6px 0"}}/>
+        {total>0&&<div style={{marginTop:10,height:6,background:"rgba(255,255,255,.12)",borderRadius:6,overflow:"hidden",display:"flex"}}>
+          <div style={{width:`${Math.round(conf/total*100)}%`,background:"rgba(74,94,58,.8)",transition:"width .4s",borderRadius:"6px 0 0 6px"}}/>
+          <div style={{width:`${Math.round(pend/total*100)}%`,background:"rgba(201,169,110,.6)",transition:"width .4s"}}/>
+          <div style={{width:`${Math.round(noVa/total*100)}%`,background:"rgba(200,60,60,.4)",transition:"width .4s",borderRadius:"0 6px 6px 0"}}/>
         </div>}
-        {restr.length>0&&<div style={{fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(26,26,20,.55)",marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
-          {restr.map(x=><span key={x.r} style={{background:"#F2F2EF",border:"1px solid rgba(26,26,20,.10)",borderRadius:100,padding:"2px 8px"}}>⚠️ {x.r}: {x.n}</span>)}
+        {restr.length>0&&<div style={{fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(201,169,110,.65)",marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
+          {restr.map(x=><span key={x.r} style={{background:"rgba(201,169,110,.12)",borderRadius:100,padding:"2px 8px"}}>⚠️ {x.r}: {x.n}</span>)}
         </div>}
-        {(saving||saved)&&<div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
+        {(saving||saved)&&<div style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.7)",marginTop:6}}>{saving?"Guardando...":"✓ Guardado"}</div>}
       </div>
     </div>
 
     <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box",transition:"max-width .25s ease"}}>
-      {addMode&&<div style={{background:"#FFFFFF",border:"1px solid rgba(26,26,20,.12)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(26,26,20,.04)"}}>
+      {addMode&&<div style={{background:THEME.color.cream2,border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(74,94,58,.08)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{fontFamily:THEME.font.display,fontSize:"1.05rem",fontWeight:700,color:THEME.color.ink}}>Nuevo invitado</div>
           <button onClick={()=>setAddMode(false)} style={{background:"transparent",border:"none",fontSize:"1.2rem",cursor:"pointer",color:"rgba(26,26,20,.3)",lineHeight:1}}>×</button>
@@ -4121,19 +4116,19 @@ function GuestsModule({user, onBack, onGoDesigner}){
 
       {/* Tabs de vista */}
       <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
-        <div style={{display:"flex",background:"#FFFFFF",borderRadius:100,padding:3,border:"1px solid rgba(26,26,20,.10)"}}>
+        <div style={{display:"flex",background:THEME.color.cream2,borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
           {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Mesas"},{id:"salon",label:"🏛️ Diseño del salón"}].map(v=>
-            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:isMobile?"8px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?"#1A1A14":"transparent",color:viewMode===v.id?"#FFFFFF":"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
+            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:isMobile?"8px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?THEME.color.sage:"transparent",color:viewMode===v.id?THEME.color.cream:"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
           )}
         </div>
         <div style={{marginLeft:"auto",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} de {guests.length}</div>
       </div>
 
-      {viewMode!=="salon"&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",background:"#FFFFFF",border:"1px solid rgba(26,26,20,.10)",borderRadius:12,padding:"9px 12px",marginBottom:12}}>
+      {viewMode!=="salon"&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",background:"rgba(74,94,58,.055)",border:"0.5px solid rgba(74,94,58,.12)",borderRadius:12,padding:"9px 12px",marginBottom:12}}>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.58)",lineHeight:1.35}}>
-          <strong style={{color:"#1A1A14"}}>Conectado con Diseño del salón:</strong> las mesas que edites acá se actualizan en el plano y en el canvas.
+          <strong style={{color:THEME.color.sage}}>Conectado con Diseño del salón:</strong> las mesas que edites acá se actualizan en el plano y en el canvas.
         </div>
-        <button onClick={()=>setViewMode("salon")} style={{background:"#FFFFFF",border:"1px solid rgba(26,26,20,.18)",borderRadius:THEME.radius.pill,padding:"8px 13px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:700,color:"#1A1A14",cursor:"pointer",whiteSpace:"nowrap"}}>Ver plano de salón</button>
+        <button onClick={()=>setViewMode("salon")} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:THEME.radius.pill,padding:"8px 13px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:700,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>Ver plano de salón</button>
       </div>}
 
       {/* Barra búsqueda + filtros — solo en lista */}
@@ -4141,7 +4136,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
         <div style={{flex:1,minWidth:180,position:"relative"}}>
           <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:".9rem",pointerEvents:"none",opacity:.4}}>🔍</span>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nombre, lado o mesa..."
-            style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"8px 10px 8px 34px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:"#FFFFFF",color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
+            style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"8px 10px 8px 34px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream2,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
           {search&&<button onClick={()=>setSearch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",fontSize:".9rem",cursor:"pointer",color:"rgba(26,26,20,.4)",lineHeight:1}}>×</button>}
         </div>
         <select value={filter.conf} onChange={e=>setFilter(f=>({...f,conf:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.conf?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
@@ -4154,7 +4149,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
       </div>}
 
       {viewMode==="lista"&&<>
-        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"clamp(16px,3.5vw,40px) clamp(10px,2vw,20px)",background:"#FFFFFF",borderRadius:16,border:"1px solid rgba(26,26,20,.10)"}}>
+        {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"clamp(16px,3.5vw,40px) clamp(10px,2vw,20px)",background:THEME.color.cream2,borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"2rem",marginBottom:10}}>👥</div>
           <p style={{fontFamily:THEME.font.display,fontSize:"1.05rem",color:THEME.color.ink,margin:"0 0 6px"}}>Aún no hay invitados</p>
           <p style={{fontFamily:THEME.font.body,fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
@@ -4167,7 +4162,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
             </label>
           </div>
         </div>}
-        {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",background:"#FFFFFF",borderRadius:14,border:"1px solid rgba(26,26,20,.10)"}}>
+        {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",background:THEME.color.cream2,borderRadius:14,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"1.8rem",marginBottom:8}}>🔍</div>
           <p style={{fontFamily:THEME.font.display,fontSize:"1rem",color:THEME.color.ink,margin:"0 0 4px"}}>Sin resultados para "{search}"</p>
           <p style={{fontFamily:THEME.font.body,fontSize:".85rem",color:"rgba(26,26,20,.4)",margin:0}}>Probá con otro nombre o limpiar los filtros</p>
@@ -4176,31 +4171,31 @@ function GuestsModule({user, onBack, onGoDesigner}){
           const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
           const isExpanded=expandedId===g.id;
           const cant=parseInt(g.cantidadInvitados||1);
-          return <div key={g.id} style={{background:"#FFFFFF",border:`1px solid ${isExpanded?"rgba(26,26,20,.28)":"rgba(26,26,20,.10)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s, box-shadow .2s",boxShadow:isExpanded?"0 8px 24px rgba(26,26,20,.06)":"none"}}>
+          return <div key={g.id} style={{background:THEME.color.cream2,border:`0.5px solid ${isExpanded?"rgba(74,94,58,.3)":"rgba(201,169,110,.18)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s, box-shadow .2s",boxShadow:isExpanded?"0 8px 24px rgba(74,94,58,.08)":"none"}}>
             <>
                   {/* Fila principal — siempre visible */}
                   <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}}
                     onClick={()=>setExpandedId(isExpanded?null:g.id)}>
                     {/* Avatar inicial */}
-                    <div style={{width:36,height:36,borderRadius:"50%",background:c.bg||"#F2F2EF",border:`1.5px solid ${c.border||"rgba(26,26,20,.18)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <div style={{width:36,height:36,borderRadius:"50%",background:c.bg||"rgba(74,94,58,.1)",border:`1.5px solid ${c.color}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                       <span style={{fontFamily:THEME.font.display,fontSize:"1rem",fontWeight:700,color:c.color}}>{g.nombre?.charAt(0)?.toUpperCase()||"?"}</span>
                     </div>
                     {/* Info principal */}
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                         <span style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:600,color:THEME.color.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{g.nombre}</span>
-                        {cant>1&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",background:"#F2F2EF",color:"rgba(26,26,20,.72)",borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
+                        {cant>1&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:THEME.color.sage,borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
                         <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}{g.parentesco&&g.parentesco!=="Otro"?` · ${g.parentesco}`:""}</span>
-                        {g.mesa&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",background:"#F2F2EF",color:"rgba(26,26,20,.65)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
+                        {g.mesa&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
                         {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
                       </div>
                     </div>
                     {/* Chip de confirmación — clickable */}
                     <div style={{flexShrink:0}}>
                       <select value={g.confirmacion} onChange={e=>{e.stopPropagation();updateGuest(g.id,"confirmacion",e.target.value);}} onClick={e=>e.stopPropagation()}
-                        style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",padding:"8px 10px",borderRadius:THEME.radius.pill,border:`1px solid ${c.border||"rgba(26,26,20,.18)"}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
+                        style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",padding:"8px 10px",borderRadius:THEME.radius.pill,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
                         {CONFIRMACIONES.map(cc=><option key={cc.id} value={cc.id}>{cc.label}</option>)}
                       </select>
                     </div>
@@ -4209,7 +4204,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                   </div>
 
                   {/* Panel expandido */}
-                  {isExpanded&&<div className="guest-expand" style={{borderTop:"1px solid rgba(26,26,20,.08)",padding:"12px 14px",background:"#FAFAF8"}}>
+                  {isExpanded&&<div className="guest-expand" style={{borderTop:"0.5px solid rgba(74,94,58,.1)",padding:"12px 14px",background:"rgba(74,94,58,.03)"}}>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginBottom:10}}>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
@@ -8848,6 +8843,71 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const elemBox=(el)=>({x1:el.mx,y1:el.my,x2:el.mx+(el.ew||3),y2:el.my+(el.eh||2),w:el.ew||3,h:el.eh||2,tipo:el.tipo});
   const expandBox=(b,g)=>({x1:b.x1-g,y1:b.y1-g,x2:b.x2+g,y2:b.y2+g});
   const boxesHit=(a,b)=>a.x1<b.x2&&a.x2>b.x1&&a.y1<b.y2&&a.y2>b.y1;
+  const NON_BLOCKING_ELEMENT_TYPES = new Set(["entrada","salida","emergencia","camino","alfombra","luces","flores","centro_floral","exterior","columnas"]);
+  const isBlockingPresetElement=(el)=>!!el && !el.nonPhysical && !NON_BLOCKING_ELEMENT_TYPES.has(el.tipo);
+
+  const resolvePresetOverlaps=(plano)=>{
+    if(!plano) return plano;
+    const W=plano.salonW||salonW, H=plano.salonH||salonH;
+    const shape=plano.salonShape||"rectangulo";
+    const cfg=plano.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG;
+    const clampElem=(el)=>{
+      const ew=el.ew||3, eh=el.eh||2;
+      return {...el,mx:+Math.max(0.25,Math.min(W-ew-0.25,el.mx||0)).toFixed(2),my:+Math.max(0.25,Math.min(H-eh-0.25,el.my||0)).toFixed(2)};
+    };
+    const clampMesaLocal=(m)=>{
+      const d=mesaDimensiones(m);
+      return {...m,mx:+Math.max(d.w/2+0.25,Math.min(W-d.w/2-0.25,m.mx||d.w/2+0.25)).toFixed(2),my:+Math.max(d.h/2+0.25,Math.min(H-d.h/2-0.25,m.my||d.h/2+0.25)).toFixed(2)};
+    };
+    const candOffsets=()=>{
+      const out=[[0,0]];
+      for(let r=0.35;r<=4.2;r+=0.35){
+        out.push([r,0],[-r,0],[0,r],[0,-r],[r,r],[r,-r],[-r,r],[-r,-r],[r*.55,r],[-r*.55,r],[r*.55,-r],[-r*.55,-r]);
+      }
+      return out;
+    };
+    const offsets=candOffsets();
+    const safeElem=(el,placed)=>{
+      if(!isBlockingPresetElement(el)) return true;
+      const b=expandBox(elemBox(el),0.04);
+      if(b.x1<0||b.y1<0||b.x2>W||b.y2>H) return false;
+      const corners=[[b.x1,b.y1],[b.x2,b.y1],[b.x1,b.y2],[b.x2,b.y2],[el.mx+(el.ew||3)/2,el.my+(el.eh||2)/2]];
+      if(!corners.every(([x,y])=>salonShapePointInside(shape,x,y,W,H,cfg))) return false;
+      return !placed.some(o=>isBlockingPresetElement(o)&&boxesHit(b,expandBox(elemBox(o),0.04)));
+    };
+    const placedElems=[];
+    for(const raw of (plano.elementos||[])){
+      const base=clampElem(raw);
+      if(!isBlockingPresetElement(base)||safeElem(base,placedElems)){placedElems.push(base);continue;}
+      let found=null;
+      for(const [dx,dy] of offsets){
+        const c=clampElem({...base,mx:(base.mx||0)+dx,my:(base.my||0)+dy});
+        if(safeElem(c,placedElems)){found=c;break;}
+      }
+      placedElems.push(found||base);
+    }
+    const fixedBlocks=placedElems.filter(isBlockingPresetElement).map(el=>expandBox(elemBox(el),0.08));
+    const safeMesa=(m,placed)=>{
+      const b=expandBox(mesaBox(m),0.06);
+      if(b.x1<0||b.y1<0||b.x2>W||b.y2>H) return false;
+      const corners=[[b.x1,b.y1],[b.x2,b.y1],[b.x1,b.y2],[b.x2,b.y2],[m.mx,m.my]];
+      if(!corners.every(([x,y])=>salonShapePointInside(shape,x,y,W,H,cfg))) return false;
+      if(fixedBlocks.some(z=>boxesHit(b,z))) return false;
+      return !placed.some(pm=>boxesHit(b,expandBox(mesaBox(pm),0.08)));
+    };
+    const placedMesas=[];
+    for(const raw of (plano.mesas||[])){
+      const base=clampMesaLocal(raw);
+      if(safeMesa(base,placedMesas)){placedMesas.push(base);continue;}
+      let found=null;
+      for(const [dx,dy] of offsets){
+        const c=clampMesaLocal({...base,mx:(base.mx||0)+dx,my:(base.my||0)+dy});
+        if(safeMesa(c,placedMesas)){found=c;break;}
+      }
+      placedMesas.push(found||base);
+    }
+    return {...plano,elementos:placedElems,mesas:placedMesas};
+  };
   const noGoMargin=(tipo)=>({
     // Márgenes pensados como “zonas de circulación” para que los presets se comporten
     // como un plano real de boda: pista libre, DJ visible, baños/cocina sin mesas encima,
@@ -9270,6 +9330,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       const ok=window.confirm("Esto reemplaza el plano actual por un preset profesional editable. Después vas a poder mover y redimensionar mesas, pista, barra, DJ, lounge y todos los elementos. ¿Querés continuar?");
       if(!ok) return;
     }
+
+    P = resolvePresetOverlaps(P);
 
     setSalonW(P.salonW); setSalonH(P.salonH); setSalonShape(P.salonShape || "rectangulo"); setSelectedSalonShape(P.salonShape || "rectangulo");
     setSalonShapeConfig(P.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG); setSelectedShapeConfig(P.salonShapeConfig||DEFAULT_SALON_SHAPE_CONFIG);
@@ -9934,10 +9996,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     eco_sustentable:{linen:"#FCFFF2",wood:"#9A6B43",metal:"#73A55C",accent:"#B5D8A7",flower:"#E5F3D5",leaf:"#4F934A",floorA:"#E4F0DB",floorB:"#D0E4C4",stroke:"#4E7846",chair:"#A4784A",text:"#33552F"},
     fiesta_latina:{linen:"#FFF2E6",wood:"#B35D38",metal:"#E6A23A",accent:"#F3C144",flower:"#F4774B",leaf:"#4F8B58",floorA:"#F8D4B5",floorB:"#F0B98D",stroke:"#9A4734",chair:"#D9844B",text:"#5C2B20"},
     luces_fairy_noche:{linen:"#F8F6FF",wood:"#5F5688",metal:"#EAC05A",accent:"#D8C06B",flower:"#E8D9FF",leaf:"#6B7B5B",floorA:"#2A2540",floorB:"#1B1730",stroke:"#453E69",chair:"#776DA1",text:"#F8F2D8"},
-    micro_wedding_boutique:{linen:"#FFF7EF",wood:"#A46E4C",metal:"#BD825D",accent:"#DABDA3",flower:"#F1D2C1",leaf:"#74875E",floorA:"#F3E5D6",floorB:"#E3CFBA",stroke:"#74533E",chair:"#C79A78",text:"#4A3325"}
+    micro_wedding_boutique:{linen:"#FFF7EF",wood:"#A46E4C",metal:"#BD825D",accent:"#DABDA3",flower:"#F1D2C1",leaf:"#74875E",floorA:"#F3E5D6",floorB:"#E3CFBA",stroke:"#74533E",chair:"#C79A78",text:"#4A3325"},
+    blanco_negro:{linen:"#FFFFFF",wood:"#262626",metal:"#111111",accent:"#E8E8E8",flower:"#F7F7F7",leaf:"#4A4A4A",floorA:"#FFFFFF",floorB:"#F2F2F2",stroke:"#1A1A1A",chair:"#F5F5F5",text:"#111111"}
   };
-  const visual = CANVAS_VISUALS[activeVisualId] || CANVAS_VISUALS.fiesta_latina;
-  const isDarkVisual = ["industrial_chic","glam_lujo","luces_fairy_noche"].includes(activeVisualId);
+  // En Invitados el canvas vuelve a la lectura blanco y negro/minimalista.
+  // En Diseño del salón se conservan los colores realistas de cada preset.
+  const visual = isGuestMode ? CANVAS_VISUALS.blanco_negro : (CANVAS_VISUALS[activeVisualId] || CANVAS_VISUALS.fiesta_latina);
+  const isDarkVisual = !isGuestMode && ["industrial_chic","glam_lujo","luces_fairy_noche"].includes(activeVisualId);
   const tableTextColor = (sel=false)=> sel ? THEME.color.cream : (isDarkVisual ? "#F8F2DE" : visual.text);
   const occupancyStats=(mesa)=>{
     const ps=mesaPersonas(mesa.id);
@@ -9951,13 +10016,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const mesaHasOverlap=(mesa)=>{
     const b=mesaBox(mesa);
     const mesaHit=mesas.some(o=>o.id!==mesa.id&&boxesHit(expandBox(b,0.05),expandBox(mesaBox(o),0.05)));
-    const elemHit=elementos.some(el=>!el.nonPhysical&&!['camino','alfombra','luces','flores','centro_floral'].includes(el.tipo)&&boxesHit(b,expandBox(elemBox(el),0.02)));
+    const elemHit=elementos.some(el=>isBlockingPresetElement(el)&&boxesHit(b,expandBox(elemBox(el),0.02)));
     return mesaHit||elemHit;
   };
   const elemHasOverlap=(el)=>{
-    if(el.nonPhysical||['camino','alfombra','luces','flores','centro_floral'].includes(el.tipo)) return false;
+    if(!isBlockingPresetElement(el)) return false;
     const b=elemBox(el);
-    return mesas.some(m=>boxesHit(expandBox(b,0.02),mesaBox(m))) || elementos.some(o=>o.id!==el.id&&!o.nonPhysical&&!['camino','alfombra','luces','flores','centro_floral'].includes(o.tipo)&&boxesHit(expandBox(b,0.02),elemBox(o)));
+    return mesas.some(m=>boxesHit(expandBox(b,0.02),mesaBox(m))) || elementos.some(o=>o.id!==el.id&&isBlockingPresetElement(o)&&boxesHit(expandBox(b,0.02),elemBox(o)));
   };
   const professionalOverlapWarnings=()=>{
     const warnings=[];
@@ -10191,16 +10256,16 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:10,flexWrap:"wrap"}}>
         <div>
           <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)"}}>Inspiración visual</div>
-          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Tocá una miniatura para aplicar el estilo al plano editable.</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Tocá una miniatura realista para aplicar ese estilo al plano editable.</div>
         </div>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.45)",whiteSpace:"nowrap"}}>Click en una miniatura = aplicar preset</div>
       </div>
       <div style={{display:"grid",gridAutoFlow:"column",gridAutoColumns:isMobile?"148px":"172px",gap:10,overflowX:"auto",paddingBottom:4,WebkitOverflowScrolling:"touch",scrollSnapType:"x proximity"}}>
         {PRESET_STAGE2_ORDER.map(id=>{
           const p=STAGE2_PRESET_CONFIGS[id]; const sel=selectedSalonType===id;
-          return <button key={id} onClick={()=>{setSelectedSalonType(id);aplicarPreset(id);}} style={{scrollSnapAlign:"start",textAlign:"left",background:sel?"rgba(26,26,20,.06)":"white",border:sel?"1.5px solid rgba(26,26,20,.72)":"1px solid rgba(26,26,20,.14)",borderRadius:14,padding:7,cursor:"pointer",boxShadow:sel?"0 8px 22px rgba(26,26,20,.10)":"none"}}>
+          return <button key={id} onClick={()=>{setSelectedSalonType(id);aplicarPreset(id);}} style={{scrollSnapAlign:"start",textAlign:"left",background:sel?"rgba(74,94,58,.08)":"white",border:sel?"1.5px solid rgba(74,94,58,.55)":"1px solid rgba(74,94,58,.16)",borderRadius:14,padding:7,cursor:"pointer",boxShadow:sel?"0 8px 22px rgba(74,94,58,.12)":"none"}}>
             <span style={{display:"block",height:isMobile?82:96,borderRadius:10,background:`url(/presets/${id}.jpg) center/cover`,border:"1px solid rgba(74,94,58,.12)",position:"relative",overflow:"hidden"}}>
-              {sel&&<span style={{position:"absolute",right:6,top:6,background:"#1A1A14",color:"#FFFFFF",borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em"}}>ACTIVO</span>}
+              {sel&&<span style={{position:"absolute",right:6,top:6,background:THEME.color.sage,color:THEME.color.cream,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em"}}>ACTIVO</span>}
             </span>
             <span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:800,color:THEME.color.ink,marginTop:7,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p?.emoji||"✨"} {p?.label||id}</span>
           </button>;
