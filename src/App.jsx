@@ -4655,6 +4655,11 @@ const ELEMENTOS_FIJOS = [
   {id:"backing",      label:"Backing fotos",      emoji:"✨", color:"#9A7B45", w:4.2, h:0.8},
   {id:"alfombra",     label:"Camino/alfombra",    emoji:"🟫", color:"#9B6D4D", w:1.2, h:7},
   {id:"living",       label:"Living lounge",      emoji:"🛋️", color:"#6E8C7A", w:3.8, h:2.2},
+  {id:"sofa_2",       label:"Sofá 2 cuerpos",     emoji:"🛋️", color:"#8A7868", w:2.2, h:0.9},
+  {id:"sofa_3",       label:"Sofá 3 cuerpos",     emoji:"🛋️", color:"#8A7868", w:3.2, h:1.0},
+  {id:"mesita",       label:"Mesita lounge",      emoji:"◯",  color:"#B9905A", w:1.0, h:1.0},
+  {id:"piano",        label:"Piano",              emoji:"🎹", color:"#2F2D2B", w:2.3, h:1.4},
+  {id:"cello",        label:"Cello",              emoji:"🎻", color:"#7B4E2F", w:0.8, h:1.4},
   {id:"luces",        label:"Luces",              emoji:"💡", color:"#B9905A", w:4.0, h:0.6},
   {id:"columnas",     label:"Columnas",           emoji:"🏺", color:"#8C7A5E", w:1.2, h:1.2},
 
@@ -4681,6 +4686,7 @@ const ELEMENTO_CATEGORIAS = [
   {label:"Principales", items:["novios","presidencial","pista","escenario","entrada"]},
   {label:"Comida y bebida", items:["torta","postres","bar","cafeteria","buffet","bebidas","catering"]},
   {label:"Decoración", items:["bienvenida","regalos","photobooth","cabina360","arco","flores","centro_floral","backing","alfombra","living","luces","columnas"]},
+  {label:"Lounge y música", items:["sofa_2","sofa_3","mesita","piano","cello"]},
   {label:"Servicios", items:["banios","cocina","guardarropa","proveedores","mozos","salida","emergencia"]},
   {label:"Ceremonia / zonas", items:["altar","sillas_cer","camino","musicos","ninos","fumadores","exterior"]},
 ];
@@ -7881,6 +7887,11 @@ const FIXED_ELEMENT_SIZES = {
   photobooth: {w:3,h:2.5,tipo:"photobooth"},
   lounge_chico: {w:5,h:3,tipo:"living"},
   lounge_grande: {w:7,h:4,tipo:"living"},
+  sofa_2: {w:2.2,h:.9,tipo:"sofa_2"},
+  sofa_3: {w:3.2,h:1,tipo:"sofa_3"},
+  mesita: {w:1,h:1,tipo:"mesita"},
+  piano: {w:2.3,h:1.4,tipo:"piano"},
+  cello: {w:.8,h:1.4,tipo:"cello"},
   mesa_torta: {w:2.5,h:1.8,tipo:"torta"},
   backing: {w:6,h:.6,tipo:"backing"},
   decoracion_aerea: {w:7,h:.4,tipo:"luces", nonPhysical:true},
@@ -8151,6 +8162,81 @@ const STAGE2_PRESET_CONFIGS = {
     exactTables:({W,H})=>exactTables(W,H,[{"tipo":"imperial","box":[530,675,1270,760],"cap":30,"label":"Mesa imperial / 20–45 invitados"}])
   }
 };
+
+// Add-ons visuales pro: reemplazan bloques genéricos de lounge por piezas editables
+// y suman instrumentos para crear rincones como los mockups realistas: sofás, mesitas, piano y cello.
+const PRESET_DECOR_ADDONS = {
+  clasica_elegante: { removeTipos:[], items:[
+    {id:"piano-clasico-1",tipo:"piano",box:[610,1018,690,1090],label:"Piano"},
+    {id:"cello-clasico-1",tipo:"cello",box:[1110,1018,1160,1090],label:"Cello"}
+  ]},
+  boho_chic: { removeTipos:["living"], items:[
+    {id:"sofa3-boho-1",tipo:"sofa_3",box:[1280,710,1565,755],label:"Sofá 3 cuerpos"},
+    {id:"sofa2-boho-1",tipo:"sofa_2",box:[1285,780,1460,825],label:"Sofá 2 cuerpos"},
+    {id:"mesita-boho-1",tipo:"mesita",box:[1490,770,1560,840],label:"Mesita"}
+  ]},
+  rustica_campo: { removeTipos:["living"], items:[
+    {id:"sofa3-rustico-1",tipo:"sofa_3",box:[1440,790,1620,845],label:"Sofá fogón"},
+    {id:"mesita-rustica-1",tipo:"mesita",box:[1510,860,1580,930],label:"Mesita fogón"},
+    {id:"sofa2-rustico-1",tipo:"sofa_2",box:[1460,995,1625,1045],label:"Sofá 2 cuerpos"}
+  ]},
+  jardin_romantico: { removeTipos:["living"], items:[
+    {id:"sofa3-jardin-1",tipo:"sofa_3",box:[250,695,470,732],label:"Sofá jardín"},
+    {id:"sofa2-jardin-1",tipo:"sofa_2",box:[260,748,380,785],label:"Sofá 2 cuerpos"},
+    {id:"mesita-jardin-1",tipo:"mesita",box:[395,742,455,802],label:"Mesita"},
+    {id:"piano-jardin-1",tipo:"piano",box:[1075,860,1160,940],label:"Piano"},
+    {id:"cello-jardin-1",tipo:"cello",box:[670,860,715,940],label:"Cello"}
+  ]},
+  vintage_romantico: { removeTipos:["living"], items:[
+    {id:"sofa3-vintage-1",tipo:"sofa_3",box:[205,535,395,578],label:"Sofá antiguo"},
+    {id:"mesita-vintage-1",tipo:"mesita",box:[270,588,340,658],label:"Mesita"},
+    {id:"sofa2-vintage-1",tipo:"sofa_2",box:[210,670,375,718],label:"Sofá 2 cuerpos"},
+    {id:"piano-vintage-1",tipo:"piano",box:[650,850,735,925],label:"Piano"},
+    {id:"cello-vintage-1",tipo:"cello",box:[1070,850,1125,925],label:"Cello"}
+  ]},
+  glam_lujo: { removeTipos:["living"], items:[
+    {id:"sofa3-glam-1",tipo:"sofa_3",box:[235,1005,430,1060],label:"Sofá VIP"},
+    {id:"mesita-glam-1",tipo:"mesita",box:[455,1010,515,1070],label:"Mesita VIP"}
+  ]},
+  mediterranea: { removeTipos:[], items:[
+    {id:"sofa3-mediterranea-1",tipo:"sofa_3",box:[235,980,455,1030],label:"Sofá patio"},
+    {id:"mesita-mediterranea-1",tipo:"mesita",box:[480,980,545,1045],label:"Mesita"}
+  ]},
+  japandi: { removeTipos:["living"], items:[
+    {id:"sofa2-japandi-1",tipo:"sofa_2",box:[260,955,440,1000],label:"Sofá té"},
+    {id:"mesita-japandi-1",tipo:"mesita",box:[330,1010,395,1075],label:"Mesita té"}
+  ]},
+  fiesta_latina: { removeTipos:["living"], items:[
+    {id:"sofa3-fiesta-1",tipo:"sofa_3",box:[1365,220,1580,265],label:"Sofá descanso"},
+    {id:"mesita-fiesta-1",tipo:"mesita",box:[1460,275,1530,345],label:"Mesita"},
+    {id:"piano-fiesta-1",tipo:"piano",box:[600,200,685,300],label:"Teclado / piano"}
+  ]},
+  luces_fairy_noche: { removeTipos:["living"], items:[
+    {id:"sofa3-luces-1",tipo:"sofa_3",box:[215,540,435,580],label:"Sofá cálido"},
+    {id:"sofa2-luces-1",tipo:"sofa_2",box:[225,610,380,650],label:"Sofá 2 cuerpos"},
+    {id:"mesita-luces-1",tipo:"mesita",box:[392,590,455,653],label:"Mesita"}
+  ]},
+  micro_wedding_boutique: { removeTipos:["living"], items:[
+    {id:"sofa3-micro-1",tipo:"sofa_3",box:[235,810,455,855],label:"Sofá boutique"},
+    {id:"sofa2-micro-1",tipo:"sofa_2",box:[235,905,405,950],label:"Sofá 2 cuerpos"},
+    {id:"mesita-micro-1",tipo:"mesita",box:[420,880,480,940],label:"Mesita"},
+    {id:"piano-micro-1",tipo:"piano",box:[635,1000,715,1080],label:"Piano"},
+    {id:"cello-micro-1",tipo:"cello",box:[1090,1000,1140,1080],label:"Cello"}
+  ]}
+};
+Object.entries(PRESET_DECOR_ADDONS).forEach(([presetId,cfg])=>{
+  const base = STAGE2_PRESET_CONFIGS[presetId];
+  if(!base || typeof base.fixed !== "function") return;
+  const originalFixed = base.fixed;
+  base.fixed = ({W,H}) => {
+    const removeTipos = new Set(cfg.removeTipos||[]);
+    const removeIds = new Set(cfg.removeIds||[]);
+    const baseItems = originalFixed({W,H}).filter(el => !removeTipos.has(el.tipo) && !removeIds.has(el.id));
+    const addonItems = exactElements(W,H,cfg.items||[]).map(el=>({...el, locked:false, editable:true, addonDecor:true}));
+    return [...baseItems, ...addonItems];
+  };
+});
+
 STAGE2_PRESET_CONFIGS.jardin_romantico_central = STAGE2_PRESET_CONFIGS.clasica_elegante;
 const PRESET_STAGE2_ORDER = ["clasica_elegante","boho_chic","rustica_campo","minimalista_moderno","jardin_romantico","playa_tropical","industrial_chic","vintage_romantico","glam_lujo","mediterranea","japandi","eco_sustentable","fiesta_latina","luces_fairy_noche","micro_wedding_boutique"];
 
@@ -8571,6 +8657,11 @@ const ELEMENT_RECOMMENDATIONS = {
   camino:["Debe quedar despejado de mesas y estaciones.","Funciona mejor si conecta entrada, altar o punto focal.","Usalo como guía visual: flores, alfombra o luces pueden reforzar el recorrido."],
   photobooth:["Ubicalo en un lugar visible, pero fuera del flujo principal de mozos.","Dejá espacio frontal para grupos y fila.","Cerca del lounge o barra suele funcionar bien para activar la experiencia."],
   living:["El lounge debe descansar del ruido de la pista, pero seguir conectado visualmente.","No lo encierres detrás de mesas; dejá un acceso claro.","Sumá luces o flores alrededor para que se sienta como rincón de foto."],
+  sofa_2:["Ideal para rincones íntimos de 2–3 personas o para acompañar un sector de fotos.","Ubicalo con una mesita cercana, pero sin bloquear la circulación.","Funciona muy bien en lounges, áreas de descanso y rincones acústicos."],
+  sofa_3:["Usalo como pieza principal del lounge: deja un frente libre para conversación y fotos.","Combiná con una mesita y otro sofá/sillón para crear una isla de descanso.","Evitá pegarlo a mesas de invitados; debe sentirse como zona social separada."],
+  mesita:["Debe acompañar sofás o sillones, no quedar aislada en medio del paso.","Sirve para velas, flores, programa de ceremonia o bebidas de bienvenida.","Dejá espacio alrededor para que los invitados puedan sentarse y circular."],
+  piano:["Ubicalo cerca del altar, lounge o escenario si habrá música en vivo.","Dejá espacio lateral para el pianista, banqueta y cables/micrófonos.","No lo pongas en el flujo principal de mozos ni demasiado cerca de la pista."],
+  cello:["Funciona como detalle musical premium junto al piano, altar o trío acústico.","Dejá espacio para atril y silla del músico.","Ideal para ceremonias íntimas, recepciones elegantes y rincones románticos."],
   torta:["La mesa de torta debe tener buen fondo para fotos.","No la pegues a la pista si hay mucho movimiento.","Dejá espacio frontal para corte simbólico y fotos familiares."],
   entrada:["La entrada necesita lectura clara: bienvenida, circulación y primer impacto.","No bloquees la entrada con mesas grandes.","Cerca de regalos, seating o bienvenida funciona muy bien."],
   banios:["Los baños deben estar señalizados y accesibles, pero no protagonistas visuales.","Dejá pasillo libre y evitá mesas pegadas a la puerta.","Conviene ubicarlos en perímetro o zona de servicio."],
@@ -10217,6 +10308,46 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         {Array.from({length:rows*cols},(_,i)=>{const c=i%cols,r=Math.floor(i/cols);return <rect key={i} x={Wv*(.12+c*.15)} y={Hv*(.16+r*.20)} width={Wv*.08} height={Hv*.09} rx="4" fill={visual.chair} stroke={visual.stroke} strokeWidth="1"/>})}
         {showLabel&&<text x={Wv/2} y={Hv*.92} fontSize={fontSize*.86} {...commonText}>{label}</text>}
       </>;
+    } else if(["sofa_2","sofa_3"].includes(el.tipo)){
+      const cushionCount = el.tipo==="sofa_3" ? 3 : 2;
+      const armW = Math.max(5,Wv*.08);
+      body=<>
+        <rect x="2" y="2" width={Wv-4} height={Hv-4} rx="12" fill="rgba(255,255,255,.03)" stroke={stroke} strokeWidth={isSel?2.5:1} strokeDasharray="5 5" opacity=".35"/>
+        <rect x={Wv*.07} y={Hv*.14} width={Wv*.86} height={Hv*.72} rx="12" fill={isDarkVisual?"#3A3330":"#E8D9C9"} stroke={stroke} strokeWidth={isSel?2.4:1.4} filter={`url(#shadow-${id})`}/>
+        <rect x={Wv*.07} y={Hv*.10} width={Wv*.86} height={Hv*.18} rx="9" fill={isDarkVisual?"#544842":"#F1E6DA"} opacity=".92"/>
+        <rect x={Wv*.07} y={Hv*.18} width={armW} height={Hv*.62} rx="8" fill={isDarkVisual?"#544842":"#F1E6DA"} stroke={visual.stroke} strokeWidth=".8"/>
+        <rect x={Wv*.93-armW} y={Hv*.18} width={armW} height={Hv*.62} rx="8" fill={isDarkVisual?"#544842":"#F1E6DA"} stroke={visual.stroke} strokeWidth=".8"/>
+        {Array.from({length:cushionCount},(_,i)=>{const gap=Wv*.03; const innerX=Wv*.07+armW+gap; const innerW=Wv*.86-armW*2-gap*2; const cw=innerW/cushionCount; return <rect key={i} x={innerX+i*cw+2} y={Hv*.34} width={Math.max(5,cw-4)} height={Hv*.34} rx="7" fill={isDarkVisual?"#6A5A50":"#FBF3EA"} stroke="rgba(90,78,62,.22)" strokeWidth=".8"/>})}
+        {showLabel&&Wv>90&&<text x={Wv/2} y={Hv*.92} fontSize={fontSize*.78} {...commonText}>{label}</text>}
+      </>;
+    } else if(el.tipo==="mesita"){
+      const r=Math.min(Wv,Hv)*.34;
+      body=<>
+        <ellipse cx={Wv/2+2} cy={Hv/2+3} rx={r*1.1} ry={r*.9} fill="rgba(0,0,0,.15)"/>
+        <circle cx={Wv/2} cy={Hv/2} r={r} fill={visual.linen} stroke={stroke} strokeWidth={isSel?2.4:1.4} filter={`url(#shadow-${id})`}/>
+        <circle cx={Wv/2} cy={Hv/2} r={r*.45} fill={visual.wood} opacity=".28"/>
+        {flower(Wv/2,Hv/2,Math.max(3,Math.min(7,r*.22)))}
+        {showLabel&&Wv>70&&<text x={Wv/2} y={Hv*.90} fontSize={fontSize*.78} {...commonText}>{label}</text>}
+      </>;
+    } else if(el.tipo==="piano"){
+      body=<>
+        <rect x="2" y="2" width={Wv-4} height={Hv-4} rx="12" fill="rgba(255,255,255,.02)" stroke={stroke} strokeWidth={isSel?2.5:1} strokeDasharray="5 5" opacity=".35"/>
+        <path d={`M ${Wv*.15} ${Hv*.22} C ${Wv*.28} ${Hv*.04}, ${Wv*.73} ${Hv*.05}, ${Wv*.88} ${Hv*.30} C ${Wv*.99} ${Hv*.50}, ${Wv*.78} ${Hv*.88}, ${Wv*.43} ${Hv*.83} L ${Wv*.18} ${Hv*.73} Z`} fill={isDarkVisual?"#080808":"#171512"} stroke={stroke} strokeWidth={isSel?2.4:1.2} filter={`url(#shadow-${id})`}/>
+        <rect x={Wv*.18} y={Hv*.59} width={Wv*.52} height={Hv*.16} rx="3" fill="#F5EFE4" stroke="rgba(255,255,255,.55)" strokeWidth=".8"/>
+        {Array.from({length:8},(_,i)=><line key={i} x1={Wv*(.23+i*.055)} y1={Hv*.60} x2={Wv*(.23+i*.055)} y2={Hv*.74} stroke="#1A1A14" strokeWidth=".7" opacity=".65"/>)}
+        <rect x={Wv*.24} y={Hv*.84} width={Wv*.20} height={Hv*.08} rx="3" fill={visual.wood} stroke={visual.stroke} strokeWidth=".8"/>
+        {showLabel&&Wv>90&&<text x={Wv/2} y={Hv*.50} fontSize={fontSize*.85} {...commonText}>{label}</text>}
+      </>;
+    } else if(el.tipo==="cello"){
+      body=<>
+        <rect x="2" y="2" width={Wv-4} height={Hv-4} rx="12" fill="rgba(255,255,255,.02)" stroke={stroke} strokeWidth={isSel?2.5:1} strokeDasharray="5 5" opacity=".35"/>
+        <line x1={Wv*.50} y1={Hv*.08} x2={Wv*.50} y2={Hv*.92} stroke={visual.wood} strokeWidth={Math.max(2,Wv*.05)} strokeLinecap="round"/>
+        <ellipse cx={Wv*.50} cy={Hv*.42} rx={Wv*.22} ry={Hv*.18} fill="#B47A45" stroke={stroke} strokeWidth={isSel?2:1.1}/>
+        <ellipse cx={Wv*.50} cy={Hv*.66} rx={Wv*.28} ry={Hv*.22} fill="#A86837" stroke={stroke} strokeWidth={isSel?2:1.1}/>
+        <circle cx={Wv*.50} cy={Hv*.56} r={Math.max(2,Wv*.045)} fill="#3A2418"/>
+        <line x1={Wv*.72} y1={Hv*.18} x2={Wv*.22} y2={Hv*.82} stroke={isDarkVisual?"#F7E6C5":"#4A3A2A"} strokeWidth="1.4" strokeLinecap="round"/>
+        {showLabel&&Wv>70&&<text x={Wv/2} y={Hv*.96} fontSize={fontSize*.72} {...commonText}>{label}</text>}
+      </>;
     } else if(el.tipo==="living"){
       body=<>
         {baseRect(10,isDarkVisual?"#2A2630":"#F4E8DD")}
@@ -10531,7 +10662,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             Preset: <strong style={{color:THEME.color.sage}}>{STAGE2_PRESET_CONFIGS[selectedSalonType]?.label}</strong>
           </div>
           <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)",lineHeight:1.35,marginTop:4}}>
-            {getRoomSize(selectedGuestCount,roomSizeOption).label} · Mesa recomendada: {getRecommendedTableTypeForPreset(selectedSalonType,selectedGuestCount,roomSizeOption).label}. El preset carga una base editable: podés mover y redimensionar mesas, pista, barra, DJ, lounge y todos los elementos.
+            {getRoomSize(selectedGuestCount,roomSizeOption).label} · Mesa recomendada: {getRecommendedTableTypeForPreset(selectedSalonType,selectedGuestCount,roomSizeOption).label}. El preset carga una base editable: podés mover y redimensionar mesas, pista, barra, DJ, sofás, mesitas, piano, cello y todos los elementos.
           </div>
         </div>
         <button onMouseDown={e=>e.stopPropagation()} onClick={()=>aplicarPreset(selectedSalonType)} style={{width:"100%",marginTop:10,background:THEME.color.sage,border:"none",borderRadius:10,padding:"12px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.86rem)",fontWeight:800,color:"white",cursor:"pointer",boxShadow:"0 8px 20px rgba(74,94,58,.18)"}}>Generar plano</button>
