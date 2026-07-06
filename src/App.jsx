@@ -10021,7 +10021,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   // En Diseño del salón se conservan los colores realistas de cada preset.
   const visual = isGuestMode ? CANVAS_VISUALS.blanco_negro : (CANVAS_VISUALS[activeVisualId] || CANVAS_VISUALS.fiesta_latina);
   const isDarkVisual = !isGuestMode && ["industrial_chic","glam_lujo","luces_fairy_noche"].includes(activeVisualId);
-  const tableTextColor = (sel=false)=> sel ? THEME.color.cream : (isDarkVisual ? "#F8F2DE" : visual.text);
+  const tableTextColor = (sel=false)=> sel ? "#FFFFFF" : (isDarkVisual ? "#F8F2DE" : visual.text);
   const occupancyStats=(mesa)=>{
     const ps=mesaPersonas(mesa.id);
     return {
@@ -10060,7 +10060,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     const commonText={fontFamily:"'Lora',serif",fontWeight:700,fill:tableTextColor(isSel),textAnchor:"middle",style:{pointerEvents:"none",userSelect:"none"}};
     const flower=(cx,cy,r=5)=><g>
       <circle cx={cx} cy={cy} r={r*1.45} fill={visual.leaf} opacity=".78"/>
-      {[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*r*.95} cy={cy+Math.sin(a*Math.PI/180)*r*.95} rx={r*.42} ry={r*.65} fill={visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*r*.95},${cy+Math.sin(a*Math.PI/180)*r*.95})`}/>) }
+      {[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*r*.95} cy={cy+Math.sin(a*Math.PI/180)*r*.95} rx={r*.42} ry={r*.65} fill={isSelected?"rgba(255,255,255,.72)":visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*r*.95},${cy+Math.sin(a*Math.PI/180)*r*.95})`}/>) }
       <circle cx={cx} cy={cy} r={r*.35} fill={visual.metal}/>
     </g>;
     const candle=(cx,cy)=><g><ellipse cx={cx} cy={cy} rx="4" ry="4" fill="#F8DFA0" opacity=".9"/><circle cx={cx} cy={cy} r="1.5" fill="#FFF7D9"/></g>;
@@ -10183,8 +10183,10 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     const overlap=mesaHasOverlap(mesa);
     const libres=Math.max(0,capM-ps.length);
     const stats=occupancyStats(mesa);
-    const fillC=isSelected?THEME.color.sage:(isDarkVisual?visual.linen:visual.linen);
-    const strokeC=over||overlap?"#D94B3D":isSelected?"#2D3D1C":visual.stroke;
+    const selectedTableFill = isGuestMode ? "#1F1F1F" : "#3F4A2F";
+    const selectedTextProps = isSelected ? { stroke:"rgba(0,0,0,.55)", strokeWidth:1.25, paintOrder:"stroke" } : {};
+    const fillC=isSelected?selectedTableFill:(isDarkVisual?visual.linen:visual.linen);
+    const strokeC=over||overlap?"#D94B3D":isSelected?(isGuestMode?"#000000":"#1E2A18"):visual.stroke;
     const dh={
       onMouseDown:e=>{
         e.stopPropagation();
@@ -10212,15 +10214,15 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           <circle cx={cx+pt.x} cy={cy+pt.y} r={AR*.64} fill={seatFill(p)} stroke={p?"rgba(255,255,255,.85)":chairStroke} strokeWidth="1.5"/>
           {p&&<text x={cx+pt.x} y={cy+pt.y+AR*.24} textAnchor="middle" fontSize={Math.max(6,AR*.55)} fill="#fff" fontWeight="800" fontFamily="Arial" style={{pointerEvents:"none"}}>{p.nombre.charAt(0)}</text>}
         </g>;})}
-        <circle cx={cx} cy={cy} r={R} fill={`url(#linen-${gid})`} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-table-${gid})`} style={{cursor:"grab"}} {...dh}/>
-        {Array.from({length:Math.min(12,capM)},(_,i)=>{const a=(i/Math.min(12,capM))*2*Math.PI-Math.PI/2;return <circle key={i} cx={cx+Math.cos(a)*R*.72} cy={cy+Math.sin(a)*R*.72} r={Math.max(1.5,R*.045)} fill={isDarkVisual?"rgba(255,245,220,.7)":"rgba(255,255,255,.85)"} stroke={visual.stroke} strokeWidth=".5"/>})}
-        <g>{[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*R*.10} cy={cy+Math.sin(a*Math.PI/180)*R*.10} rx={R*.065} ry={R*.105} fill={visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*R*.10},${cy+Math.sin(a*Math.PI/180)*R*.10})`}/>) }<circle cx={cx} cy={cy} r={R*.055} fill={visual.metal}/></g>
-        {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill={tableTextColor(isSelected)} fontFamily="'Lora',serif" fontWeight="800" style={{pointerEvents:"none"}}>soltar</text>}
+        <circle cx={cx} cy={cy} r={R} fill={isSelected?fillC:`url(#linen-${gid})`} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-table-${gid})`} style={{cursor:"grab"}} {...dh}/>
+        {Array.from({length:Math.min(12,capM)},(_,i)=>{const a=(i/Math.min(12,capM))*2*Math.PI-Math.PI/2;return <circle key={i} cx={cx+Math.cos(a)*R*.72} cy={cy+Math.sin(a)*R*.72} r={Math.max(1.5,R*.045)} fill={isSelected?"rgba(255,255,255,.82)":(isDarkVisual?"rgba(255,245,220,.7)":"rgba(255,255,255,.85)")} stroke={isSelected?"rgba(255,255,255,.55)":visual.stroke} strokeWidth=".5"/>})}
+        <g>{[0,72,144,216,288].map((a,i)=><ellipse key={i} cx={cx+Math.cos(a*Math.PI/180)*R*.10} cy={cy+Math.sin(a*Math.PI/180)*R*.10} rx={R*.065} ry={R*.105} fill={isSelected?"rgba(255,255,255,.72)":visual.flower} transform={`rotate(${a},${cx+Math.cos(a*Math.PI/180)*R*.10},${cy+Math.sin(a*Math.PI/180)*R*.10})`}/>) }<circle cx={cx} cy={cy} r={R*.055} fill={visual.metal}/></g>
+        {isHovered&&dragging?.type==="guest"&&<text x={cx} y={cy+4} textAnchor="middle" fontSize={Math.max(8,R*0.22)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Lora',serif" fontWeight="800" style={{pointerEvents:"none"}}>soltar</text>}
         {mesa.etiqueta
-          ?<><text x={cx} y={cy-R*.18} textAnchor="middle" fontSize={Math.max(6,R*.18)} fill={tableTextColor(isSelected)} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
-            <text x={cx} y={cy+R*.31} textAnchor="middle" fontSize={Math.max(9,R*.38)} fill={tableTextColor(isSelected)} fontFamily="'Playfair Display',serif" fontWeight="800" style={{pointerEvents:"none"}}>{mesa.id}</text></>
-          :<><text x={cx} y={cy-R*.08} textAnchor="middle" fontSize={Math.max(7,R*.22)} fill={tableTextColor(isSelected)} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>Mesa</text>
-            <text x={cx} y={cy+R*.36} textAnchor="middle" fontSize={Math.max(9,R*.42)} fill={tableTextColor(isSelected)} fontFamily="'Playfair Display',serif" fontWeight="800" style={{pointerEvents:"none"}}>{mesa.id}</text></>}
+          ?<><text x={cx} y={cy-R*.18} textAnchor="middle" fontSize={Math.max(6,R*.18)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>{mesa.etiqueta}</text>
+            <text x={cx} y={cy+R*.31} textAnchor="middle" fontSize={Math.max(9,R*.38)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Playfair Display',serif" fontWeight="800" style={{pointerEvents:"none"}}>{mesa.id}</text></>
+          :<><text x={cx} y={cy-R*.08} textAnchor="middle" fontSize={Math.max(7,R*.22)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Cinzel',serif" fontWeight="700" style={{pointerEvents:"none"}}>Mesa</text>
+            <text x={cx} y={cy+R*.36} textAnchor="middle" fontSize={Math.max(9,R*.42)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Playfair Display',serif" fontWeight="800" style={{pointerEvents:"none"}}>{mesa.id}</text></>}
         {!isSelected&&<text x={cx} y={cy+R*.72} textAnchor="middle" fontSize={Math.max(7,R*.20)} fill={over||overlap?"#D94B3D":libres===0?visual.leaf:visual.stroke} fontFamily="'Lora',serif" fontWeight="700" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
         {stats.total>0&&<g transform={`translate(${cx-R*.45},${cy+R*.88})`}>
           {[{c:CONF_COLORS.Confirmado||THEME.color.sage,n:stats.confirmados},{c:CONF_COLORS.Pendiente||THEME.color.gold,n:stats.pendientes},{c:"rgba(26,26,20,.35)",n:stats.noVan}].map((s,i)=>s.n>0?<circle key={i} cx={i*R*.23} cy="0" r={Math.max(2,R*.045)} fill={s.c}/>:null)}
@@ -10256,9 +10258,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       </g>;})}
       <rect x={pad+2} y={pad+3} width={rW} height={rH} rx="7" fill="rgba(0,0,0,.16)"/>
       <rect x={pad} y={pad} width={rW} height={rH} rx="7" fill={fillC} stroke={strokeC} strokeWidth={isSelected?3:overlap?2.5:1.7} filter={`url(#shadow-rect-${gid})`} style={{cursor:"grab"}} {...dh}/>
-      <rect x={pad+rW*.08} y={pad+rH*.42} width={rW*.84} height={Math.max(3,rH*.12)} rx="4" fill={visual.accent} opacity=".58"/>
-      {[.18,.30,.42,.58,.70,.82].map((k,i)=><circle key={i} cx={pad+rW*k} cy={pad+rH*.50} r={Math.max(1.6,Math.min(5,rH*.12))} fill={visual.flower} opacity=".86"/>)}
-      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.25)} fill={tableTextColor(isSelected)} fontFamily="'Playfair Display',serif" fontWeight="800" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||`Mesa ${mesa.id}`}</text>
+      <rect x={pad+rW*.08} y={pad+rH*.42} width={rW*.84} height={Math.max(3,rH*.12)} rx="4" fill={isSelected?"rgba(255,255,255,.22)":visual.accent} opacity={isSelected?".22":".58"}/>
+      {[.18,.30,.42,.58,.70,.82].map((k,i)=><circle key={i} cx={pad+rW*k} cy={pad+rH*.50} r={Math.max(1.6,Math.min(5,rH*.12))} fill={isSelected?"rgba(255,255,255,.65)":visual.flower} opacity={isSelected?".38":".86"}/>)}
+      <text x={pad+rW/2} y={pad+rH/2+(isV?0:4)} textAnchor="middle" fontSize={Math.max(7,Math.min(rW,rH)*0.25)} fill={tableTextColor(isSelected)} {...selectedTextProps} fontFamily="'Playfair Display',serif" fontWeight="800" transform={isV?`rotate(-90,${pad+rW/2},${pad+rH/2})`:undefined} style={{pointerEvents:"none"}}>{mesa.etiqueta||`Mesa ${mesa.id}`}</text>
       {!isSelected&&<text x={pad+rW-5} y={pad+rH-5} textAnchor="end" fontSize={Math.max(7,Math.min(rW,rH)*.18)} fill={over||overlap?"#D94B3D":visual.stroke} fontWeight="800" fontFamily="Arial" style={{pointerEvents:"none"}}>{ps.length}/{capM}</text>}
       <circle cx={pad/2+2} cy={hD-pad/2-2} r={9} fill="rgba(201,169,110,.90)" stroke="#FBF7EF" strokeWidth="1.5" style={{cursor:"crosshair"}} onMouseDown={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}} onTouchStart={e=>{e.stopPropagation();startDrag(e,"rotate",mesa.id);}}/>
       <text x={pad/2+2} y={hD-pad/2+2} textAnchor="middle" fontSize="10" fill="#FFF" fontWeight="bold" style={{pointerEvents:"none",userSelect:"none"}}>↻</text>
