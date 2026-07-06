@@ -4117,12 +4117,19 @@ function GuestsModule({user, onBack, onGoDesigner}){
       {/* Tabs de vista */}
       <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
         <div style={{display:"flex",background:THEME.color.cream2,borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
-          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Mesas"},{id:"salon",label:"⚪ Plano de mesas"}].map(v=>
+          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Mesas"},{id:"salon",label:"🏛️ Diseño del salón"}].map(v=>
             <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:isMobile?"8px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?THEME.color.sage:"transparent",color:viewMode===v.id?THEME.color.cream:"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
           )}
         </div>
         <div style={{marginLeft:"auto",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} de {guests.length}</div>
       </div>
+
+      {viewMode!=="salon"&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",background:"rgba(74,94,58,.055)",border:"0.5px solid rgba(74,94,58,.12)",borderRadius:12,padding:"9px 12px",marginBottom:12}}>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.58)",lineHeight:1.35}}>
+          <strong style={{color:THEME.color.sage}}>Conectado con Diseño del salón:</strong> las mesas que edites acá se actualizan en el plano y en el canvas.
+        </div>
+        <button onClick={()=>setViewMode("salon")} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:THEME.radius.pill,padding:"8px 13px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:700,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>Ver plano de salón</button>
+      </div>}
 
       {/* Barra búsqueda + filtros — solo en lista */}
       {viewMode==="lista"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
@@ -4164,7 +4171,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
           const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
           const isExpanded=expandedId===g.id;
           const cant=parseInt(g.cantidadInvitados||1);
-          return <div key={g.id} style={{background:isExpanded?"rgba(74,94,58,.035)":(c.bg||THEME.color.cream2),border:`1px solid ${isExpanded?"rgba(74,94,58,.35)":(c.color||"rgba(201,169,110,.18)")}`,boxShadow:g.confirmacion==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.55)":g.confirmacion==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.7)":"inset 3px 0 0 rgba(26,26,20,.18)",borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s, background .2s"}}>
+          return <div key={g.id} style={{background:THEME.color.cream2,border:`0.5px solid ${isExpanded?"rgba(74,94,58,.3)":"rgba(201,169,110,.18)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s, box-shadow .2s",boxShadow:isExpanded?"0 8px 24px rgba(74,94,58,.08)":"none"}}>
             <>
                   {/* Fila principal — siempre visible */}
                   <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}}
@@ -4239,6 +4246,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                       style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:10}}/>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       <button onClick={()=>setExpandedId(null)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:THEME.radius.pill,padding:"11px 24px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.85rem)",cursor:"pointer"}}>✓ Guardar</button>
+                      <button onClick={()=>setViewMode("salon")} style={{background:"white",color:THEME.color.sage,border:"1px solid rgba(74,94,58,.2)",borderRadius:THEME.radius.pill,padding:"11px 16px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.82rem)",cursor:"pointer"}}>🏛️ Ver en salón</button>
                       <button onClick={()=>setConfirmDelete(g.id)} style={{background:"transparent",border:"none",borderRadius:THEME.radius.sm,padding:"11px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(200,60,60,.65)",cursor:"pointer",marginLeft:"auto"}}>🗑 Eliminar</button>
                     </div>
                   </div>}
@@ -4265,7 +4273,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
               onDragStart={e=>{e.dataTransfer.setData("guestId",g.id);setMovingGuest(g.id);}}
               onDragEnd={()=>setMovingGuest(null)}
               onClick={e=>{e.stopPropagation();setMovingGuest(movingGuest===g.id?null:g.id);}}
-              style={{display:"flex",alignItems:"center",gap:4,background:movingGuest===g.id?"rgba(74,94,58,.18)":(getConfirmacionStyle(g.confirmacion).bg),border:movingGuest===g.id?"1px solid rgba(74,94,58,.5)":`1px solid ${getConfirmacionStyle(g.confirmacion).color}`,borderRadius:100,padding:"5px 12px 5px 4px",minHeight:38,cursor:"grab",userSelect:"none",boxShadow:g.confirmacion==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.5)":g.confirmacion==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.6)":"inset 3px 0 0 rgba(26,26,20,.18)"}}>
+              style={{display:"flex",alignItems:"center",gap:4,background:movingGuest===g.id?"rgba(74,94,58,.12)":"rgba(255,255,255,.78)",border:movingGuest===g.id?"1px solid rgba(74,94,58,.5)":"1px solid rgba(201,169,110,.22)",borderRadius:100,padding:"5px 12px 5px 4px",minHeight:38,cursor:"grab",userSelect:"none"}}>
               <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
                 style={{cursor:"grab",touchAction:"none",padding:"8px 6px",color:"rgba(26,26,20,.35)",fontSize:".85rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
               <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(26,26,20,.7)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
@@ -4314,7 +4322,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                   onDragEnd={()=>setMovingGuest(null)}
                   onClick={e=>{e.stopPropagation();setMovingGuest(enMov?null:g.id);}}
                   title="Arrastrá desde ⠿ (o tocá y elegí mesa)"
-                  style={{display:"flex",alignItems:"center",gap:6,padding:"8px 6px 8px 0",minHeight:THEME.tap.min,borderBottom:"0.5px solid rgba(74,94,58,.06)",borderRadius:8,background:enMov?"rgba(74,94,58,.12)":(c.bg||"transparent"),border:`1px solid ${enMov?"rgba(74,94,58,.35)":(c.color||"rgba(74,94,58,.06)")}`,cursor:"grab",userSelect:"none",transition:"background .15s,border .15s",boxShadow:g.confirmacion==="confirmado"?"inset 3px 0 0 rgba(74,94,58,.5)":g.confirmacion==="pendiente"?"inset 3px 0 0 rgba(201,169,110,.6)":"inset 3px 0 0 rgba(26,26,20,.18)"}}>
+                  style={{display:"flex",alignItems:"center",gap:6,padding:"8px 6px 8px 0",minHeight:THEME.tap.min,borderBottom:"0.5px solid rgba(74,94,58,.06)",borderRadius:8,background:enMov?"rgba(74,94,58,.12)":"transparent",border:`1px solid ${enMov?"rgba(74,94,58,.35)":"transparent"}`,cursor:"grab",userSelect:"none",transition:"background .15s,border .15s"}}>
                   <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
                     style={{cursor:"grab",touchAction:"none",padding:"10px 8px",color:"rgba(26,26,20,.3)",fontSize:".9rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
                   <div style={{flex:1,minWidth:0}}>
@@ -10173,6 +10181,27 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const fabStyle={width:THEME.tap.min,height:THEME.tap.min,borderRadius:"50%",border:"1px solid rgba(245,239,224,.25)",background:"rgba(26,26,20,.55)",color:THEME.color.cream,fontSize:"1.25rem",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",padding:0,lineHeight:1};
 
   return <div style={{display:"flex",flexDirection:"column",gap:0}}>
+
+    {isDesignerMode&&<div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.22)",borderRadius:16,padding:"12px",marginBottom:10,boxShadow:"0 6px 22px rgba(74,94,58,.06)"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:10,flexWrap:"wrap"}}>
+        <div>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.55)"}}>Inspiración visual</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.55)",marginTop:2}}>Elegí un estilo mirando las miniaturas realistas; después el plano queda editable por objetos.</div>
+        </div>
+        <button onClick={()=>aplicarPreset(selectedSalonType)} style={{background:THEME.color.sage,border:"none",borderRadius:THEME.radius.pill,padding:"9px 16px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:800,color:THEME.color.cream,cursor:"pointer",whiteSpace:"nowrap"}}>Usar estilo seleccionado</button>
+      </div>
+      <div style={{display:"grid",gridAutoFlow:"column",gridAutoColumns:isMobile?"148px":"172px",gap:10,overflowX:"auto",paddingBottom:4,WebkitOverflowScrolling:"touch",scrollSnapType:"x proximity"}}>
+        {PRESET_STAGE2_ORDER.map(id=>{
+          const p=STAGE2_PRESET_CONFIGS[id]; const sel=selectedSalonType===id;
+          return <button key={id} onClick={()=>setSelectedSalonType(id)} style={{scrollSnapAlign:"start",textAlign:"left",background:sel?"rgba(74,94,58,.08)":"white",border:sel?"1.5px solid rgba(74,94,58,.55)":"1px solid rgba(74,94,58,.16)",borderRadius:14,padding:7,cursor:"pointer",boxShadow:sel?"0 8px 22px rgba(74,94,58,.12)":"none"}}>
+            <span style={{display:"block",height:isMobile?82:96,borderRadius:10,background:`url(/presets/${id}.jpg) center/cover`,border:"1px solid rgba(74,94,58,.12)",position:"relative",overflow:"hidden"}}>
+              {sel&&<span style={{position:"absolute",right:6,top:6,background:THEME.color.sage,color:THEME.color.cream,borderRadius:999,padding:"3px 7px",fontFamily:THEME.font.label,fontSize:"10px",letterSpacing:".05em"}}>ACTIVO</span>}
+            </span>
+            <span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",fontWeight:800,color:THEME.color.ink,marginTop:7,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p?.emoji||"✨"} {p?.label||id}</span>
+          </button>;
+        })}
+      </div>
+    </div>}
 
     {/* ── TOOLBAR ── */}
     <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"8px 10px",marginBottom:8,display:"flex",flexDirection:"column",gap:5,position:"relative"}}>
