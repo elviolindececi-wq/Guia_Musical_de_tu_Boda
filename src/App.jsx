@@ -2328,17 +2328,63 @@ const CURRENCIES = [
 ];
 const getCurrencySymbol = (code) => CURRENCIES.find(c=>c.code===code)?.symbol || code;
 
+// Unidades aproximadas de cada moneda equivalentes a USD 1.
+// Se usan solo para sugerir el tipo de cambio inicial; el usuario puede editarlo.
+const FX_UNITS_PER_USD = {
+  USD:1, CAD:1.35, EUR:0.92, GBP:0.79, CHF:0.89,
+  PYG:7500, ARS:900, BRL:5, UYU:40, BOB:6.9, CLP:920, COP:4000, PEN:3.8,
+  MXN:17, CRC:520, GTQ:7.8, HNL:24.7, NIO:36.6, PAB:1, DOP:59,
+  SEK:10.5, NOK:10.6, DKK:6.85, PLN:4, CZK:23, HUF:360, RON:4.6,
+  JPY:150, CNY:7.2, KRW:1330, INR:83, AUD:1.53, NZD:1.63,
+  SGD:1.34, HKD:7.8, TWD:32, THB:36, MYR:4.7, IDR:16000, PHP:57, VND:25000,
+  AED:3.67, SAR:3.75, QAR:3.64, BHD:0.376, KWD:0.31, OMR:0.385, JOD:0.71, ILS:3.7,
+  ZAR:18.6, EGP:48, MAD:10, NGN:1500, KES:130, GHS:15,
+};
+
+// Devuelve cuántas unidades de la moneda del proveedor equivalen a 1 unidad
+// de la moneda principal del presupuesto. Ej.: presupuesto USD + proveedor PYG = 7500.
+function getSuggestedExchangeRate(budgetCurrency="USD", vendorCurrency="USD"){
+  if(budgetCurrency===vendorCurrency) return 1;
+  const budgetRate = FX_UNITS_PER_USD[budgetCurrency] || 1;
+  const vendorRate = FX_UNITS_PER_USD[vendorCurrency] || 1;
+  return vendorRate / budgetRate;
+}
+
+function formatExchangeRate(rate){
+  const value = Number(rate||0);
+  if(!Number.isFinite(value) || value<=0) return "1";
+  return String(Number(value.toFixed(value>=100 ? 2 : value>=1 ? 4 : 6)));
+}
+
+function getVendorExchangeRateForBudget(vendor, budgetCurrency="USD"){
+  const vendorCurrency = vendor?.currency || budgetCurrency;
+  if(vendorCurrency===budgetCurrency) return 1;
+  const storedRate = parseFloat(vendor?.exchangeRate||0);
+  if(!storedRate || storedRate<=0) return getSuggestedExchangeRate(budgetCurrency,vendorCurrency);
+  const storedBaseCurrency = vendor?.exchangeRateBaseCurrency || budgetCurrency;
+  if(storedBaseCurrency===budgetCurrency) return storedRate;
+  // Conserva el tipo de cambio manual aunque luego cambie la moneda del presupuesto.
+  return storedRate * getSuggestedExchangeRate(budgetCurrency,storedBaseCurrency);
+}
+
+function vendorAmountInBudgetCurrency(vendor, budgetCurrency="USD"){
+  const price = parseFloat(vendor?.precio||0) || 0;
+  const vendorCurrency = vendor?.currency || budgetCurrency;
+  if(vendorCurrency===budgetCurrency) return price;
+  const exchangeRate = getVendorExchangeRateForBudget(vendor,budgetCurrency);
+  return exchangeRate>0 ? price/exchangeRate : 0;
+}
 
 // ─── SYNC: calcula cotizado+pagado del budget a partir de vendors ─────────────
-function calcBudgetFromVendors(budgetData, vendorsList){
+function calcBudgetFromVendors(budgetData, vendorsList, budgetCurrency="USD"){
   if(!budgetData || !vendorsList) return budgetData;
   const next = {
     ...budgetData,
     categorias: (budgetData.categorias||[]).map(cat => {
       const catVendors = vendorsList.filter(v => v.cat === cat.id && v.estado !== "descartado");
-      const cotizado = catVendors.reduce((s,v) => s + parseFloat(v.precio||0), 0);
+      const cotizado = catVendors.reduce((s,v) => s + vendorAmountInBudgetCurrency(v,budgetCurrency), 0);
       const pagado   = vendorsList.filter(v => v.cat===cat.id && v.estado==="pagado")
-                                  .reduce((s,v) => s + parseFloat(v.precio||0), 0);
+                                  .reduce((s,v) => s + vendorAmountInBudgetCurrency(v,budgetCurrency), 0);
       return {...cat, cotizado, pagado};
     })
   };
@@ -2602,6 +2648,7 @@ function BudgetModule({ user, onBack }){
   const [addingCat, setAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [vendors, setVendors] = useState([]);
   const [invitados, setInvitados] = useState("");
   const [invitadosReales, setInvitadosReales] = useState(0);
   const [tieneMusica, setTieneMusica] = useState("si");
@@ -2614,14 +2661,16 @@ function BudgetModule({ user, onBack }){
     const load = async()=>{
       try{
         const {data:row} = await supabase.from("wedding_data").select("budget,currency,vendors,guests").eq("user_id",user.id).maybeSingle();
-        const vendors = Array.isArray(row?.vendors) ? row.vendors : [];
+        const loadedVendors = Array.isArray(row?.vendors) ? row.vendors : [];
+        const budgetCurrency = row?.currency || "USD";
         let budget = (row?.budget && row.budget.categorias?.length > 0)
           ? row.budget
           : {total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))};
-        // Auto-sync cotizado + pagado from vendors
-        budget = calcBudgetFromVendors(budget, vendors);
+        // Auto-sync cotizado + pagado convirtiendo cada proveedor a la moneda del presupuesto
+        budget = calcBudgetFromVendors(budget, loadedVendors, budgetCurrency);
+        setVendors(loadedVendors);
         setData(budget);
-        if(row?.currency) setCurrency(row.currency);
+        setCurrency(budgetCurrency);
         // Total real de personas confirmadas/pendientes en lista de invitados
         if(Array.isArray(row?.guests) && row.guests.length>0){
           const totalPersonasReal = row.guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
@@ -2643,10 +2692,13 @@ function BudgetModule({ user, onBack }){
   const save = async(newData, newCurrency)=>{
     setSaving(true);
     try{
+      const targetCurrency = newCurrency || currency;
+      const syncedBudget = calcBudgetFromVendors(newData || data, vendors, targetCurrency);
+      setData(syncedBudget);
       await supabase.from("wedding_data").upsert({
         user_id: user.id,
-        budget: newData || data,
-        currency: newCurrency || currency,
+        budget: syncedBudget,
+        currency: targetCurrency,
         updated_at: new Date().toISOString()
       },{onConflict:"user_id"});
       setSaved(true);
@@ -2860,7 +2912,7 @@ function BudgetModule({ user, onBack }){
           <div>
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>💰 Presupuesto</h1>
-            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se sincronizan automáticamente desde Proveedores</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se convierten automáticamente desde la moneda de cada proveedor</div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",justifyContent:"flex-start"}}>
             <select value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer",maxWidth:"min(220px,60vw)"}}>
@@ -3121,11 +3173,33 @@ const VENDOR_ESTADOS = [
   {id:"descartado",label:"Descartado", color:"rgba(26,26,20,.35)",    bg:"rgba(26,26,20,.05)"},
 ];
 
-function VendorForm({vendor, onSave, onCancel}){
-  const [v, setV] = useState(vendor || {id:Date.now()+"",cat:"salon",nombre:"",contacto:"",precio:"",estado:"evaluando",link:"",notas:""});
+function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD"}){
+  const initialCurrency = vendor?.currency || budgetCurrency;
+  const initialRate = vendor ? getVendorExchangeRateForBudget(vendor,budgetCurrency) : getSuggestedExchangeRate(budgetCurrency,initialCurrency);
+  const [v, setV] = useState(vendor
+    ? {...vendor,currency:initialCurrency,exchangeRate:formatExchangeRate(initialRate),exchangeRateBaseCurrency:budgetCurrency}
+    : {id:Date.now()+"",cat:"salon",nombre:"",contacto:"",precio:"",currency:budgetCurrency,exchangeRate:"1",exchangeRateBaseCurrency:budgetCurrency,estado:"evaluando",link:"",notas:""}
+  );
   const set = (k,val) => setV(x=>({...x,[k]:val}));
+  const vendorCurrency = v.currency || budgetCurrency;
+  const currencySymbol = getCurrencySymbol(vendorCurrency);
+  const exchangeRate = parseFloat(v.exchangeRate||0) || 1;
+  const equivalent = vendorAmountInBudgetCurrency(v,budgetCurrency);
+  const changeVendorCurrency = (nextCurrency) => {
+    setV(x=>({...x,
+      currency:nextCurrency,
+      exchangeRate:formatExchangeRate(getSuggestedExchangeRate(budgetCurrency,nextCurrency)),
+      exchangeRateBaseCurrency:budgetCurrency
+    }));
+  };
+  const saveVendor = () => onSave({...v,
+    currency:vendorCurrency,
+    exchangeRate:vendorCurrency===budgetCurrency ? "1" : formatExchangeRate(exchangeRate),
+    exchangeRateBaseCurrency:budgetCurrency
+  });
+
   return <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"20px",marginBottom:12}}>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:12,marginBottom:12}}>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Categoría</div>
         <select value={v.cat} onChange={e=>set("cat",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
@@ -3139,7 +3213,7 @@ function VendorForm({vendor, onSave, onCancel}){
         </select>
       </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:12,marginBottom:12}}>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Nombre / Empresa</div>
         <input type="text" value={v.nombre} onChange={e=>set("nombre",e.target.value)} placeholder="ej: Salón Los Pinos"
@@ -3151,17 +3225,37 @@ function VendorForm({vendor, onSave, onCancel}){
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginBottom:12}}>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Precio cotizado</div>
-        <input type="number" value={v.precio} onChange={e=>set("precio",e.target.value)} placeholder="0"
-          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+        <div style={{display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",borderRadius:8,paddingLeft:10}}>
+          <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",fontWeight:700,color:"rgba(26,26,20,.45)",flexShrink:0}}>{currencySymbol}</span>
+          <input type="number" value={v.precio} onChange={e=>set("precio",e.target.value)} placeholder="0" min="0" step="any"
+            style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px 9px 0",border:"none",outline:"none",background:"transparent",color:"#1A1A14",boxSizing:"border-box"}}/>
+        </div>
       </div>
       <div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Link (web / Instagram)</div>
-        <input type="text" value={v.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."
-          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Moneda del proveedor</div>
+        <select value={vendorCurrency} onChange={e=>changeVendorCurrency(e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".92rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+          {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
+        </select>
       </div>
+      <div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Tipo de cambio</div>
+        <input type="number" value={v.exchangeRate} disabled={vendorCurrency===budgetCurrency} onChange={e=>set("exchangeRate",e.target.value)} min="0.000001" step="any"
+          style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".92rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:vendorCurrency===budgetCurrency?"rgba(74,94,58,.06)":"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",opacity:vendorCurrency===budgetCurrency ? .65 : 1}}/>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.45)",marginTop:5,lineHeight:1.35}}>
+          1 {budgetCurrency} = {vendorCurrency===budgetCurrency?"1":formatExchangeRate(exchangeRate)} {vendorCurrency}
+        </div>
+      </div>
+    </div>
+    {vendorCurrency!==budgetCurrency && num(v.precio)>0 && <div style={{background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.12)",borderRadius:10,padding:"10px 12px",marginBottom:12,fontFamily:"'Lora',serif",fontSize:".86rem",color:"#4A5E3A"}}>
+      Equivalente en el presupuesto: <strong>{getCurrencySymbol(budgetCurrency)} {fmt(equivalent)} {budgetCurrency}</strong>
+    </div>}
+    <div style={{marginBottom:12}}>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Link (web / Instagram)</div>
+      <input type="text" value={v.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."
+        style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
     </div>
     <div style={{marginBottom:14}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Notas</div>
@@ -3169,7 +3263,7 @@ function VendorForm({vendor, onSave, onCancel}){
         style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box"}}/>
     </div>
     <div style={{display:"flex",gap:10}}>
-      <button onClick={()=>onSave(v)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"10px 22px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",cursor:"pointer"}}>✓ Guardar</button>
+      <button onClick={saveVendor} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"10px 22px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",cursor:"pointer"}}>✓ Guardar</button>
       <button onClick={onCancel} style={{background:"transparent",border:"1px solid rgba(74,94,58,.25)",borderRadius:100,padding:"10px 18px",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.5)",cursor:"pointer"}}>Cancelar</button>
     </div>
   </div>;
@@ -3177,6 +3271,7 @@ function VendorForm({vendor, onSave, onCancel}){
 
 function VendorsModule({user, onBack}){
   const [vendors, setVendors] = useState(null);
+  const [budgetCurrency, setBudgetCurrency] = useState("USD");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -3189,8 +3284,9 @@ function VendorsModule({user, onBack}){
     if(!user) return;
     const load = async()=>{
       try{
-        const {data:row} = await supabase.from("wedding_data").select("vendors").eq("user_id",user.id).maybeSingle();
+        const {data:row} = await supabase.from("wedding_data").select("vendors,currency").eq("user_id",user.id).maybeSingle();
         setVendors(Array.isArray(row?.vendors) ? row.vendors : []);
+        setBudgetCurrency(row?.currency || "USD");
       }catch(e){ setVendors([]); }
     };
     load();
@@ -3200,10 +3296,12 @@ function VendorsModule({user, onBack}){
     setSaving(true);
     try{
       const vendorList = list || vendors;
-      // Load current budget to sync cotizado/pagado
-      const {data:row} = await supabase.from("wedding_data").select("budget").eq("user_id",user.id).maybeSingle();
+      // La moneda principal vive en Presupuesto. Cada proveedor conserva la suya.
+      const {data:row} = await supabase.from("wedding_data").select("budget,currency").eq("user_id",user.id).maybeSingle();
       const currentBudget = row?.budget || {total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))};
-      const updatedBudget = calcBudgetFromVendors(currentBudget, vendorList);
+      const currentBudgetCurrency = row?.currency || budgetCurrency || "USD";
+      setBudgetCurrency(currentBudgetCurrency);
+      const updatedBudget = calcBudgetFromVendors(currentBudget, vendorList, currentBudgetCurrency);
       await supabase.from("wedding_data").upsert({
         user_id:user.id,
         vendors:vendorList,
@@ -3236,7 +3334,8 @@ function VendorsModule({user, onBack}){
   });
 
   const contratados = vendors.filter(v=>v.estado==="contratado"||v.estado==="pagado").length;
-  const totalCotizado = vendors.reduce((s,v)=>s+parseFloat(v.precio||0),0);
+  const totalCotizado = vendors.filter(v=>v.estado!=="descartado").reduce((s,v)=>s+vendorAmountInBudgetCurrency(v,budgetCurrency),0);
+  const budgetCurrencySymbol = getCurrencySymbol(budgetCurrency);
 
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
     {/* Header */}
@@ -3248,11 +3347,15 @@ function VendorsModule({user, onBack}){
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>🏢 Proveedores</h1>
           </div>
-          <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",marginTop:8}}>+ Agregar</button>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"flex-end",marginTop:8}}>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.35)",color:"rgba(245,239,224,.78)"}}>Presupuesto en <strong>{budgetCurrency}</strong></div>
+            <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
+          </div>
         </div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(245,239,224,.55)",marginTop:8}}>Cada proveedor puede tener su propia moneda. La app convierte el importe a {budgetCurrency} usando el tipo de cambio guardado.</div>
         {/* Summary pills */}
         <div style={{display:"flex",gap:12,marginTop:16,flexWrap:"wrap"}}>
-          {[{label:`${vendors.length} en total`,color:"rgba(245,239,224,.7)"},{label:`${contratados} contratados`,color:"rgba(201,169,110,.85)"},{label:`USD ${num(totalCotizado).toLocaleString()} cotizado`,color:"rgba(245,239,224,.6)"}].map(p=>
+          {[{label:`${vendors.length} en total`,color:"rgba(245,239,224,.7)"},{label:`${contratados} contratados`,color:"rgba(201,169,110,.85)"},{label:`${budgetCurrency} ${fmt(totalCotizado)} equivalente cotizado`,color:"rgba(245,239,224,.6)"},{label:saving?"Guardando…":saved?"Cambios guardados ✓":"",color:"rgba(201,169,110,.85)"}].filter(p=>p.label).map(p=>
             <div key={p.label} style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:p.color}}>{p.label}</div>
           )}
         </div>
@@ -3261,7 +3364,7 @@ function VendorsModule({user, onBack}){
 
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
       {/* Add form */}
-      {adding && editId==="new" && <VendorForm onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
+      {adding && editId==="new" && <VendorForm budgetCurrency={budgetCurrency} onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
 
       {/* Filters */}
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14,alignItems:"center",width:"100%"}}>
@@ -3293,7 +3396,7 @@ function VendorsModule({user, onBack}){
       {filtered.map(v=>{
         const cat = catMap[v.cat]||{emoji:"📌",label:"Otro"};
         const est = estMap[v.estado]||VENDOR_ESTADOS[0];
-        if(editId===v.id) return <VendorForm key={v.id} vendor={v} onSave={saveVendor} onCancel={()=>setEditId(null)}/>;
+        if(editId===v.id) return <VendorForm key={v.id} vendor={v} budgetCurrency={budgetCurrency} onSave={saveVendor} onCancel={()=>setEditId(null)}/>;
         return <div key={v.id} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.22)",borderRadius:14,padding:"16px 18px",marginBottom:10}}>
           <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
             <div style={{fontSize:"1.5rem",flexShrink:0,marginTop:2}}>{cat.emoji}</div>
@@ -3305,7 +3408,10 @@ function VendorsModule({user, onBack}){
               <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:6}}>{cat.label}</div>
               <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
                 {v.contacto&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.55)"}}>📞 {v.contacto}</div>}
-                {v.precio&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.65)",fontWeight:600}}>USD {parseFloat(v.precio).toLocaleString()}</div>}
+                {v.precio&&<div style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.65)",fontWeight:600}}>
+                  {getCurrencySymbol(v.currency||budgetCurrency)} {fmt(v.precio)} <span style={{fontSize:".72rem",fontWeight:400,color:"rgba(26,26,20,.38)"}}>{v.currency||budgetCurrency}</span>
+                  {(v.currency||budgetCurrency)!==budgetCurrency&&<span style={{fontSize:".76rem",fontWeight:500,color:"#4A5E3A",marginLeft:8}}>≈ {budgetCurrencySymbol} {fmt(vendorAmountInBudgetCurrency(v,budgetCurrency))} {budgetCurrency}</span>}
+                </div>}
                 {v.link&&<a href={v.link.startsWith("http")?v.link:`https://${v.link}`} target="_blank" rel="noopener noreferrer" style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"#4A5E3A",textDecoration:"none"}}>🔗 Ver</a>}
               </div>
               {v.notas&&<p style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.45)",fontStyle:"italic",margin:"6px 0 0",lineHeight:1.5}}>{v.notas}</p>}
