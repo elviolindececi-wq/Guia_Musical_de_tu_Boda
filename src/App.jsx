@@ -2394,17 +2394,67 @@ function vendorMatchesBudgetCategory(vendor, category, canonicalOtherCategoryId=
   return vendor.cat === "otro" && canonicalOtherCategoryId === category.id;
 }
 
+function getBudgetCategoryMetaForVendor(vendor){
+  if(!vendor?.cat) return null;
+  if(vendor.cat === "otro") return {id:"otro", emoji:"📌", nombre:"Otros"};
+  const defaultCategory = CATEGORIAS_DEFAULT.find(category => category.id === vendor.cat);
+  if(defaultCategory) return {id:defaultCategory.id, emoji:defaultCategory.emoji, nombre:defaultCategory.nombre};
+  return {
+    id:vendor.cat,
+    emoji:vendor.categoryEmoji || "📌",
+    nombre:vendor.categoryName || "Categoría personalizada"
+  };
+}
+
+// Garantiza que toda categoría usada por un proveedor también exista en Presupuesto.
+// Esto recupera datos anteriores y evita que un proveedor quede sin categoría visible.
+function ensureBudgetCategoriesForVendors(budgetData, vendorsList=[]){
+  const baseBudget = budgetData || {total:0, categorias:[]};
+  const categories = Array.isArray(baseBudget.categorias)
+    ? baseBudget.categorias.map(category => ({...category}))
+    : [];
+
+  const hasOther = () => categories.some(category =>
+    category.id === "otro" || ["otro","otros"].includes(normalizeBudgetCategoryName(category.nombre))
+  );
+
+  (vendorsList || []).forEach(vendor => {
+    if(!vendor?.cat) return;
+    if(vendor.cat === "otro" && hasOther()) return;
+    if(categories.some(category => category.id === vendor.cat)) return;
+    const meta = getBudgetCategoryMetaForVendor(vendor);
+    if(!meta) return;
+    categories.push({...meta, estimado:0, cotizado:0, pagado:0, notas:""});
+  });
+
+  return {...baseBudget, categorias:categories};
+}
+
+function budgetCategoriesToVendorOptions(categories=[]){
+  const seen = new Set();
+  return (categories || []).filter(category => {
+    if(!category?.id || seen.has(category.id)) return false;
+    seen.add(category.id);
+    return true;
+  }).map(category => ({
+    id:category.id,
+    emoji:category.emoji || "📌",
+    label:category.nombre || "Sin nombre"
+  }));
+}
+
 // ─── SYNC: calcula cotizado+pagado del budget a partir de vendors ─────────────
 function calcBudgetFromVendors(budgetData, vendorsList, budgetCurrency="USD"){
   if(!budgetData || !vendorsList) return budgetData;
-  const categories = budgetData.categorias || [];
+  const preparedBudget = ensureBudgetCategoriesForVendors(budgetData, vendorsList);
+  const categories = preparedBudget.categorias || [];
   const canonicalOtherCategory =
     categories.find(cat => cat.id === "otro") ||
     categories.find(cat => ["otro","otros"].includes(normalizeBudgetCategoryName(cat.nombre)));
   const canonicalOtherCategoryId = canonicalOtherCategory?.id || null;
 
   const next = {
-    ...budgetData,
+    ...preparedBudget,
     categorias: categories.map(cat => {
       const catVendors = vendorsList.filter(v => vendorMatchesBudgetCategory(v,cat,canonicalOtherCategoryId) && v.estado !== "descartado");
       const cotizado = catVendors.reduce((s,v) => s + vendorAmountInBudgetCurrency(v,budgetCurrency), 0);
@@ -2691,11 +2741,21 @@ function BudgetModule({ user, onBack }){
         let budget = (row?.budget && row.budget.categorias?.length > 0)
           ? row.budget
           : {total:0, categorias:CATEGORIAS_DEFAULT.map(c=>({...c}))};
-        // Auto-sync cotizado + pagado convirtiendo cada proveedor a la moneda del presupuesto
+        // Auto-sync cotizado + pagado y crea categorías faltantes usadas por proveedores.
+        const originalBudgetJson = JSON.stringify(budget);
         budget = calcBudgetFromVendors(budget, loadedVendors, budgetCurrency);
         setVendors(loadedVendors);
         setData(budget);
         setCurrency(budgetCurrency);
+        // Persiste la reparación automática para que "Otros" y categorías personalizadas
+        // sigan visibles al volver a abrir la aplicación.
+        if(JSON.stringify(budget) !== originalBudgetJson){
+          await supabase.from("wedding_data").upsert({
+            user_id:user.id,
+            budget,
+            updated_at:new Date().toISOString()
+          },{onConflict:"user_id"});
+        }
         // Total real de personas confirmadas/pendientes en lista de invitados
         if(Array.isArray(row?.guests) && row.guests.length>0){
           const totalPersonasReal = row.guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
@@ -2847,6 +2907,11 @@ function BudgetModule({ user, onBack }){
   };
 
   const removeCategoria = (id)=>{
+    const linkedVendors = vendors.filter(vendor => vendor.cat === id || (id === "otro" && vendor.cat === "otro"));
+    if(linkedVendors.length > 0){
+      showToast(`Esta categoría tiene ${linkedVendors.length} proveedor${linkedVendors.length===1?"":"es"}. Reasigná o eliminá esos proveedores antes de quitarla.`, "warning");
+      return;
+    }
     const next = {...data, categorias: data.categorias.filter(c=>c.id!==id)};
     setData(next);
     save(next);
@@ -3213,12 +3278,14 @@ const VENDOR_ESTADOS = [
   {id:"descartado",label:"Descartado", color:"rgba(26,26,20,.35)",    bg:"rgba(26,26,20,.05)"},
 ];
 
-function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD"}){
+function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD", categories=[]}){
+  const categoryOptions = categories.length ? categories : VENDOR_CATS;
+  const initialCategory = vendor?.cat || categoryOptions[0]?.id || "salon";
   const initialCurrency = vendor?.currency || budgetCurrency;
   const initialRate = vendor ? getVendorExchangeRateForBudget(vendor,budgetCurrency) : getSuggestedExchangeRate(budgetCurrency,initialCurrency);
   const [v, setV] = useState(vendor
-    ? {...vendor,currency:initialCurrency,exchangeRate:formatExchangeRate(initialRate),exchangeRateBaseCurrency:budgetCurrency}
-    : {id:Date.now()+"",cat:"salon",nombre:"",contacto:"",precio:"",currency:budgetCurrency,exchangeRate:"1",exchangeRateBaseCurrency:budgetCurrency,estado:"evaluando",link:"",notas:""}
+    ? {...vendor,cat:initialCategory,currency:initialCurrency,exchangeRate:formatExchangeRate(initialRate),exchangeRateBaseCurrency:budgetCurrency}
+    : {id:Date.now()+"",cat:initialCategory,nombre:"",contacto:"",precio:"",currency:budgetCurrency,exchangeRate:"1",exchangeRateBaseCurrency:budgetCurrency,estado:"evaluando",link:"",notas:""}
   );
   const set = (k,val) => setV(x=>({...x,[k]:val}));
   const vendorCurrency = v.currency || budgetCurrency;
@@ -3232,18 +3299,23 @@ function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD"}){
       exchangeRateBaseCurrency:budgetCurrency
     }));
   };
-  const saveVendor = () => onSave({...v,
-    currency:vendorCurrency,
-    exchangeRate:vendorCurrency===budgetCurrency ? "1" : formatExchangeRate(exchangeRate),
-    exchangeRateBaseCurrency:budgetCurrency
-  });
+  const saveVendor = () => {
+    const selectedCategory = categoryOptions.find(category => category.id === v.cat);
+    onSave({...v,
+      categoryName:selectedCategory?.label || v.categoryName || "Otros",
+      categoryEmoji:selectedCategory?.emoji || v.categoryEmoji || "📌",
+      currency:vendorCurrency,
+      exchangeRate:vendorCurrency===budgetCurrency ? "1" : formatExchangeRate(exchangeRate),
+      exchangeRateBaseCurrency:budgetCurrency
+    });
+  };
 
   return <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"20px",marginBottom:12}}>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:12,marginBottom:12}}>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Categoría</div>
         <select value={v.cat} onChange={e=>set("cat",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
-          {VENDOR_CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+          {categoryOptions.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
         </select>
       </div>
       <div>
@@ -3312,6 +3384,7 @@ function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD"}){
 function VendorsModule({user, onBack}){
   const [vendors, setVendors] = useState(null);
   const [budgetCurrency, setBudgetCurrency] = useState("USD");
+  const [budgetCategories, setBudgetCategories] = useState(CATEGORIAS_DEFAULT.map(category=>({...category})));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -3324,9 +3397,23 @@ function VendorsModule({user, onBack}){
     if(!user) return;
     const load = async()=>{
       try{
-        const {data:row} = await supabase.from("wedding_data").select("vendors,currency").eq("user_id",user.id).maybeSingle();
-        setVendors(Array.isArray(row?.vendors) ? row.vendors : []);
-        setBudgetCurrency(row?.currency || "USD");
+        const {data:row} = await supabase.from("wedding_data").select("vendors,currency,budget").eq("user_id",user.id).maybeSingle();
+        const loadedVendors = Array.isArray(row?.vendors) ? row.vendors : [];
+        const currentCurrency = row?.currency || "USD";
+        const currentBudget = (row?.budget && Array.isArray(row.budget.categorias) && row.budget.categorias.length)
+          ? row.budget
+          : {total:0, categorias:CATEGORIAS_DEFAULT.map(category=>({...category}))};
+        const syncedBudget = calcBudgetFromVendors(currentBudget, loadedVendors, currentCurrency);
+        setVendors(loadedVendors);
+        setBudgetCurrency(currentCurrency);
+        setBudgetCategories(syncedBudget.categorias || []);
+        if(JSON.stringify(syncedBudget) !== JSON.stringify(currentBudget)){
+          await supabase.from("wedding_data").upsert({
+            user_id:user.id,
+            budget:syncedBudget,
+            updated_at:new Date().toISOString()
+          },{onConflict:"user_id"});
+        }
       }catch(e){ setVendors([]); }
     };
     load();
@@ -3342,6 +3429,7 @@ function VendorsModule({user, onBack}){
       const currentBudgetCurrency = row?.currency || budgetCurrency || "USD";
       setBudgetCurrency(currentBudgetCurrency);
       const updatedBudget = calcBudgetFromVendors(currentBudget, vendorList, currentBudgetCurrency);
+      setBudgetCategories(updatedBudget.categorias || []);
       await supabase.from("wedding_data").upsert({
         user_id:user.id,
         vendors:vendorList,
@@ -3361,7 +3449,8 @@ function VendorsModule({user, onBack}){
 
   if(vendors===null) return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontFamily:"'Lora',serif",color:"#4A5E3A"}}>Cargando proveedores...</p></div>;
 
-  const catMap = Object.fromEntries(VENDOR_CATS.map(c=>[c.id,c]));
+  const vendorCategoryOptions = budgetCategoriesToVendorOptions(budgetCategories);
+  const catMap = Object.fromEntries(vendorCategoryOptions.map(c=>[c.id,c]));
   const estMap = Object.fromEntries(VENDOR_ESTADOS.map(e=>[e.id,e]));
   const filtered = vendors.filter(v=>{
     if(filterCat!=="all"&&v.cat!==filterCat) return false;
@@ -3404,7 +3493,7 @@ function VendorsModule({user, onBack}){
 
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
       {/* Add form */}
-      {adding && editId==="new" && <VendorForm budgetCurrency={budgetCurrency} onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
+      {adding && editId==="new" && <VendorForm budgetCurrency={budgetCurrency} categories={vendorCategoryOptions} onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
 
       {/* Filters */}
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14,alignItems:"center",width:"100%"}}>
@@ -3417,7 +3506,7 @@ function VendorsModule({user, onBack}){
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginRight:4}}>Filtrar:</div>
         <select value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
           <option value="all">Todas las categorías</option>
-          {VENDOR_CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+          {vendorCategoryOptions.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
         </select>
         <select value={filterEst} onChange={e=>setFilterEst(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
           <option value="all">Todos los estados</option>
@@ -3436,7 +3525,7 @@ function VendorsModule({user, onBack}){
       {filtered.map(v=>{
         const cat = catMap[v.cat]||{emoji:"📌",label:"Otro"};
         const est = estMap[v.estado]||VENDOR_ESTADOS[0];
-        if(editId===v.id) return <VendorForm key={v.id} vendor={v} budgetCurrency={budgetCurrency} onSave={saveVendor} onCancel={()=>setEditId(null)}/>;
+        if(editId===v.id) return <VendorForm key={v.id} vendor={v} budgetCurrency={budgetCurrency} categories={vendorCategoryOptions} onSave={saveVendor} onCancel={()=>setEditId(null)}/>;
         return <div key={v.id} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.22)",borderRadius:14,padding:"16px 18px",marginBottom:10}}>
           <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
             <div style={{fontSize:"1.5rem",flexShrink:0,marginTop:2}}>{cat.emoji}</div>
