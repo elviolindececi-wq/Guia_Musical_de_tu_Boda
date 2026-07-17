@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 // @ts-nocheck
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -2375,16 +2375,41 @@ function vendorAmountInBudgetCurrency(vendor, budgetCurrency="USD"){
   return exchangeRate>0 ? price/exchangeRate : 0;
 }
 
+// Normaliza nombres para vincular categorías equivalentes aunque hayan sido
+// creadas manualmente. Ej.: "Otro" y "Otros" deben corresponder a vendor.cat="otro".
+function normalizeBudgetCategoryName(value=""){
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function vendorMatchesBudgetCategory(vendor, category, canonicalOtherCategoryId=null){
+  if(!vendor || !category) return false;
+  if(vendor.cat === category.id) return true;
+
+  // Los proveedores guardados como "otro" se asignan a una sola categoría
+  // Otro/Otros del presupuesto para evitar duplicar importes.
+  return vendor.cat === "otro" && canonicalOtherCategoryId === category.id;
+}
+
 // ─── SYNC: calcula cotizado+pagado del budget a partir de vendors ─────────────
 function calcBudgetFromVendors(budgetData, vendorsList, budgetCurrency="USD"){
   if(!budgetData || !vendorsList) return budgetData;
+  const categories = budgetData.categorias || [];
+  const canonicalOtherCategory =
+    categories.find(cat => cat.id === "otro") ||
+    categories.find(cat => ["otro","otros"].includes(normalizeBudgetCategoryName(cat.nombre)));
+  const canonicalOtherCategoryId = canonicalOtherCategory?.id || null;
+
   const next = {
     ...budgetData,
-    categorias: (budgetData.categorias||[]).map(cat => {
-      const catVendors = vendorsList.filter(v => v.cat === cat.id && v.estado !== "descartado");
+    categorias: categories.map(cat => {
+      const catVendors = vendorsList.filter(v => vendorMatchesBudgetCategory(v,cat,canonicalOtherCategoryId) && v.estado !== "descartado");
       const cotizado = catVendors.reduce((s,v) => s + vendorAmountInBudgetCurrency(v,budgetCurrency), 0);
-      const pagado   = vendorsList.filter(v => v.cat===cat.id && v.estado==="pagado")
-                                  .reduce((s,v) => s + vendorAmountInBudgetCurrency(v,budgetCurrency), 0);
+      const pagado   = catVendors.filter(v => v.estado === "pagado")
+                                 .reduce((s,v) => s + vendorAmountInBudgetCurrency(v,budgetCurrency), 0);
       return {...cat, cotizado, pagado};
     })
   };
@@ -2798,8 +2823,23 @@ function BudgetModule({ user, onBack }){
   };
 
   const addCategoria = ()=>{
-    if(!newCatName.trim()) return;
-    const next = {...data, categorias:[...data.categorias, {id:"c_"+Date.now(),emoji:"📌",nombre:newCatName.trim(),estimado:0,cotizado:0,pagado:0,notas:""}]};
+    const categoryName = newCatName.trim();
+    if(!categoryName) return;
+
+    const normalizedName = normalizeBudgetCategoryName(categoryName);
+    const isOtherCategory = normalizedName === "otro" || normalizedName === "otros";
+    const alreadyHasOther = data.categorias.some(c =>
+      c.id === "otro" || ["otro","otros"].includes(normalizeBudgetCategoryName(c.nombre))
+    );
+
+    if(isOtherCategory && alreadyHasOther){
+      showToast("La categoría Otros ya existe en el presupuesto.", "info");
+      return;
+    }
+
+    // Usar el mismo ID que Proveedores para que los importes se sincronicen.
+    const categoryId = isOtherCategory ? "otro" : "c_"+Date.now();
+    const next = {...data, categorias:[...data.categorias, {id:categoryId,emoji:"📌",nombre:categoryName,estimado:0,cotizado:0,pagado:0,notas:""}]};
     setData(next);
     setNewCatName("");
     setAddingCat(false);
@@ -3164,7 +3204,7 @@ const VENDOR_CATS = [
   {id:"beauty",   emoji:"💄", label:"Maquillaje / Peinado"},
   {id:"transport",emoji:"🚗", label:"Transporte"},
   {id:"papel",    emoji:"💌", label:"Papelería"},
-  {id:"otro",     emoji:"📌", label:"Otro"},
+  {id:"otro",     emoji:"📌", label:"Otros"},
 ];
 const VENDOR_ESTADOS = [
   {id:"evaluando", label:"Evaluando",  color:"rgba(201,169,110,.8)",  bg:"rgba(201,169,110,.1)"},
