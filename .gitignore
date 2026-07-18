@@ -8,3 +8,5 @@ dist
 
 .env.local
 .env*.local
+
+src/App.backup*.jsx
