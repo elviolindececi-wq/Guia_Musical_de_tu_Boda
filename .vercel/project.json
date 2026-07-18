@@ -1,1 +1,16 @@
-{"projectId":"prj_7Du6xyMovX3LMmAn7M3yeBv5zdnQ","orgId":"team_vje3jKykEiGvqWanZxNsg6Zs","projectName":"elviolindececi-app"}
+{
+  "projectId": "prj_7Du6xyMovX3LMmAn7M3yeBv5zdnQ",
+  "orgId": "team_vje3jKykEiGvqWanZxNsg6Zs",
+  "projectName": "elviolindececi-app",
+  "settings": {
+    "createdAt": 1780336783667,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

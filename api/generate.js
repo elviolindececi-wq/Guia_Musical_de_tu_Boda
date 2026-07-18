@@ -1,13 +1,71 @@
 // api/generate.js
 const https = require('https');
+const { createClient } = require('@supabase/supabase-js');
+
+const PRODUCT_CODE = process.env.HOTMART_PRODUCT_CODE || 'W106077396L';
+
+function getAdminClient() {
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRole) throw new Error('Faltan VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.');
+  return createClient(url, serviceRole, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
+async function requireProductAccess(req) {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) return { ok: false, status: 401, message: 'Necesitás iniciar sesión.' };
+
+  const admin = getAdminClient();
+  const { data: authData, error: authError } = await admin.auth.getUser(token);
+  const user = authData?.user;
+  if (authError || !user) return { ok: false, status: 401, message: 'La sesión no es válida.' };
+
+  const email = String(user.email || '').toLowerCase().trim();
+  const activeStatuses = ['active', 'legacy'];
+
+  let { data, error } = await admin
+    .from('access_entitlements')
+    .select('id')
+    .eq('product_code', PRODUCT_CODE)
+    .eq('user_id', user.id)
+    .in('status', activeStatuses)
+    .limit(1);
+
+  if (error) throw error;
+
+  if (!data?.length && email) {
+    const byEmail = await admin
+      .from('access_entitlements')
+      .select('id')
+      .eq('product_code', PRODUCT_CODE)
+      .ilike('email', email)
+      .in('status', activeStatuses)
+      .limit(1);
+    if (byEmail.error) throw byEmail.error;
+    data = byEmail.data;
+  }
+
+  if (!data?.length) return { ok: false, status: 403, message: 'La compra todavía no está habilitada para esta cuenta.' };
+
+  return { ok: true, user };
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method not allowed' } });
+
+  try {
+    const access = await requireProductAccess(req);
+    if (!access.ok) return res.status(access.status).json({ error: { message: access.message } });
+  } catch (error) {
+    console.error('Error verificando acceso:', error);
+    return res.status(500).json({ error: { message: 'No pudimos verificar el acceso al producto.' } });
+  }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -21,8 +79,6 @@ module.exports = async function handler(req, res) {
     max_tokens: body.max_tokens || 2000,
     messages: Array.isArray(body.messages) ? body.messages : []
   });
-
-  console.log('Llamando a Anthropic, modelo:', body.model, 'tokens:', body.max_tokens);
 
   return new Promise((resolve) => {
     const options = {
@@ -41,7 +97,6 @@ module.exports = async function handler(req, res) {
       let data = '';
       response.on('data', chunk => { data += chunk; });
       response.on('end', () => {
-        console.log('Respuesta de Anthropic, status:', response.statusCode, 'bytes:', data.length);
         try {
           const parsed = JSON.parse(data);
           res.status(response.statusCode).json(parsed);
@@ -60,7 +115,6 @@ module.exports = async function handler(req, res) {
     });
 
     request.setTimeout(55000, () => {
-      console.error('Timeout esperando respuesta de Anthropic');
       request.destroy();
       res.status(504).json({ error: { message: 'Tiempo de espera agotado. Intentá de nuevo.' } });
       resolve();
