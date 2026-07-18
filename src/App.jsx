@@ -27,6 +27,142 @@ const DEMO_USER_KEY = "ceci_demo_user_id_v1";
 const DEMO_TEST_FORM_KEY = "ceci_demo_test_form_v1";
 const DEMO_TEST_STEP_KEY = "ceci_demo_test_step_v1";
 const DEMO_BLOCKED_VIEWS = new Set(["results","generating"]);
+const START_PROFILE_KEY = "ceci_start_profile_v1";
+const PRODUCT_EVENTS_KEY = "ceci_product_events_v1";
+
+const trackProductEvent = (name, payload={}) => {
+  const event = { name, payload, at:new Date().toISOString() };
+  try {
+    const current = JSON.parse(localStorage.getItem(PRODUCT_EVENTS_KEY) || "[]");
+    localStorage.setItem(PRODUCT_EVENTS_KEY, JSON.stringify([...current.slice(-99), event]));
+  } catch(e) {}
+  try { if(typeof window.clarity === "function") window.clarity("event", name); } catch(e) {}
+  try { if(typeof window.gtag === "function") window.gtag("event", name, payload); } catch(e) {}
+  try { console.debug("[product-event]", name, payload); } catch(e) {}
+};
+
+const readStartProfile = () => {
+  try { return JSON.parse(localStorage.getItem(START_PROFILE_KEY) || "null"); }
+  catch(e) { return null; }
+};
+
+const ROUTE_PROGRESS_KEY = "ceci_route_progress_v1";
+
+const JOURNEY_STAGES = [
+  {
+    id:"vision", emoji:"💍", short:"Imaginar", title:"Imaginar la boda",
+    description:"Transformar la emoción del compromiso en una primera visión compartida, sin intentar resolver todo de una vez.",
+    tip:"Antes de pedir presupuestos, hablen de cómo quieren sentirse ese día. Esa conversación evita muchas decisiones contradictorias después.",
+    actions:[
+      {id:"vision-priorities",module:"checklist-boda",emoji:"✨",title:"Definir las prioridades de la pareja",copy:"Elijan tres cosas que sí o sí quieren cuidar y tres que no necesitan impresionar."},
+      {id:"vision-budget",module:"budget",emoji:"💰",title:"Conversar sobre un rango de inversión",copy:"No hace falta un número perfecto: un rango inicial ya permite tomar mejores decisiones."},
+      {id:"vision-guests",module:"guests",emoji:"👥",title:"Estimar el tamaño de la boda",copy:"Una primera aproximación de invitados condiciona salón, presupuesto y estilo de celebración."}
+    ]
+  },
+  {
+    id:"foundations", emoji:"📍", short:"Bases", title:"Definir las bases",
+    description:"Acordar presupuesto, cantidad aproximada de invitados, fecha y zona para destrabar las decisiones grandes.",
+    tip:"No compares salones ni proveedores con cantidades distintas de invitados. Definí primero una estimación común para comparar sobre la misma boda.",
+    actions:[
+      {id:"base-budget",module:"budget",emoji:"💰",title:"Crear el presupuesto inicial",copy:"Distribuí un monto aproximado entre las áreas principales antes de contratar."},
+      {id:"base-guests",module:"guests",emoji:"👥",title:"Armar una primera lista de invitados",copy:"Trabajá por grupos y familias; todavía no tiene que ser la lista definitiva."},
+      {id:"base-plan",module:"checklist-boda",emoji:"📅",title:"Definir fecha, zona y criterios del salón",copy:"Convertí las ideas generales en condiciones concretas para buscar y decidir."}
+    ]
+  },
+  {
+    id:"essentials", emoji:"🤝", short:"Esencial", title:"Asegurar lo esencial",
+    description:"Reservar lo difícil de conseguir y centralizar propuestas, contratos, anticipos y decisiones.",
+    tip:"No elijas cada proveedor por separado. Revisá cómo sus decisiones se afectan entre sí: salón, catering, técnica, decoración y música forman un mismo sistema.",
+    actions:[
+      {id:"essential-vendors",module:"vendors",emoji:"🏢",title:"Comparar proveedores prioritarios",copy:"Registrá propuestas con los mismos criterios para poder compararlas de verdad."},
+      {id:"essential-payments",module:"budget",emoji:"🧾",title:"Controlar anticipos y compromisos",copy:"Anotá cuánto pagaron, cuánto falta y en qué fecha vence cada saldo."},
+      {id:"essential-checklist",module:"checklist-boda",emoji:"✅",title:"Confirmar lo contratado y lo pendiente",copy:"Separá decisiones cerradas, decisiones en evaluación y tareas sin iniciar."}
+    ]
+  },
+  {
+    id:"experience", emoji:"🌿", short:"Experiencia", title:"Diseñar la experiencia",
+    description:"Dar coherencia al espacio, los momentos, la música y la forma en que los invitados vivirán la boda.",
+    tip:"Una boda memorable no depende de sumar cosas. Depende de que espacio, tiempos, música y detalles cuenten la misma historia.",
+    actions:[
+      {id:"experience-salon",module:"salon-design",emoji:"🏛️",title:"Diseñar la distribución del salón",copy:"Probá mesas, pista, livings y circulación antes de cerrar decisiones de montaje."},
+      {id:"experience-music",module:"guia",emoji:"🎵",title:"Diseñar los momentos musicales",copy:"Elegí qué debería sentirse en cada momento, no solamente una lista de canciones."},
+      {id:"experience-guests",module:"guests",emoji:"💌",title:"Pensar la experiencia de los invitados",copy:"Identificá necesidades, afinidades y grupos que condicionarán la distribución."}
+    ]
+  },
+  {
+    id:"guest-organization", emoji:"👥", short:"Invitados", title:"Organizar invitados y mesas",
+    description:"Convertir la lista estimada en personas confirmadas, grupos, necesidades y una distribución posible.",
+    tip:"No empieces por ubicar persona por persona. Primero agrupá afinidades y conflictos; después diseñá mesas completas.",
+    actions:[
+      {id:"guest-list",module:"guests",emoji:"👥",title:"Actualizar confirmaciones y necesidades",copy:"Centralizá respuestas, restricciones y datos importantes de cada invitado."},
+      {id:"guest-tables",module:"salon-design",emoji:"🪑",title:"Probar la distribución de mesas",copy:"Acomodá grupos completos y revisá circulación, pista y visibilidad."},
+      {id:"guest-communication",module:"checklist-boda",emoji:"💬",title:"Ordenar comunicaciones pendientes",copy:"Definí qué información necesita cada grupo y cuándo debe recibirla."}
+    ]
+  },
+  {
+    id:"coordination", emoji:"⏰", short:"Coordinar", title:"Coordinar el gran día",
+    description:"Convertir todas las decisiones en horarios, responsables, pagos finales y planes alternativos.",
+    tip:"El cronograma no es solo una lista de horarios: cada momento necesita una persona responsable, una señal de inicio y un plan si algo se demora.",
+    actions:[
+      {id:"coordination-timeline",module:"timeline",emoji:"⏰",title:"Construir el cronograma maestro",copy:"Uní ceremonia, recepción, proveedores, música y responsables en una sola secuencia."},
+      {id:"coordination-vendors",module:"vendors",emoji:"📞",title:"Confirmar proveedores y contactos",copy:"Validá horarios de llegada, responsables, saldos y teléfonos del día."},
+      {id:"coordination-music",module:"guia",emoji:"🎵",title:"Cerrar el guion musical",copy:"Entregá a músicos o DJ una guía clara de momentos, versiones y señales."}
+    ]
+  }
+];
+
+const normalizeJourneyStage = (stage) => ({
+  starting:"vision", foundations:"foundations", execution:"essentials", final:"coordination"
+}[stage] || stage || "vision");
+
+const monthsUntilWedding = (dateValue) => {
+  if(!dateValue) return null;
+  const target = new Date(`${dateValue}T12:00:00`);
+  if(Number.isNaN(target.getTime())) return null;
+  const now = new Date();
+  return Math.max(0, Math.round((target.getTime()-now.getTime())/(1000*60*60*24*30.44)));
+};
+
+const getWeddingStage = (profile={}) => {
+  let id = normalizeJourneyStage(profile?.stage);
+  const selectedIndex = Math.max(0,JOURNEY_STAGES.findIndex(x=>x.id===id));
+  let inferredIndex = selectedIndex;
+  const months = monthsUntilWedding(profile?.weddingDate);
+  if(months !== null && months <= 2) inferredIndex = Math.max(inferredIndex,5);
+  else if(months !== null && months <= 5 && profile?.venueStatus === "booked") inferredIndex = Math.max(inferredIndex,4);
+  if(profile?.venueStatus === "booked" && inferredIndex < 2) inferredIndex = 2;
+  if(profile?.budgetStatus === "defined" && profile?.guestRange && inferredIndex < 1) inferredIndex = 1;
+  return JOURNEY_STAGES[Math.min(inferredIndex,JOURNEY_STAGES.length-1)] || JOURNEY_STAGES[0];
+};
+
+const getWeddingRecommendation = (profile={}) => {
+  const stage = getWeddingStage(profile);
+  const direct = {
+    budget:{module:"budget",emoji:"💰",title:"Ordenar el presupuesto",why:"Definí cuánto pueden invertir y cómo distribuirlo antes de sumar nuevas decisiones.",cta:"Armar mi presupuesto"},
+    guests:{module:"guests",emoji:"👥",title:"Aterrizar la lista de invitados",why:"La cantidad de personas condiciona salón, presupuesto, mesas y logística.",cta:"Organizar invitados"},
+    salon:{module:"salon-design",emoji:"🏛️",title:"Visualizar el salón",why:"Probá distribuciones antes de comprometer espacios, mesas y circulación.",cta:"Diseñar mi salón"},
+    vendors:{module:"vendors",emoji:"🏢",title:"Comparar proveedores",why:"Centralizá propuestas y decisiones para no perder información entre chats.",cta:"Ordenar proveedores"},
+    timeline:{module:"timeline",emoji:"⏰",title:"Construir el cronograma",why:"Convertí todo lo contratado en una secuencia clara para el gran día.",cta:"Crear cronograma"},
+    music:{module:"guia",emoji:"🎵",title:"Diseñar la banda sonora",why:"Traducí el estilo de la pareja en canciones y momentos con intención.",cta:"Empezar con Ceci"}
+  };
+  if(direct[profile?.concern]) return direct[profile.concern];
+  const first = stage.actions[0];
+  return {module:first.module,emoji:first.emoji,title:first.title,why:first.copy,cta:"Empezar ahora"};
+};
+
+const getRoutePlan = (profile={}) => {
+  const stage = getWeddingStage(profile);
+  const stageIndex = JOURNEY_STAGES.findIndex(x=>x.id===stage.id);
+  const recommendation = getWeddingRecommendation(profile);
+  const directAction = {id:`priority-${profile?.concern||stage.id}`,module:recommendation.module,emoji:recommendation.emoji,title:recommendation.title,copy:recommendation.why};
+  const actions = [directAction,...stage.actions].filter((item,index,array)=>array.findIndex(x=>x.module===item.module&&x.title===item.title)===index).slice(0,3);
+  return {stage,stageIndex,recommendation,actions,nextStage:JOURNEY_STAGES[stageIndex+1]||null};
+};
+
+const readRouteProgress = () => {
+  try { return JSON.parse(localStorage.getItem(ROUTE_PROGRESS_KEY) || "{}"); }
+  catch(e) { return {}; }
+};
 let demoWeddingMemory = {};
 
 const isDemoUser = (user) => !!user?.is_demo;
@@ -967,440 +1103,247 @@ function Progress({step}){
 
 function Landing({onTry,onLogin,onBuy}){
   const tools = [
-    {emoji:"🏛️",title:"Diseño del salón",copy:"Probá distribuciones, mesas, mobiliario y estilos."},
-    {emoji:"💰",title:"Presupuesto",copy:"Organizá los gastos y controlá cada categoría."},
-    {emoji:"👥",title:"Invitados",copy:"Gestioná la lista, etiquetas y distribución."},
-    {emoji:"🏢",title:"Proveedores",copy:"Compará propuestas, contactos y contrataciones."},
-    {emoji:"⏰",title:"Cronograma",copy:"Planificá cada momento del gran día."},
-    {emoji:"🎵",title:"Música y banda sonora",copy:"Diseñá la emoción musical de cada momento."},
+    ["📋","Plan y checklist"],
+    ["💰","Presupuesto"],
+    ["👥","Invitados"],
+    ["🏛️","Salón y mesas"],
+    ["🏢","Proveedores"],
+    ["🎵","Música"]
   ];
 
-  return <div className="home-floral-bg" style={{
-    minHeight:"100dvh",
-    backgroundColor:"#F5EFE0",
-    color:"#1A1A14"
-  }}>
+  const begin = () => { trackProductEvent("landing_start_clicked", {source:"hero"}); onTry(); };
 
-    {/* Encabezado */}
-    <header style={{
-      position:"sticky",
-      top:0,
-      zIndex:100,
-      background:"rgba(251,247,239,.88)",
-      backdropFilter:"blur(14px)",
-      WebkitBackdropFilter:"blur(14px)",
-      borderBottom:"0.5px solid rgba(201,169,110,.25)"
-    }}>
-      <div className="responsive-shell" style={{
-        minHeight:72,
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"space-between",
-        gap:16
-      }}>
+  return <div className="home-floral-bg" style={{minHeight:"100dvh",backgroundColor:"#F5EFE0",color:"#1A1A14"}}>
+    <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(251,247,239,.9)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:"0.5px solid rgba(201,169,110,.25)"}}>
+      <div className="responsive-shell" style={{minHeight:72,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
         <div>
           <div className="brand-logo">El Violín de Ceci</div>
-          <div style={{
-            fontFamily:"'Lora',serif",
-            fontSize:THEME.text.label,
-            color:"rgba(26,26,20,.45)",
-            marginTop:3
-          }}>
-            Organizador de bodas
-          </div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",marginTop:3}}>Tu Boda Organizada</div>
         </div>
-
-        <button
-          type="button"
-          onClick={onLogin}
-          style={{
-            background:"transparent",
-            border:"none",
-            padding:"10px 4px",
-            cursor:"pointer",
-            fontFamily:"'Lora',serif",
-            color:"#4A5E3A",
-            fontSize:"clamp(.85rem,2vw,1rem)",
-            fontWeight:600,
-            textDecoration:"underline",
-            textUnderlineOffset:4
-          }}
-        >
-          ¿Ya tenés acceso? Iniciar sesión
+        <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"10px 4px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.85rem,2vw,1rem)",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4}}>
+          Ya tengo acceso
         </button>
       </div>
     </header>
 
     <main>
-      {/* Hero */}
-      <section className="responsive-shell" style={{
-        paddingTop:"clamp(38px,7vw,86px)",
-        paddingBottom:"clamp(42px,7vw,82px)"
-      }}>
-        <div style={{
-          display:"grid",
-          gridTemplateColumns:"repeat(auto-fit,minmax(min(360px,100%),1fr))",
-          gap:"clamp(28px,6vw,72px)",
-          alignItems:"center"
-        }}>
-
+      <section className="responsive-shell" style={{paddingTop:"clamp(40px,7vw,88px)",paddingBottom:"clamp(44px,7vw,84px)"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(360px,100%),1fr))",gap:"clamp(30px,6vw,72px)",alignItems:"center"}}>
           <div className="fu">
-            <div style={{
-              display:"inline-flex",
-              alignItems:"center",
-              gap:8,
-              background:"rgba(74,94,58,.08)",
-              border:"0.5px solid rgba(74,94,58,.22)",
-              borderRadius:100,
-              padding:"8px 14px",
-              marginBottom:22,
-              fontFamily:"'Cinzel',serif",
-              fontSize:THEME.text.label,
-              letterSpacing:".13em",
-              textTransform:"uppercase",
-              color:"#4A5E3A"
-            }}>
-              ✦ Todo tu evento en un solo lugar
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.22)",borderRadius:100,padding:"8px 14px",marginBottom:22,fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A"}}>
+              ✦ Primero claridad. Después, herramientas.
             </div>
-
-            <h1 className="brand-title" style={{
-              fontSize:"clamp(2.55rem,7vw,5rem)",
-              lineHeight:1.02,
-              letterSpacing:"-.025em",
-              margin:"0 0 22px",
-              maxWidth:720
-            }}>
-              Organizá tu boda,
-              <br/>
-              <span className="gold">visualizá cada detalle.</span>
+            <h1 className="brand-title" style={{fontSize:"clamp(2.5rem,7vw,4.9rem)",lineHeight:1.03,letterSpacing:"-.025em",margin:"0 0 22px",maxWidth:760}}>
+              No necesitás organizar todo hoy.
+              <br/><span className="gold">Necesitás saber qué sigue.</span>
             </h1>
-
-            <p className="brand-copy" style={{
-              fontSize:"clamp(1.08rem,2.2vw,1.35rem)",
-              lineHeight:1.7,
-              margin:"0 0 28px",
-              maxWidth:670,
-              color:"rgba(26,26,20,.7)"
-            }}>
-              Diseñá el salón, armá el presupuesto, organizá invitados,
-              compará proveedores y planificá cada momento de tu boda.
+            <p className="brand-copy" style={{fontSize:"clamp(1.07rem,2.2vw,1.32rem)",lineHeight:1.7,margin:"0 0 28px",maxWidth:680,color:"rgba(26,26,20,.7)"}}>
+              Contanos en qué etapa está tu boda y recibí un próximo paso claro. Después usá presupuesto, invitados, salón, proveedores, cronograma y música sin tener todo disperso.
             </p>
-
-            <div style={{
-              display:"flex",
-              gap:12,
-              alignItems:"center",
-              flexWrap:"wrap"
-            }}>
-              <button className="pbtn" onClick={onTry}>
-                Probar el organizador gratis →
-              </button>
-
-              <button className="gbtn" onClick={onLogin}>
-                Ya compré
-              </button>
+            <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+              <button className="pbtn" onClick={begin}>Descubrir mi próximo paso →</button>
+              <button className="gbtn" onClick={onLogin}>Ya compré</button>
             </div>
-
-            <p style={{
-              fontFamily:"'Lora',serif",
-              fontSize:".88rem",
-              color:"rgba(26,26,20,.42)",
-              margin:"16px 0 0",
-              lineHeight:1.5
-            }}>
-              Sin tarjeta. Los cambios de la prueba son temporales.
-            </p>
+            <div style={{display:"flex",gap:"10px 18px",flexWrap:"wrap",marginTop:17,fontFamily:"'Lora',serif",fontSize:".86rem",color:"rgba(26,26,20,.52)"}}>
+              <span>✓ Te lleva menos de 2 minutos</span><span>✓ Sin tarjeta</span><span>✓ Podés probar las herramientas</span>
+            </div>
           </div>
 
-          {/* Preview del producto */}
-          <div className="fu2" style={{
-            background:"rgba(251,247,239,.96)",
-            border:"0.5px solid rgba(201,169,110,.35)",
-            borderRadius:26,
-            padding:"clamp(18px,4vw,28px)",
-            boxShadow:"0 24px 70px rgba(49,39,25,.16)"
-          }}>
-            <div style={{
-              display:"flex",
-              alignItems:"center",
-              justifyContent:"space-between",
-              gap:12,
-              marginBottom:18
-            }}>
-              <div>
-                <div className="brand-logo" style={{
-                  fontSize:THEME.text.label,
-                  letterSpacing:".16em",
-                  marginBottom:4
-                }}>
-                  Tu organizador
-                </div>
-                <div style={{
-                  fontFamily:"'Playfair Display',serif",
-                  fontSize:"1.35rem",
-                  fontWeight:600
-                }}>
-                  Todo conectado
-                </div>
-              </div>
-
-              <div style={{
-                borderRadius:100,
-                background:"rgba(74,94,58,.08)",
-                border:"0.5px solid rgba(74,94,58,.2)",
-                color:"#4A5E3A",
-                padding:"7px 12px",
-                fontFamily:"'Lora',serif",
-                fontSize:".78rem",
-                fontWeight:700
-              }}>
-                Modo prueba
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onTry}
-              style={{
-                width:"100%",
-                border:"none",
-                borderRadius:18,
-                padding:"22px 20px",
-                textAlign:"left",
-                background:"#4A5E3A",
-                cursor:"pointer",
-                marginBottom:12,
-                boxShadow:"0 12px 28px rgba(74,94,58,.18)"
-              }}
-            >
-              <div style={{fontSize:"1.75rem",marginBottom:8}}>🏛️</div>
-              <div style={{
-                fontFamily:"'Playfair Display',serif",
-                fontSize:"1.25rem",
-                fontWeight:600,
-                color:"#F5EFE0",
-                marginBottom:6
-              }}>
-                Diseñá tu salón
-              </div>
-              <div style={{
-                fontFamily:"'Lora',serif",
-                color:"rgba(245,239,224,.68)",
-                fontSize:".9rem",
-                lineHeight:1.5,
-                marginBottom:12
-              }}>
-                Probá medidas, mesas, sofás, decoración y distribución.
-              </div>
-              <div style={{
-                fontFamily:"'Lora',serif",
-                color:"#D9B86F",
-                fontSize:".9rem",
-                fontWeight:700
-              }}>
-                Empezar a diseñar →
-              </div>
-            </button>
-
-            <div style={{
-              display:"grid",
-              gridTemplateColumns:"repeat(2,minmax(0,1fr))",
-              gap:10
-            }}>
-              {[
-                ["💰","Presupuesto"],
-                ["👥","Invitados"],
-                ["🏢","Proveedores"],
-                ["⏰","Cronograma"]
-              ].map(([emoji,label])=>
-                <div key={label} style={{
-                  minHeight:92,
-                  background:"#FBF7EF",
-                  border:"0.5px solid rgba(201,169,110,.25)",
-                  borderRadius:14,
-                  padding:"14px 12px"
-                }}>
-                  <div style={{fontSize:"1.25rem",marginBottom:7}}>{emoji}</div>
-                  <div style={{
-                    fontFamily:"'Playfair Display',serif",
-                    fontSize:".9rem",
-                    fontWeight:600
-                  }}>
-                    {label}
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="fu2" style={{background:"rgba(251,247,239,.97)",border:"0.5px solid rgba(201,169,110,.38)",borderRadius:26,padding:"clamp(20px,4vw,30px)",boxShadow:"0 24px 70px rgba(49,39,25,.16)"}}>
+            <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:8}}>Tu plan de inicio</div>
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.45rem,4vw,2rem)",lineHeight:1.18,margin:"0 0 8px"}}>Un recorrido, no otro listado de tareas.</h2>
+            <p className="brand-copy" style={{fontSize:".95rem",margin:"0 0 20px"}}>La experiencia empieza por tu momento real y prioriza lo que destraba el resto.</p>
+            {[
+              ["1","Decinos en qué etapa estás","Recién empezando, ya contratando o cerrando detalles."],
+              ["2","Elegí qué te preocupa hoy","Presupuesto, invitados, salón, proveedores, tiempos o música."],
+              ["3","Recibí un próximo paso","Con una herramienta concreta para avanzar ahora."]
+            ].map(([n,title,copy])=><div key={n} style={{display:"grid",gridTemplateColumns:"42px 1fr",gap:12,alignItems:"start",padding:"14px 0",borderBottom:n!=="3"?"0.5px solid rgba(201,169,110,.22)":"none"}}>
+              <div style={{width:38,height:38,borderRadius:999,display:"grid",placeItems:"center",background:n==="3"?"#4A5E3A":"rgba(74,94,58,.08)",color:n==="3"?"#F5EFE0":"#4A5E3A",fontFamily:"'Cinzel',serif",fontWeight:700}}>{n}</div>
+              <div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,marginBottom:4}}>{title}</div><div style={{fontFamily:"'Lora',serif",fontSize:".86rem",lineHeight:1.5,color:"rgba(26,26,20,.52)"}}>{copy}</div></div>
+            </div>)}
+            <button type="button" className="pbtn" onClick={begin} style={{width:"100%",marginTop:20}}>Crear mi plan gratis →</button>
           </div>
         </div>
       </section>
 
-      {/* Herramientas */}
-      <section style={{
-        background:"rgba(251,247,239,.76)",
-        borderTop:"0.5px solid rgba(201,169,110,.22)",
-        borderBottom:"0.5px solid rgba(201,169,110,.22)"
-      }}>
-        <div className="responsive-shell" style={{
-          paddingTop:"clamp(42px,7vw,78px)",
-          paddingBottom:"clamp(42px,7vw,78px)"
-        }}>
+      <section style={{background:"rgba(251,247,239,.76)",borderTop:"0.5px solid rgba(201,169,110,.22)",borderBottom:"0.5px solid rgba(201,169,110,.22)"}}>
+        <div className="responsive-shell" style={{paddingTop:"clamp(42px,7vw,76px)",paddingBottom:"clamp(42px,7vw,76px)"}}>
           <div style={{textAlign:"center",maxWidth:720,margin:"0 auto 34px"}}>
-            <div className="brand-logo" style={{marginBottom:12}}>
-              Planificá con claridad
-            </div>
-            <h2 className="brand-title" style={{
-              fontSize:"clamp(2rem,5vw,3.35rem)",
-              margin:"0 0 14px"
-            }}>
-              Todo lo que necesitás para organizar tu boda
-            </h2>
-            <p className="brand-copy" style={{
-              fontSize:"clamp(1rem,2vw,1.16rem)",
-              margin:0
-            }}>
-              Probá cada módulo y descubrí cómo se conecta toda la planificación.
-            </p>
+            <div className="brand-logo" style={{marginBottom:12}}>Todo conectado</div>
+            <h2 className="brand-title" style={{fontSize:"clamp(2rem,5vw,3.25rem)",margin:"0 0 14px"}}>Una sola boda. Un solo lugar para decidir.</h2>
+            <p className="brand-copy" style={{fontSize:"clamp(1rem,2vw,1.14rem)",margin:0}}>Las herramientas acompañan tu recorrido; no tenés que aprender una aplicación compleja antes de empezar.</p>
           </div>
-
-          <div style={{
-            display:"grid",
-            gridTemplateColumns:"repeat(auto-fit,minmax(min(230px,100%),1fr))",
-            gap:14
-          }}>
-            {tools.map((item)=>
-              <button
-                key={item.title}
-                type="button"
-                onClick={onTry}
-                style={{
-                  background:"#FBF7EF",
-                  border:"0.5px solid rgba(201,169,110,.27)",
-                  borderRadius:18,
-                  padding:"22px 19px",
-                  textAlign:"left",
-                  cursor:"pointer",
-                  minHeight:168,
-                  transition:"transform .2s, box-shadow .2s"
-                }}
-              >
-                <div style={{fontSize:"1.7rem",marginBottom:12}}>
-                  {item.emoji}
-                </div>
-                <div style={{
-                  fontFamily:"'Playfair Display',serif",
-                  fontSize:"1.08rem",
-                  fontWeight:600,
-                  marginBottom:7,
-                  color:"#1A1A14"
-                }}>
-                  {item.title}
-                </div>
-                <div style={{
-                  fontFamily:"'Lora',serif",
-                  fontSize:".9rem",
-                  color:"rgba(26,26,20,.55)",
-                  lineHeight:1.55
-                }}>
-                  {item.copy}
-                </div>
-              </button>
-            )}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(190px,45vw),1fr))",gap:12}}>
+            {tools.map(([emoji,label])=><div key={label} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.27)",borderRadius:17,padding:"19px 16px",textAlign:"center"}}>
+              <div style={{fontSize:"1.55rem",marginBottom:8}}>{emoji}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:".98rem",fontWeight:650}}>{label}</div>
+            </div>)}
           </div>
         </div>
       </section>
 
-      {/* CTA final */}
-      <section className="responsive-shell" style={{
-        paddingTop:"clamp(42px,7vw,78px)",
-        paddingBottom:"clamp(46px,8vw,92px)"
-      }}>
-        <div style={{
-          background:"#4A5E3A",
-          border:"0.5px solid rgba(201,169,110,.4)",
-          borderRadius:26,
-          padding:"clamp(28px,6vw,58px)",
-          textAlign:"center",
-          boxShadow:"0 20px 55px rgba(74,94,58,.18)"
-        }}>
-          <div style={{
-            fontFamily:"'Cinzel',serif",
-            fontSize:THEME.text.label,
-            letterSpacing:".18em",
-            textTransform:"uppercase",
-            color:"rgba(217,184,111,.8)",
-            marginBottom:13
-          }}>
-            Primero probalo
-          </div>
-
-          <h2 style={{
-            fontFamily:"'Playfair Display',serif",
-            fontSize:"clamp(2rem,5vw,3.25rem)",
-            lineHeight:1.08,
-            color:"#F5EFE0",
-            margin:"0 0 15px"
-          }}>
-            Empezá a visualizar tu boda hoy.
-          </h2>
-
-          <p style={{
-            fontFamily:"'Lora',serif",
-            fontSize:"clamp(1rem,2vw,1.18rem)",
-            color:"rgba(245,239,224,.7)",
-            maxWidth:650,
-            margin:"0 auto 26px",
-            lineHeight:1.65
-          }}>
-            Explorá todas las herramientas. Para guardar, publicar, exportar
-            y continuar desde cualquier dispositivo, accedé a la versión completa.
-          </p>
-
-          <div style={{
-            display:"flex",
-            justifyContent:"center",
-            gap:12,
-            flexWrap:"wrap"
-          }}>
-            <button
-              type="button"
-              onClick={onTry}
-              style={{
-                background:"#D9B86F",
-                color:"#1A1A14",
-                border:"none",
-                padding:"15px 28px",
-                borderRadius:100,
-                cursor:"pointer",
-                fontFamily:"'Lora',serif",
-                fontWeight:700,
-                minHeight:52
-              }}
-            >
-              Probar el organizador →
-            </button>
-
-            <button
-              type="button"
-              onClick={onBuy}
-              style={{
-                background:"transparent",
-                color:"#F5EFE0",
-                border:"1px solid rgba(245,239,224,.42)",
-                padding:"14px 26px",
-                borderRadius:100,
-                cursor:"pointer",
-                fontFamily:"'Lora',serif",
-                fontWeight:600,
-                minHeight:52
-              }}
-            >
-              Acceder a la versión completa
-            </button>
+      <section className="responsive-shell" style={{paddingTop:"clamp(44px,7vw,78px)",paddingBottom:"clamp(48px,8vw,92px)"}}>
+        <div style={{background:"#4A5E3A",borderRadius:26,padding:"clamp(28px,6vw,56px)",textAlign:"center",boxShadow:"0 20px 55px rgba(74,94,58,.18)"}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"rgba(217,184,111,.85)",marginBottom:13}}>Empezá por lo importante</div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,5vw,3.15rem)",lineHeight:1.08,color:"#F5EFE0",margin:"0 0 15px"}}>Tu próximo paso puede quedar claro hoy.</h2>
+          <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1rem,2vw,1.16rem)",color:"rgba(245,239,224,.72)",maxWidth:650,margin:"0 auto 26px",lineHeight:1.65}}>Probá el recorrido y avanzá con una decisión concreta. La versión completa guarda, conecta y acompaña toda la planificación.</p>
+          <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap"}}>
+            <button type="button" onClick={begin} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"15px 28px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:800,minHeight:52}}>Descubrir mi próximo paso →</button>
+            <button type="button" onClick={onBuy} style={{background:"transparent",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.42)",padding:"14px 26px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:650,minHeight:52}}>Ver acceso completo</button>
           </div>
         </div>
       </section>
     </main>
+  </div>;
+}
+
+function WeddingStartPlanner({onOpenModule,onSeeAll,onBack,isDemo=false}){
+  const previous = readStartProfile();
+  const [wizardStep,setWizardStep] = useState(0);
+  const [stage,setStage] = useState(normalizeJourneyStage(previous?.stage || ""));
+  const [dateStatus,setDateStatus] = useState(previous?.dateStatus || (previous?.weddingDate?"exact":""));
+  const [weddingDate,setWeddingDate] = useState(previous?.weddingDate || "");
+  const [venueStatus,setVenueStatus] = useState(previous?.venueStatus || "");
+  const [guestRange,setGuestRange] = useState(previous?.guestRange || "");
+  const [budgetStatus,setBudgetStatus] = useState(previous?.budgetStatus || "");
+  const [support,setSupport] = useState(previous?.support || "");
+  const [concern,setConcern] = useState(previous?.concern || "");
+  const [complete,setComplete] = useState(!!previous?.stage && !!previous?.concern);
+
+  const stages = JOURNEY_STAGES.map(item=>({id:item.id,emoji:item.emoji,title:item.title,copy:item.description}));
+  const concerns = [
+    {id:"overwhelm",emoji:"🧭",title:"No sé por dónde seguir"},
+    {id:"budget",emoji:"💰",title:"Que el presupuesto se nos vaya"},
+    {id:"guests",emoji:"👥",title:"Invitados y mesas"},
+    {id:"salon",emoji:"🏛️",title:"Cómo va a quedar el salón"},
+    {id:"vendors",emoji:"🏢",title:"Comparar y controlar proveedores"},
+    {id:"timeline",emoji:"⏰",title:"Tiempos y pendientes"},
+    {id:"music",emoji:"🎵",title:"Música y momentos especiales"}
+  ];
+
+  const profile = {stage,dateStatus,weddingDate:dateStatus==="exact"?weddingDate:"",venueStatus,guestRange,budgetStatus,support,concern};
+  const route = getRoutePlan(profile);
+  const months = monthsUntilWedding(profile.weddingDate);
+  const canContinue = [
+    !!stage,
+    !!dateStatus && (dateStatus!=="exact" || !!weddingDate) && !!venueStatus,
+    !!guestRange && !!budgetStatus,
+    !!support && !!concern
+  ][wizardStep];
+
+  const next = () => { if(canContinue) setWizardStep(v=>Math.min(3,v+1)); };
+  const finish = () => {
+    if(!support || !concern) return;
+    const saved = {...profile,created_at:previous?.created_at||new Date().toISOString(),updated_at:new Date().toISOString()};
+    try { localStorage.setItem(START_PROFILE_KEY, JSON.stringify(saved)); } catch(e) {}
+    trackProductEvent("wedding_route_created", {...saved,resolved_stage:route.stage.id,is_demo:isDemo});
+    setComplete(true);
+  };
+
+  if(complete){
+    const savedProfile = readStartProfile() || profile;
+    const savedRoute = getRoutePlan(savedProfile);
+    const savedMonths = monthsUntilWedding(savedProfile.weddingDate);
+    return <div className="home-floral-bg" style={{minHeight:"100svh",padding:"clamp(18px,4vw,50px)",display:"grid",placeItems:"center"}}>
+      <div className="fu" style={{width:"100%",maxWidth:820,background:"rgba(251,247,239,.98)",border:"0.5px solid rgba(201,169,110,.35)",borderRadius:26,padding:"clamp(24px,5vw,46px)",boxShadow:"0 24px 70px rgba(49,39,25,.14)"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:18}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",borderRadius:999,padding:"8px 13px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A"}}>✓ Tu ruta está lista</div>
+          {savedMonths!==null&&<div style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:"rgba(26,26,20,.55)"}}>Faltan aproximadamente <strong>{savedMonths} meses</strong></div>}
+        </div>
+        <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.25rem)",lineHeight:1.08,margin:"0 0 10px"}}>Estás en: <span className="gold">{savedRoute.stage.title}</span></h1>
+        <p className="brand-copy" style={{fontSize:"1.04rem",margin:"0 0 24px",maxWidth:680}}>{savedRoute.stage.description}</p>
+
+        <div style={{background:"#4A5E3A",borderRadius:22,padding:"clamp(22px,5vw,34px)",color:"#F5EFE0",marginBottom:20}}>
+          <div style={{fontSize:"2rem",marginBottom:9}}>{savedRoute.recommendation.emoji}</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:"#D9B86F",marginBottom:8}}>Tu prioridad ahora</div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.55rem,5vw,2.2rem)",margin:"0 0 9px"}}>{savedRoute.recommendation.title}</h2>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".98rem",lineHeight:1.6,color:"rgba(245,239,224,.72)",margin:"0 0 20px"}}>{savedRoute.recommendation.why}</p>
+          <button className="pbtn" onClick={()=>{trackProductEvent("route_priority_opened",{module:savedRoute.recommendation.module});onOpenModule(savedRoute.recommendation.module);}} style={{background:"#D9B86F",color:"#1A1A14"}}>{savedRoute.recommendation.cta} →</button>
+        </div>
+
+        <div style={{border:"0.5px solid rgba(201,169,110,.28)",borderRadius:18,padding:"18px",marginBottom:18}}>
+          <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:12}}>Tus tres próximos pasos</div>
+          {savedRoute.actions.map((item,i)=><button key={item.id} onClick={()=>onOpenModule(item.module)} style={{width:"100%",display:"grid",gridTemplateColumns:"34px 1fr auto",gap:10,alignItems:"center",padding:"12px 0",background:"transparent",border:"none",borderBottom:i<savedRoute.actions.length-1?"0.5px solid rgba(74,94,58,.12)":"none",textAlign:"left",cursor:"pointer"}}>
+            <span style={{width:29,height:29,borderRadius:999,display:"grid",placeItems:"center",background:"rgba(74,94,58,.08)",color:"#4A5E3A",fontWeight:800}}>{i+1}</span>
+            <span><strong style={{display:"block",fontFamily:"'Playfair Display',serif",fontSize:".98rem",color:"#1A1A14",marginBottom:3}}>{item.title}</strong><span style={{fontFamily:"'Lora',serif",fontSize:".79rem",lineHeight:1.4,color:"rgba(26,26,20,.5)"}}>{item.copy}</span></span>
+            <span style={{color:"#4A5E3A"}}>→</span>
+          </button>)}
+        </div>
+
+        <div style={{background:"rgba(201,169,110,.1)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:16,padding:"16px 18px",marginBottom:20}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Consejo de Ceci</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".9rem",lineHeight:1.58,color:"rgba(26,26,20,.65)"}}>“{savedRoute.stage.tip}”</div>
+        </div>
+
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <button className="pbtn" onClick={onSeeAll}>Ir a mi ruta →</button>
+          <button className="gbtn" onClick={()=>{setComplete(false);setWizardStep(0);}}>Actualizar mis respuestas</button>
+        </div>
+      </div>
+    </div>;
+  }
+
+  const optionStyle = (active) => ({background:active?"rgba(74,94,58,.1)":"#FBF7EF",border:`1px solid ${active?"#4A5E3A":"rgba(201,169,110,.3)"}`,borderRadius:15,padding:"14px",textAlign:"left",cursor:"pointer",fontFamily:"'Lora',serif",color:"#1A1A14"});
+
+  return <div className="home-floral-bg" style={{minHeight:"100svh",padding:"clamp(18px,4vw,50px)",display:"grid",placeItems:"center"}}>
+    <div className="fu" style={{width:"100%",maxWidth:800,background:"rgba(251,247,239,.98)",border:"0.5px solid rgba(201,169,110,.35)",borderRadius:26,padding:"clamp(22px,5vw,42px)",boxShadow:"0 24px 70px rgba(49,39,25,.14)"}}>
+      <button onClick={wizardStep>0?()=>setWizardStep(v=>v-1):onBack} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(74,94,58,.7)",cursor:"pointer",padding:"4px 0",marginBottom:16}}>← {wizardStep>0?"Anterior":"Volver"}</button>
+      <div style={{display:"flex",gap:6,marginBottom:20}}>{[0,1,2,3].map(i=><div key={i} style={{height:5,flex:1,borderRadius:5,background:i<=wizardStep?"#4A5E3A":"rgba(74,94,58,.12)"}}/>)}</div>
+      <div className="brand-logo" style={{marginBottom:9}}>Mi ruta de boda · Paso {wizardStep+1} de 4</div>
+
+      {wizardStep===0&&<>
+        <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.15rem)",lineHeight:1.08,margin:"0 0 10px"}}>¿En qué momento está tu boda?</h1>
+        <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px"}}>Elegí la etapa que mejor describe lo que están viviendo hoy. No tiene que ser perfecta.</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(230px,100%),1fr))",gap:10}}>
+          {stages.map(item=><button key={item.id} type="button" onClick={()=>setStage(item.id)} style={optionStyle(stage===item.id)}><div style={{fontSize:"1.35rem",marginBottom:6}}>{item.emoji}</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1rem",marginBottom:4}}>{item.title}</div><div style={{fontSize:".77rem",lineHeight:1.4,color:"rgba(26,26,20,.5)"}}>{item.copy}</div></button>)}
+        </div>
+      </>}
+
+      {wizardStep===1&&<>
+        <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.05rem)",lineHeight:1.08,margin:"0 0 10px"}}>Fecha y salón</h1>
+        <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px"}}>Estas dos decisiones cambian qué debería ser prioritario y cuánto tiempo tienen.</p>
+        <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:9}}>¿Ya tienen fecha?</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:9,marginBottom:16}}>
+          {[["exact","Sí, fecha exacta"],["range","Tenemos un mes o rango"],["none","Todavía no"]].map(([id,label])=><button key={id} onClick={()=>setDateStatus(id)} style={optionStyle(dateStatus===id)}>{label}</button>)}
+        </div>
+        {dateStatus==="exact"&&<input type="date" value={weddingDate} onChange={e=>setWeddingDate(e.target.value)} style={{marginBottom:20}}/>}
+        <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:9}}>¿Y el salón?</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:9}}>
+          {[["booked","Ya está reservado"],["looking","Estamos buscando"],["none","Todavía no empezamos"]].map(([id,label])=><button key={id} onClick={()=>setVenueStatus(id)} style={optionStyle(venueStatus===id)}>{label}</button>)}
+        </div>
+      </>}
+
+      {wizardStep===2&&<>
+        <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.05rem)",lineHeight:1.08,margin:"0 0 10px"}}>Tamaño y presupuesto</h1>
+        <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px"}}>No buscamos cifras definitivas. Una aproximación ya permite ordenar la ruta.</p>
+        <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:9}}>Cantidad aproximada de invitados</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:9,marginBottom:20}}>
+          {["Hasta 50","51 a 100","101 a 180","Más de 180","No sabemos"].map(label=><button key={label} onClick={()=>setGuestRange(label)} style={optionStyle(guestRange===label)}>{label}</button>)}
+        </div>
+        <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:9}}>¿Cómo está el presupuesto?</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:9}}>
+          {[["defined","Ya está definido"],["range","Tenemos un rango"],["none","Todavía no hablamos"]].map(([id,label])=><button key={id} onClick={()=>setBudgetStatus(id)} style={optionStyle(budgetStatus===id)}>{label}</button>)}
+        </div>
+      </>}
+
+      {wizardStep===3&&<>
+        <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.05rem)",lineHeight:1.08,margin:"0 0 10px"}}>¿Cómo se están organizando?</h1>
+        <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px"}}>Esto nos ayuda a recomendar cuánto control y acompañamiento necesita la ruta.</p>
+        <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:9}}>Acompañamiento</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:9,marginBottom:20}}>
+          {[["self","La organizamos nosotros"],["support","Con familia o amigos"],["planner","Tenemos wedding planner"]].map(([id,label])=><button key={id} onClick={()=>setSupport(id)} style={optionStyle(support===id)}>{label}</button>)}
+        </div>
+        <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:9}}>¿Qué te preocupa más hoy?</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(205px,100%),1fr))",gap:9}}>
+          {concerns.map(item=><button key={item.id} type="button" onClick={()=>setConcern(item.id)} style={{...optionStyle(concern===item.id),display:"flex",alignItems:"center",gap:9,fontWeight:concern===item.id?700:500}}><span style={{fontSize:"1.15rem"}}>{item.emoji}</span><span>{item.title}</span></button>)}
+        </div>
+      </>}
+
+      <div style={{display:"flex",justifyContent:"space-between",gap:10,marginTop:24}}>
+        <span style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(26,26,20,.4)",alignSelf:"center"}}>Menos de 2 minutos · Sin tarjeta</span>
+        {wizardStep<3?<button className="pbtn" onClick={next} disabled={!canContinue} style={{opacity:canContinue?1:.45,cursor:canContinue?"pointer":"not-allowed"}}>Continuar →</button>:<button className="pbtn" onClick={finish} disabled={!canContinue} style={{opacity:canContinue?1:.45,cursor:canContinue?"pointer":"not-allowed"}}>Crear mi ruta →</button>}
+      </div>
+    </div>
   </div>;
 }
 
@@ -2330,7 +2273,7 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
 
-  useEffect(()=>{ if(open && initialEmail) setEmail(initialEmail); },[open,initialEmail]);
+  useEffect(()=>{ if(open){ if(initialEmail) setEmail(initialEmail); trackProductEvent("purchase_modal_opened",{}); } },[open,initialEmail]);
   if(!open) return null;
 
   const submit=async()=>{
@@ -2348,6 +2291,7 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
       const data=await response.json();
       if(!response.ok) throw new Error(data?.error||"No pudimos continuar al pago.");
       try{ localStorage.setItem("ceci_purchase_email",cleanEmail); }catch(e){}
+      trackProductEvent("checkout_started", {email_domain:(cleanEmail.split("@")[1]||"")});
       window.location.href=data.checkout_url||HOTMART_CHECKOUT_URL;
     }catch(e){ setError(e.message||"No pudimos continuar al pago."); setLoading(false); }
   };
@@ -2356,10 +2300,10 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
     <div className="fu" style={{width:"100%",maxWidth:480,background:"#FBF7EF",borderRadius:24,padding:"clamp(24px,5vw,38px)",boxShadow:"0 30px 90px rgba(0,0,0,.35)",position:"relative"}}>
       <button aria-label="Cerrar" disabled={loading} onClick={onClose} style={{position:"absolute",right:16,top:14,width:38,height:38,borderRadius:999,border:"1px solid rgba(26,26,20,.12)",background:"white",cursor:"pointer",fontSize:"1.2rem"}}>×</button>
       <div className="brand-logo" style={{marginBottom:12}}>El Violín de Ceci</div>
-      <h2 className="brand-title" style={{fontSize:"clamp(1.65rem,5vw,2.15rem)",margin:"0 0 10px"}}>Guardá y publicá tu planificación</h2>
-      <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 12px"}}>En la prueba podés diseñar el salón, armar el presupuesto y recorrer todos los módulos. Los cambios son temporales y se borran al salir o recargar.</p>
-      <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px",fontWeight:700,color:"#4A5E3A"}}>Para guardar, publicar, exportar y acceder desde cualquier dispositivo necesitás la versión completa.</p>
-      <input value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre" style={{marginBottom:12}}/>
+      <h2 className="brand-title" style={{fontSize:"clamp(1.65rem,5vw,2.15rem)",margin:"0 0 10px"}}>Convertí este avance en tu boda organizada</h2>
+      <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 12px"}}>Ya comprobaste cómo se siente tener decisiones, invitados, presupuesto y proveedores en un solo recorrido. En la prueba los cambios son temporales.</p>
+      <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px",fontWeight:700,color:"#4A5E3A"}}>Con el acceso completo conservás tu planificación, conectás los módulos y seguís desde cualquier dispositivo.</p>
+      <input value={name} onChange={e=>setName(e.target.value)} placeholder="Tu nombre" style={{marginBottom:12}}/>
       <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@email.com" style={{marginBottom:12}}/>
       <PhoneInput international countryCallingCodeEditable={false} defaultCountry="PY" value={phone} onChange={setPhone} onCountryChange={c=>c&&setCountry(c)} placeholder="Celular"/>
       {error&&<p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:"#b64343",lineHeight:1.45,margin:"8px 0 12px"}}>{error}</p>}
@@ -2373,10 +2317,10 @@ function DemoBanner({onBuy,onExit,changed}){
   return <>
     <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:10020,background:"rgba(26,26,20,.96)",color:"#F5EFE0",padding:"10px clamp(12px,3vw,24px)",boxShadow:"0 -10px 30px rgba(0,0,0,.2)"}}>
       <div style={{maxWidth:980,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",lineHeight:1.35}}><strong>Modo prueba.</strong> Podés usar todos los módulos y crear una versión temporal. Para guardar, publicar o exportar necesitás la versión completa.</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".88rem",lineHeight:1.35}}><strong>Estás probando tu recorrido.</strong> Avanzá todo lo que necesites; el acceso completo conserva y conecta tu planificación.</div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <button onClick={onExit} style={{background:"transparent",border:"none",color:"rgba(245,239,224,.72)",fontFamily:"'Lora',serif",fontWeight:600,cursor:"pointer",padding:"9px 10px"}}>Salir</button>
-          <button onClick={onBuy} style={{background:"#D9B86F",border:"none",color:"#1A1A14",fontFamily:"'Lora',serif",fontWeight:800,borderRadius:999,padding:"11px 18px",cursor:"pointer"}}>Guardar y publicar</button>
+          <button onClick={onBuy} style={{background:"#D9B86F",border:"none",color:"#1A1A14",fontFamily:"'Lora',serif",fontWeight:800,borderRadius:999,padding:"11px 18px",cursor:"pointer"}}>Conservar mi avance</button>
         </div>
       </div>
     </div>
@@ -2613,508 +2557,143 @@ function GlobalProgress({ user, hasResults }){
   </div>;
 }
 
-function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout, onGoModule, isDemo=false, onRequestPurchase }){
+function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout, onGoModule, isDemo=false, onRequestPurchase, onOpenStart }){
   const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
-  const link = resultToken && typeof window !== "undefined"
-    ? window.location.origin + window.location.pathname + "?r=" + resultToken
-    : "";
-
-  const [copied, setCopied] = useState(false);
-  const [demoHasChanges, setDemoHasChanges] = useState(
-    ()=>Object.keys(readDemoWeddingData() || {}).length > 0
-  );
+  const profile = readStartProfile();
+  const route = getRoutePlan(profile || {});
+  const months = monthsUntilWedding(profile?.weddingDate);
+  const [routeProgress,setRouteProgress] = useState(readRouteProgress);
+  const [demoHasChanges,setDemoHasChanges] = useState(()=>Object.keys(readDemoWeddingData() || {}).length > 0);
 
   useEffect(()=>{
     if(!isDemo) return;
-
-    const markChanged = ()=>setDemoHasChanges(true);
-    window.addEventListener("ceci-demo-change", markChanged);
-
-    if(Object.keys(readDemoWeddingData() || {}).length > 0){
-      setDemoHasChanges(true);
-    }
-
-    return ()=>window.removeEventListener("ceci-demo-change", markChanged);
+    const markChanged=()=>setDemoHasChanges(true);
+    window.addEventListener("ceci-demo-change",markChanged);
+    return()=>window.removeEventListener("ceci-demo-change",markChanged);
   },[isDemo]);
 
-  const copyLink = async()=>{
-    if(!link) return;
-    try{
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(()=>setCopied(false),2400);
-    }catch(e){}
+  const openModule = (id) => {
+    trackProductEvent("route_module_opened", {module:id,stage:route.stage.id,is_demo:isDemo});
+    onGoModule(id);
   };
+  const toggleDone = (id) => {
+    const next={...routeProgress,[id]:!routeProgress[id]};
+    setRouteProgress(next);
+    try{localStorage.setItem(ROUTE_PROGRESS_KEY,JSON.stringify(next));}catch(e){}
+    trackProductEvent("route_action_toggled",{action:id,done:!!next[id],stage:route.stage.id});
+  };
+  const doneCount = route.actions.filter(x=>routeProgress[x.id]).length;
+  const pct = Math.round((doneCount/Math.max(1,route.actions.length))*100);
 
-  const premiumAction = (viewName) => () => onGoModule(viewName);
-  const premiumStatus = isDemo ? "Probar →" : "Abrir →";
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"clamp(16px,4vw,48px)",paddingBottom:"110px"}}>
+    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(900px,calc(100vw - 24px))"}}>
+      {isDemo&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:"rgba(74,94,58,.07)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"11px 14px",marginBottom:22}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.45,color:"rgba(26,26,20,.62)"}}><strong style={{color:"#4A5E3A"}}>Modo prueba.</strong> Podés recorrer tu ruta y usar las herramientas. El acceso completo conserva y conecta todo.</div>
+        <button className="lbtn" onClick={onRequestPurchase} style={{fontSize:".78rem"}}>Ver acceso completo</button>
+      </div>}
 
-  const modules = [
-    {
-      emoji:"🏛️",
-      label:"Diseño del salón",
-      desc:"Probá distribuciones, medidas, mesas, mobiliario y decoración.",
-      action:premiumAction("salon-design"),
-      status:isDemo ? "Diseñar mi salón →" : "Abrir diseño →",
-      done:false,
-      primary:true,
-      locked:false
-    },
-    {
-      emoji:"💰",
-      label:"Presupuesto",
-      desc:"Control de gastos por categoría",
-      action:premiumAction("budget"),
-      status:premiumStatus,
-      done:false,
-      locked:false
-    },
-    {
-      emoji:"👥",
-      label:"Invitados",
-      desc:"Lista, etiquetas y seating recomendado",
-      action:premiumAction("guests"),
-      status:premiumStatus,
-      done:false,
-      locked:false
-    },
-    {
-      emoji:"🏢",
-      label:"Proveedores",
-      desc:"Cotizaciones, contactos y contratos",
-      action:premiumAction("vendors"),
-      status:premiumStatus,
-      done:false,
-      locked:false
-    },
-    {
-      emoji:"📋",
-      label:"Checklist",
-      desc:"Plan completo de la boda",
-      action:premiumAction("checklist-boda"),
-      status:premiumStatus,
-      done:false,
-      locked:false
-    },
-    {
-      emoji:"⏰",
-      label:"Cronograma",
-      desc:"Timeline completo del gran día",
-      action:premiumAction("timeline"),
-      status:premiumStatus,
-      done:false,
-      locked:false
-    },
-    {
-      emoji:"🎵",
-      label:"Música y banda sonora",
-      desc:hasResults
-        ? "Tu guion musical personalizado"
-        : isDemo
-          ? "Probá el test; el resultado se desbloquea al comprar"
-          : "Creá tu guion musical con IA",
-      action:hasResults ? onViewResults : onStartNew,
-      status:hasResults
-        ? "Ver resultado →"
-        : isDemo
-          ? "Probar el test →"
-          : "Empezar test →",
-      done:hasResults,
-      primary:false,
-      locked:false
-    },
-    {
-      emoji:"📖",
-      label:"Guía para novios",
-      desc:"Protocolo, ceremonia y consejos",
-      action:premiumAction("guia-novios"),
-      status:premiumStatus,
-      done:false,
-      locked:false
-    }
-  ];
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:18,flexWrap:"wrap",marginBottom:22}}>
+        <div>
+          <div className="brand-logo" style={{marginBottom:8}}>Mi ruta de boda</div>
+          <h1 className="brand-title" style={{fontSize:"clamp(2rem,5vw,3rem)",margin:"0 0 8px",lineHeight:1.05}}>{pareja?`Hola, ${pareja}`:"Un paso claro a la vez"}</h1>
+          <p className="brand-copy" style={{fontSize:".98rem",margin:0,maxWidth:610,lineHeight:1.58}}>{profile?route.stage.description:"Contanos en qué momento está tu boda para ordenar las herramientas según lo que necesitás ahora."}</p>
+        </div>
+        <button className="gbtn" onClick={onOpenStart} style={{fontSize:".82rem",padding:"10px 16px"}}>{profile?"Actualizar mi ruta":"Crear mi ruta →"}</button>
+      </div>
 
-  return <div style={{
-    minHeight:"100svh",
-    display:"flex",
-    alignItems:"flex-start",
-    justifyContent:"center",
-    padding:"clamp(16px,4vw,48px)"
-  }}>
-    <div className="fu home-content-card" style={{
-      width:"100%",
-      maxWidth:"min(780px,calc(100vw - 24px))"
-    }}>
-
-      {/* Indicador discreto del modo prueba */}
-      {isDemo&&<div style={{
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"space-between",
-        gap:14,
-        flexWrap:"wrap",
-        background:"rgba(74,94,58,.07)",
-        border:"0.5px solid rgba(74,94,58,.2)",
-        borderRadius:14,
-        padding:"12px 14px",
-        marginBottom:24
-      }}>
-        <div style={{
-          display:"flex",
-          alignItems:"flex-start",
-          gap:10,
-          flex:"1 1 330px"
-        }}>
-          <div style={{
-            width:9,
-            height:9,
-            borderRadius:"50%",
-            background:"#4A5E3A",
-            marginTop:7,
-            flexShrink:0
-          }}/>
-
-          <div>
-            <div style={{
-              fontFamily:"'Lora',serif",
-              fontSize:".86rem",
-              fontWeight:700,
-              color:"#4A5E3A",
-              marginBottom:2
-            }}>
-              Modo prueba
-            </div>
-
-            <div style={{
-              fontFamily:"'Lora',serif",
-              fontSize:".78rem",
-              color:"rgba(26,26,20,.55)",
-              lineHeight:1.45
-            }}>
-              Podés usar todas las herramientas. Los cambios se borrarán al salir o recargar.
-            </div>
+      {!profile?<section style={{background:"#4A5E3A",borderRadius:22,padding:"clamp(24px,5vw,38px)",color:"#F5EFE0",marginBottom:20}}>
+        <div style={{fontSize:"2rem",marginBottom:8}}>🧭</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:"#D9B86F",marginBottom:8}}>Empezá por acá</div>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.6rem,5vw,2.25rem)",margin:"0 0 9px"}}>Descubrí qué deberías resolver primero</h2>
+        <p style={{fontFamily:"'Lora',serif",fontSize:".96rem",lineHeight:1.6,color:"rgba(245,239,224,.72)",margin:"0 0 20px"}}>Fecha, salón, invitados, presupuesto y acompañamiento cambian el orden correcto de la planificación.</p>
+        <button className="pbtn" onClick={onOpenStart} style={{background:"#D9B86F",color:"#1A1A14"}}>Crear mi ruta →</button>
+      </section>:<>
+        <div style={{overflowX:"auto",paddingBottom:5,marginBottom:18}}>
+          <div style={{display:"flex",minWidth:690,alignItems:"center",gap:0}}>
+            {JOURNEY_STAGES.map((stage,index)=>{const active=index===route.stageIndex;const passed=index<route.stageIndex;return <div key={stage.id} style={{display:"flex",alignItems:"center",flex:1}}>
+              <div style={{minWidth:88,textAlign:"center"}}><div style={{width:38,height:38,borderRadius:999,display:"grid",placeItems:"center",margin:"0 auto 5px",background:active?"#4A5E3A":passed?"rgba(74,94,58,.13)":"rgba(201,169,110,.12)",border:`1px solid ${active?"#4A5E3A":"rgba(74,94,58,.16)"}`,fontSize:"1rem"}}>{passed?"✓":stage.emoji}</div><div style={{fontFamily:"'Cinzel',serif",fontSize:".58rem",letterSpacing:".04em",textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",fontWeight:active?800:500}}>{stage.short}</div></div>
+              {index<JOURNEY_STAGES.length-1&&<div style={{height:1,flex:1,background:index<route.stageIndex?"rgba(74,94,58,.35)":"rgba(74,94,58,.12)",marginTop:-18}}/>}
+            </div>})}
           </div>
         </div>
 
-        <button
-          type="button"
-          className="lbtn"
-          onClick={onRequestPurchase}
-          style={{fontSize:".78rem",flexShrink:0}}
-        >
-          Acceder a la versión completa
-        </button>
-      </div>}
-
-      {/* Encabezado */}
-      <div style={{textAlign:"center",marginBottom:26}}>
-        <div className="brand-logo" style={{marginBottom:12}}>
-          El Violín de Ceci
-        </div>
-
-        <h1 className="brand-title" style={{
-          fontSize:"clamp(1.85rem,5vw,2.8rem)",
-          margin:"0 0 10px",
-          lineHeight:1.08
-        }}>
-          {pareja
-            ? "¡Hola, " + pareja + "! 🌸"
-            : "Organizá tu boda en un solo lugar"}
-        </h1>
-
-        <p className="brand-copy" style={{
-          fontSize:"clamp(.95rem,2vw,1.08rem)",
-          margin:"0 auto",
-          maxWidth:570,
-          lineHeight:1.65
-        }}>
-          {isDemo
-            ? "Diseñá el salón, armá tu presupuesto, organizá invitados y recorré cada herramienta antes de acceder a la versión completa."
-            : "Elegí el módulo con el que querés trabajar hoy."}
-        </p>
-
-        {isDemo&&demoHasChanges&&
-          <div style={{
-            marginTop:18,
-            background:"rgba(201,169,110,.1)",
-            border:"0.5px solid rgba(201,169,110,.36)",
-            borderRadius:16,
-            padding:"14px"
-          }}>
-            <div style={{
-              fontFamily:"'Lora',serif",
-              fontSize:".85rem",
-              color:"rgba(26,26,20,.62)",
-              marginBottom:10
-            }}>
-              Ya empezaste a crear tu boda. Para conservar estos cambios necesitás publicar tu proyecto.
+        <section style={{background:"#4A5E3A",borderRadius:22,padding:"clamp(22px,5vw,34px)",color:"#F5EFE0",marginBottom:18,boxShadow:"0 14px 34px rgba(74,94,58,.17)"}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
+            <div style={{flex:"1 1 430px"}}>
+              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:8}}><span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:"#D9B86F"}}>Etapa actual · {route.stage.title}</span>{months!==null&&<span style={{fontFamily:"'Lora',serif",fontSize:".73rem",color:"rgba(245,239,224,.58)"}}>· faltan aprox. {months} meses</span>}</div>
+              <div style={{fontSize:"2rem",marginBottom:7}}>{route.recommendation.emoji}</div>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.5rem,4vw,2.1rem)",margin:"0 0 8px"}}>{route.recommendation.title}</h2>
+              <p style={{fontFamily:"'Lora',serif",fontSize:".94rem",lineHeight:1.58,color:"rgba(245,239,224,.72)",margin:0}}>{route.recommendation.why}</p>
             </div>
-
-            <button
-              className="pbtn"
-              onClick={onRequestPurchase}
-              style={{padding:"12px 24px",minHeight:48}}
-            >
-              Guardar y publicar mi boda →
-            </button>
+            <button type="button" onClick={()=>openModule(route.recommendation.module)} style={{background:"#D9B86F",color:"#1A1A14",border:"none",borderRadius:999,padding:"13px 20px",fontFamily:"'Lora',serif",fontWeight:800,cursor:"pointer",alignSelf:"center"}}>{route.recommendation.cta} →</button>
           </div>
-        }
+        </section>
 
-        {form?.fechaBoda&&(()=>{
-          const dias = Math.ceil(
-            (new Date(form.fechaBoda)-new Date())/(1000*60*60*24)
-          );
+        <section style={{border:"0.5px solid rgba(201,169,110,.3)",borderRadius:20,padding:"clamp(18px,4vw,26px)",marginBottom:18,background:"rgba(251,247,239,.82)"}}>
+          <div style={{display:"flex",alignItems:"end",justifyContent:"space-between",gap:14,flexWrap:"wrap",marginBottom:13}}>
+            <div><div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:4}}>Tus tres próximos pasos</div><div style={{fontFamily:"'Lora',serif",fontSize:".79rem",color:"rgba(26,26,20,.48)"}}>Trabajá esta etapa, no toda la boda a la vez.</div></div>
+            <div style={{minWidth:125}}><div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.45)",textAlign:"right",marginBottom:5}}>{doneCount} de {route.actions.length} listos</div><div style={{height:6,borderRadius:9,background:"rgba(74,94,58,.1)",overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#4A5E3A",transition:"width .25s"}}/></div></div>
+          </div>
+          {route.actions.map((item,i)=>{const done=!!routeProgress[item.id];return <div key={item.id} style={{display:"grid",gridTemplateColumns:"34px minmax(0,1fr) auto",gap:10,alignItems:"center",padding:"13px 0",borderBottom:i<route.actions.length-1?"0.5px solid rgba(74,94,58,.12)":"none",opacity:done?.68:1}}>
+            <button onClick={()=>toggleDone(item.id)} aria-label={done?"Marcar pendiente":"Marcar listo"} style={{width:30,height:30,borderRadius:999,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.25)"}`,background:done?"#4A5E3A":"transparent",color:done?"#F5EFE0":"#4A5E3A",cursor:"pointer",fontWeight:800}}>{done?"✓":i+1}</button>
+            <div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:".98rem",marginBottom:4,textDecoration:done?"line-through":"none"}}>{item.title}</div><div style={{fontFamily:"'Lora',serif",fontSize:".77rem",lineHeight:1.42,color:"rgba(26,26,20,.48)"}}>{item.copy}</div></div>
+            <button className="lbtn" onClick={()=>openModule(item.module)} style={{fontSize:".73rem",padding:"8px 11px"}}>Abrir →</button>
+          </div>})}
+        </section>
 
-          return dias>0
-            ? <div style={{
-                marginTop:14,
-                display:"inline-flex",
-                alignItems:"center",
-                gap:8,
-                background:"rgba(74,94,58,.08)",
-                border:"0.5px solid rgba(74,94,58,.2)",
-                borderRadius:100,
-                padding:"7px 16px",
-                flexWrap:"wrap",
-                justifyContent:"center"
-              }}>
-                <span style={{fontSize:"1rem"}}>💍</span>
-
-                <span style={{
-                  fontFamily:"'Lora',serif",
-                  fontSize:".88rem",
-                  color:"#4A5E3A",
-                  fontWeight:600
-                }}>
-                  {dias} días para la boda
-                </span>
-
-                <span style={{
-                  fontFamily:"'Cinzel',serif",
-                  fontSize:THEME.text.tiny,
-                  letterSpacing:".08em",
-                  textTransform:"uppercase",
-                  color:"rgba(74,94,58,.5)"
-                }}>
-                  {new Date(form.fechaBoda).toLocaleDateString("es",{
-                    day:"numeric",
-                    month:"long",
-                    year:"numeric"
-                  })}
-                </span>
-              </div>
-            : dias===0
-              ? <div style={{
-                  marginTop:14,
-                  display:"inline-flex",
-                  alignItems:"center",
-                  gap:8,
-                  background:"rgba(201,169,110,.12)",
-                  borderRadius:100,
-                  padding:"7px 16px"
-                }}>
-                  <span>🎉</span>
-                  <span style={{
-                    fontFamily:"'Lora',serif",
-                    fontSize:".88rem",
-                    color:"#C9A96E",
-                    fontWeight:600
-                  }}>
-                    ¡Hoy es el gran día!
-                  </span>
-                </div>
-              : null;
-        })()}
-      </div>
-
-      {/* Acceso al resultado musical */}
-      {hasResults&&link&&<div style={{
-        background:"rgba(74,94,58,.06)",
-        border:"0.5px solid rgba(74,94,58,.2)",
-        borderRadius:12,
-        padding:"12px 16px",
-        marginBottom:20,
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"space-between",
-        gap:10,
-        flexWrap:"wrap"
-      }}>
-        <div style={{
-          fontFamily:"'Lora',serif",
-          fontSize:".85rem",
-          color:"rgba(26,26,20,.55)"
-        }}>
-          🔗 Tu link privado del guion musical
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(260px,100%),1fr))",gap:12,marginBottom:18}}>
+          <div style={{background:"rgba(201,169,110,.1)",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:17,padding:"17px"}}><div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:7}}>Consejo de Ceci</div><div style={{fontFamily:"'Lora',serif",fontSize:".86rem",lineHeight:1.55,color:"rgba(26,26,20,.62)"}}>“{route.stage.tip}”</div></div>
+          {route.nextStage?<div style={{background:"#FBF7EF",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:17,padding:"17px"}}><div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.65)",marginBottom:7}}>Lo que viene después</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1rem",marginBottom:5}}>{route.nextStage.emoji} {route.nextStage.title}</div><div style={{fontFamily:"'Lora',serif",fontSize:".78rem",lineHeight:1.45,color:"rgba(26,26,20,.48)"}}>{route.nextStage.description}</div></div>:<div style={{background:"#FBF7EF",border:"0.5px solid rgba(74,94,58,.18)",borderRadius:17,padding:"17px"}}><div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.65)",marginBottom:7}}>Última etapa</div><div style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.5,color:"rgba(26,26,20,.55)"}}>La ruta ya está enfocada en coordinar y proteger todo lo que decidieron.</div></div>}
         </div>
+      </>}
 
-        <button
-          className="lbtn"
-          onClick={copyLink}
-          style={{flexShrink:0,fontSize:".8rem"}}
-        >
-          {copied ? "¡Copiado ✓" : "Copiar link"}
-        </button>
-      </div>}
+      {isDemo&&demoHasChanges&&<div style={{background:"rgba(201,169,110,.1)",border:"0.5px solid rgba(201,169,110,.36)",borderRadius:16,padding:"15px",marginBottom:18,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><div style={{fontFamily:"'Lora',serif",fontSize:".84rem",color:"rgba(26,26,20,.62)",lineHeight:1.45}}>Ya empezaste tu planificación. El acceso completo conserva y conecta estos avances.</div><button className="pbtn" onClick={onRequestPurchase} style={{padding:"11px 20px",minHeight:44}}>Conservar mi boda →</button></div>}
+      {!isDemo&&<GlobalProgress user={user} hasResults={hasResults}/>}
 
-      <GlobalProgress user={user} hasResults={hasResults}/>
-
-      {/* Módulos */}
-      <div style={{
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"space-between",
-        gap:12,
-        marginBottom:14
-      }}>
-        <div style={{
-          fontFamily:"'Cinzel',serif",
-          fontSize:THEME.text.label,
-          letterSpacing:".2em",
-          textTransform:"uppercase",
-          color:"#4A5E3A"
-        }}>
-          Herramientas para tu boda
-        </div>
-
-        <div style={{
-          fontFamily:"'Lora',serif",
-          fontSize:".78rem",
-          color:"rgba(26,26,20,.35)",
-          flexShrink:0
-        }}>
-          {modules.filter(m=>m.done).length}/{modules.length}
-        </div>
-      </div>
-
-      <div style={{
-        display:"grid",
-        gridTemplateColumns:"repeat(auto-fill,minmax(min(165px,45vw),1fr))",
-        gap:12,
-        marginBottom:24
-      }}>
-        {modules.map(({emoji,label,desc,action,status,done,primary,locked})=>
-          <button
-            key={label}
-            type="button"
-            onClick={action}
-            style={{
-              background:done
-                ? "rgba(74,94,58,.08)"
-                : primary
-                  ? "#4A5E3A"
-                  : locked
-                    ? "rgba(251,247,239,.72)"
-                    : "#FBF7EF",
-              border:"0.5px solid " + (
-                done
-                  ? "rgba(74,94,58,.28)"
-                  : primary
-                    ? "#4A5E3A"
-                    : locked
-                      ? "rgba(26,26,20,.12)"
-                      : "rgba(201,169,110,.25)"
-              ),
-              borderRadius:16,
-              padding:primary ? "20px 18px" : "16px 14px",
-              textAlign:"left",
-              cursor:"pointer",
-              transition:"all .2s",
-              outline:"none",
-              opacity:locked ? .78 : 1,
-              gridColumn:primary ? "1 / -1" : "auto",
-              boxShadow:primary
-                ? "0 12px 28px rgba(74,94,58,.17)"
-                : "none"
-            }}
-          >
-            <div style={{
-              display:"flex",
-              alignItems:"flex-start",
-              justifyContent:"space-between",
-              gap:8
-            }}>
-              <div>
-                <div style={{
-                  fontSize:primary ? "1.8rem" : "1.3rem",
-                  marginBottom:primary ? 8 : 5
-                }}>
-                  {emoji}
-                </div>
-
-                <div style={{
-                  fontFamily:"'Playfair Display',serif",
-                  fontWeight:600,
-                  fontSize:primary ? "1.2rem" : ".92rem",
-                  color:primary ? "#F5EFE0" : "#1A1A14",
-                  lineHeight:1.2,
-                  marginBottom:5
-                }}>
-                  {label}
-                </div>
-
-                <div style={{
-                  fontFamily:"'Lora',serif",
-                  fontSize:primary ? ".86rem" : ".78rem",
-                  color:primary
-                    ? "rgba(245,239,224,.68)"
-                    : "rgba(26,26,20,.45)",
-                  lineHeight:1.4,
-                  marginBottom:12,
-                  maxWidth:primary ? 560 : "none"
-                }}>
-                  {desc}
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              display:"inline-block",
-              fontFamily:"'Lora',serif",
-              fontSize:primary ? ".9rem" : ".82rem",
-              fontWeight:700,
-              color:primary
-                ? "#D9B86F"
-                : done
-                  ? "#4A5E3A"
-                  : "rgba(74,94,58,.75)"
-            }}>
-              {status}
-            </div>
-          </button>
-        )}
-      </div>
-
-      {/* Pie */}
-      <div style={{
-        display:"flex",
-        gap:10,
-        justifyContent:"center",
-        alignItems:"center",
-        flexWrap:"wrap",
-        paddingTop:16,
-        borderTop:"0.5px solid rgba(201,169,110,.15)"
-      }}>
-        {hasResults&&
-          <button
-            className="gbtn"
-            onClick={onStartNew}
-            style={{fontSize:".85rem",padding:"9px 18px"}}
-          >
-            Hacer el test de nuevo
-          </button>
-        }
-
-        <button
-          className="gbtn"
-          onClick={onLogout}
-          style={{fontSize:".85rem",padding:"9px 18px"}}
-        >
-          {isDemo ? "Salir de la prueba" : "Cerrar sesión"}
-        </button>
-      </div>
+      <button type="button" onClick={()=>onGoModule("tools")} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:17,padding:"17px 18px",cursor:"pointer",textAlign:"left"}}><span><strong style={{display:"block",fontFamily:"'Playfair Display',serif",fontSize:"1.05rem",marginBottom:4}}>Explorar todas las herramientas</strong><span style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.48)"}}>Presupuesto, invitados, salón, proveedores, cronograma, música y guías.</span></span><span style={{fontSize:"1.2rem",color:"#4A5E3A"}}>→</span></button>
     </div>
   </div>;
+}
+
+function ToolsScreen({hasResults,onGoModule,onViewResults,onStartNew,onBack,isDemo=false,onRequestPurchase}){
+  const groups = [
+    {title:"Organizar y controlar",items:[
+      {id:"checklist-boda",emoji:"📋",label:"Plan y checklist",desc:"Tareas por etapa, orden y pendientes."},
+      {id:"budget",emoji:"💰",label:"Presupuesto",desc:"Categorías, pagos y control del total."},
+      {id:"guests",emoji:"👥",label:"Invitados",desc:"Lista, etiquetas, necesidades y grupos."},
+      {id:"vendors",emoji:"🏢",label:"Proveedores",desc:"Propuestas, contactos, decisiones y saldos."},
+      {id:"timeline",emoji:"⏰",label:"Cronograma",desc:"Secuencia y responsables del gran día."}
+    ]},
+    {title:"Diseñar la experiencia",items:[
+      {id:"salon-design",emoji:"🏛️",label:"Diseño del salón",desc:"Medidas, mesas, muebles y circulación."},
+      {id:"guia",emoji:"🎵",label:"Música con Ceci",desc:hasResults?"Tu guion musical personalizado.":"Test, criterios y planificación musical."},
+      {id:"guia-novios",emoji:"📖",label:"Guía para novios",desc:"Protocolo, ceremonia y consejos prácticos."}
+    ]}
+  ];
+  const open=(item)=>{
+    trackProductEvent("tool_opened",{module:item.id,is_demo:isDemo});
+    if(item.id==="guia") return hasResults?onViewResults():onStartNew();
+    onGoModule(item.id);
+  };
+  return <div style={{minHeight:"100svh",padding:"clamp(18px,4vw,48px)",paddingBottom:110}}><div className="fu home-content-card" style={{width:"100%",maxWidth:900,margin:"0 auto"}}>
+    <button onClick={onBack} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(74,94,58,.7)",cursor:"pointer",padding:"4px 0",marginBottom:16}}>← Volver a mi ruta</button>
+    <div className="brand-logo" style={{marginBottom:8}}>Herramientas</div><h1 className="brand-title" style={{fontSize:"clamp(2rem,5vw,3rem)",margin:"0 0 9px"}}>Todo lo que necesitás, cuando tu ruta lo pida</h1><p className="brand-copy" style={{fontSize:".98rem",margin:"0 0 24px",maxWidth:650}}>Podés entrar directamente a cualquier módulo. La ruta sigue siendo tu guía para saber cuál conviene priorizar.</p>
+    {groups.map(group=><section key={group.title} style={{marginBottom:24}}><div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:10}}>{group.title}</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(210px,100%),1fr))",gap:11}}>{group.items.map(item=><button key={item.id} onClick={()=>open(item)} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.28)",borderRadius:17,padding:"17px 15px",textAlign:"left",cursor:"pointer",minHeight:150}}><div style={{fontSize:"1.45rem",marginBottom:9}}>{item.emoji}</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.02rem",marginBottom:6}}>{item.label}</div><div style={{fontFamily:"'Lora',serif",fontSize:".78rem",lineHeight:1.46,color:"rgba(26,26,20,.48)"}}>{item.desc}</div></button>)}</div></section>)}
+    {isDemo&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:"rgba(74,94,58,.07)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:15,padding:"14px"}}><div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.58)"}}>En la prueba podés explorar. El acceso completo conserva la información y conecta los módulos.</div><button className="lbtn" onClick={onRequestPurchase}>Ver acceso completo</button></div>}
+  </div></div>;
+}
+
+function AccountScreen({user,isDemo,onLogout,onOpenStart,onRequestPurchase,onBack}){
+  const profile=readStartProfile();
+  const route=getRoutePlan(profile||{});
+  return <div style={{minHeight:"100svh",padding:"clamp(18px,4vw,48px)",paddingBottom:110}}><div className="fu home-content-card" style={{width:"100%",maxWidth:680,margin:"0 auto"}}>
+    <button onClick={onBack} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(74,94,58,.7)",cursor:"pointer",padding:"4px 0",marginBottom:16}}>← Volver a mi ruta</button>
+    <div className="brand-logo" style={{marginBottom:8}}>Cuenta</div><h1 className="brand-title" style={{fontSize:"clamp(2rem,5vw,2.8rem)",margin:"0 0 20px"}}>Tu espacio de planificación</h1>
+    <div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"18px",marginBottom:13}}><div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:7}}>Acceso</div><div style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.65)"}}>{isDemo?"Modo prueba":user?.email||"Cuenta activa"}</div></div>
+    {profile&&<div style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:18,padding:"18px",marginBottom:13}}><div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:7}}>Ruta actual</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.05rem",marginBottom:5}}>{route.stage.emoji} {route.stage.title}</div><button className="lbtn" onClick={onOpenStart} style={{marginTop:10}}>Actualizar mi ruta</button></div>}
+    {isDemo&&<button className="pbtn" onClick={onRequestPurchase} style={{width:"100%",marginBottom:10}}>Conservar mi planificación →</button>}
+    <button className="gbtn" onClick={onLogout} style={{width:"100%"}}>{isDemo?"Salir de la prueba":"Cerrar sesión"}</button>
+  </div></div>;
 }
 
 const EMPTY_FORM={
@@ -13607,50 +13186,20 @@ function BackToHome({onBack, style={}}){
 // ─── GLOBAL NAV BAR ───────────────────────────────────────────────────────────
 function GlobalNav({view, setView, hasResults, isDemo=false}){
   const items = [
-    {id:"home",          icon:"🏠", label:"Inicio"},
-    {id:"results",       icon:"🎵", label:"Música",       disabled:!hasResults},
-    {id:"budget",        icon:"💰", label:"Presupuesto"},
-    {id:"vendors",       icon:"🏢", label:"Proveedores"},
-    {id:"checklist-boda",icon:"📋", label:"Checklist"},
-    {id:"guests",        icon:"👥", label:"Invitados"},
-    {id:"salon-design",  icon:"🏛️", label:"Salón"},
-    {id:"timeline",      icon:"⏰", label:"Cronograma"},
-    {id:"guia-novios",   icon:"📖", label:"Guía"},
+    {id:"home",icon:"🧭",label:"Mi ruta"},
+    {id:"tools",icon:"🧰",label:"Herramientas"},
+    {id:"checklist-boda",icon:"📋",label:"Mi boda"},
+    {id:"ceci",icon:"🎵",label:"Ceci"},
+    {id:"account",icon:"👤",label:"Cuenta"}
   ];
-  return <nav style={{
-    position:"fixed",bottom:isDemo?"clamp(76px,12vw,98px)":0,left:0,right:0,zIndex:100,
-    background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",
-    borderTop:"0.5px solid rgba(201,169,110,.25)",
-    boxShadow:"0 -4px 24px rgba(26,20,14,.06)",
-    overflowX:"auto",overflowY:"visible",
-    scrollbarWidth:"none",WebkitOverflowScrolling:"touch",
-  }} className="no-print">
-    <div style={{
-      display:"inline-flex",alignItems:"stretch",
-      minWidth:"100%",
-      paddingBottom:"max(4px,env(safe-area-inset-bottom))",
-    }}>
-      {items.map(item=>{
-        const active = view===item.id;
-        return <button key={item.id} onClick={()=>!item.disabled&&setView(item.id)} disabled={item.disabled} style={{
-          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          gap:2,background:"transparent",border:"none",
-          cursor:item.disabled?"default":"pointer",
-          padding:"10px 12px 8px",
-          minHeight:THEME.tap.comfortable,
-          flexShrink:0,flexGrow:1,
-          opacity:item.disabled?.35:1,
-          borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent",
-          minWidth:64,
-        }}>
-          <span style={{fontSize:"1.2rem",lineHeight:1}}>{item.icon}</span>
-          <span style={{
-            fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".06em",
-            textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",
-            fontWeight:active?700:400,whiteSpace:"nowrap",marginTop:3,lineHeight:1
-          }}>{item.label}</span>
-        </button>;
-      })}
+  const isActive=(id)=>id==="ceci"?["guia","results"].includes(view):view===id;
+  const go=(id)=>id==="ceci"?setView(hasResults?"results":"guia"):setView(id);
+  return <nav style={{position:"fixed",bottom:isDemo?"clamp(70px,11vw,92px)":0,left:0,right:0,zIndex:100,background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderTop:"0.5px solid rgba(201,169,110,.25)",boxShadow:"0 -4px 24px rgba(26,20,14,.06)"}} className="no-print">
+    <div style={{display:"flex",alignItems:"stretch",maxWidth:720,margin:"0 auto",paddingBottom:"max(4px,env(safe-area-inset-bottom))"}}>
+      {items.map(item=>{const active=isActive(item.id);return <button key={item.id} onClick={()=>go(item.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,background:"transparent",border:"none",cursor:"pointer",padding:"9px 3px 7px",minHeight:THEME.tap.comfortable,flex:1,borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent"}}>
+        <span style={{fontSize:"1.15rem",lineHeight:1}}>{item.icon}</span>
+        <span style={{fontFamily:"'Cinzel',serif",fontSize:"clamp(.49rem,1.8vw,.61rem)",letterSpacing:".02em",textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",fontWeight:active?700:400,whiteSpace:"nowrap",marginTop:3,lineHeight:1}}>{item.label}</span>
+      </button>;})}
     </div>
   </nav>;
 }
@@ -14211,7 +13760,8 @@ export default function App(){
     setChecked({});
     setArquetipo(null);
     setResultToken(null);
-    setView("home");
+    trackProductEvent("demo_started", {source:"landing"});
+    setView("start");
   };
 
   const openAuth=(mode="login")=>{
@@ -14221,7 +13771,7 @@ export default function App(){
 
   const initialPurchaseEmail=(()=>{ try{return localStorage.getItem("ceci_purchase_email")||user?.email||"";}catch(e){return user?.email||"";} })();
   const demo=isDemoUser(user);
-  const showNav = !!user && !['auth','entry','landing','form','generating','locked'].includes(view);
+  const showNav = !!user && !['auth','entry','landing','start','form','generating','locked'].includes(view);
   const decorate=(content)=><>{content}{demo&&<DemoBanner onBuy={()=>setPurchaseOpen(true)} onExit={logout} changed={demoChanged}/>}<PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/></>;
 
   if(authLoading || (!!user&&!demo&&accessStatus==="checking")) return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
@@ -14249,6 +13799,13 @@ export default function App(){
 
   if(!demo && accessStatus==="denied") return decorate(<LockedAccessScreen email={user.email||"tu email"} onBuy={()=>setPurchaseOpen(true)} onLogout={logout} onCreateAccess={async()=>{await logout();openAuth("login");}}/>);
 
+  if(view==="start") return decorate(<WeddingStartPlanner
+    isDemo={demo}
+    onBack={()=>demo?logout():setView("home")}
+    onSeeAll={()=>setView("home")}
+    onOpenModule={(module)=>setView(module)}
+  />);
+
   // El resultado musical y la generación con IA siguen reservados para compradores.
   // Los módulos de planificación sí pueden probarse con datos temporales.
   if(demo && DEMO_BLOCKED_VIEWS.has(view)){
@@ -14263,6 +13820,7 @@ export default function App(){
       onViewResults={()=>setPurchaseOpen(true)}
       onStartNew={()=>setView("form")}
       onLogout={logout}
+      onOpenStart={()=>setView("start")}
     />);
   }
 
@@ -14287,8 +13845,11 @@ export default function App(){
       setView(demo?"form":"guia");
     }}
     onLogout={logout}
+    onOpenStart={()=>setView("start")}
   />{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
-  if(view==="landing") return decorate(<Landing onTry={()=>setView("guia")} onLogin={()=>openAuth("login")} onBuy={()=>setPurchaseOpen(true)}/>);
+  if(view==="tools") return decorate(<><ToolsScreen hasResults={!!results} isDemo={demo} onBack={()=>setView("home")} onGoModule={(m)=>setView(m)} onViewResults={()=>demo?setPurchaseOpen(true):setView("results")} onStartNew={()=>setView("guia")} onRequestPurchase={()=>setPurchaseOpen(true)}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
+  if(view==="account") return decorate(<><AccountScreen user={user} isDemo={demo} onBack={()=>setView("home")} onLogout={logout} onOpenStart={()=>setView("start")} onRequestPurchase={()=>setPurchaseOpen(true)}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
+  if(view==="landing") return decorate(<Landing onTry={()=>setView("start")} onLogin={()=>openAuth("login")} onBuy={()=>setPurchaseOpen(true)}/>);
   if(view==="guia") return demo
     ? decorate(<Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")} isDemo={true}/>)
     : decorate(<GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>);
@@ -14307,7 +13868,7 @@ export default function App(){
     setView("guia");setStep(1);setResults(null);setChecked({});setForm({...EMPTY_FORM,email:demo?"":(user.email||"")});setArquetipo(null);setResultToken(null);
   }}/><GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/><InstallPrompt/></>);
 
-  return decorate(<><HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} isDemo={demo} onRequestPurchase={()=>setPurchaseOpen(true)} onGoModule={(m)=>setView(m)} onViewResults={()=>demo?setPurchaseOpen(true):setView("results")} onStartNew={()=>setView("guia")} onLogout={logout}/><GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/><InstallPrompt/></>);
+  return decorate(<><HomeScreen user={user} hasResults={!!results} form={form} resultToken={resultToken} isDemo={demo} onRequestPurchase={()=>setPurchaseOpen(true)} onGoModule={(m)=>setView(m)} onViewResults={()=>demo?setPurchaseOpen(true):setView("results")} onStartNew={()=>setView("guia")} onLogout={logout} onOpenStart={()=>setView("start")}/><GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/><InstallPrompt/></>);
 
 }
 
