@@ -22,6 +22,49 @@ const supabase = SB_URL && SB_KEY
 
 
 const HOTMART_CHECKOUT_URL = "https://pay.hotmart.com/W106077396L?checkoutMode=10&bid=1783991520846";
+const MARKETING_PARAMS_KEY = "ceci_marketing_params_v1";
+const MARKETING_PARAM_NAMES = ["utm_source","utm_medium","utm_campaign","utm_content","utm_term","sck","src"];
+
+const captureMarketingParams = () => {
+  if(typeof window === "undefined") return {};
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(MARKETING_PARAMS_KEY) || "{}"); } catch(e) {}
+
+  const current = new URLSearchParams(window.location.search || "");
+  const merged = {...saved};
+  let changed = false;
+
+  MARKETING_PARAM_NAMES.forEach((name) => {
+    const value = current.get(name);
+    if(value){
+      merged[name] = String(value).trim().slice(0, 200);
+      changed = true;
+    }
+  });
+
+  if(changed){
+    try { localStorage.setItem(MARKETING_PARAMS_KEY, JSON.stringify(merged)); } catch(e) {}
+  }
+  return merged;
+};
+
+const buildHotmartCheckoutUrl = (checkoutUrl = HOTMART_CHECKOUT_URL) => {
+  if(typeof window === "undefined") return checkoutUrl;
+  try {
+    const marketingParams = captureMarketingParams();
+    const url = new URL(checkoutUrl);
+    MARKETING_PARAM_NAMES.forEach((name) => {
+      const value = marketingParams[name];
+      if(value && !url.searchParams.has(name)) url.searchParams.set(name, value);
+    });
+    return url.toString();
+  } catch(e) {
+    return checkoutUrl;
+  }
+};
+
+// Guarda las UTMs apenas se abre la app, antes de que otros flujos limpien la URL.
+captureMarketingParams();
 const DEMO_WEDDING_KEY = "ceci_demo_wedding_data_v1";
 const DEMO_USER_KEY = "ceci_demo_user_id_v1";
 const DEMO_TEST_FORM_KEY = "ceci_demo_test_form_v1";
@@ -2144,7 +2187,7 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
       if(!response.ok) throw new Error(data?.error||"No pudimos continuar al pago.");
       try{ localStorage.setItem("ceci_purchase_email",cleanEmail); }catch(e){}
       trackProductEvent("checkout_started", {email_domain:(cleanEmail.split("@")[1]||"")});
-      window.location.href=data.checkout_url||HOTMART_CHECKOUT_URL;
+      window.location.href=buildHotmartCheckoutUrl(data.checkout_url||HOTMART_CHECKOUT_URL);
     }catch(e){ setError(e.message||"No pudimos continuar al pago."); setLoading(false); }
   };
 
