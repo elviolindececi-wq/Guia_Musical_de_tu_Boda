@@ -24,6 +24,69 @@ const supabase = SB_URL && SB_KEY
 const HOTMART_CHECKOUT_URL = "https://pay.hotmart.com/W106077396L?checkoutMode=10&bid=1783991520846";
 const FREE_GUIDE_URL = "/guias/nos-comprometimos-guia-gratuita.pdf";
 const FULL_GUIDE_ENDPOINT = "/api/full-guide";
+const EXCEL_DOWNLOAD_ENDPOINT = "/api/excel-download";
+
+const EXCEL_TEMPLATES = Object.freeze({
+  master: {
+    title: "Planificador maestro",
+    shortTitle: "Planificador maestro",
+    description: "Presupuesto, invitados, proveedores, pagos, tareas, música, mesas y día de la boda en un solo archivo."
+  },
+  budget: {
+    title: "Presupuesto de la boda",
+    shortTitle: "Presupuesto",
+    description: "Controlá estimados, contratados, pagos, saldos y desvíos."
+  },
+  guests: {
+    title: "Lista de invitados",
+    shortTitle: "Invitados",
+    description: "Gestioná confirmaciones, grupos, restricciones y asignación de mesas."
+  },
+  vendors: {
+    title: "Gestión de proveedores",
+    shortTitle: "Proveedores",
+    description: "Compará propuestas, contactos, contratos, pagos y pendientes."
+  },
+  checklist: {
+    title: "Cronograma y checklist",
+    shortTitle: "Checklist",
+    description: "Ordená tareas, responsables, vencimientos y etapas de la boda."
+  },
+  payments: {
+    title: "Pagos y contratos",
+    shortTitle: "Pagos y contratos",
+    description: "Registrá cuotas, vencimientos, comprobantes y contratos."
+  },
+  music: {
+    title: "Música de la boda",
+    shortTitle: "Música",
+    description: "Definí canciones, momentos, versiones, responsables y alternativas."
+  },
+  tables: {
+    title: "Distribución de mesas",
+    shortTitle: "Mesas",
+    description: "Controlá capacidad, asignaciones y necesidades de cada mesa."
+  },
+  weddingDay: {
+    title: "Cronograma del día de la boda",
+    shortTitle: "Día de la boda",
+    description: "Coordiná horarios, responsables, proveedores y planes alternativos."
+  }
+});
+
+const EXCEL_TEMPLATES_BY_VIEW = Object.freeze({
+  home: ["master"],
+  tools: ["master"],
+  account: ["master"],
+  budget: ["budget", "payments"],
+  vendors: ["vendors", "payments"],
+  guests: ["guests", "tables"],
+  "salon-design": ["tables"],
+  timeline: ["weddingDay", "checklist"],
+  "checklist-boda": ["checklist", "weddingDay"],
+  "guia-novios": ["master"],
+  results: ["music"]
+});
 const FULL_GUIDE_WELCOME_KEY = "ceci_full_guide_welcome_seen_v1";
 const HOTMART_SEND_FORM_ID = "BEudGxe";
 const HOTMART_SEND_ACTION = "https://handler.send.hotmart.com/subscription/BEudGxe?hotfeature=53";
@@ -852,15 +915,24 @@ button.landing-v9-tool:active{
   text-transform:uppercase;
 }
 .demo-purchase-spacer{
-  height:68px;
+  /*
+    Solo reserva el espacio de la navegación inferior fija.
+    La barra de compra ya forma parte del flujo normal y no cubre contenido.
+  */
+  height:82px;
+}
+.demo-purchase-spacer.no-nav{
+  height:14px;
 }
 .demo-purchase-bar{
-  position:fixed;
-  left:50%;
-  bottom:76px;
-  z-index:96;
-  width:min(calc(100% - 20px),680px);
-  transform:translateX(-50%);
+  /*
+    La barra se muestra dentro del contenido, después del aviso de Excel.
+    Ya no es fija: por lo tanto nunca tapa el popup ni otros controles.
+  */
+  position:relative;
+  z-index:1;
+  width:min(calc(100% - 24px),680px);
+  margin:8px auto 10px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -868,13 +940,11 @@ button.landing-v9-tool:active{
   padding:9px 10px 9px 14px;
   border:1px solid rgba(201,169,110,.46);
   border-radius:17px;
-  background:rgba(255,253,248,.97);
-  box-shadow:0 13px 34px rgba(26,20,14,.18);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  background:#FFFDF8;
+  box-shadow:0 8px 22px rgba(26,20,14,.1);
 }
 .demo-purchase-bar.no-nav{
-  bottom:12px;
+  margin-bottom:12px;
 }
 .demo-purchase-copy{
   min-width:0;
@@ -1989,8 +2059,212 @@ function FullGuideLockedCard({onRequestPurchase}){
   </section>;
 }
 
+
+async function openExcelTemplateDownload(templateId, source="unknown"){
+  const template=EXCEL_TEMPLATES[templateId];
+  if(!template) throw new Error("La plantilla solicitada no existe.");
+
+  let newTab=null;
+  try{
+    if(typeof window!=="undefined"){
+      newTab=window.open("about:blank","_blank");
+      if(newTab) newTab.opener=null;
+    }
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session?.access_token) throw new Error("Tu sesión venció. Volvé a ingresar para descargar el Excel.");
+
+    const response=await fetch(`${EXCEL_DOWNLOAD_ENDPOINT}?file=${encodeURIComponent(templateId)}`,{
+      headers:{Authorization:`Bearer ${session.access_token}`}
+    });
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok || !payload?.url) throw new Error(payload?.error||"No pudimos preparar el archivo Excel.");
+
+    trackProductEvent("excel_template_downloaded",{source,template:templateId});
+    if(newTab) newTab.location.href=payload.url;
+    else window.location.href=payload.url;
+    return true;
+  }catch(e){
+    try{ if(newTab&&!newTab.closed) newTab.close(); }catch(_e){}
+    throw e;
+  }
+}
+
+function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source="unknown",withNav=true}){
+  const [activeDownload,setActiveDownload]=useState("");
+  const [error,setError]=useState("");
+  const teaserKey=`tbo_excel_teaser_closed:${source}`;
+  const paidTeaserKey=`tbo_excel_paid_teaser_closed:${source}`;
+  const [demoTeaserOpen,setDemoTeaserOpen]=useState(()=>{
+    if(!isDemo || typeof window==="undefined") return true;
+    try{return sessionStorage.getItem(teaserKey)!=="1";}catch(e){return true;}
+  });
+  const [paidTeaserOpen,setPaidTeaserOpen]=useState(()=>{
+    if(isDemo || typeof window==="undefined") return true;
+    try{return sessionStorage.getItem(paidTeaserKey)!=="1";}catch(e){return true;}
+  });
+  const [paidExpanded,setPaidExpanded]=useState(false);
+  const templates=templateIds.map(id=>({id,...EXCEL_TEMPLATES[id]})).filter(item=>item.title);
+
+  if(!templates.length) return null;
+
+  const download=async(id)=>{
+    setError("");
+    setActiveDownload(id);
+    try{ await openExcelTemplateDownload(id,source); }
+    catch(e){ setError(e.message||"No pudimos preparar el archivo Excel."); }
+    finally{ setActiveDownload(""); }
+  };
+
+  const closeDemoTeaser=()=>{
+    try{sessionStorage.setItem(teaserKey,"1");}catch(e){}
+    setDemoTeaserOpen(false);
+    trackProductEvent("excel_demo_teaser_closed",{source});
+  };
+
+  const reopenDemoTeaser=()=>{
+    try{sessionStorage.removeItem(teaserKey);}catch(e){}
+    setDemoTeaserOpen(true);
+    trackProductEvent("excel_demo_teaser_reopened",{source});
+  };
+
+  const openExcelPurchase=()=>{
+    trackProductEvent("excel_demo_purchase_opened",{source,templates:templates.map(item=>item.id).join(",")});
+    onRequestPurchase?.();
+  };
+
+  const closePaidTeaser=()=>{
+    try{sessionStorage.setItem(paidTeaserKey,"1");}catch(e){}
+    setPaidTeaserOpen(false);
+    setPaidExpanded(false);
+    trackProductEvent("excel_paid_teaser_closed",{source});
+  };
+
+  const reopenPaidTeaser=()=>{
+    try{sessionStorage.removeItem(paidTeaserKey);}catch(e){}
+    setPaidTeaserOpen(true);
+    setPaidExpanded(false);
+    trackProductEvent("excel_paid_teaser_reopened",{source});
+  };
+
+  if(isDemo){
+    const singular=templates.length===1;
+
+    if(!demoTeaserOpen){
+      return <div className="no-print" style={{width:"min(calc(100% - 24px),960px)",margin:"8px auto 14px",textAlign:"center"}}>
+        <button
+          type="button"
+          onClick={reopenDemoTeaser}
+          style={{border:0,background:"transparent",padding:"5px 8px",fontFamily:"'Lora',serif",fontSize:".72rem",lineHeight:1.35,color:"rgba(74,94,58,.78)",textDecoration:"underline",textUnderlineOffset:3,cursor:"pointer"}}
+        >
+          ¿Preferís organizarte en Excel?
+        </button>
+      </div>;
+    }
+
+    return <aside className="no-print" aria-label="Plantillas Excel incluidas con la compra" style={{position:"relative",width:"min(calc(100% - 24px),420px)",margin:"10px auto 14px",padding:"13px 42px 12px 14px",background:"rgba(255,253,248,.97)",border:"1px solid rgba(201,169,110,.42)",borderRadius:16,boxShadow:"0 10px 28px rgba(63,50,31,.11)"}}>
+      <button
+        type="button"
+        aria-label="Cerrar aviso sobre plantillas Excel"
+        onClick={closeDemoTeaser}
+        style={{position:"absolute",right:8,top:8,width:28,height:28,display:"grid",placeItems:"center",border:"1px solid rgba(74,94,58,.16)",borderRadius:999,background:"rgba(255,253,248,.92)",color:"rgba(26,26,20,.58)",fontSize:"1rem",lineHeight:1,cursor:"pointer"}}
+      >
+        ×
+      </button>
+
+      <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+        <div aria-hidden="true" style={{width:34,height:34,flex:"0 0 auto",display:"grid",placeItems:"center",borderRadius:11,background:"rgba(74,94,58,.09)",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".78rem",fontWeight:850}}>XLS</div>
+        <div style={{minWidth:0}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:".98rem",lineHeight:1.2,fontWeight:700,color:"#1A1A14",marginBottom:4}}>¿Preferís trabajar en Excel?</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.48,color:"rgba(26,26,20,.58)"}}>
+            Con la compra recibís {singular?"esta plantilla":"las plantillas de este módulo"} y el planificador completo para usar sin conexión.
+          </div>
+          <button
+            type="button"
+            onClick={openExcelPurchase}
+            style={{border:0,background:"transparent",padding:"7px 0 0",fontFamily:"'Lora',serif",fontSize:".72rem",fontWeight:750,color:"#4A5E3A",textDecoration:"underline",textUnderlineOffset:3,cursor:"pointer"}}
+          >
+            Ver app + plantillas incluidas →
+          </button>
+        </div>
+      </div>
+    </aside>;
+  }
+
+  const paidBottom=withNav?78:12;
+
+  if(!paidTeaserOpen){
+    return <>
+      <div aria-hidden="true" style={{height:52}}/>
+      <button
+        type="button"
+        className="no-print"
+        onClick={reopenPaidTeaser}
+        aria-label="Abrir plantillas Excel"
+        style={{position:"fixed",left:"50%",bottom:paidBottom,zIndex:96,transform:"translateX(-50%)",border:"1px solid rgba(74,94,58,.24)",borderRadius:999,background:"rgba(255,253,248,.97)",boxShadow:"0 7px 20px rgba(26,20,14,.13)",padding:"8px 13px",fontFamily:"'Lora',serif",fontSize:".72rem",fontWeight:750,color:"#4A5E3A",cursor:"pointer",whiteSpace:"nowrap"}}
+      >
+        XLS · Ver plantillas
+      </button>
+    </>;
+  }
+
+  return <>
+    <div aria-hidden="true" style={{height:paidExpanded?292:154}}/>
+    <aside
+      className="no-print"
+      aria-label="Plantillas Excel disponibles"
+      style={{position:"fixed",left:"50%",bottom:paidBottom,zIndex:96,transform:"translateX(-50%)",width:"min(calc(100% - 20px),440px)",maxHeight:"min(54dvh,430px)",overflowY:"auto",padding:"14px 42px 13px 14px",background:"rgba(255,253,248,.98)",border:"1px solid rgba(201,169,110,.48)",borderRadius:17,boxShadow:"0 15px 42px rgba(26,20,14,.2)",backdropFilter:"blur(13px)",WebkitBackdropFilter:"blur(13px)"}}
+    >
+      <button
+        type="button"
+        aria-label="Cerrar opciones de Excel"
+        onClick={closePaidTeaser}
+        style={{position:"absolute",right:8,top:8,width:29,height:29,display:"grid",placeItems:"center",border:"1px solid rgba(74,94,58,.16)",borderRadius:999,background:"#FFFDF8",color:"rgba(26,26,20,.58)",fontSize:"1rem",lineHeight:1,cursor:"pointer"}}
+      >
+        ×
+      </button>
+
+      <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+        <div aria-hidden="true" style={{width:36,height:36,flex:"0 0 auto",display:"grid",placeItems:"center",borderRadius:11,background:"rgba(74,94,58,.1)",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:850}}>XLS</div>
+        <div style={{minWidth:0,flex:1}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",lineHeight:1.18,fontWeight:700,color:"#1A1A14",marginBottom:4}}>¿Preferís trabajar en Excel?</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.58)"}}>
+            Tu compra incluye {templates.length===1?"la plantilla de este módulo":`${templates.length} plantillas para este módulo`} para usar sin conexión o compartir.
+          </div>
+
+          <button
+            type="button"
+            onClick={()=>{setPaidExpanded(value=>!value);trackProductEvent("excel_paid_teaser_toggled",{source,expanded:!paidExpanded});}}
+            style={{border:0,background:"transparent",padding:"7px 0 0",fontFamily:"'Lora',serif",fontSize:".72rem",fontWeight:800,color:"#4A5E3A",textDecoration:"underline",textUnderlineOffset:3,cursor:"pointer"}}
+          >
+            {paidExpanded?"Ocultar plantillas ↑":`Ver ${templates.length===1?"plantilla":"plantillas"} disponibles →`}
+          </button>
+        </div>
+      </div>
+
+      {paidExpanded&&<div style={{display:"grid",gap:8,marginTop:11,paddingTop:10,borderTop:"1px solid rgba(74,94,58,.12)"}}>
+        {templates.map(item=><div key={item.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,alignItems:"center",padding:"9px 9px 9px 11px",background:"rgba(221,229,214,.38)",border:"1px solid rgba(74,94,58,.12)",borderRadius:12}}>
+          <div style={{minWidth:0}}>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:800,color:"#4A5E3A",lineHeight:1.25}}>{item.title}</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".66rem",color:"rgba(26,26,20,.5)",lineHeight:1.3,marginTop:2}}>{item.description}</div>
+          </div>
+          <button
+            type="button"
+            onClick={()=>download(item.id)}
+            disabled={!!activeDownload}
+            style={{minHeight:38,border:0,borderRadius:999,padding:"8px 11px",background:"#4A5E3A",color:"#FFF8E8",fontFamily:"'Lora',serif",fontSize:".68rem",fontWeight:850,cursor:activeDownload?"wait":"pointer",whiteSpace:"nowrap",opacity:activeDownload&&activeDownload!==item.id?0.72:1}}
+          >
+            {activeDownload===item.id?"Preparando...":"Descargar"}
+          </button>
+        </div>)}
+        {error&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"#B5443A",lineHeight:1.4,margin:"2px 0 0"}}>{error}</p>}
+      </div>}
+    </aside>
+  </>;
+}
+
 function FullGuideWelcomeModal({open,onClose,onGoGuide}){
   const [loading,setLoading]=useState(false);
+  const [excelLoading,setExcelLoading]=useState(false);
   const [error,setError]=useState("");
 
   useEffect(()=>{
@@ -2011,9 +2285,17 @@ function FullGuideWelcomeModal({open,onClose,onGoGuide}){
     finally{ setLoading(false); }
   };
 
-  return <div onMouseDown={e=>{if(e.target===e.currentTarget&&!loading)onClose("backdrop");}} style={{position:"fixed",inset:0,zIndex:10070,background:"rgba(18,18,14,.72)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+  const downloadExcel=async()=>{
+    setError("");
+    setExcelLoading(true);
+    try{ await openExcelTemplateDownload("master","purchase_welcome"); }
+    catch(e){ setError(e.message||"No pudimos preparar el planificador en Excel."); }
+    finally{ setExcelLoading(false); }
+  };
+
+  return <div onMouseDown={e=>{if(e.target===e.currentTarget&&!loading&&!excelLoading)onClose("backdrop");}} style={{position:"fixed",inset:0,zIndex:10070,background:"rgba(18,18,14,.72)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
     <div role="dialog" aria-modal="true" aria-labelledby="full-guide-welcome-title" className="fu" style={{width:"100%",maxWidth:820,maxHeight:"calc(100dvh - 32px)",overflowY:"auto",background:"#FBF7EF",borderRadius:26,boxShadow:"0 34px 100px rgba(0,0,0,.42)",position:"relative",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(280px,100%),1fr))"}}>
-      <button type="button" aria-label="Cerrar bienvenida" disabled={loading} onClick={()=>onClose("close")} style={{position:"absolute",right:14,top:12,zIndex:3,width:40,height:40,borderRadius:999,border:"1px solid rgba(26,26,20,.13)",background:"rgba(251,247,239,.96)",cursor:"pointer",fontSize:"1.25rem"}}>×</button>
+      <button type="button" aria-label="Cerrar bienvenida" disabled={loading||excelLoading} onClick={()=>onClose("close")} style={{position:"absolute",right:14,top:12,zIndex:3,width:40,height:40,borderRadius:999,border:"1px solid rgba(26,26,20,.13)",background:"rgba(251,247,239,.96)",cursor:"pointer",fontSize:"1.25rem"}}>×</button>
 
       <div style={{background:"#173F49",padding:"clamp(24px,5vw,42px)",display:"flex",alignItems:"center",justifyContent:"center",minHeight:390}}>
         <img src="/guias/portada-guia-completa.png" alt="Portada de la guía completa Nos comprometimos, ¿y ahora qué?" style={{width:"100%",maxWidth:275,height:"auto",borderRadius:5,boxShadow:"0 20px 52px rgba(0,0,0,.32)"}}/>
@@ -2022,16 +2304,17 @@ function FullGuideWelcomeModal({open,onClose,onGoGuide}){
       <div style={{padding:"clamp(30px,5vw,48px)",alignSelf:"center"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.22)",borderRadius:999,padding:"7px 12px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:14}}>Tu compra fue validada ✓</div>
         <h2 id="full-guide-welcome-title" className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,2.6rem)",lineHeight:1.08,margin:"0 0 12px"}}>Tu acceso completo ya está listo</h2>
-        <p className="brand-copy" style={{fontSize:"1rem",lineHeight:1.65,margin:"0 0 15px"}}>Además de todas las herramientas para organizar tu boda, tu compra incluye la guía completa <strong>“Nos comprometimos, ¿y ahora qué?”</strong>.</p>
+        <p className="brand-copy" style={{fontSize:"1rem",lineHeight:1.65,margin:"0 0 15px"}}>Además de todas las herramientas para organizar tu boda, tu compra incluye el <strong>planificador maestro en Excel</strong>, plantillas específicas por módulo y la guía completa <strong>“Nos comprometimos, ¿y ahora qué?”</strong>.</p>
         <div style={{display:"grid",gap:8,marginBottom:20,fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.68)"}}>
-          <span>✓ 55 páginas de orientación práctica</span>
-          <span>✓ Presupuesto, invitados, salón, ceremonia y música</span>
-          <span>✓ Disponible siempre en “Guía para novios”</span>
+          <span>✓ Planificador maestro en Excel para usar offline</span>
+          <span>✓ Plantillas específicas dentro de cada módulo</span>
+          <span>✓ Guía completa de 55 páginas</span>
         </div>
         {error&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"#B5443A",lineHeight:1.45,margin:"0 0 12px"}}>{error}</p>}
-        <button type="button" className="pbtn" onClick={download} disabled={loading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{loading?"Preparando tu guía...":"Descargar guía completa →"}</button>
-        <button type="button" className="gbtn" onClick={()=>onClose("enter_app")} disabled={loading} style={{width:"100%",marginBottom:9}}>Entrar a Organizá tu Boda</button>
-        <button type="button" onClick={onGoGuide} disabled={loading} style={{width:"100%",border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,cursor:"pointer",padding:"8px"}}>Verla en Guía para novios</button>
+        <button type="button" className="pbtn" onClick={downloadExcel} disabled={loading||excelLoading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{excelLoading?"Preparando tu Excel...":"Descargar planificador maestro en Excel →"}</button>
+        <button type="button" className="gbtn" onClick={download} disabled={loading||excelLoading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{loading?"Preparando tu guía...":"Descargar guía completa →"}</button>
+        <button type="button" className="gbtn" onClick={()=>onClose("enter_app")} disabled={loading||excelLoading} style={{width:"100%",marginBottom:9}}>Entrar a Tu Boda Organizada</button>
+        <button type="button" onClick={onGoGuide} disabled={loading||excelLoading} style={{width:"100%",border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,cursor:"pointer",padding:"8px"}}>Ver la guía dentro de la app</button>
       </div>
     </div>
   </div>;
@@ -2087,6 +2370,7 @@ function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
               <div className="landing-v9-proof">
                 <span>✓ Pago único</span>
                 <span>✓ Acceso inmediato</span>
+                <span>✓ Planificador Excel incluido</span>
                 <span>✓ Guía completa de regalo</span>
               </div>
             </div>
@@ -3216,10 +3500,30 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
       <div className="brand-logo" style={{marginBottom:12}}>El Violín de Ceci</div>
       <h2 className="brand-title" style={{fontSize:"clamp(1.65rem,5vw,2.15rem)",margin:"0 0 10px"}}>Convertí este avance en tu boda organizada</h2>
       <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 12px"}}>Ya comprobaste cómo se siente tener decisiones, invitados, presupuesto y proveedores en un solo recorrido. En la prueba los cambios son temporales.</p>
-      <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px",fontWeight:700,color:"#4A5E3A"}}>Con el acceso completo conservás tu planificación, conectás los módulos y seguís desde cualquier dispositivo.</p>
+      <div style={{display:"grid",gap:8,margin:"0 0 20px",padding:"13px 14px",background:"rgba(74,94,58,.07)",border:"1px solid rgba(74,94,58,.15)",borderRadius:14,fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.45,color:"rgba(26,26,20,.68)"}}>
+        <span>✓ Guardás tu planificación y continuás desde cualquier dispositivo.</span>
+        <span>✓ Descargás el planificador maestro y plantillas por módulo en Excel.</span>
+        <span>✓ Accedés a la guía completa de 55 páginas.</span>
+      </div>
       <input name="app-field-3007" value={name} onChange={e=>setName(e.target.value)} placeholder="Tu nombre" style={{marginBottom:12}}/>
       <input name="app-field-3008" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@email.com" style={{marginBottom:12}}/>
-      <PhoneInput international countryCallingCodeEditable={false} defaultCountry="PY" value={phone} onChange={setPhone} onCountryChange={c=>c&&setCountry(c)} placeholder="Celular"/>
+      <PhoneInput
+        id="purchase-phone"
+        name="purchase_phone"
+        international
+        countryCallingCodeEditable={false}
+        defaultCountry="PY"
+        value={phone}
+        onChange={setPhone}
+        onCountryChange={c=>c&&setCountry(c)}
+        countrySelectProps={{
+          id:"purchase-phone-country",
+          name:"purchase_phone_country",
+          "aria-label":"País del número de celular"
+        }}
+        placeholder="Celular"
+        autoComplete="tel"
+      />
       {error&&<p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:"#b64343",lineHeight:1.45,margin:"8px 0 12px"}}>{error}</p>}
       <button className="pbtn" disabled={loading} onClick={submit} style={{width:"100%",marginTop:8}}>{loading?"Preparando pago...":"Ir al pago seguro →"}</button>
       <p style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:DIMSOFT,lineHeight:1.45,textAlign:"center",margin:"14px 0 0"}}>El pago se procesa en Hotmart. Usá el mismo email para comprar y para crear tu acceso.</p>
@@ -5120,7 +5424,7 @@ const getGuestSoftStatusStyle = (id) => {
 };
 const LADOS = ["Novio","Novia","Ambos"];
 
-function GuestsModule({user, onBack, onGoDesigner}){
+function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   const [guests, setGuests]     = useState(null);
   const [tableSize, setTableSize] = useState(10);
   const [viewMode, setViewMode] = useState("lista");
@@ -5661,8 +5965,8 @@ function GuestsModule({user, onBack, onGoDesigner}){
       </div>
     </div>
     {guests&&guests.length>0&&guests.some(g=>!g.mesa||g.mesa==="")&&<button onClick={()=>{asignarMesasAuto();setShowGuestMenu(false);}} style={menuItemStyle}>🪑 Asignar mesas automáticamente</button>}
-    <button onClick={()=>{exportToExcel();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Exportar a Excel</button>
-    <button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Descargar plantilla</button>
+    {!isDemo&&<button onClick={()=>{exportToExcel();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Exportar a Excel</button>}
+    {!isDemo&&<button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Descargar plantilla</button>}
     <label style={menuItemStyle}>
       ↑ Importar lista
       <input name="app-field-5455" type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
@@ -5834,7 +6138,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
           <p style={{fontFamily:THEME.font.body,fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button onClick={()=>setAddMode(true)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:100,padding:"11px 22px",fontFamily:THEME.font.body,fontWeight:700,cursor:"pointer"}}>+ Agregar invitado</button>
-            <button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer"}}>↓ Descargar plantilla Excel</button>
+            {!isDemo&&<button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer"}}>↓ Descargar plantilla Excel</button>}
             <label style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer",display:"inline-flex",alignItems:"center"}}>
               ↑ Importar lista
               <input name="app-field-5627" type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
@@ -14266,14 +14570,14 @@ function ModuleContextBar({title,onBack,onHome}){
 
 function DemoPurchaseBar({onBuy,withNav=true}){
   return <>
-    <div className="demo-purchase-spacer" aria-hidden="true"/>
     <aside className={`demo-purchase-bar no-print ${withNav?"":"no-nav"}`} aria-label="Opciones de compra de la demo">
       <div className="demo-purchase-copy">
         <strong>Estás probando gratis</strong>
-        <span>Comprá para guardar y continuar después.</span>
+        <span>Comprá para guardar y descargar las plantillas en Excel.</span>
       </div>
-      <button type="button" onClick={onBuy}>Comprar y guardar</button>
+      <button type="button" onClick={onBuy}>Comprar acceso</button>
     </aside>
+    <div className={`demo-purchase-spacer ${withNav?"":"no-nav"}`} aria-hidden="true"/>
   </>;
 }
 
@@ -14953,9 +15257,17 @@ export default function App(){
   };
   const showModuleContext = !!user && !!moduleContextTitles[view];
   const showDemoPurchase = demo && !["free-choice","start","auth","landing","account","locked","generating","results"].includes(view);
+  const excelTemplateIds = EXCEL_TEMPLATES_BY_VIEW[view] || [];
+  const showExcelAccess = !!user && excelTemplateIds.length>0 && (demo || accessStatus==="granted");
+  const excelPanel = showExcelAccess
+    ? <ExcelAccessPanel key={`excel-${view}-${demo?"demo":"paid"}`} templateIds={excelTemplateIds} isDemo={demo} withNav={showNav} onRequestPurchase={()=>setPurchaseOpen(true)} source={`view_${view}`}/>
+    : null;
+  const excelBeforeContent = false;
   const decorate=(content)=><>
     {showModuleContext&&<ModuleContextBar title={moduleContextTitles[view]} onBack={()=>setView("tools")} onHome={()=>setView("home")}/>}
+    {excelBeforeContent&&excelPanel}
     {content}
+    {!excelBeforeContent&&excelPanel}
     {showDemoPurchase&&<DemoPurchaseBar withNav={showNav} onBuy={()=>setPurchaseOpen(true)}/>}
     <PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/>
     <GuideLeadModal open={guideOpen} onClose={()=>setGuideOpen(false)}/>
@@ -15075,7 +15387,7 @@ export default function App(){
   if(view==="guia-novios") return decorate(<><GuiaModule onBack={()=>setView("home")} isDemo={demo} onRequestPurchase={()=>setPurchaseOpen(true)}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="budget") return decorate(<><BudgetModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="vendors") return decorate(<><VendorsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
-  if(view==="guests") return decorate(<><GuestsModule user={user} onBack={()=>setView("home")} onGoDesigner={()=>setView("salon-design")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
+  if(view==="guests") return decorate(<><GuestsModule user={user} isDemo={demo} onBack={()=>setView("home")} onGoDesigner={()=>setView("salon-design")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="salon-design") return decorate(<><SalonDesignerModule user={user} onBack={()=>setView("home")} onGoGuests={()=>setView("guests")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="timeline") return decorate(<><TimelineModule user={user} form={form} results={results} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="checklist-boda") return decorate(<><ChecklistModule user={user} form={form} results={results} onGoMusic={()=>setView(results?"results":"guia")} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
