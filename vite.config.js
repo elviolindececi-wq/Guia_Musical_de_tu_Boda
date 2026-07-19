@@ -1,35 +1,43 @@
-import { defineConfig } from "vite";
+﻿import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+
+const normalizePath = (id = "") => id.replace(/\\/g, "/");
 
 export default defineConfig({
   plugins: [react()],
 
-  server: {
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:3001",
-        changeOrigin: true
-      }
-    }
-  },
-
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 700,
 
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            if (id.includes("react") || id.includes("react-dom")) {
-              return "react-vendor";
-            }
+          const path = normalizePath(id);
 
-            if (id.includes("@supabase")) {
-              return "supabase-vendor";
-            }
-
-            return "vendor";
+          if (!path.includes("/node_modules/")) {
+            return undefined;
           }
+
+          if (
+            path.includes("/node_modules/react/") ||
+            path.includes("/node_modules/react-dom/") ||
+            path.includes("/node_modules/scheduler/")
+          ) {
+            return "react-vendor";
+          }
+
+          if (path.includes("/node_modules/@supabase/")) {
+            return "supabase-vendor";
+          }
+
+          if (
+            path.includes("/node_modules/react-phone-number-input/") ||
+            path.includes("/node_modules/libphonenumber-js/")
+          ) {
+            return "phone-input-vendor";
+          }
+
+          return undefined;
         }
       }
     }

@@ -97,19 +97,52 @@ const readStartProfile = () => {
 const getWeddingRecommendation = (profile={}) => {
   const stage = profile?.stage || "starting";
   const concern = profile?.concern || "overwhelm";
-  const direct = {
-    budget:{module:"budget",emoji:"💰",title:"Ordenar el presupuesto",why:"Definí cuánto pueden invertir antes de sumar decisiones y proveedores.",cta:"Armar mi presupuesto"},
-    guests:{module:"guests",emoji:"👥",title:"Aterrizar la lista de invitados",why:"La cantidad de personas condiciona salón, presupuesto, mesas y logística.",cta:"Organizar invitados"},
-    salon:{module:"salon-design",emoji:"🏛️",title:"Visualizar el salón",why:"Probá distribuciones antes de comprometer espacios, mesas y circulación.",cta:"Diseñar mi salón"},
-    vendors:{module:"vendors",emoji:"🏢",title:"Comparar proveedores",why:"Centralizá propuestas y decisiones para no perder información entre chats.",cta:"Ordenar proveedores"},
-    timeline:{module:"timeline",emoji:"⏰",title:"Construir el cronograma",why:"Convertí todo lo contratado en una secuencia clara para el gran día.",cta:"Crear cronograma"},
-    music:{module:"guia",emoji:"🎵",title:"Diseñar la banda sonora",why:"Traducí el estilo de la pareja en canciones y momentos con intención.",cta:"Empezar el test musical"}
+
+  // La recomendación combina la etapa real de la boda con el dolor principal.
+  // No alcanza con enviar siempre al mismo módulo: también cambian el mensaje,
+  // la primera acción y el plan concreto de tres pasos.
+  const recommendations = {
+    starting:{
+      overwhelm:{module:"checklist-boda",emoji:"📋",title:"Definir un comienzo posible",why:"Cuando recién empiezan, la prioridad no es completar todo: es acordar qué decisiones importan ahora y cuáles pueden esperar.",cta:"Crear mi plan inicial",steps:["Conversen sobre las tres cosas que más quieren cuidar en la boda.","Definan una primera decisión concreta para esta semana.","Dejen por escrito qué temas pueden esperar sin culpa."]},
+      budget:{module:"budget",emoji:"💰",title:"Acordar un límite inicial",why:"Antes de pedir muchos presupuestos, conviene definir un rango realista y las prioridades que no quieren negociar.",cta:"Definir presupuesto inicial",steps:["Anoten cuánto pueden invertir sin comprometer otras prioridades.","Elijan tres categorías importantes para ustedes.","Reservá un pequeño margen para cambios e imprevistos."]},
+      guests:{module:"guests",emoji:"👥",title:"Crear una primera lista",why:"No necesita ser definitiva. Una primera estimación ayuda a conversar sobre presupuesto, salón y tipo de celebración.",cta:"Empezar la lista",steps:["Creen una lista amplia sin discutir todavía cada nombre.","Sepárenla en imprescindibles, deseados y por revisar.","Usen el total estimado para orientar las siguientes decisiones."]},
+      salon:{module:"salon-design",emoji:"🏛️",title:"Definir qué espacio necesitan",why:"Antes de enamorarse de un salón, conviene saber cuántas personas esperan y cómo quieren que se sienta la celebración.",cta:"Pensar el espacio",steps:["Definan una cantidad estimada de invitados.","Anoten tres necesidades del lugar que no quieren negociar.","Usen el diseñador para probar una primera distribución."]},
+      vendors:{module:"vendors",emoji:"🏢",title:"Preparar la búsqueda de proveedores",why:"Ordenar criterios antes de pedir presupuestos evita comparar propuestas que no responden a la misma necesidad.",cta:"Organizar proveedores",steps:["Elegí qué proveedor necesitan consultar primero.","Anotá qué debe incluir cada propuesta para poder compararla.","Cargá los contactos y presupuestos en un solo lugar."]},
+      timeline:{module:"checklist-boda",emoji:"⏰",title:"Ordenar qué viene primero",why:"En esta etapa todavía no necesitás un cronograma del día: necesitás un orden simple para las próximas decisiones.",cta:"Ver mi plan",steps:["Identificá las decisiones que condicionan a las demás.","Elegí una tarea pequeña para completar esta semana.","Revisá el plan nuevamente después de cada decisión importante."]},
+      music:{module:"guia",emoji:"🎵",title:"Descubrir el estilo musical de la boda",why:"La música puede empezar como una conversación sobre emociones y momentos, sin elegir todavía todas las canciones.",cta:"Empezar el recorrido musical",steps:["Conversen sobre cómo quieren que se sienta la ceremonia.","Anoten artistas o canciones que representan a la pareja.","Usen el test para crear una primera dirección musical."]}
+    },
+    foundations:{
+      overwhelm:{module:"checklist-boda",emoji:"📋",title:"Ordenar las decisiones que faltan",why:"Con fecha o salón definidos, conviene convertir todo lo pendiente en un orden claro y posible.",cta:"Ordenar mi plan",steps:["Marcá qué decisiones ya están cerradas.","Elegí las tres que condicionan al resto.","Trabajá esta semana en una sola de ellas."]},
+      budget:{module:"budget",emoji:"💰",title:"Distribuir el presupuesto",why:"Ahora que existen algunas bases, el presupuesto debe mostrar cuánto destinar a cada categoría y qué margen queda disponible.",cta:"Distribuir presupuesto",steps:["Cargá el total disponible o estimado.","Asigná montos a las categorías principales.","Compará lo cotizado con lo que todavía queda disponible."]},
+      guests:{module:"guests",emoji:"👥",title:"Convertir la lista en una decisión",why:"La cantidad de invitados afecta directamente presupuesto, mesas, catering y capacidad del salón.",cta:"Ordenar invitados",steps:["Unificá las listas de la pareja y las familias.","Marcá prioridades y nombres por confirmar.","Usá el total para validar salón y presupuesto."]},
+      salon:{module:"salon-design",emoji:"🏛️",title:"Probar la distribución del salón",why:"Con el lugar definido, conviene verificar mesas, circulación y zonas importantes antes de cerrar decisiones de ambientación.",cta:"Diseñar el salón",steps:["Cargá las medidas principales del espacio.","Ubicá mesas y sectores imprescindibles.","Revisá circulación, visibilidad y comodidad de los invitados."]},
+      vendors:{module:"vendors",emoji:"🏢",title:"Comparar propuestas con claridad",why:"Centralizar lo que incluye cada proveedor ayuda a decidir sin depender de chats, capturas o memoria.",cta:"Comparar proveedores",steps:["Cargá las opciones que ya consultaste.","Marcá qué incluye y qué no incluye cada propuesta.","Definí el próximo contacto o decisión pendiente."]},
+      timeline:{module:"checklist-boda",emoji:"⏰",title:"Crear un orden de contratación",why:"En esta etapa el tiempo se organiza mejor con prioridades y fechas de decisión, no con el minuto a minuto del evento.",cta:"Ordenar pendientes",steps:["Listá los servicios que todavía faltan contratar.","Asigná una fecha límite realista a cada decisión.","Empezá por lo que tiene menos disponibilidad."]},
+      music:{module:"guia",emoji:"🎵",title:"Definir la identidad musical",why:"Con el estilo de la boda más claro, ya pueden elegir la emoción y el tono de cada momento importante.",cta:"Crear mi propuesta musical",steps:["Definan el clima emocional de la ceremonia.","Elijan los momentos que necesitan música.","Completen el test para recibir una primera propuesta."]}
+    },
+    execution:{
+      overwhelm:{module:"vendors",emoji:"🏢",title:"Centralizar lo contratado",why:"Cuando ya hay varios proveedores, ordenar contactos, acuerdos y pendientes reduce la sensación de tener todo repartido.",cta:"Ordenar proveedores",steps:["Cargá primero los proveedores ya contratados.","Marcá qué pagaste y qué queda pendiente.","Agregá la próxima fecha o decisión de cada proveedor."]},
+      budget:{module:"budget",emoji:"💰",title:"Revisar contratado, pagado y pendiente",why:"El presupuesto debe mostrar la diferencia entre lo cotizado, lo comprometido y lo que todavía falta pagar.",cta:"Revisar presupuesto",steps:["Cargá los importes de los proveedores contratados.","Marcá señas y pagos realizados.","Identificá categorías que superan lo planificado."]},
+      guests:{module:"guests",emoji:"👥",title:"Preparar confirmaciones y mesas",why:"Con la organización en marcha, la lista debe empezar a convertirse en confirmaciones, grupos y necesidades concretas.",cta:"Gestionar invitados",steps:["Actualizá los datos de la lista principal.","Marcá confirmados, pendientes y bajas.","Agrupá personas que probablemente se sienten juntas."]},
+      salon:{module:"salon-design",emoji:"🏛️",title:"Convertir el salón en un plan real",why:"Ahora conviene trabajar con las medidas, muebles y necesidades concretas de los proveedores ya contratados.",cta:"Ajustar el diseño",steps:["Cargá la distribución real del lugar.","Sumá mesas, mobiliario y sectores contratados.","Validá circulación y espacios de trabajo de los proveedores."]},
+      vendors:{module:"vendors",emoji:"🏢",title:"Controlar acuerdos y próximos pasos",why:"La prioridad ya no es solamente comparar: es saber qué está contratado, qué falta confirmar y qué pago viene después.",cta:"Controlar proveedores",steps:["Actualizá el estado de cada proveedor.","Registrá pagos, contactos y acuerdos principales.","Definí un próximo pendiente para cada uno."]},
+      timeline:{module:"timeline",emoji:"⏰",title:"Construir una primera secuencia",why:"Con varios servicios contratados, ya podés empezar a ordenar horarios, responsables y dependencias del gran día.",cta:"Crear cronograma",steps:["Cargá los horarios ya confirmados.","Asigná responsables a los momentos importantes.","Detectá huecos, cruces o tiempos poco realistas."]},
+      music:{module:"guia",emoji:"🎵",title:"Cerrar los momentos musicales",why:"Con la ceremonia y la celebración más definidas, es momento de conectar canciones, versiones y responsables.",cta:"Completar mi guion musical",steps:["Confirmá qué momentos necesitan música.","Elegí canciones principales y alternativas.","Compartí el guion con músicos, DJ o responsables."]}
+    },
+    final:{
+      overwhelm:{module:"checklist-boda",emoji:"📋",title:"Ver solamente lo crítico",why:"Cerca de la boda, una lista extensa aumenta la ansiedad. Conviene separar lo urgente de lo que ya está resuelto.",cta:"Revisar pendientes finales",steps:["Marcá todo lo que ya está confirmado.","Filtrá los pendientes que deben resolverse esta semana.","Delegá al menos una tarea con una persona responsable."]},
+      budget:{module:"budget",emoji:"💰",title:"Cerrar pagos y margen final",why:"En las últimas semanas necesitás saber qué está pagado, qué vence y cuánto margen queda para imprevistos.",cta:"Revisar pagos finales",steps:["Marcá todos los pagos ya realizados.","Ordená los vencimientos por fecha.","Reservá un margen final para ajustes o emergencias."]},
+      guests:{module:"guests",emoji:"👥",title:"Cerrar confirmaciones y distribución",why:"La lista debe transformarse en una versión operativa para catering, mesas y responsables.",cta:"Cerrar invitados",steps:["Confirmá asistentes y bajas definitivas.","Registrá restricciones o necesidades especiales.","Validá la distribución final de mesas y grupos."]},
+      salon:{module:"salon-design",emoji:"🏛️",title:"Validar el salón definitivo",why:"La distribución final debe responder a invitados confirmados, circulación, proveedores y plan alternativo.",cta:"Revisar distribución final",steps:["Actualizá la cantidad definitiva de mesas y personas.","Confirmá zonas de ceremonia, música y proveedores.","Prepará una alternativa para clima o cambios de último momento."]},
+      vendors:{module:"vendors",emoji:"🏢",title:"Confirmar a cada proveedor",why:"La tranquilidad final viene de saber que todos tienen horarios, contactos, pagos y responsabilidades claras.",cta:"Confirmar proveedores",steps:["Revisá contratos, saldos y datos de contacto.","Confirmá horario, lugar y responsable con cada proveedor.","Registrá cualquier pendiente o cambio acordado."]},
+      timeline:{module:"timeline",emoji:"⏰",title:"Cerrar el cronograma del día",why:"La prioridad es que cada persona sepa qué sucede, cuándo sucede y quién es responsable.",cta:"Cerrar cronograma",steps:["Validá horarios con los proveedores principales.","Asigná responsables y contactos de respaldo.","Compartí una versión simple con quienes deben ejecutarla."]},
+      music:{module:"guia",emoji:"🎵",title:"Confirmar el guion musical",why:"Ya no hace falta seguir explorando: conviene cerrar canciones, versiones, entradas y señales con quienes las ejecutarán.",cta:"Revisar guion musical",steps:["Confirmá la canción y versión de cada momento.","Definí quién dará cada señal musical.","Compartí el orden final con músicos, DJ y coordinación."]}
+    }
   };
-  if(direct[concern]) return direct[concern];
-  if(stage === "starting") return {module:"checklist-boda",emoji:"📋",title:"Definir un plan de inicio",why:"No necesitás resolver todo hoy: primero ordená las decisiones que destraban las demás.",cta:"Ver mi checklist"};
-  if(stage === "foundations") return {module:"budget",emoji:"💰",title:"Conectar presupuesto y prioridades",why:"Con fecha o salón definidos, el siguiente paso es decidir dónde poner el dinero y dónde no.",cta:"Ordenar presupuesto"};
-  if(stage === "execution") return {module:"vendors",emoji:"🏢",title:"Centralizar lo contratado",why:"Cuando ya hay proveedores, necesitás control, comparaciones y pendientes en un solo lugar.",cta:"Ordenar proveedores"};
-  return {module:"timeline",emoji:"⏰",title:"Cerrar pendientes y tiempos",why:"Cerca de la boda, la prioridad es coordinar responsables, horarios y detalles críticos.",cta:"Crear cronograma"};
+
+  return recommendations[stage]?.[concern]
+    || recommendations[stage]?.overwhelm
+    || recommendations.starting.overwhelm;
 };
 let demoWeddingMemory = {};
 
@@ -284,13 +317,13 @@ const actualizarChecked = async ({ user_id, email, checked }) => {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Great+Vibes&display=swap');
 *,*::before,*::after{box-sizing:border-box}
-html{font-size:clamp(17px,1.15vw,20px);scroll-behavior:smooth;-webkit-text-size-adjust:100%;background:#F5EFE0;background-image:url('/bg-mobile.jpg');background-size:cover;background-position:center;background-attachment:fixed}
-body{margin:0;background:transparent;color:#1A1A14;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden;font-size:18px;font-weight:500}
+html{font-size:clamp(17px,1.15vw,20px);scroll-behavior:smooth;-webkit-text-size-adjust:100%;background:#F5EFE0}
+body{margin:0;background:#F5EFE0;color:#1A1A14;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden;font-size:18px;font-weight:500}
 button,input,textarea{font:inherit}
 button{-webkit-tap-highlight-color:transparent}
 #root{min-height:100vh;background:transparent}
 @media(max-width:480px){html{font-size:17px}}
-@media(min-width:601px){html{background-image:url('/bg-desktop.jpg') !important}}
+@media(min-width:601px){html{background:#F5EFE0!important}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
@@ -401,6 +434,10 @@ html,body{overscroll-behavior-y:none}
   }
 }
 .mobile-buy-bar{display:none}
+.global-nav{background:#FBF7EF!important}
+@supports selector(body:has(*)){
+  body:has([data-focus-form="true"]) .global-nav{display:none!important}
+}
 .guide-consent-row{display:flex;align-items:flex-start;gap:10px;text-align:left;margin:12px 0 16px}
 .guide-consent-row input[type="checkbox"]{width:19px!important;height:19px!important;min-height:19px!important;margin:3px 0 0!important;padding:0!important;flex:0 0 19px;-webkit-appearance:auto;appearance:auto;accent-color:#4A5E3A}
 @media(max-width:640px){
@@ -487,6 +524,702 @@ div[style*="grab"]:active{cursor:grabbing}
 
 @media(min-width:640px){.tag-desktop{display:inline-block!important}}
 .accordion-open{border-color:rgba(74,94,58,.35)!important}
+
+/* ══ ITERACIÓN 9 — REDISEÑO VISUAL VISIBLE ══ */
+.landing-v9{
+  min-height:100dvh;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(217,184,111,.16), transparent 28rem),
+    linear-gradient(180deg,#F8F3E9 0%,#F3EBDD 100%);
+  color:#1A1A14;
+  padding-bottom:90px;
+}
+.landing-v9-header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(248,243,233,.94);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(74,94,58,.12);
+}
+.landing-v9-hero{
+  position:relative;
+  overflow:hidden;
+  border-radius:30px;
+  min-height:560px;
+  background:
+    linear-gradient(90deg,rgba(248,243,233,.98) 0%,rgba(248,243,233,.93) 48%,rgba(248,243,233,.25) 100%),
+    url('/bg-desktop.jpg') center / cover no-repeat;
+  border:1px solid rgba(201,169,110,.32);
+  box-shadow:0 28px 80px rgba(63,50,31,.14);
+}
+.landing-v9-hero-inner{
+  min-height:560px;
+  display:grid;
+  grid-template-columns:minmax(0,1.04fr) minmax(300px,.76fr);
+  align-items:center;
+  gap:34px;
+  padding:clamp(34px,6vw,72px);
+}
+.landing-v9-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 13px;
+  border-radius:100px;
+  background:#F7F1E5;
+  border:1px solid rgba(74,94,58,.18);
+  color:#4A5E3A;
+  font-family:'Cinzel',serif;
+  font-size:max(11px,.68rem);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-weight:600;
+}
+.landing-v9-title{
+  max-width:700px;
+  margin:18px 0 16px;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2.8rem,6.2vw,5.7rem);
+  line-height:.98;
+  letter-spacing:-.038em;
+  text-wrap:balance;
+}
+.landing-v9-title em{
+  color:#A57B32;
+  font-style:normal;
+}
+.landing-v9-copy{
+  max-width:625px;
+  margin:0 0 24px;
+  color:rgba(26,26,20,.7);
+  font-family:'Lora',serif;
+  font-size:clamp(1rem,1.8vw,1.17rem);
+  line-height:1.65;
+}
+.landing-v9-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.landing-v9-primary{
+  min-height:58px;
+  padding:15px 27px;
+  border:0;
+  border-radius:100px;
+  background:#4A5E3A;
+  color:#FFF9EC;
+  box-shadow:0 13px 30px rgba(74,94,58,.24);
+  font-family:'Lora',serif;
+  font-weight:800;
+  cursor:pointer;
+}
+.landing-v9-secondary{
+  min-height:54px;
+  padding:13px 22px;
+  border:1px solid rgba(74,94,58,.28);
+  border-radius:100px;
+  background:rgba(255,253,248,.72);
+  color:#4A5E3A;
+  font-family:'Lora',serif;
+  font-weight:750;
+  cursor:pointer;
+}
+.landing-v9-proof{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 15px;
+  margin-top:16px;
+  color:rgba(26,26,20,.58);
+  font-family:'Lora',serif;
+  font-size:.78rem;
+}
+.landing-v9-preview{
+  align-self:stretch;
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-end;
+}
+.landing-v9-preview-card{
+  width:min(100%,360px);
+  margin-left:auto;
+  padding:22px;
+  border-radius:24px;
+  background:rgba(74,94,58,.92);
+  border:1px solid rgba(255,249,236,.24);
+  box-shadow:0 20px 50px rgba(32,42,25,.25);
+  color:#F8F1E4;
+}
+.landing-v9-preview-card h2{
+  margin:8px 0 8px;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.55rem,3.7vw,2.25rem);
+  line-height:1.08;
+}
+.landing-v9-preview-card p{
+  margin:0 0 18px;
+  color:rgba(248,241,228,.74);
+  font-family:'Lora',serif;
+  font-size:.87rem;
+  line-height:1.55;
+}
+.landing-v9-progress{
+  display:grid;
+  gap:9px;
+}
+.landing-v9-progress-row{
+  display:grid;
+  grid-template-columns:22px 1fr;
+  gap:10px;
+  align-items:start;
+  color:rgba(248,241,228,.86);
+  font-family:'Lora',serif;
+  font-size:.79rem;
+  line-height:1.4;
+}
+.landing-v9-section{
+  padding-top:clamp(42px,7vw,76px);
+  padding-bottom:clamp(42px,7vw,76px);
+}
+.landing-v9-guide{
+  display:grid;
+  grid-template-columns:minmax(180px,.55fr) minmax(0,1.25fr);
+  gap:clamp(22px,5vw,54px);
+  align-items:center;
+  padding:clamp(24px,5vw,48px);
+  background:#FFFDF8;
+  border:1px solid rgba(201,169,110,.3);
+  border-radius:28px;
+  box-shadow:0 18px 60px rgba(63,50,31,.1);
+}
+.landing-v9-guide-cover{
+  width:min(100%,220px);
+  justify-self:center;
+  border-radius:5px;
+  box-shadow:0 18px 42px rgba(26,20,14,.2);
+}
+.landing-v9-guide-tag{
+  display:inline-block;
+  padding:7px 11px;
+  border-radius:100px;
+  background:#E95A4E;
+  color:white;
+  font-family:'Cinzel',serif;
+  font-size:max(10px,.6rem);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:800;
+}
+.landing-v9-guide h2{
+  margin:13px 0 10px;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,4.8vw,3.3rem);
+  line-height:1.03;
+  text-wrap:balance;
+}
+.landing-v9-guide p{
+  margin:0 0 20px;
+  color:rgba(26,26,20,.62);
+  font-family:'Lora',serif;
+  line-height:1.65;
+}
+.landing-v9-guide-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin:0 0 22px;
+}
+.landing-v9-guide-list div{
+  padding:10px 12px;
+  border-radius:12px;
+  background:#F4EFE5;
+  color:rgba(26,26,20,.66);
+  font-family:'Lora',serif;
+  font-size:.79rem;
+}
+.landing-v9-tools{
+  background:#4A5E3A;
+  color:#F7F1E5;
+}
+.landing-v9-tools-header{
+  max-width:760px;
+  margin:0 auto 30px;
+  text-align:center;
+}
+.landing-v9-tools-header h2{
+  margin:9px 0 11px;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,5vw,3.5rem);
+  line-height:1.05;
+}
+.landing-v9-tools-header p{
+  margin:0;
+  color:rgba(247,241,229,.7);
+  font-family:'Lora',serif;
+  line-height:1.6;
+}
+.landing-v9-tools-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.landing-v9-tool{
+  min-height:150px;
+  padding:20px;
+  border-radius:20px;
+  background:rgba(255,253,248,.085);
+  border:1px solid rgba(255,249,236,.14);
+}
+
+button.landing-v9-tool{
+  width:100%;
+  color:inherit;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+button.landing-v9-tool:hover{
+  background:rgba(255,253,248,.13);
+  border-color:rgba(217,184,111,.52);
+  box-shadow:0 12px 26px rgba(20,31,15,.14);
+  transform:translateY(-2px);
+}
+button.landing-v9-tool:active{
+  transform:scale(.985);
+}
+.landing-v9-tool-arrow{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-top:12px;
+  color:#E7C878!important;
+  font-family:'Lora',serif;
+  font-size:.7rem!important;
+  font-weight:800;
+}
+.module-context-bar{
+  position:sticky;
+  top:0;
+  z-index:94;
+  background:rgba(255,253,248,.97);
+  border-bottom:1px solid rgba(74,94,58,.14);
+  box-shadow:0 6px 18px rgba(63,50,31,.06);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.module-context-inner{
+  width:100%;
+  max-width:980px;
+  min-height:54px;
+  margin:0 auto;
+  padding:7px 14px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+}
+.module-context-btn{
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:1px solid rgba(74,94,58,.2);
+  border-radius:999px;
+  padding:8px 12px;
+  background:#FFFDF8;
+  color:#4A5E3A;
+  font-family:'Lora',serif;
+  font-size:.76rem;
+  font-weight:750;
+  cursor:pointer;
+}
+.module-context-title{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:center;
+  color:rgba(26,26,20,.68);
+  font-family:'Cinzel',serif;
+  font-size:max(10px,.62rem);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.demo-purchase-spacer{
+  height:68px;
+}
+.demo-purchase-bar{
+  position:fixed;
+  left:50%;
+  bottom:76px;
+  z-index:96;
+  width:min(calc(100% - 20px),680px);
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 10px 9px 14px;
+  border:1px solid rgba(201,169,110,.46);
+  border-radius:17px;
+  background:rgba(255,253,248,.97);
+  box-shadow:0 13px 34px rgba(26,20,14,.18);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.demo-purchase-bar.no-nav{
+  bottom:12px;
+}
+.demo-purchase-copy{
+  min-width:0;
+  font-family:'Lora',serif;
+  color:rgba(26,26,20,.63);
+  font-size:.72rem;
+  line-height:1.3;
+}
+.demo-purchase-copy strong{
+  display:block;
+  color:#4A5E3A;
+  font-size:.77rem;
+}
+.demo-purchase-bar button{
+  flex:0 0 auto;
+  min-height:42px;
+  border:0;
+  border-radius:999px;
+  padding:9px 15px;
+  background:#4A5E3A;
+  color:#FFF8E8;
+  font-family:'Lora',serif;
+  font-size:.76rem;
+  font-weight:850;
+  cursor:pointer;
+}
+@media(max-width:480px){
+  .module-context-inner{
+    padding-left:10px;
+    padding-right:10px;
+    gap:7px;
+  }
+  .module-context-btn{
+    padding:8px 10px;
+    font-size:.7rem;
+  }
+  .module-context-title{
+    font-size:9px;
+  }
+  .demo-purchase-bar{
+    gap:8px;
+    padding-left:11px;
+  }
+  .demo-purchase-copy span{
+    display:none;
+  }
+  .demo-purchase-bar button{
+    padding-left:13px;
+    padding-right:13px;
+  }
+}
+.landing-v9-tool-icon{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  background:#D9B86F;
+  color:#1A1A14;
+  font-size:1.2rem;
+  margin-bottom:14px;
+}
+.landing-v9-tool strong{
+  display:block;
+  margin-bottom:5px;
+  font-family:'Playfair Display',serif;
+  font-size:1.05rem;
+}
+.landing-v9-tool span{
+  color:rgba(247,241,229,.64);
+  font-family:'Lora',serif;
+  font-size:.77rem;
+  line-height:1.45;
+}
+.landing-v9-final{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:24px;
+  align-items:center;
+  padding:clamp(26px,5vw,46px);
+  border:1px solid rgba(74,94,58,.18);
+  border-radius:26px;
+  background:#FFFDF8;
+}
+.landing-v9-final h2{
+  margin:0 0 7px;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.8rem,4vw,2.8rem);
+}
+.landing-v9-final p{
+  margin:0;
+  color:rgba(26,26,20,.6);
+  font-family:'Lora',serif;
+  line-height:1.55;
+}
+.global-nav{
+  border-top:1px solid rgba(74,94,58,.12)!important;
+  box-shadow:0 -8px 24px rgba(63,50,31,.06)!important;
+}
+.scard,.moment-card{
+  box-shadow:0 5px 18px rgba(63,50,31,.045);
+}
+@media(max-width:760px){
+  .landing-v9{
+    padding-bottom:80px;
+  }
+  .landing-v9-header .responsive-shell{
+    min-height:64px!important;
+  }
+  .landing-v9-hero{
+    min-height:auto;
+    border-radius:0;
+    margin-left:-18px;
+    margin-right:-18px;
+    border-left:0;
+    border-right:0;
+    background:
+      linear-gradient(180deg,rgba(248,243,233,.88) 0%,rgba(248,243,233,.96) 65%,#F8F3E9 100%),
+      url('/bg-mobile.jpg') center top / cover no-repeat;
+    box-shadow:none;
+  }
+  .landing-v9-hero-inner{
+    min-height:auto;
+    grid-template-columns:1fr;
+    gap:24px;
+    padding:42px 18px 32px;
+  }
+  .landing-v9-title{
+    font-size:clamp(2.65rem,13vw,4.05rem);
+    line-height:1.02;
+    margin-top:15px;
+  }
+  .landing-v9-copy{
+    font-size:.96rem;
+    line-height:1.58;
+  }
+  .landing-v9-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .landing-v9-primary,.landing-v9-secondary{
+    width:100%;
+  }
+  .landing-v9-preview{
+    display:block;
+  }
+  .landing-v9-preview-card{
+    width:100%;
+  }
+  .landing-v9-guide{
+    grid-template-columns:116px minmax(0,1fr);
+    gap:14px;
+    border-radius:22px;
+    padding:16px;
+    text-align:left;
+    align-items:start;
+  }
+  .landing-v9-guide-cover{
+    width:116px;
+    max-width:100%;
+    justify-self:start;
+    align-self:start;
+    grid-column:1;
+    grid-row:1 / span 4;
+    box-shadow:0 14px 30px rgba(26,20,14,.2);
+  }
+  .landing-v9-guide > div{
+    display:contents;
+  }
+  .landing-v9-guide-tag{
+    grid-column:2;
+    justify-self:start;
+    font-size:max(9px,.54rem);
+    padding:6px 9px;
+  }
+  .landing-v9-guide h2{
+    grid-column:2;
+    max-width:none;
+    font-size:clamp(1.28rem,6.3vw,1.58rem);
+    line-height:1.01;
+    margin:8px 0 7px;
+  }
+  .landing-v9-guide p{
+    grid-column:2;
+    max-width:none;
+    font-size:.76rem;
+    line-height:1.45;
+    margin:0;
+  }
+  .landing-v9-guide-list{
+    grid-column:1 / -1;
+    width:100%;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    margin:5px 0 8px;
+    text-align:left;
+  }
+  .landing-v9-guide-list div{
+    min-height:42px;
+    display:flex;
+    align-items:center;
+    padding:9px 10px;
+    font-size:.7rem;
+  }
+  .landing-v9-guide .landing-v9-guide-action{
+    grid-column:1 / -1;
+    width:100%;
+    max-width:none;
+  }
+  .landing-v9-guide > div > div:last-child{
+    grid-column:1 / -1;
+    width:100%;
+    text-align:center;
+  }
+  .landing-v9-tools-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .landing-v9-tool{
+    min-height:136px;
+    padding:16px;
+  }
+  .landing-v9-final{
+    grid-template-columns:1fr;
+  }
+  .mobile-buy-bar{
+    align-items:center;
+  }
+  .mobile-buy-bar button:first-child{
+    flex:1.5;
+  }
+  .mobile-buy-bar button:last-child{
+    flex:.8;
+    border:0!important;
+    background:transparent!important;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+}
+@media(max-width:350px){
+  .landing-v9-guide{
+    grid-template-columns:98px minmax(0,1fr);
+    gap:11px;
+    padding:14px;
+  }
+  .landing-v9-guide-cover{
+    width:98px;
+  }
+  .landing-v9-guide h2{
+    font-size:1.18rem;
+  }
+  .landing-v9-guide p{
+    font-size:.7rem;
+  }
+  .landing-v9-guide-list{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+
+/* ══ ITERACIÓN 10 · EXPERIENCIA PERSONALIZADA ══ */
+.home-v10-summary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.home-v10-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  padding:7px 12px;
+  border-radius:999px;
+  border:1px solid rgba(74,94,58,.18);
+  background:rgba(255,253,248,.76);
+  color:rgba(26,26,20,.66);
+  font-family:'Lora',serif;
+  font-size:.76rem;
+  font-weight:600;
+}
+.home-v10-focus{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(250px,.62fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+.home-v10-steps{
+  background:#FFFDF8;
+  border:1px solid rgba(201,169,110,.25);
+  border-radius:20px;
+  padding:20px;
+}
+.home-v10-step{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:10px;
+  align-items:flex-start;
+  padding:10px 0;
+  border-bottom:1px solid rgba(74,94,58,.09);
+}
+.home-v10-step:last-child{border-bottom:0;padding-bottom:0}
+.home-v10-step-num{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(74,94,58,.08);color:#4A5E3A;
+  font-family:'Playfair Display',serif;font-weight:700;font-size:.9rem;
+}
+.home-v10-final{
+  background:linear-gradient(145deg,#F0E3BF,#F8F1DE);
+  border:1px solid rgba(169,132,63,.28);
+  border-radius:20px;
+  padding:20px;
+}
+.home-v10-final-actions{display:grid;gap:8px;margin-top:16px}
+.home-v10-final-actions button{
+  width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid rgba(74,94,58,.18);background:rgba(255,253,248,.76);color:#1A1A14;
+  border-radius:14px;padding:12px 14px;font-family:'Lora',serif;font-weight:700;cursor:pointer;
+}
+.product-icon-wrap{
+  width:42px;height:42px;display:grid;place-items:center;border-radius:13px;
+  background:rgba(74,94,58,.08);color:#4A5E3A;flex:0 0 42px;
+}
+.product-icon-wrap.gold{background:#D9B86F;color:#1A1A14}
+.module-card-v10{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.module-card-v10:active{transform:scale(.98)}
+.tools-v10-section{
+  background:#FFFDF8;border:1px solid rgba(201,169,110,.22);border-radius:22px;
+  padding:18px;margin-bottom:16px;
+}
+.tools-v10-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tools-v10-card{
+  min-height:138px;padding:16px;border-radius:17px;background:#F8F3E9;
+  border:1px solid rgba(74,94,58,.12);text-align:left;cursor:pointer;
+}
+.tools-v10-card .product-icon-wrap{margin-bottom:12px}
+.nav-v10-icon{height:24px;display:grid;place-items:center}
+@media(min-width:760px){
+  .tools-v10-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:720px){
+  .home-v10-focus{grid-template-columns:1fr}
+}
+
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   html,body{background:#fff!important;color:#1a1a1a!important;font-size:13px!important}
@@ -1304,98 +2037,144 @@ function FullGuideWelcomeModal({open,onClose,onGoGuide}){
   </div>;
 }
 
-function Landing({onTry,onLogin,onBuy,onGuide}){
+function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
+  const [showMobileBar,setShowMobileBar] = useState(false);
   const tools = [
-    ["📋","Plan y checklist"],
-    ["💰","Presupuesto"],
-    ["👥","Invitados"],
-    ["🏛️","Salón y mesas"],
-    ["🏢","Proveedores"],
-    ["🎵","Música"]
+    {id:"checklist-boda",icon:"✓",title:"Plan y checklist",copy:"Qué hacer ahora, después y qué ya resolvieron."},
+    {id:"budget",icon:"$",title:"Presupuesto",copy:"Categorías, pagos y control de lo comprometido."},
+    {id:"guests",icon:"◎",title:"Invitados",copy:"Lista, confirmaciones, grupos y necesidades."},
+    {id:"salon-design",icon:"⌂",title:"Salón y mesas",copy:"Medidas, mobiliario, circulación y distribución."},
+    {id:"vendors",icon:"↔",title:"Proveedores",copy:"Propuestas, contactos, acuerdos y pendientes."},
+    {id:"guia",icon:"♫",title:"Música",copy:"Momentos, canciones y guion musical personalizado."}
   ];
 
   const tryDemo = () => { trackProductEvent("demo_cta_clicked", {source:"landing"}); onTry(); };
   const buy = () => { trackProductEvent("buy_cta_clicked", {source:"landing"}); onBuy(); };
   const guide = () => { trackProductEvent("free_guide_cta_clicked", {source:"landing"}); onGuide(); };
 
-  return <div className="home-floral-bg" style={{minHeight:"100dvh",backgroundColor:"#F5EFE0",color:"#1A1A14",paddingBottom:84}}>
-    <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(251,247,239,.92)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:"0.5px solid rgba(201,169,110,.25)"}}>
-      <div className="responsive-shell" style={{minHeight:72,display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
+  useEffect(()=>{
+    const update = () => setShowMobileBar(window.scrollY > Math.min(560, window.innerHeight * .72));
+    update();
+    window.addEventListener("scroll", update, {passive:true});
+    return()=>window.removeEventListener("scroll", update);
+  },[]);
+
+  return <div className="landing-v9">
+    <header className="landing-v9-header">
+      <div className="responsive-shell" style={{minHeight:70,display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
         <div>
           <div className="brand-logo">El Violín de Ceci</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",marginTop:3}}>Tu Boda Organizada</div>
         </div>
-        <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"10px 4px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.82rem,2vw,.98rem)",fontWeight:750,textDecoration:"underline",textUnderlineOffset:4}}>
-          ¿Ya compraste? Ingresá
+        <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"10px 2px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.78rem,2vw,.95rem)",fontWeight:750,textDecoration:"underline",textUnderlineOffset:4}}>
+          Ya compré: ingresar
         </button>
       </div>
     </header>
 
     <main>
-      <section className="responsive-shell" style={{paddingTop:"clamp(32px,6vw,72px)",paddingBottom:"clamp(38px,7vw,76px)"}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(370px,100%),1fr))",gap:"clamp(26px,5vw,58px)",alignItems:"center"}}>
-          <div className="fu">
-            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.22)",borderRadius:100,padding:"8px 14px",marginBottom:20,fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A"}}>✦ Toda tu boda, en un solo lugar</div>
-            <h1 className="brand-title" style={{fontSize:"clamp(2.5rem,7vw,5rem)",lineHeight:1.02,letterSpacing:"-.028em",margin:"0 0 20px",maxWidth:760}}>
-              Organizá tu boda sin depender de
-              <br/><span className="gold">planillas, chats y memoria.</span>
-            </h1>
-            <p className="brand-copy" style={{fontSize:"clamp(1.04rem,2.1vw,1.28rem)",lineHeight:1.68,margin:"0 0 25px",maxWidth:680,color:"rgba(26,26,20,.7)"}}>Presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados en una experiencia pensada para avanzar con claridad.</p>
-
-            <div style={{display:"grid",gap:10,maxWidth:470}}>
-              <button type="button" onClick={buy} style={{width:"100%",minHeight:62,border:"none",borderRadius:999,background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontSize:"1.08rem",fontWeight:850,cursor:"pointer",boxShadow:"0 13px 30px rgba(74,94,58,.28)"}}>Comprar acceso completo →</button>
-              <button type="button" onClick={tryDemo} style={{width:"100%",minHeight:56,border:"1.5px solid rgba(74,94,58,.42)",borderRadius:999,background:"rgba(251,247,239,.72)",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:750,cursor:"pointer"}}>Probar la demo gratis</button>
-            </div>
-            <div style={{display:"flex",gap:"9px 17px",flexWrap:"wrap",marginTop:14,fontFamily:"'Lora',serif",fontSize:".79rem",color:"rgba(26,26,20,.5)"}}><span>✓ Pago único</span><span>✓ Acceso inmediato</span><span>✓ Incluye la guía completa</span></div>
-            <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"18px 0 4px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.62)",textDecoration:"underline",textUnderlineOffset:4}}>Ya compré el producto: ingresar a mi cuenta</button>
-          </div>
-
-          <aside className="fu2" style={{background:"rgba(251,247,239,.97)",border:"1px solid rgba(201,169,110,.42)",borderRadius:26,padding:"clamp(18px,4vw,28px)",boxShadow:"0 24px 70px rgba(49,39,25,.16)"}}>
-            <div style={{display:"grid",gridTemplateColumns:"minmax(112px,155px) 1fr",gap:18,alignItems:"center"}}>
-              <img src="/guias/portada-guia-gratuita.png" alt="Guía gratuita Nos comprometimos, ¿y ahora qué?" style={{width:"100%",borderRadius:4,boxShadow:"0 14px 34px rgba(26,20,14,.22)"}}/>
-              <div>
-                <div style={{display:"inline-block",background:"#E95A4E",color:"white",borderRadius:999,padding:"6px 10px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",fontWeight:800,marginBottom:10}}>Descarga gratuita</div>
-                <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,1.8rem)",lineHeight:1.13,margin:"0 0 8px"}}>¿Se comprometieron y ahora no saben por dónde empezar?</h2>
-                <p style={{fontFamily:"'Lora',serif",fontSize:".86rem",lineHeight:1.55,color:"rgba(26,26,20,.58)",margin:0}}>Recibí una guía express para ordenar los primeros pasos sin abrumarte.</p>
+      <section className="responsive-shell" style={{paddingTop:"clamp(18px,4vw,44px)"}}>
+        <div className="landing-v9-hero fu">
+          <div className="landing-v9-hero-inner">
+            <div>
+              <div className="landing-v9-kicker">✦ Un sistema para toda la boda</div>
+              <h1 className="landing-v9-title">Ordená la boda.<br/><em>Disfrutá el proceso.</em></h1>
+              <p className="landing-v9-copy">Presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados en un solo lugar. Para saber qué hacer ahora sin depender de planillas, chats y memoria.</p>
+              <div className="landing-v9-actions">
+                <button type="button" className="landing-v9-primary" onClick={buy}>Comprar acceso completo →</button>
+                <button type="button" className="landing-v9-secondary" onClick={tryDemo}>Probar la demo gratis</button>
+              </div>
+              <div className="landing-v9-proof">
+                <span>✓ Pago único</span>
+                <span>✓ Acceso inmediato</span>
+                <span>✓ Guía completa de regalo</span>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,margin:"18px 0"}}>
-              {["Primeras semanas","Conversaciones en pareja","5 prioridades","Lo que suele olvidarse"].map(item=><div key={item} style={{background:"rgba(74,94,58,.06)",borderRadius:10,padding:"9px",fontFamily:"'Lora',serif",fontSize:".75rem",lineHeight:1.35,color:"rgba(26,26,20,.64)"}}>✓ {item}</div>)}
+
+            <div className="landing-v9-preview fu2">
+              <div className="landing-v9-preview-card">
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"#D9B86F"}}>Tu próximo paso</div>
+                <h2>No necesitás organizar todo hoy.</h2>
+                <p>Contanos en qué etapa están y qué les preocupa. El sistema les recomienda una acción concreta para avanzar.</p>
+                <div className="landing-v9-progress">
+                  {[
+                    "Elegí la etapa actual de la boda.",
+                    "Marcá qué les preocupa más hoy.",
+                    "Recibí una ruta para empezar."
+                  ].map((item,index)=><div className="landing-v9-progress-row" key={item}>
+                    <span style={{width:22,height:22,borderRadius:999,display:"grid",placeItems:"center",background:"rgba(217,184,111,.18)",color:"#D9B86F",fontWeight:800}}>{index+1}</span>
+                    <span>{item}</span>
+                  </div>)}
+                </div>
+                <button type="button" onClick={tryDemo} style={{marginTop:20,width:"100%",minHeight:50,border:"1px solid rgba(217,184,111,.5)",borderRadius:100,background:"transparent",color:"#FFF8E8",fontFamily:"'Lora',serif",fontWeight:750,cursor:"pointer"}}>Ver cómo funciona →</button>
+              </div>
             </div>
-            <button type="button" onClick={guide} style={{width:"100%",minHeight:58,border:"none",borderRadius:999,background:"#E95A4E",color:"white",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:850,cursor:"pointer",boxShadow:"0 10px 26px rgba(233,90,78,.25)"}}>Quiero recibir la guía gratis →</button>
-            <div style={{textAlign:"center",fontFamily:"'Lora',serif",fontSize:".73rem",color:"rgba(26,26,20,.43)",marginTop:9}}>La recibís por email · Sin tarjeta</div>
-          </aside>
-        </div>
-      </section>
-
-      <section style={{background:"rgba(251,247,239,.78)",borderTop:"0.5px solid rgba(201,169,110,.22)",borderBottom:"0.5px solid rgba(201,169,110,.22)"}}>
-        <div className="responsive-shell" style={{paddingTop:"clamp(40px,7vw,70px)",paddingBottom:"clamp(40px,7vw,70px)"}}>
-          <div style={{textAlign:"center",maxWidth:720,margin:"0 auto 30px"}}>
-            <div className="brand-logo" style={{marginBottom:11}}>Todo conectado</div>
-            <h2 className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,3.1rem)",margin:"0 0 13px"}}>Una sola boda. Un solo lugar para decidir.</h2>
-            <p className="brand-copy" style={{fontSize:"clamp(.98rem,2vw,1.12rem)",margin:0}}>Probá la demo sin crear una cuenta o comprá para guardar, conectar y continuar desde cualquier dispositivo.</p>
           </div>
-          <div className="modules-card-grid">{tools.map(([emoji,label])=><div key={label} className="module-card" style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.27)",borderRadius:17,padding:"19px 12px",textAlign:"center"}}><div style={{fontSize:"1.55rem",marginBottom:8}}>{emoji}</div><div style={{fontFamily:"'Playfair Display',serif",fontSize:".98rem",fontWeight:650}}>{label}</div></div>)}</div>
         </div>
       </section>
 
-      <section className="responsive-shell" style={{paddingTop:"clamp(42px,7vw,74px)",paddingBottom:"clamp(48px,8vw,86px)"}}>
-        <div style={{background:"#4A5E3A",borderRadius:26,padding:"clamp(28px,6vw,52px)",textAlign:"center",boxShadow:"0 20px 55px rgba(74,94,58,.18)"}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"rgba(217,184,111,.85)",marginBottom:12}}>Elegí cómo empezar</div>
-          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.9rem,5vw,3rem)",lineHeight:1.08,color:"#F5EFE0",margin:"0 0 14px"}}>Comprá, probá la demo o empezá con la guía gratuita.</h2>
-          <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,2vw,1.12rem)",color:"rgba(245,239,224,.72)",maxWidth:650,margin:"0 auto 24px",lineHeight:1.62}}>Sin caminos escondidos: quienes ya compraron también pueden ingresar directamente desde acá.</p>
-          <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
-            <button type="button" onClick={buy} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"15px 25px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:850,minHeight:52}}>Comprar acceso completo</button>
-            <button type="button" onClick={tryDemo} style={{background:"transparent",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.42)",padding:"14px 24px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:700,minHeight:52}}>Probar demo</button>
-            <button type="button" onClick={guide} style={{background:"transparent",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.42)",padding:"14px 24px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:700,minHeight:52}}>Guía gratis</button>
+      <section className="responsive-shell landing-v9-section">
+        <div className="landing-v9-guide">
+          <img className="landing-v9-guide-cover" src="/guias/portada-guia-gratuita.png" alt="Guía gratuita Nos comprometimos, ¿y ahora qué?"/>
+          <div>
+            <span className="landing-v9-guide-tag">Guía gratuita · 12 páginas</span>
+            <h2>¿Se comprometieron y no saben por dónde empezar?</h2>
+            <p>Recibí una guía express para ordenar las primeras conversaciones, definir prioridades y avanzar sin abrumarte.</p>
+            <div className="landing-v9-guide-list">
+              {["Primeras semanas","Conversaciones en pareja","5 prioridades","Lo que suele olvidarse"].map(item=><div key={item}>✓ {item}</div>)}
+            </div>
+            <button type="button" className="landing-v9-guide-action" onClick={guide} style={{minHeight:54,border:0,borderRadius:100,background:"#E95A4E",color:"white",padding:"14px 24px",fontFamily:"'Lora',serif",fontWeight:800,cursor:"pointer",boxShadow:"0 10px 24px rgba(233,90,78,.2)"}}>Quiero recibir la guía gratis →</button>
+            <div style={{marginTop:9,fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.42)"}}>La recibís por email · No necesitás tarjeta</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-v9-tools">
+        <div className="responsive-shell landing-v9-section">
+          <div className="landing-v9-tools-header">
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#D9B86F"}}>Todo conectado</div>
+            <h2>Una sola boda. Un solo lugar para decidir.</h2>
+            <p>No son ocho herramientas separadas. Cada decisión puede acompañar a la siguiente para que la información no quede repartida.</p>
+          </div>
+          <div className="landing-v9-tools-grid">
+            {tools.map(tool=><button
+              type="button"
+              className="landing-v9-tool"
+              key={tool.title}
+              onClick={()=>{
+                trackProductEvent("landing_module_demo_clicked",{module:tool.id});
+                onOpenDemoModule?.(tool.id);
+              }}
+              aria-label={`Probar ${tool.title} en la demo`}
+            >
+              <div className="landing-v9-tool-icon">{tool.icon}</div>
+              <strong>{tool.title}</strong>
+              <span>{tool.copy}</span>
+              <span className="landing-v9-tool-arrow">Probar este módulo →</span>
+            </button>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v9-section">
+        <div className="landing-v9-final">
+          <div>
+            <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:8}}>Empezá a tu manera</div>
+            <h2>Probá primero o guardá toda la organización desde hoy.</h2>
+            <p>La demo no pide registro. El acceso completo permite guardar avances y continuar desde cualquier dispositivo.</p>
+          </div>
+          <div style={{display:"grid",gap:10,minWidth:"min(100%,270px)"}}>
+            <button type="button" className="landing-v9-primary" onClick={buy}>Comprar acceso completo</button>
+            <button type="button" className="landing-v9-secondary" onClick={tryDemo}>Probar demo gratis</button>
+            <button type="button" onClick={onLogin} style={{background:"transparent",border:0,color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4,cursor:"pointer"}}>Ya compré: ingresar</button>
           </div>
         </div>
       </section>
     </main>
 
-    <div className="mobile-buy-bar">
+    <div className="mobile-buy-bar" style={{display:showMobileBar?undefined:"none"}}>
       <button type="button" onClick={buy} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}>Comprar ahora</button>
-      <button type="button" onClick={tryDemo} style={{border:"1px solid rgba(74,94,58,.35)",background:"#FBF7EF",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Probar demo</button>
+      <button type="button" onClick={tryDemo} style={{border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Probar demo</button>
     </div>
   </div>;
 }
@@ -1432,15 +2211,14 @@ function WeddingStartPlanner({onOpenModule,onSeeAll,onBack,isDemo=false}){
 
   const recommendation = getWeddingRecommendation({stage,concern});
   const stageLabel = stages.find(x=>x.id===stage)?.title || "Tu etapa";
-  const plan = concern === "overwhelm"
-    ? ["Elegir las tres decisiones que destraban el resto.","Definir un orden realista para esta etapa.","Trabajar hoy en una sola herramienta, no en todas."]
-    : [recommendation.why,"Completar una primera versión, aunque no sea perfecta.","Usar ese resultado para decidir el siguiente paso."];
+  const concernLabel = concerns.find(x=>x.id===concern)?.title || "lo que necesitan resolver";
+  const plan = recommendation.steps || [recommendation.why,"Completá una primera versión, aunque todavía no sea perfecta.","Usá ese resultado para decidir el siguiente paso."];
 
   if(complete) return <div className="home-floral-bg" style={{minHeight:"100svh",padding:"clamp(18px,4vw,50px)",display:"grid",placeItems:"center"}}>
     <div className="fu" style={{width:"100%",maxWidth:720,background:"rgba(251,247,239,.97)",border:"0.5px solid rgba(201,169,110,.35)",borderRadius:26,padding:"clamp(24px,5vw,46px)",boxShadow:"0 24px 70px rgba(49,39,25,.14)"}}>
       <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",borderRadius:999,padding:"8px 13px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:18}}>✓ Tu punto de partida</div>
       <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.25rem)",lineHeight:1.08,margin:"0 0 12px"}}>Tu próximo paso no es hacer todo.</h1>
-      <p className="brand-copy" style={{fontSize:"1.05rem",margin:"0 0 24px"}}>Según lo que nos contaste —<strong>{stageLabel.toLowerCase()}</strong>— conviene empezar por una decisión que ordene las siguientes.</p>
+      <p className="brand-copy" style={{fontSize:"1.05rem",margin:"0 0 24px"}}>Según lo que nos contaste —<strong>{stageLabel.toLowerCase()}</strong> y hoy te preocupa <strong>{concernLabel.toLowerCase()}</strong>— conviene empezar por una acción concreta que ordene las siguientes.</p>
       <div style={{background:"#4A5E3A",borderRadius:22,padding:"clamp(22px,5vw,34px)",color:"#F5EFE0",marginBottom:20}}>
         <div style={{fontSize:"2rem",marginBottom:10}}>{recommendation.emoji}</div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:"#D9B86F",marginBottom:8}}>Empezá por acá</div>
@@ -1504,7 +2282,7 @@ function EmailCapture({form,setForm,onContinue,onRecover}){
       <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.85rem",fontWeight:700,color:C,margin:"0 0 12px"}}>Tu guion musical está listo.</h2>
       <p style={{fontFamily:"'Lora',serif",fontSize:"1.05rem",color:DIM,lineHeight:1.7,margin:"0 0 10px"}}>Dejá tu email para guardar tu resultado y poder acceder desde cualquier dispositivo.</p>
       <p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(201,169,110,.5)",fontStyle:"italic",margin:"0 0 28px"}}>📧 Tu resultado queda guardado en tu cuenta y podés volver a verlo cuando quieras.</p>
-      <input type="email" placeholder="tu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setNotFound(false);}} style={{textAlign:"center",fontSize:"1.15rem",marginBottom:16}}/>
+      <input name="app-field-2072" type="email" placeholder="tu@email.com" value={email} onChange={e=>{setEmail(e.target.value);setNotFound(false);}} style={{textAlign:"center",fontSize:"1.15rem",marginBottom:16}}/>
       {notFound&&<p style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(201,169,110,.7)",margin:"0 0 12px",fontStyle:"italic"}}>No encontramos ese email. Continuá para crear tu guion nuevo.</p>}
       <button className="pbtn" disabled={!ok} onClick={()=>{setForm(f=>({...f,email}));onContinue();}} style={{width:"100%",marginBottom:12}}>
         Ver mi resultado →
@@ -1554,13 +2332,13 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome,isDemo=false}){
   if(step===1) return wrap(<>
     <SL n={1} l="Cuéntenme sobre la pareja"/>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-      <div><FL>Nombre 1</FL><input placeholder="Tu nombre" value={form.nombre1} onChange={e=>set("nombre1",e.target.value)}/></div>
-      <div><FL>Nombre 2</FL><input placeholder="Su nombre" value={form.nombre2} onChange={e=>set("nombre2",e.target.value)}/></div>
+      <div><FL>Nombre 1</FL><input name="app-field-2122" placeholder="Tu nombre" value={form.nombre1} onChange={e=>set("nombre1",e.target.value)}/></div>
+      <div><FL>Nombre 2</FL><input name="app-field-2123" placeholder="Su nombre" value={form.nombre2} onChange={e=>set("nombre2",e.target.value)}/></div>
     </div>
     <FL>Fecha de la boda</FL>
-    <input type="date" value={form.fechaBoda} onChange={e=>set("fechaBoda",e.target.value)}/>
+    <input name="app-field-2126" type="date" value={form.fechaBoda} onChange={e=>set("fechaBoda",e.target.value)}/>
     <FL>Ciudad / país</FL>
-    <input placeholder="ej: Asunción, Paraguay" value={form.ciudad} onChange={e=>set("ciudad",e.target.value)}/>
+    <input name="app-field-2128" placeholder="ej: Asunción, Paraguay" value={form.ciudad} onChange={e=>set("ciudad",e.target.value)}/>
     <FL>Cantidad de invitados</FL>
     <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
       {["Menos de 30","30–80","80–150","150–250","Más de 250"].map(v=><Tag key={v} label={v} selected={form.invitados===v} onClick={()=>set("invitados",v)}/>)}
@@ -1592,7 +2370,7 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome,isDemo=false}){
         ⚠️ La misa católica tiene momentos litúrgicos con música obligatoria (Aleluya, Comunión, Ofertorio). Muchas iglesias solo permiten música sacra. Siempre consultá con el sacerdote antes de definir el repertorio.
       </p>}
       <FL>¿Hay restricciones musicales específicas?</FL>
-      <input placeholder="ej: Solo música sacra, el sacerdote eligió el Aleluya..." value={form.restriccionIglesia||""} onChange={e=>set("restriccionIglesia",e.target.value)}/>
+      <input name="app-field-2160" placeholder="ej: Solo música sacra, el sacerdote eligió el Aleluya..." value={form.restriccionIglesia||""} onChange={e=>set("restriccionIglesia",e.target.value)}/>
 
       <FL>¿Dónde será la ceremonia religiosa?</FL>
       <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
@@ -1649,7 +2427,7 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome,isDemo=false}){
       {GENEROS.map(v=><Tag key={v} label={v} selected={form.generos.includes(v)} onClick={()=>{if(form.generos.includes(v))tog("generos",v);else if(form.generos.length<4)tog("generos",v);}}/>)}
     </div>
     <FL>3 artistas o canciones que los representen como pareja</FL>
-    <input placeholder="ej: Coldplay, La Oreja de Van Gogh, Hans Zimmer" value={form.artistas} onChange={e=>set("artistas",e.target.value)}/>
+    <input name="app-field-2217" placeholder="ej: Coldplay, La Oreja de Van Gogh, Hans Zimmer" value={form.artistas} onChange={e=>set("artistas",e.target.value)}/>
     <FL>¿Alguna canción que definitivamente NO quieren en su boda?</FL>
     <div style={{background:"rgba(201,169,110,.05)",border:"1px solid rgba(201,169,110,.12)",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
       <p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:DIM,margin:"0 0 6px",lineHeight:1.6}}>
@@ -1659,7 +2437,7 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome,isDemo=false}){
         Puede ser una canción muy repetida en bodas, una que los recuerde de algo que no quieren traer, o simplemente una que no los representa. El guion no va a incluirla ni versiones de ella.
       </p>
     </div>
-    <input placeholder="ej: La Bamba, Despacito, la canción del ex — anotá todo lo que se les ocurra" value={form.cancionesProhibidas} onChange={e=>set("cancionesProhibidas",e.target.value)}/>
+    <input name="app-field-2227" placeholder="ej: La Bamba, Despacito, la canción del ex — anotá todo lo que se les ocurra" value={form.cancionesProhibidas} onChange={e=>set("cancionesProhibidas",e.target.value)}/>
     <FL>Idioma preferido</FL>
     <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>
       {["Castellano","Inglés","Mezcla","No importa"].map(v=><Tag key={v} label={v} selected={form.idioma===v} onClick={()=>set("idioma",v)}/>)}
@@ -1735,9 +2513,9 @@ function Form({step,setStep,form,setForm,onSubmit,error,onGoHome,isDemo=false}){
   return wrap(<>
     <SL n={6} l="Lo que hace especial a su boda"/>
     <FL>¿Tienen una canción que los une como pareja?</FL>
-    <textarea rows={2} placeholder="ej: una canción que escucharon juntos en un viaje, o que sonaba cuando se conocieron..." value={form.cancionPersonal} onChange={e=>set("cancionPersonal",e.target.value)} style={{resize:"none"}}/>
+    <textarea name="app-field-2303" rows={2} placeholder="ej: una canción que escucharon juntos en un viaje, o que sonaba cuando se conocieron..." value={form.cancionPersonal} onChange={e=>set("cancionPersonal",e.target.value)} style={{resize:"none"}}/>
     <FL>¿Qué querés que la gente sienta o recuerde musicalmente? *</FL>
-    <textarea rows={3} placeholder="Contanos con tus palabras, sin filtros — esto es lo que más importa..." value={form.recuerdo} onChange={e=>set("recuerdo",e.target.value)} style={{resize:"none"}}/>
+    <textarea name="app-field-2305" rows={3} placeholder="Contanos con tus palabras, sin filtros — esto es lo que más importa..." value={form.recuerdo} onChange={e=>set("recuerdo",e.target.value)} style={{resize:"none"}}/>
     <p style={{marginTop:24,fontFamily:"'Lora',serif",fontSize:".92rem",color:"rgba(26,26,20,.22)",lineHeight:1.65,fontStyle:"italic"}}>Con estas respuestas, Ceci crea un guion que no podría aplicarse a ninguna otra boda.</p>
   </>);
 }
@@ -2439,8 +3217,8 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
       <h2 className="brand-title" style={{fontSize:"clamp(1.65rem,5vw,2.15rem)",margin:"0 0 10px"}}>Convertí este avance en tu boda organizada</h2>
       <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 12px"}}>Ya comprobaste cómo se siente tener decisiones, invitados, presupuesto y proveedores en un solo recorrido. En la prueba los cambios son temporales.</p>
       <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px",fontWeight:700,color:"#4A5E3A"}}>Con el acceso completo conservás tu planificación, conectás los módulos y seguís desde cualquier dispositivo.</p>
-      <input value={name} onChange={e=>setName(e.target.value)} placeholder="Tu nombre" style={{marginBottom:12}}/>
-      <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@email.com" style={{marginBottom:12}}/>
+      <input name="app-field-3007" value={name} onChange={e=>setName(e.target.value)} placeholder="Tu nombre" style={{marginBottom:12}}/>
+      <input name="app-field-3008" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@email.com" style={{marginBottom:12}}/>
       <PhoneInput international countryCallingCodeEditable={false} defaultCountry="PY" value={phone} onChange={setPhone} onCountryChange={c=>c&&setCountry(c)} placeholder="Celular"/>
       {error&&<p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:"#b64343",lineHeight:1.45,margin:"8px 0 12px"}}>{error}</p>}
       <button className="pbtn" disabled={loading} onClick={submit} style={{width:"100%",marginTop:8}}>{loading?"Preparando pago...":"Ir al pago seguro →"}</button>
@@ -2596,7 +3374,7 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
       {mode==="login"&&<button type="button" onClick={()=>{clean();setMode("forgot");}} style={{background:"transparent",border:"none",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3,marginTop:14}}>Olvidé mi contraseña</button>}
 
       <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(201,169,110,.18)",display:"flex",flexDirection:"column",gap:9}}>
-        {mode==="login"&&<button className="gbtn" onClick={()=>{clean();setMode("signup");}} style={{width:"100%"}}>Primera vez: activar mi acceso</button>}
+        {mode==="login"&&<button type="button" onClick={()=>{clean();setMode("signup");}} style={{width:"100%",minHeight:52,border:"1.5px solid rgba(74,94,58,.48)",borderRadius:999,background:"rgba(74,94,58,.06)",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".94rem",fontWeight:800,cursor:"pointer"}}>Es mi primera vez: activar acceso →</button>}
         {mode==="signup"&&<button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Ya activé mi acceso</button>}
         {mode==="forgot"&&<><button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Volver a ingresar</button><button type="button" onClick={()=>{clean();setEmail("");}} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(26,26,20,.55)",textDecoration:"underline",cursor:"pointer",padding:6}}>Usar otro email</button></>}
       </div>
@@ -2613,12 +3391,60 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
 }
 
 
+
+const START_STAGE_META = {
+  starting:{label:"Recién empezando",short:"Primeros pasos",icon:"spark"},
+  foundations:{label:"Definiendo las bases",short:"Bases de la boda",icon:"plan"},
+  execution:{label:"Organización en marcha",short:"En plena organización",icon:"vendors"},
+  final:{label:"Cerrando detalles",short:"Últimas semanas",icon:"timeline"}
+};
+
+const getDaysUntilWedding = (dateValue) => {
+  if(!dateValue) return null;
+  const target = new Date(`${dateValue}T12:00:00`);
+  if(Number.isNaN(target.getTime())) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(),now.getMonth(),now.getDate(),12,0,0);
+  return Math.ceil((target.getTime()-today.getTime())/86400000);
+};
+
+const getWeddingTimingLabel = (days) => {
+  if(days===null) return "Fecha todavía no definida";
+  if(days<0) return "La fecha de la boda ya pasó";
+  if(days===0) return "Hoy es el gran día";
+  if(days===1) return "Falta 1 día";
+  if(days<30) return `Faltan ${days} días`;
+  const months = Math.max(1,Math.round(days/30.4));
+  return months===1 ? "Falta cerca de 1 mes" : `Faltan cerca de ${months} meses`;
+};
+
+function ProductIcon({name,size=24,color="currentColor",strokeWidth=1.8}){
+  let content = null;
+  switch(name){
+    case "home": content=<><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></>; break;
+    case "grid": content=<><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></>; break;
+    case "plan": content=<><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="m8 10 1.5 1.5L12 9"/><path d="M13.5 10h3"/><path d="m8 15 1.5 1.5L12 14"/><path d="M13.5 15h3"/></>; break;
+    case "budget": content=<><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5c-.8-.8-1.9-1.2-3.2-1.2-1.8 0-3 .9-3 2.2 0 1.5 1.3 2 3.2 2.4 1.9.4 3.2.9 3.2 2.5 0 1.5-1.4 2.5-3.5 2.5-1.5 0-2.8-.5-3.7-1.4"/><path d="M12 5.7v12.6"/></>; break;
+    case "guests": content=<><circle cx="9" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.5"/><path d="M3.5 20c.4-4 2.3-6 5.5-6s5.1 2 5.5 6"/><path d="M14 15c3.4.2 5.3 1.8 5.8 5"/></>; break;
+    case "salon": content=<><path d="M3 9h18"/><path d="M5 9v10M9 9v10M15 9v10M19 9v10"/><path d="M2.5 19h19"/><path d="m12 3 9 5H3l9-5Z"/></>; break;
+    case "vendors": content=<><rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h2M14 16h2"/><path d="M10 21v-3h4v3"/></>; break;
+    case "timeline": content=<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/><path d="M7 2 4 5M17 2l3 3"/></>; break;
+    case "music": content=<><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></>; break;
+    case "guide": content=<><path d="M4 5.5C6.5 4.5 9 5 12 7v13c-3-2-5.5-2.5-8-1.5v-13Z"/><path d="M20 5.5C17.5 4.5 15 5 12 7v13c3-2 5.5-2.5 8-1.5v-13Z"/></>; break;
+    case "account": content=<><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.6-4.8 3.2-7 7.5-7s6.9 2.2 7.5 7"/></>; break;
+    case "compass": content=<><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z"/></>; break;
+    case "spark": content=<><path d="M12 2.8c.5 4.2 2.8 6.5 7 7-4.2.5-6.5 2.8-7 7-.5-4.2-2.8-6.5-7-7 4.2-.5 6.5-2.8 7-7Z"/><path d="M19 16.5c.2 1.4 1 2.2 2.4 2.4-1.4.2-2.2 1-2.4 2.4-.2-1.4-1-2.2-2.4-2.4 1.4-.2 2.2-1 2.4-2.4Z"/></>; break;
+    default: content=<circle cx="12" cy="12" r="8"/>;
+  }
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{content}</svg>;
+}
+
 function GlobalProgress({ user, hasResults }){
   const [pct, setPct] = useState(0);
   const [breakdown, setBreakdown] = useState([]);
 
   useEffect(()=>{
-    if(!user || !supabase) return;
+    if(!user) return;
     let cancelled = false;
     const compute = async () => {
       const scores = [];
@@ -2629,7 +3455,7 @@ function GlobalProgress({ user, hasResults }){
       // Cargamos todo de wedding_data en una sola consulta
       let row = null;
       try {
-        const { data } = await supabase
+        const { data } = await dataClient(user)
           .from("wedding_data")
           .select("budget,vendors,guests,checklist_general,checklist_custom")
           .eq("user_id", user.id)
@@ -2703,6 +3529,10 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
   const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
   const profile = readStartProfile();
   const recommendation = getWeddingRecommendation(profile || {});
+  const stageMeta = START_STAGE_META[profile?.stage] || START_STAGE_META.starting;
+  const daysUntilWedding = getDaysUntilWedding(form?.fechaBoda);
+  const timingLabel = getWeddingTimingLabel(daysUntilWedding);
+  const finalWeeks = profile?.stage==="final" || (daysUntilWedding!==null && daysUntilWedding>=0 && daysUntilWedding<=45);
   const [demoHasChanges,setDemoHasChanges] = useState(()=>Object.keys(readDemoWeddingData() || {}).length > 0);
 
   useEffect(()=>{
@@ -2713,68 +3543,102 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
   },[isDemo]);
 
   const openModule = (id) => {
-    trackProductEvent("module_opened", {module:id,is_demo:isDemo});
+    trackProductEvent("module_opened", {module:id,is_demo:isDemo,source:"home_v10"});
     onGoModule(id);
   };
 
   const modules = [
-    {id:"checklist-boda",emoji:"📋",label:"Plan y checklist",desc:"Qué hacer, en qué orden y qué falta."},
-    {id:"budget",emoji:"💰",label:"Presupuesto",desc:"Categorías, pagos y control del total."},
-    {id:"guests",emoji:"👥",label:"Invitados",desc:"Lista, etiquetas y distribución."},
-    {id:"salon-design",emoji:"🏛️",label:"Diseño del salón",desc:"Medidas, mesas, muebles y circulación."},
-    {id:"vendors",emoji:"🏢",label:"Proveedores",desc:"Propuestas, contactos y decisiones."},
-    {id:"timeline",emoji:"⏰",label:"Cronograma",desc:"Secuencia y responsables del gran día."},
-    {id:"guia",emoji:"🎵",label:"Música",desc:hasResults?"Tu guion musical personalizado.":"Test y planificación musical."},
-    {id:"guia-novios",emoji:"📖",label:"Guía para novios",desc:"Protocolo, ceremonia y consejos."}
+    {id:"checklist-boda",icon:"plan",label:"Plan y checklist",desc:"Qué hacer, en qué orden y qué falta."},
+    {id:"budget",icon:"budget",label:"Presupuesto",desc:"Categorías, pagos y control del total."},
+    {id:"guests",icon:"guests",label:"Invitados",desc:"Lista, etiquetas y distribución."},
+    {id:"salon-design",icon:"salon",label:"Diseño del salón",desc:"Medidas, mesas, muebles y circulación."},
+    {id:"vendors",icon:"vendors",label:"Proveedores",desc:"Propuestas, contactos y decisiones."},
+    {id:"timeline",icon:"timeline",label:"Cronograma",desc:"Secuencia y responsables del gran día."},
+    {id:"guia",icon:"music",label:"Música",desc:hasResults?"Tu guion musical personalizado.":"Test y planificación musical."},
+    {id:"guia-novios",icon:"guide",label:"Guía para novios",desc:"Protocolo, ceremonia y consejos."}
   ];
 
-  return <div style={{minHeight:"100svh",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"clamp(16px,4vw,48px)"}}>
-    <div className="fu home-content-card" style={{width:"100%",maxWidth:"min(820px,calc(100vw - 24px))"}}>
-      {isDemo&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:"rgba(74,94,58,.07)",border:"0.5px solid rgba(74,94,58,.2)",borderRadius:14,padding:"11px 14px",marginBottom:22}}>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.45,color:"rgba(26,26,20,.62)"}}><strong style={{color:"#4A5E3A"}}>Modo prueba.</strong> Podés avanzar y experimentar resultados. Para conservarlos necesitás el acceso completo.</div>
-        <button className="lbtn" onClick={onRequestPurchase} style={{fontSize:".78rem"}}>Ver acceso completo</button>
+  return <div style={{minHeight:"100svh",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"clamp(16px,4vw,42px) clamp(12px,4vw,42px) 112px",background:"#F5EFE0"}}>
+    <div className="fu" style={{width:"100%",maxWidth:920}}>
+      {isDemo&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:"#FFFDF8",border:"1px solid rgba(74,94,58,.16)",borderRadius:16,padding:"12px 14px",marginBottom:16}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.45,color:"rgba(26,26,20,.62)"}}><strong style={{color:"#4A5E3A"}}>Modo prueba.</strong> Podés avanzar y experimentar resultados. Los datos se borran al recargar o salir.</div>
+        <button className="lbtn" onClick={onRequestPurchase} style={{fontSize:".78rem"}}>Conservar mi planificación</button>
       </div>}
 
-      <div style={{textAlign:"center",marginBottom:24}}>
+      <header style={{textAlign:"center",padding:"clamp(24px,5vw,40px) 18px 22px"}}>
         <div className="brand-logo" style={{marginBottom:10}}>Tu Boda Organizada</div>
-        <h1 className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,2.85rem)",margin:"0 0 9px",lineHeight:1.08}}>{pareja?`¡Hola, ${pareja}! 🌸`:"Un paso claro a la vez"}</h1>
-        <p className="brand-copy" style={{fontSize:"clamp(.95rem,2vw,1.06rem)",margin:"0 auto",maxWidth:590,lineHeight:1.62}}>No hace falta entrar a todos los módulos. Empezá por lo que más puede ordenar tu etapa actual.</p>
-      </div>
+        <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.25rem)",margin:"0 0 10px",lineHeight:1.04}}>{pareja?`Hola, ${pareja}`:"Un paso claro a la vez"}</h1>
+        <p className="brand-copy" style={{fontSize:"clamp(.95rem,2vw,1.06rem)",margin:"0 auto",maxWidth:620,lineHeight:1.62}}>No necesitás resolver todo hoy. Te mostramos qué conviene priorizar según el momento de tu boda.</p>
+        <div className="home-v10-summary">
+          <span className="home-v10-chip"><ProductIcon name={stageMeta.icon} size={17}/>{profile?stageMeta.label:"Etapa todavía no definida"}</span>
+          <span className="home-v10-chip"><ProductIcon name="timeline" size={17}/>{timingLabel}</span>
+        </div>
+      </header>
 
-      <section style={{background:"#4A5E3A",borderRadius:22,padding:"clamp(21px,5vw,32px)",color:"#F5EFE0",marginBottom:20,boxShadow:"0 14px 34px rgba(74,94,58,.17)"}}>
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:18,flexWrap:"wrap"}}>
-          <div style={{flex:"1 1 420px"}}>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".15em",textTransform:"uppercase",color:"#D9B86F",marginBottom:8}}>{profile?"Tu próximo paso recomendado":"Empezá con un plan breve"}</div>
-            <div style={{fontSize:"2rem",marginBottom:7}}>{profile?recommendation.emoji:"🧭"}</div>
-            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.45rem,4vw,2rem)",margin:"0 0 8px"}}>{profile?recommendation.title:"Decinos en qué etapa está tu boda"}</h2>
-            <p style={{fontFamily:"'Lora',serif",fontSize:".94rem",lineHeight:1.58,color:"rgba(245,239,224,.72)",margin:0}}>{profile?recommendation.why:"En menos de dos minutos priorizamos una herramienta para que no empieces frente a un menú vacío."}</p>
+      <section style={{background:"#4A5E3A",borderRadius:24,padding:"clamp(22px,5vw,34px)",color:"#F5EFE0",marginBottom:16,boxShadow:"0 16px 38px rgba(74,94,58,.16)"}}>
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr)",gap:18}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+            <div className="product-icon-wrap gold"><ProductIcon name={profile?recommendation.module==="budget"?"budget":recommendation.module==="guests"?"guests":recommendation.module==="salon-design"?"salon":recommendation.module==="vendors"?"vendors":recommendation.module==="timeline"?"timeline":recommendation.module==="guia"?"music":"plan":"compass"} size={24}/></div>
+            <div style={{minWidth:0,flex:1}}>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".15em",textTransform:"uppercase",color:"#D9B86F",marginBottom:8}}>{profile?"Tu próximo paso":"Empecemos por ubicarte"}</div>
+              <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.55rem,4vw,2.15rem)",margin:"0 0 8px",lineHeight:1.08}}>{profile?recommendation.title:"Decinos en qué etapa está tu boda"}</h2>
+              <p style={{fontFamily:"'Lora',serif",fontSize:".94rem",lineHeight:1.58,color:"rgba(245,239,224,.74)",margin:0}}>{profile?recommendation.why:"Respondé dos preguntas y convertimos un menú de herramientas en un próximo paso concreto."}</p>
+            </div>
           </div>
-          <div style={{display:"flex",gap:9,flexWrap:"wrap",alignSelf:"center"}}>
+          <div style={{display:"flex",gap:9,flexWrap:"wrap"}}>
             {profile&&<button type="button" onClick={()=>openModule(recommendation.module)} style={{background:"#D9B86F",color:"#1A1A14",border:"none",borderRadius:999,padding:"13px 20px",fontFamily:"'Lora',serif",fontWeight:800,cursor:"pointer"}}>{recommendation.cta} →</button>}
-            <button type="button" onClick={onOpenStart} style={{background:profile?"transparent":"#D9B86F",color:profile?"#F5EFE0":"#1A1A14",border:profile?"1px solid rgba(245,239,224,.4)":"none",borderRadius:999,padding:"12px 18px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>{profile?"Revisar mi plan":"Crear mi plan →"}</button>
+            <button type="button" onClick={onOpenStart} style={{background:profile?"transparent":"#D9B86F",color:profile?"#F5EFE0":"#1A1A14",border:profile?"1px solid rgba(245,239,224,.4)":"none",borderRadius:999,padding:"12px 18px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>{profile?"Actualizar mi etapa":"Crear mi plan →"}</button>
           </div>
         </div>
       </section>
 
-      {isDemo&&demoHasChanges&&<div style={{background:"rgba(201,169,110,.1)",border:"0.5px solid rgba(201,169,110,.36)",borderRadius:16,padding:"15px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",color:"rgba(26,26,20,.62)",lineHeight:1.45}}>Ya empezaste tu planificación. El acceso completo conserva y conecta estos avances.</div>
-        <button className="pbtn" onClick={onRequestPurchase} style={{padding:"11px 20px",minHeight:44}}>Conservar mi boda →</button>
+      {profile&&<div className="home-v10-focus">
+        <section className="home-v10-steps">
+          <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:7}}>Tu foco de esta etapa</div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.35rem",margin:"0 0 8px"}}>Tres acciones para avanzar sin dispersarte</h2>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.5)",lineHeight:1.5,margin:"0 0 8px"}}>No es una lista completa. Es un orden sugerido para comenzar.</p>
+          {(recommendation.steps||[]).map((stepText,index)=><div className="home-v10-step" key={stepText}>
+            <span className="home-v10-step-num">{index+1}</span>
+            <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",lineHeight:1.5,color:"rgba(26,26,20,.68)"}}>{stepText}</span>
+          </div>)}
+        </section>
+
+        {finalWeeks?<aside className="home-v10-final">
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><ProductIcon name="timeline" size={22} color="#4A5E3A"/><div className="brand-logo" style={{fontSize:THEME.text.label}}>Modo últimas semanas</div></div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.32rem",margin:"0 0 7px"}}>Ahora importa confirmar y delegar</h2>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.5,color:"rgba(26,26,20,.58)",margin:0}}>Priorizá solamente lo que puede afectar el gran día.</p>
+          <div className="home-v10-final-actions">
+            <button onClick={()=>openModule("checklist-boda")}><span>Revisar pendientes críticos</span><span>→</span></button>
+            <button onClick={()=>openModule("timeline")}><span>Cerrar cronograma</span><span>→</span></button>
+            <button onClick={()=>openModule("vendors")}><span>Confirmar proveedores</span><span>→</span></button>
+          </div>
+        </aside>:<aside className="home-v10-final" style={{background:"#EEF0E7",borderColor:"rgba(74,94,58,.18)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><ProductIcon name="spark" size={22} color="#4A5E3A"/><div className="brand-logo" style={{fontSize:THEME.text.label}}>Recordatorio</div></div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.32rem",margin:"0 0 7px"}}>No hace falta completar todo</h2>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.55,color:"rgba(26,26,20,.58)",margin:"0 0 14px"}}>Usá una herramienta, cerrá una decisión y después volvé por el siguiente paso.</p>
+          <button className="gbtn" onClick={onOpenStart} style={{width:"100%",background:"rgba(255,253,248,.7)"}}>Revisar mi recorrido</button>
+        </aside>}
+      </div>}
+
+      {isDemo&&demoHasChanges&&<div style={{background:"#FFFDF8",border:"1px solid rgba(201,169,110,.34)",borderRadius:17,padding:"15px",marginBottom:18,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",color:"rgba(26,26,20,.62)",lineHeight:1.45}}>Ya empezaste a ordenar tu boda. El acceso completo conserva y conecta estos avances.</div>
+        <button className="pbtn" onClick={onRequestPurchase} style={{padding:"11px 20px",minHeight:44}}>Guardar mi avance →</button>
       </div>}
 
       {!isDemo&&<GlobalProgress user={user} hasResults={hasResults}/>}
 
       <div style={{display:"flex",alignItems:"end",justifyContent:"space-between",gap:12,margin:"22px 0 13px"}}>
-        <div><div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:4}}>Todas las herramientas</div><div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.45)"}}>Usalas cuando tu plan las necesite.</div></div>
+        <div><div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:4}}>Tus herramientas</div><div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.45)"}}>Entrá directamente cuando ya sabés qué necesitás resolver.</div></div>
       </div>
       <div className="modules-card-grid modules-card-grid-wide" style={{marginBottom:24}}>
-        {modules.map(item=><button key={item.id} className="module-card" type="button" onClick={()=>item.id==="guia"?(hasResults?onViewResults():onStartNew()):openModule(item.id)} style={{background:item.id===recommendation.module&&profile?"rgba(74,94,58,.08)":"#FBF7EF",border:`0.5px solid ${item.id===recommendation.module&&profile?"rgba(74,94,58,.38)":"rgba(201,169,110,.27)"}`,borderRadius:16,padding:"16px 12px",textAlign:"left",cursor:"pointer",minHeight:145}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:8}}><span style={{fontSize:"1.35rem"}}>{item.emoji}</span>{item.id===recommendation.module&&profile&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800}}>Recomendado</span>}</div>
-          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:".98rem",marginBottom:6}}>{item.label}</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",lineHeight:1.45,color:"rgba(26,26,20,.46)"}}>{item.desc}</div>
+        {modules.map(item=><button key={item.id} className="module-card module-card-v10" type="button" onClick={()=>item.id==="guia"?(hasResults?onViewResults():onStartNew()):openModule(item.id)} style={{background:item.id===recommendation.module&&profile?"#EEF0E7":"#FFFDF8",border:`1px solid ${item.id===recommendation.module&&profile?"rgba(74,94,58,.35)":"rgba(201,169,110,.24)"}`,borderRadius:18,padding:"16px 13px",textAlign:"left",cursor:"pointer",minHeight:150,boxShadow:"0 6px 18px rgba(63,50,31,.045)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:11}}><span className="product-icon-wrap"><ProductIcon name={item.icon} size={23}/></span>{item.id===recommendation.module&&profile&&<span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800}}>Recomendado</span>}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1rem",marginBottom:6}}>{item.label}</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",lineHeight:1.45,color:"rgba(26,26,20,.48)"}}>{item.desc}</div>
         </button>)}
       </div>
 
-      <div style={{display:"flex",gap:10,justifyContent:"center",alignItems:"center",flexWrap:"wrap",paddingTop:16,borderTop:"0.5px solid rgba(201,169,110,.15)"}}>
+      <div style={{display:"flex",gap:10,justifyContent:"center",alignItems:"center",flexWrap:"wrap",paddingTop:16,borderTop:"1px solid rgba(201,169,110,.16)"}}>
         <button className="gbtn" onClick={onOpenStart} style={{fontSize:".84rem",padding:"9px 17px"}}>Actualizar mi etapa</button>
         <button className="gbtn" onClick={onLogout} style={{fontSize:".84rem",padding:"9px 17px"}}>{isDemo?"Salir de la prueba":"Cerrar sesión"}</button>
       </div>
@@ -3565,7 +4429,7 @@ function BudgetModule({ user, onBack }){
           {[{label:"Presupuestado",key:"est",val:localEst,set:setLocalEst,editable:true}].map(({label,key,val,set})=>
             <div key={key}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(26,26,20,.4)",marginBottom:4}}>{label}</div>
-              <input type="number" value={val} onChange={e=>set(e.target.value)} placeholder="0"
+              <input name="app-field-4219" type="number" value={val} onChange={e=>set(e.target.value)} placeholder="0"
                 style={{width:"100%",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
             </div>
           )}
@@ -3579,7 +4443,7 @@ function BudgetModule({ user, onBack }){
             </div>
           )}
         </div>
-        <input type="text" value={localNota} onChange={e=>setLocalNota(e.target.value)} placeholder="Notas (proveedor, fecha de pago, etc.)"
+        <input name="app-field-4233" type="text" value={localNota} onChange={e=>setLocalNota(e.target.value)} placeholder="Notas (proveedor, fecha de pago, etc.)"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"rgba(26,26,20,.7)",boxSizing:"border-box"}}/>
       </div>}
 
@@ -3599,7 +4463,7 @@ function BudgetModule({ user, onBack }){
             <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(245,239,224,.45)",marginTop:6}}>🔗 Cotizado y pagado se convierten automáticamente desde la moneda de cada proveedor</div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",justifyContent:"flex-start"}}>
-            <select value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer",maxWidth:"min(220px,60vw)"}}>
+            <select name="app-field-4253" value={currency} onChange={e=>{setCurrency(e.target.value);save(data,e.target.value);}} style={{fontFamily:"'Lora',serif",fontSize:".85rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.4)",background:"rgba(245,239,224,.9)",color:"#1A1A14",cursor:"pointer",maxWidth:"min(220px,60vw)"}}>
               {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
             </select>
             <button onClick={()=>save()} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"9px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer",minWidth:90}}>
@@ -3618,13 +4482,13 @@ function BudgetModule({ user, onBack }){
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12,flexWrap:"wrap"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:200}}>
             <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1.5rem",color:"rgba(26,26,20,.4)"}}>{SYM}</span>
-            <input type="number" value={data.total||""} onChange={e=>updateTotal(e.target.value)}
+            <input name="app-field-4272" type="number" value={data.total||""} onChange={e=>updateTotal(e.target.value)}
               onBlur={()=>save()} placeholder="0"
               style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.8rem,4vw,2.4rem)",fontWeight:700,color:"#1A1A14",border:"none",borderBottom:"2px solid #4A5E3A",background:"transparent",padding:"4px 0",width:"100%",outline:"none"}}/>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
             <span style={{fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.45)"}}>👥</span>
-            <input type="number" value={invitados} onChange={e=>setInvitados(e.target.value)}
+            <input name="app-field-4278" type="number" value={invitados} onChange={e=>setInvitados(e.target.value)}
               onBlur={()=>{ const next={...data,invitados}; setData(next); save(next); }}
               placeholder="Invitados" min="1"
               style={{fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:600,color:"#1A1A14",border:"none",borderBottom:"1.5px solid rgba(74,94,58,.3)",background:"transparent",padding:"4px 0",width:90,outline:"none"}}/>
@@ -3812,7 +4676,7 @@ function BudgetModule({ user, onBack }){
       </div>
 
       {addingCat&&<div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.3)",borderRadius:14,padding:"14px 16px",marginBottom:12,display:"flex",gap:10,alignItems:"center"}}>
-        <input autoFocus type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)}
+        <input name="app-field-4466" autoFocus type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)}
           onKeyDown={e=>e.key==="Enter"&&addCategoria()}
           placeholder="Nombre de la categoría (ej: Cohetes, Sweets table...)"
           style={{flex:1,fontFamily:"'Lora',serif",fontSize:"1rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14"}}/>
@@ -3889,17 +4753,17 @@ function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD", categories=
     });
   };
 
-  return <div style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"20px",marginBottom:12}}>
+  return <div data-focus-form="true" style={{background:"#FBF7EF",border:"1px solid rgba(74,94,58,.25)",borderRadius:16,padding:"20px",marginBottom:12,boxShadow:"0 14px 36px rgba(49,39,25,.08)"}}>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:12,marginBottom:12}}>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Categoría</div>
-        <select value={v.cat} onChange={e=>set("cat",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+        <select name="app-field-4547" value={v.cat} onChange={e=>set("cat",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
           {categoryOptions.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
         </select>
       </div>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Estado</div>
-        <select value={v.estado} onChange={e=>set("estado",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+        <select name="app-field-4553" value={v.estado} onChange={e=>set("estado",e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
           {VENDOR_ESTADOS.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
         </select>
       </div>
@@ -3907,12 +4771,12 @@ function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD", categories=
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:12,marginBottom:12}}>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Nombre / Empresa</div>
-        <input type="text" value={v.nombre} onChange={e=>set("nombre",e.target.value)} placeholder="ej: Salón Los Pinos"
+        <input name="app-field-4561" type="text" value={v.nombre} onChange={e=>set("nombre",e.target.value)} placeholder="ej: Salón Los Pinos"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Contacto</div>
-        <input type="text" value={v.contacto} onChange={e=>set("contacto",e.target.value)} placeholder="Tel / email / Instagram"
+        <input name="app-field-4566" type="text" value={v.contacto} onChange={e=>set("contacto",e.target.value)} placeholder="Tel / email / Instagram"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
       </div>
     </div>
@@ -3921,19 +4785,19 @@ function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD", categories=
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Precio cotizado</div>
         <div style={{display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",borderRadius:8,paddingLeft:10}}>
           <span style={{fontFamily:"'Lora',serif",fontSize:".9rem",fontWeight:700,color:"rgba(26,26,20,.45)",flexShrink:0}}>{currencySymbol}</span>
-          <input type="number" value={v.precio} onChange={e=>set("precio",e.target.value)} placeholder="0" min="0" step="any"
+          <input name="app-field-4575" type="number" value={v.precio} onChange={e=>set("precio",e.target.value)} placeholder="0" min="0" step="any"
             style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px 9px 0",border:"none",outline:"none",background:"transparent",color:"#1A1A14",boxSizing:"border-box"}}/>
         </div>
       </div>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Moneda del proveedor</div>
-        <select value={vendorCurrency} onChange={e=>changeVendorCurrency(e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".92rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+        <select name="app-field-4581" value={vendorCurrency} onChange={e=>changeVendorCurrency(e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".92rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
           {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
         </select>
       </div>
       <div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Tipo de cambio</div>
-        <input type="number" value={v.exchangeRate} disabled={vendorCurrency===budgetCurrency} onChange={e=>set("exchangeRate",e.target.value)} min="0.000001" step="any"
+        <input name="app-field-4587" type="number" value={v.exchangeRate} disabled={vendorCurrency===budgetCurrency} onChange={e=>set("exchangeRate",e.target.value)} min="0.000001" step="any"
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".92rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:vendorCurrency===budgetCurrency?"rgba(74,94,58,.06)":"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",opacity:vendorCurrency===budgetCurrency ? .65 : 1}}/>
         <div style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.45)",marginTop:5,lineHeight:1.35}}>
           1 {budgetCurrency} = {vendorCurrency===budgetCurrency?"1":formatExchangeRate(exchangeRate)} {vendorCurrency}
@@ -3945,17 +4809,17 @@ function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD", categories=
     </div>}
     <div style={{marginBottom:12}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Link (web / Instagram)</div>
-      <input type="text" value={v.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."
+      <input name="app-field-4599" type="text" value={v.link} onChange={e=>set("link",e.target.value)} placeholder="https://..."
         style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".95rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
     </div>
     <div style={{marginBottom:14}}>
       <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginBottom:6}}>Notas</div>
-      <textarea value={v.notas} onChange={e=>set("notas",e.target.value)} rows={2} placeholder="Incluye vajilla, requiere depósito del 30%, etc."
+      <textarea name="app-field-4604" value={v.notas} onChange={e=>set("notas",e.target.value)} rows={2} placeholder="Incluye vajilla, requiere depósito del 30%, etc."
         style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"9px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box"}}/>
     </div>
-    <div style={{display:"flex",gap:10}}>
-      <button onClick={saveVendor} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"10px 22px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",cursor:"pointer"}}>✓ Guardar</button>
-      <button onClick={onCancel} style={{background:"transparent",border:"1px solid rgba(74,94,58,.25)",borderRadius:100,padding:"10px 18px",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.5)",cursor:"pointer"}}>Cancelar</button>
+    <div style={{display:"flex",gap:10,position:"sticky",bottom:0,zIndex:20,background:"#FBF7EF",padding:"12px 0 2px",borderTop:"1px solid rgba(201,169,110,.2)"}}>
+      <button onClick={onCancel} style={{flex:1,background:"transparent",border:"1px solid rgba(74,94,58,.28)",borderRadius:100,padding:"11px 16px",fontFamily:"'Lora',serif",fontSize:".9rem",fontWeight:700,color:"#4A5E3A",cursor:"pointer"}}>Cancelar</button>
+      <button onClick={saveVendor} style={{flex:1.25,background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"11px 18px",fontFamily:"'Lora',serif",fontWeight:800,fontSize:".9rem",cursor:"pointer"}}>Guardar proveedor →</button>
     </div>
   </div>;
 }
@@ -4045,7 +4909,7 @@ function VendorsModule({user, onBack}){
   const totalCotizado = vendors.filter(v=>v.estado!=="descartado").reduce((s,v)=>s+vendorAmountInBudgetCurrency(v,budgetCurrency),0);
   const budgetCurrencySymbol = getCurrencySymbol(budgetCurrency);
 
-  return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:80}}>
+  return <div style={{minHeight:"100dvh",background:"#F5EFE0",paddingBottom:96}}>
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
@@ -4056,14 +4920,14 @@ function VendorsModule({user, onBack}){
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,2.6rem)",color:"#F5EFE0",margin:0,lineHeight:1.1}}>🏢 Proveedores</h1>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"flex-end",marginTop:8}}>
-            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.35)",color:"rgba(245,239,224,.78)"}}>Presupuesto en <strong>{budgetCurrency}</strong></div>
-            <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#C9A96E",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".9rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.45)",color:"rgba(245,239,224,.88)"}}>Moneda principal: <strong>{budgetCurrency}</strong></div>
+            {vendors.length>0&&<button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:800,fontSize:".9rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>}
           </div>
         </div>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:"rgba(245,239,224,.55)",marginTop:8}}>Cada proveedor puede tener su propia moneda. La app convierte el importe a {budgetCurrency} usando el tipo de cambio guardado.</div>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(245,239,224,.82)",marginTop:10,lineHeight:1.5}}>Cargá cada proveedor en la moneda en la que te cotizó. También te mostramos el equivalente en {budgetCurrency} para que puedas comparar.</div>
         {/* Summary pills */}
         <div style={{display:"flex",gap:12,marginTop:16,flexWrap:"wrap"}}>
-          {[{label:`${vendors.length} en total`,color:"rgba(245,239,224,.7)"},{label:`${contratados} contratados`,color:"rgba(201,169,110,.85)"},{label:`${budgetCurrency} ${fmt(totalCotizado)} equivalente cotizado`,color:"rgba(245,239,224,.6)"},{label:saving?"Guardando…":saved?"Cambios guardados ✓":"",color:"rgba(201,169,110,.85)"}].filter(p=>p.label).map(p=>
+          {[{label:`${vendors.length} en total`,color:"rgba(245,239,224,.9)"},{label:`${contratados} contratados`,color:"#D9B86F"},{label:`Total cotizado: ${budgetCurrency} ${fmt(totalCotizado)}`,color:"rgba(245,239,224,.86)"},{label:saving?"Guardando…":saved?"Cambios guardados ✓":"",color:"#D9B86F"}].filter(p=>p.label).map(p=>
             <div key={p.label} style={{fontFamily:"'Lora',serif",fontSize:".85rem",color:p.color}}>{p.label}</div>
           )}
         </div>
@@ -4075,29 +4939,30 @@ function VendorsModule({user, onBack}){
       {adding && editId==="new" && <VendorForm budgetCurrency={budgetCurrency} categories={vendorCategoryOptions} onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
 
       {/* Filters */}
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14,alignItems:"center",width:"100%"}}>
-        <div style={{position:"relative",flex:1,minWidth:160,marginBottom:8}}>
-          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:".85rem",pointerEvents:"none",opacity:.4}}>🔍</span>
-          <input value={searchVendor} onChange={e=>setSearchVendor(e.target.value)} placeholder="Buscar proveedor..."
-            style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".85rem",padding:"7px 10px 7px 30px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:"#FBF7EF",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
-          {searchVendor&&<button onClick={()=>setSearchVendor("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)"}}>×</button>}
+      <div style={{display:"grid",gap:9,marginBottom:16,width:"100%"}}>
+        <div style={{position:"relative",width:"100%"}}>
+          <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:".9rem",pointerEvents:"none",opacity:.45}}>⌕</span>
+          <input name="app-field-4732" value={searchVendor} onChange={e=>setSearchVendor(e.target.value)} placeholder="Buscar por nombre o nota"
+            style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"10px 38px 10px 38px",borderRadius:100,border:"1px solid rgba(74,94,58,.22)",background:"#FBF7EF",color:"#1A1A14",boxSizing:"border-box",outline:"none"}}/>
+          {searchVendor&&<button onClick={()=>setSearchVendor("")} aria-label="Limpiar búsqueda" style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.5)",fontSize:"1.1rem"}}>×</button>}
         </div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".14em",textTransform:"uppercase",color:"#4A5E3A",marginRight:4}}>Filtrar:</div>
-        <select value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
-          <option value="all">Todas las categorías</option>
-          {vendorCategoryOptions.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
-        </select>
-        <select value={filterEst} onChange={e=>setFilterEst(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".88rem",padding:"7px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.25)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
-          <option value="all">Todos los estados</option>
-          {VENDOR_ESTADOS.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
-        </select>
-        {(filterCat!=="all"||filterEst!=="all")&&<button onClick={()=>{setFilterCat("all");setFilterEst("all");}} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.4)",fontFamily:"'Lora',serif",fontSize:".85rem",cursor:"pointer"}}>✕ Limpiar</button>}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>
+          <select name="app-field-4737" aria-label="Filtrar por categoría" value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".84rem",padding:"9px 30px 9px 12px",borderRadius:100,border:"1px solid rgba(74,94,58,.24)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+            <option value="all">Todas las categorías</option>
+            {vendorCategoryOptions.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+          </select>
+          <select name="app-field-4741" aria-label="Filtrar por estado" value={filterEst} onChange={e=>setFilterEst(e.target.value)} style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".84rem",padding:"9px 30px 9px 12px",borderRadius:100,border:"1px solid rgba(74,94,58,.24)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+            <option value="all">Todos los estados</option>
+            {VENDOR_ESTADOS.map(e=><option key={e.id} value={e.id}>{e.label}</option>)}
+          </select>
+        </div>
+        {(filterCat!=="all"||filterEst!=="all")&&<button onClick={()=>{setFilterCat("all");setFilterEst("all");}} style={{justifySelf:"start",background:"transparent",border:"none",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,cursor:"pointer",padding:"2px 4px"}}>Limpiar filtros</button>}
       </div>
 
       {filtered.length===0 && !adding && <div style={{textAlign:"center",padding:"clamp(20px,4vw,48px) clamp(12px,2vw,20px)",background:"#FBF7EF",borderRadius:18,border:"0.5px solid rgba(201,169,110,.2)"}}>
         <div style={{fontSize:"2.5rem",marginBottom:12}}>🏢</div>
         <p style={{fontFamily:"'Playfair Display',serif",fontSize:"1.15rem",color:"#1A1A14",marginBottom:8}}>Aún no hay proveedores</p>
-        <p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.45)",margin:"0 0 20px"}}>Agregá tu primer proveedor con el botón de arriba</p>
+        <p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(26,26,20,.62)",margin:"0 auto 20px",maxWidth:470,lineHeight:1.55}}>Empezá cargando uno de los proveedores que ya consultaste o contrataste. Después vas a poder comparar propuestas, pagos y pendientes.</p>
         <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"12px 24px",fontFamily:"'Lora',serif",fontWeight:700,cursor:"pointer"}}>+ Agregar proveedor</button>
       </div>}
 
@@ -4800,7 +5665,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
     <button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Descargar plantilla</button>
     <label style={menuItemStyle}>
       ↑ Importar lista
-      <input type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
+      <input name="app-field-5455" type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
     </label>
     <button onClick={()=>{setGuia("ceremonia");setShowGuestMenu(false);}} style={menuItemStyle}>📖 Guía nupcial (ceremonia, invitaciones...)</button>
   </>;
@@ -4876,7 +5741,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
         </div>
         {/* Nombre — campo principal, más grande */}
         <div style={{marginBottom:10}}>
-          <input autoFocus type="text" value={newGuest.nombre} onChange={e=>setNewGuest(x=>({...x,nombre:e.target.value}))}
+          <input name="app-field-5531" autoFocus type="text" value={newGuest.nombre} onChange={e=>setNewGuest(x=>({...x,nombre:e.target.value}))}
             onKeyDown={e=>e.key==="Enter"&&addGuest()}
             placeholder="Nombre completo del invitado o familia..."
             style={{width:"100%",fontFamily:THEME.font.display,fontSize:"1.05rem",padding:"10px 14px",borderRadius:10,border:"1.5px solid rgba(74,94,58,.3)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
@@ -4885,29 +5750,29 @@ function GuestsModule({user, onBack, onGoDesigner}){
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:10}}>
           <div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
-            <input type="number" value={newGuest.cantidadInvitados} onChange={e=>setNewGuest(x=>({...x,cantidadInvitados:e.target.value}))} min="1"
+            <input name="app-field-5540" type="number" value={newGuest.cantidadInvitados} onChange={e=>setNewGuest(x=>({...x,cantidadInvitados:e.target.value}))} min="1"
               style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
           </div>
           <div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
-            <input type="number" value={newGuest.mesa} onChange={e=>setNewGuest(x=>({...x,mesa:e.target.value}))} placeholder="—" min="1"
+            <input name="app-field-5545" type="number" value={newGuest.mesa} onChange={e=>setNewGuest(x=>({...x,mesa:e.target.value}))} placeholder="—" min="1"
               style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
           </div>
           <div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
-            <select value={newGuest.lado} onChange={e=>setNewGuest(x=>({...x,lado:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
+            <select name="app-field-5550" value={newGuest.lado} onChange={e=>setNewGuest(x=>({...x,lado:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
               {LADOS.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Parentesco</div>
-            <select value={newGuest.parentesco} onChange={e=>setNewGuest(x=>({...x,parentesco:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
+            <select name="app-field-5556" value={newGuest.parentesco} onChange={e=>setNewGuest(x=>({...x,parentesco:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
               {PARENTESCOS.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div>
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
-            <select value={newGuest.restriccion} onChange={e=>setNewGuest(x=>({...x,restriccion:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
+            <select name="app-field-5562" value={newGuest.restriccion} onChange={e=>setNewGuest(x=>({...x,restriccion:e.target.value}))} style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink}}>
               {RESTRICCIONES.map(o=><option key={o} value={o}>{o}</option>)}
             </select>
           </div>
@@ -4949,14 +5814,14 @@ function GuestsModule({user, onBack, onGoDesigner}){
       {viewMode==="lista"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
         <div style={{flex:1,minWidth:180,position:"relative"}}>
           <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:".9rem",pointerEvents:"none",opacity:.4}}>🔍</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nombre, lado o mesa..."
+          <input name="app-field-5604" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nombre, lado o mesa..."
             style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"8px 10px 8px 34px",borderRadius:100,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream2,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
           {search&&<button onClick={()=>setSearch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",fontSize:".9rem",cursor:"pointer",color:"rgba(26,26,20,.4)",lineHeight:1}}>×</button>}
         </div>
-        <select value={filter.conf} onChange={e=>setFilter(f=>({...f,conf:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.conf?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
+        <select name="app-field-5608" value={filter.conf} onChange={e=>setFilter(f=>({...f,conf:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.conf?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
           <option value="">Confirmación</option>{CONFIRMACIONES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
-        <select value={filter.lado} onChange={e=>setFilter(f=>({...f,lado:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.lado?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
+        <select name="app-field-5611" value={filter.lado} onChange={e=>setFilter(f=>({...f,lado:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.lado?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
           <option value="">Lado</option>{LADOS.map(l=><option key={l}>{l}</option>)}
         </select>
         {(search||filter.conf||filter.lado)&&<button onClick={()=>{setSearch("");setFilter({lado:"",conf:"",mesa:""}); }} style={{background:"transparent",border:"none",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(200,60,60,.6)",cursor:"pointer",whiteSpace:"nowrap"}}>✕ Limpiar</button>}
@@ -4972,7 +5837,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
             <button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer"}}>↓ Descargar plantilla Excel</button>
             <label style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer",display:"inline-flex",alignItems:"center"}}>
               ↑ Importar lista
-              <input type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
+              <input name="app-field-5627" type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
             </label>
           </div>
         </div>}
@@ -5008,7 +5873,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                     </div>
                     {/* Chip de confirmación — clickable */}
                     <div style={{flexShrink:0}}>
-                      <select value={g.confirmacion} onChange={e=>{e.stopPropagation();updateGuest(g.id,"confirmacion",e.target.value);}} onClick={e=>e.stopPropagation()}
+                      <select name="app-field-5663" value={g.confirmacion} onChange={e=>{e.stopPropagation();updateGuest(g.id,"confirmacion",e.target.value);}} onClick={e=>e.stopPropagation()}
                         style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",padding:"8px 10px",borderRadius:THEME.radius.pill,border:`1px solid ${c.color}`,background:c.bg,color:c.color,cursor:"pointer",textTransform:"uppercase"}}>
                         {CONFIRMACIONES.map(cc=><option key={cc.id} value={cc.id}>{cc.label}</option>)}
                       </select>
@@ -5022,33 +5887,33 @@ function GuestsModule({user, onBack, onGoDesigner}){
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginBottom:10}}>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Mesa Nº</div>
-                        <input type="number" key={`mesa-${g.id}-${g.mesa||""}`} defaultValue={g.mesa||""} onBlur={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Sin asignar" min="1"
+                        <input name="app-field-5677" type="number" key={`mesa-${g.id}-${g.mesa||""}`} defaultValue={g.mesa||""} onBlur={e=>updateGuest(g.id,"mesa",e.target.value)} placeholder="Sin asignar" min="1"
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
                         <button onClick={()=>{const s=sugerirMesa(g.parentesco||"Otro",g.lado,g.cantidadInvitados);updateGuest(g.id,"mesa",String(s.mesa));}}
                           style={{background:"transparent",border:"none",fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(139,107,40,.85)",cursor:"pointer",padding:"6px 2px",textAlign:"left"}}>💡 Sugerir según parentesco</button>
                       </div>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Personas</div>
-                        <input type="number" defaultValue={g.cantidadInvitados||1} onBlur={e=>updateGuest(g.id,"cantidadInvitados",e.target.value)} min="1"
+                        <input name="app-field-5684" type="number" defaultValue={g.cantidadInvitados||1} onBlur={e=>updateGuest(g.id,"cantidadInvitados",e.target.value)} min="1"
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box"}}/>
                       </div>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Lado</div>
-                        <select defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)}
+                        <select name="app-field-5689" defaultValue={g.lado} onBlur={e=>updateGuest(g.id,"lado",e.target.value)}
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
                           {LADOS.map(l=><option key={l}>{l}</option>)}
                         </select>
                       </div>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Parentesco</div>
-                        <select defaultValue={g.parentesco||"Otro"} onBlur={e=>updateGuest(g.id,"parentesco",e.target.value)}
+                        <select name="app-field-5696" defaultValue={g.parentesco||"Otro"} onBlur={e=>updateGuest(g.id,"parentesco",e.target.value)}
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
                           {PARENTESCOS.map(p=><option key={p}>{p}</option>)}
                         </select>
                       </div>
                       <div>
                         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:4}}>Restricción</div>
-                        <select defaultValue={g.restriccion} onBlur={e=>updateGuest(g.id,"restriccion",e.target.value)}
+                        <select name="app-field-5703" defaultValue={g.restriccion} onBlur={e=>updateGuest(g.id,"restriccion",e.target.value)}
                           style={{width:"100%",fontFamily:THEME.font.body,fontSize:".9rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink}}>
                           {RESTRICCIONES.map(r=><option key={r}>{r}</option>)}
                         </select>
@@ -5056,7 +5921,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                     </div>
                     <RecommendationBox title="Recomendaciones de mesa" items={getGuestSeatRecommendations(g)}/>
                     {/* Notas */}
-                    <input type="text" defaultValue={g.notas||""} onBlur={e=>updateGuest(g.id,"notas",e.target.value)} placeholder="Notas (opcional)..."
+                    <input name="app-field-5711" type="text" defaultValue={g.notas||""} onBlur={e=>updateGuest(g.id,"notas",e.target.value)} placeholder="Notas (opcional)..."
                       style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:10}}/>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       <button onClick={()=>setExpandedId(null)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:THEME.radius.pill,padding:"11px 24px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.85rem)",cursor:"pointer"}}>✓ Guardar</button>
@@ -5112,7 +5977,7 @@ function GuestsModule({user, onBack, onGoDesigner}){
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}} onClick={e=>e.stopPropagation()}>
                   <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}{over&&" ⚠️"} /</span>
-                  <input type="number" min="2" max="80" key={`cap-${t.num}-${t.cap}`} defaultValue={t.cap}
+                  <input name="app-field-5767" type="number" min="2" max="80" key={`cap-${t.num}-${t.cap}`} defaultValue={t.cap}
                     onBlur={e=>{const v=parseInt(e.target.value); if(v&&v!==t.cap) setCapMesaVista(t.num,v);}}
                     onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}}
                     title="Personas por mesa"
@@ -5220,7 +6085,7 @@ function SalonDesignerModule({user, onBack, onGoGuests}){
     if(!user){ setGuests([]); setLoading(false); return; }
     (async()=>{
       try{
-        const {data:row} = await supabase
+        const {data:row} = await dataClient(user)
           .from("wedding_data")
           .select("guests,table_size,budget")
           .eq("user_id",user.id)
@@ -11391,9 +12256,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         </div>
         {/* Dimensiones */}
         <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-          <input type="number" key={`sw-${salonW}`} defaultValue={salonW} min="5" max="100" onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}} onBlur={e=>{const v=Math.max(5,Math.min(100,parseInt(e.target.value)||salonW));setSalonW(v);if(salonShape==="cuadrado")setSalonH(v);setTimeout(fitToScreen,60);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <input name="app-field-12046" type="number" key={`sw-${salonW}`} defaultValue={salonW} min="5" max="100" onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}} onBlur={e=>{const v=Math.max(5,Math.min(100,parseInt(e.target.value)||salonW));setSalonW(v);if(salonShape==="cuadrado")setSalonH(v);setTimeout(fitToScreen,60);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
           <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.4)"}}>×</span>
-          <input type="number" key={`sh-${salonH}`} defaultValue={salonH} min="5" max="100" onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}} onBlur={e=>{const v=Math.max(5,Math.min(100,parseInt(e.target.value)||salonH));setSalonH(v);if(salonShape==="cuadrado")setSalonW(v);setTimeout(fitToScreen,60);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
+          <input name="app-field-12048" type="number" key={`sh-${salonH}`} defaultValue={salonH} min="5" max="100" onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}} onBlur={e=>{const v=Math.max(5,Math.min(100,parseInt(e.target.value)||salonH));setSalonH(v);if(salonShape==="cuadrado")setSalonW(v);setTimeout(fitToScreen,60);}} style={{width:48,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",minHeight:40,borderRadius:8,border:"1px solid rgba(74,94,58,.2)",textAlign:"center"}}/>
           <span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(26,26,20,.35)"}}>m</span>
         </div>
         {/* Zoom */}
@@ -11453,20 +12318,20 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
           <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
             Invitados
-            <select value={selectedGuestCount} onChange={e=>setSelectedGuestCount(parseInt(e.target.value)||150)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
+            <select name="app-field-12108" value={selectedGuestCount} onChange={e=>setSelectedGuestCount(parseInt(e.target.value)||150)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
               {GUEST_COUNT_OPTIONS.map(n=><option key={n} value={n}>{n} invitados</option>)}
             </select>
           </label>
           <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)"}}>
             Tamaño salón
-            <select value={roomSizeOption} onChange={e=>setRoomSizeOption(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
+            <select name="app-field-12114" value={roomSizeOption} onChange={e=>setRoomSizeOption(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
               {Object.entries(ROOM_SIZE_OPTION_LABELS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
             </select>
           </label>
         </div>
         <label style={{display:"grid",gap:4,fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.48)",marginTop:8}}>
           Tipo de mesa
-          <select value={selectedTableTypeId} onChange={e=>setSelectedTableTypeId(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
+          <select name="app-field-12121" value={selectedTableTypeId} onChange={e=>setSelectedTableTypeId(e.target.value)} style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"10px 12px",borderRadius:9,border:"1px solid rgba(74,94,58,.22)",background:"white",color:THEME.color.ink,outline:"none"}}>
             <option value="auto">Automático recomendado</option>
             {Object.entries(TABLE_TYPES).filter(([id,t])=>id!=="high_cocktail").map(([id,t])=><option key={id} value={id}>{t.label} · {t.capacity} pers.</option>)}
           </select>
@@ -11695,7 +12560,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             <RecommendationBox items={getElementRecommendations(el,{salonW,salonH,mesas,elementos})}/>
             <div style={{display:"grid",gap:6,margin:"8px 0"}}>
               <label style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Nombre visible</label>
-              <input type="text" defaultValue={el.labelOverride||def?.label||""} placeholder="Ej: Barra principal, Pista central..."
+              <input name="app-field-12350" type="text" defaultValue={el.labelOverride||def?.label||""} placeholder="Ej: Barra principal, Pista central..."
                 onChange={e=>setElementos(es=>es.map(x=>x.id===el.id?{...x,labelOverride:e.target.value}:x))}
                 onMouseDown={e=>e.stopPropagation()}
                 style={{width:"100%",boxSizing:"border-box",fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"8px 9px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,outline:"none"}}/>
@@ -11703,11 +12568,11 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             <>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                 <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Medidas</span>
-                <input type="number" step="0.1" min="0.4" key={`ew-${el.id}-${el.ew}`} defaultValue={(el.ew||1).toFixed(1)}
+                <input name="app-field-12358" type="number" step="0.1" min="0.4" key={`ew-${el.id}-${el.ew}`} defaultValue={(el.ew||1).toFixed(1)}
                   onBlur={e=>setElDims(e.target.value,el.eh)} onMouseDown={e=>e.stopPropagation()}
                   style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
                 <span style={{color:"rgba(26,26,20,.35)",fontSize:".75rem"}}>×</span>
-                <input type="number" step="0.1" min="0.4" key={`eh-${el.id}-${el.eh}`} defaultValue={(el.eh||1).toFixed(1)}
+                <input name="app-field-12362" type="number" step="0.1" min="0.4" key={`eh-${el.id}-${el.eh}`} defaultValue={(el.eh||1).toFixed(1)}
                   onBlur={e=>setElDims(el.ew,e.target.value)} onMouseDown={e=>e.stopPropagation()}
                   style={{width:56,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"6px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
                 <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>m</span>
@@ -11732,7 +12597,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>{isTouchAssignment?"tocá o arrastrá a una mesa":"arrastrá al plano"}</span>}
           </div>
           {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
-            <input value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
+            <input name="app-field-12387" value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
               style={{width:"100%",fontFamily:THEME.font.body,fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
             <span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",fontSize:".75rem",opacity:.4}}>🔍</span>
             {searchSinMesa&&<button onClick={()=>setSearchSinMesa("")} style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.4)",fontSize:".8rem"}}>×</button>}
@@ -11791,12 +12656,12 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               </div>
               <div style={{display:"flex",alignItems:"center",gap:5,justifyContent:"flex-end"}}>
                 <span style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.45)"}}>{(selectedMesaObj.tipo||"round")==="round"?"Ø":"Medida"}</span>
-                <input type="number" step="0.1" min="0.6" key={`mw-${selectedMesa}-${selectedMesaObj.ew||""}`} defaultValue={(selectedMesaObj.ew||MESA_R_M*2).toFixed(1)}
+                <input name="app-field-12446" type="number" step="0.1" min="0.6" key={`mw-${selectedMesa}-${selectedMesaObj.ew||""}`} defaultValue={(selectedMesaObj.ew||MESA_R_M*2).toFixed(1)}
                   onBlur={e=>setMedidas(selectedMesaObj,e.target.value,selectedMesaObj.eh)} onMouseDown={e=>e.stopPropagation()}
                   style={{width:52,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"5px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
                 {(selectedMesaObj.tipo||"round")!=="round"&&(selectedMesaObj.tipo!=="square")&&<>
                   <span style={{color:"rgba(26,26,20,.35)",fontSize:".75rem"}}>×</span>
-                  <input type="number" step="0.1" min="0.6" key={`mh-${selectedMesa}-${selectedMesaObj.eh||""}`} defaultValue={(selectedMesaObj.eh||0.8).toFixed(1)}
+                  <input name="app-field-12451" type="number" step="0.1" min="0.6" key={`mh-${selectedMesa}-${selectedMesaObj.eh||""}`} defaultValue={(selectedMesaObj.eh||0.8).toFixed(1)}
                     onBlur={e=>setMedidas(selectedMesaObj,selectedMesaObj.ew,e.target.value)} onMouseDown={e=>e.stopPropagation()}
                     style={{width:52,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",padding:"5px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
                 </>}
@@ -11809,7 +12674,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
             {/* Etiqueta */}
             <div style={{marginBottom:8}}>
-              <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Nombre de la mesa (se ve en el plano)"
+              <input name="app-field-12464" type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Nombre de la mesa (se ve en el plano)"
                 onChange={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
                 style={{width:"100%",fontFamily:THEME.font.body,fontSize:".8rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",outline:"none"}}/>
               <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap"}}>
@@ -11914,12 +12779,12 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         </div>
         <div style={{display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end"}}>
           <span style={{fontFamily:THEME.font.body,fontSize:"max(12px,.75rem)",color:"rgba(26,26,20,.45)"}}>{(selectedMesaObj.tipo||"round")==="round"?"Ø":"Medida"}</span>
-          <input type="number" step="0.1" min="0.6" key={`smw-${selectedMesa}-${selectedMesaObj.ew||""}`} defaultValue={(selectedMesaObj.ew||MESA_R_M*2).toFixed(1)}
+          <input name="app-field-12569" type="number" step="0.1" min="0.6" key={`smw-${selectedMesa}-${selectedMesaObj.ew||""}`} defaultValue={(selectedMesaObj.ew||MESA_R_M*2).toFixed(1)}
             onBlur={e=>setMedidas(selectedMesaObj,e.target.value,selectedMesaObj.eh)}
             style={{width:64,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
           {(selectedMesaObj.tipo||"round")!=="round"&&(selectedMesaObj.tipo!=="square")&&<>
             <span style={{color:"rgba(26,26,20,.35)"}}>×</span>
-            <input type="number" step="0.1" min="0.6" key={`smh-${selectedMesa}-${selectedMesaObj.eh||""}`} defaultValue={(selectedMesaObj.eh||0.8).toFixed(1)}
+            <input name="app-field-12574" type="number" step="0.1" min="0.6" key={`smh-${selectedMesa}-${selectedMesaObj.eh||""}`} defaultValue={(selectedMesaObj.eh||0.8).toFixed(1)}
               onBlur={e=>setMedidas(selectedMesaObj,selectedMesaObj.ew,e.target.value)}
               style={{width:64,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",padding:"8px 4px",borderRadius:6,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,textAlign:"center"}}/>
           </>}
@@ -11937,7 +12802,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           </button>
         ))}
       </div>
-      <input type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Nombre de la mesa (se ve en el plano)"
+      <input name="app-field-12592" type="text" defaultValue={selectedMesaObj.etiqueta||""} placeholder="Nombre de la mesa (se ve en el plano)"
         onChange={e=>updateMesa(selectedMesa,{etiqueta:e.target.value})}
         style={{width:"100%",fontFamily:THEME.font.body,fontSize:"max(14px,.9rem)",padding:"11px 12px",borderRadius:THEME.radius.sm,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:12}}/>
       {/* Tipo de mesa */}
@@ -12117,7 +12982,7 @@ function SeatingCircleView({ guests, tableSize, onAssign, onRemove }){
         {sinMesa.length>12&&<span style={{fontFamily:"'Lora',serif",fontSize:".76rem",color:"rgba(26,26,20,.42)",whiteSpace:"nowrap"}}>buscar y arrastrar</span>}
       </div>
       {sinMesa.length>12&&<div style={{position:"relative",marginBottom:10}}>
-        <input value={searchSinMesaCircle} onChange={e=>setSearchSinMesaCircle(e.target.value)} placeholder="Buscar invitado sin mesa..."
+        <input name="app-field-12772" value={searchSinMesaCircle} onChange={e=>setSearchSinMesaCircle(e.target.value)} placeholder="Buscar invitado sin mesa..."
           style={{width:"100%",boxSizing:"border-box",fontFamily:"'Lora',serif",fontSize:".84rem",padding:"8px 12px 8px 30px",borderRadius:100,border:"1px solid rgba(201,169,110,.28)",background:"#FBF7EF",outline:"none",color:"#1A1A14"}}/>
         <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:".82rem",opacity:.38}}>🔍</span>
         {searchSinMesaCircle&&<button onClick={()=>setSearchSinMesaCircle("")} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",cursor:"pointer",color:"rgba(26,26,20,.45)",fontSize:".9rem"}}>×</button>}
@@ -12475,14 +13340,14 @@ function TimelineModule({user, form, results, onBack}){
           {[{label:"Hora",key:"hora",type:"time"},{label:"Evento",key:"titulo",type:"text",placeholder:"ej: Primer baile"},{label:"Duración (min)",key:"duracion",type:"number"},{label:"Lugar",key:"lugar",type:"text",placeholder:"ej: Jardín"}].map(f=>
             <div key={f.key}>
               <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginBottom:4}}>{f.label}</div>
-              <input type={f.type} value={newEv[f.key]} onChange={e=>setNewEv(x=>({...x,[f.key]:e.target.value}))} placeholder={f.placeholder||""}
+              <input name="app-field-13130" type={f.type} value={newEv[f.key]} onChange={e=>setNewEv(x=>({...x,[f.key]:e.target.value}))} placeholder={f.placeholder||""}
                 style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
             </div>
           )}
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
           <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)"}}>
-            <input type="checkbox" checked={"cancion" in newEv} onChange={e=>setNewEv(x=>{
+            <input name="app-field-13137" type="checkbox" checked={"cancion" in newEv} onChange={e=>setNewEv(x=>{
               if(e.target.checked)return{...x,cancion:"",esVivo:false,quienToca:""};
               const{cancion,esVivo,quienToca,...rest}=x;return rest;
             })} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
@@ -12491,30 +13356,30 @@ function TimelineModule({user, form, results, onBack}){
         </div>
         {"cancion" in newEv && <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:6}}>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <input type="text" value={newEv.cancion||""} onChange={e=>setNewEv(x=>({...x,cancion:e.target.value}))} placeholder="Canción (opcional)"
+            <input name="app-field-13146" type="text" value={newEv.cancion||""} onChange={e=>setNewEv(x=>({...x,cancion:e.target.value}))} placeholder="Canción (opcional)"
               style={{flex:1,fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14"}}/>
             <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
-              <input type="checkbox" checked={!!newEv.esVivo} onChange={e=>setNewEv(x=>({...x,esVivo:e.target.checked}))} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+              <input name="app-field-13149" type="checkbox" checked={!!newEv.esVivo} onChange={e=>setNewEv(x=>({...x,esVivo:e.target.checked}))} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
               En vivo
             </label>
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
             <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
             {vendorsMusica.length>0
-              ? <select value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
+              ? <select name="app-field-13156" value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
                   style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
                   <option value="">Sin asignar</option>
                   {vendorsMusica.map(v=><option key={v.id} value={v.nombre||v.id}>{v.nombre||"Sin nombre"}</option>)}
                   <option value="DJ">DJ</option>
                   <option value="Música grabada">Música grabada</option>
                 </select>
-              : <input type="text" value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
+              : <input name="app-field-13163" type="text" value={newEv.quienToca||""} onChange={e=>setNewEv(x=>({...x,quienToca:e.target.value}))}
                   placeholder="ej: DJ, Violín de Ceci, Banda..."
                   style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}/>
             }
           </div>
         </div>}
-        <textarea value={newEv.notas} onChange={e=>setNewEv(x=>({...x,notas:e.target.value}))} rows={2} placeholder="Notas para proveedores..."
+        <textarea name="app-field-13169" value={newEv.notas} onChange={e=>setNewEv(x=>({...x,notas:e.target.value}))} rows={2} placeholder="Notas para proveedores..."
           style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"8px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",resize:"none",boxSizing:"border-box",marginBottom:10}}/>
         <div style={{display:"flex",gap:8}}>
           <button onClick={addEvent} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"9px 20px",fontFamily:"'Lora',serif",fontWeight:700,fontSize:".88rem",cursor:"pointer"}}>✓ Agregar</button>
@@ -12570,16 +13435,16 @@ function TimelineModule({user, form, results, onBack}){
               </div>
               :<div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:7,width:"100%"}}>
-                  <input type="time" defaultValue={ev.hora} onBlur={e=>updateEv(ev.id,"hora",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:90}}/>
-                  <input type="text" defaultValue={ev.titulo} onBlur={e=>updateEv(ev.id,"titulo",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",flex:1,minWidth:120}}/>
-                  <input type="number" defaultValue={ev.duracion} onBlur={e=>updateEv(ev.id,"duracion",e.target.value)} placeholder="min" title="Duración en minutos" style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:70}}/>
+                  <input name="app-field-13225" type="time" defaultValue={ev.hora} onBlur={e=>updateEv(ev.id,"hora",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:90}}/>
+                  <input name="app-field-13226" type="text" defaultValue={ev.titulo} onBlur={e=>updateEv(ev.id,"titulo",e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",flex:1,minWidth:120}}/>
+                  <input name="app-field-13227" type="number" defaultValue={ev.duracion} onBlur={e=>updateEv(ev.id,"duracion",e.target.value)} placeholder="min" title="Duración en minutos" style={{fontFamily:"'Lora',serif",fontSize:".9rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.22)",background:"#F5EFE0",color:"#1A1A14",width:70}}/>
                   <button onClick={()=>setEditId(null)} style={{background:"#4A5E3A",color:"#F5EFE0",border:"none",borderRadius:100,padding:"7px 14px",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer"}}>✓</button>
                 </div>
-                <input type="text" defaultValue={ev.lugar||""} onBlur={e=>updateEv(ev.id,"lugar",e.target.value)} placeholder="Lugar" style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:5}}/>
+                <input name="app-field-13230" type="text" defaultValue={ev.lugar||""} onBlur={e=>updateEv(ev.id,"lugar",e.target.value)} placeholder="Lugar" style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box",marginBottom:5}}/>
                 {/* Toggle música */}
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
                   <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".82rem",color:"rgba(26,26,20,.6)"}}>
-                    <input type="checkbox" checked={"cancion" in ev} onChange={e=>{
+                    <input name="app-field-13234" type="checkbox" checked={"cancion" in ev} onChange={e=>{
                       if(e.target.checked) updateEv(ev.id,"cancion","");
                       else {
                         const next=events.map(x=>{if(x.id!==ev.id)return x;const{cancion,esVivo,quienToca,...rest}=x;return rest;});
@@ -12592,7 +13457,7 @@ function TimelineModule({user, form, results, onBack}){
                 {"cancion" in ev && <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:5}}>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
                     <div style={{flex:1,display:"flex",flexDirection:"column",gap:3}}>
-                      <input type="text" defaultValue={ev.cancion||""} onBlur={e=>updateEv(ev.id,"cancion",e.target.value)}
+                      <input name="app-field-13247" type="text" defaultValue={ev.cancion||""} onBlur={e=>updateEv(ev.id,"cancion",e.target.value)}
                         placeholder={getSugerencia(ev.id) ? "Sugerencia del guion abajo ↓" : "Canción (ej: Can't Help Falling in Love)"}
                         style={{width:"100%",fontFamily:"'Lora',serif",fontSize:".88rem",padding:"6px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14",boxSizing:"border-box"}}/>
                       {!ev.cancion && getSugerencia(ev.id) && <button onClick={()=>updateEv(ev.id,"cancion",getSugerencia(ev.id))}
@@ -12601,7 +13466,7 @@ function TimelineModule({user, form, results, onBack}){
                       </button>}
                     </div>
                     <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",flexShrink:0,fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.6)",whiteSpace:"nowrap"}}>
-                      <input type="checkbox" defaultChecked={!!ev.esVivo} onChange={e=>updateEv(ev.id,"esVivo",e.target.checked)} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
+                      <input name="app-field-13256" type="checkbox" defaultChecked={!!ev.esVivo} onChange={e=>updateEv(ev.id,"esVivo",e.target.checked)} style={{width:15,height:15,accentColor:"#4A5E3A",cursor:"pointer"}}/>
                       En vivo
                     </label>
                   </div>
@@ -12609,14 +13474,14 @@ function TimelineModule({user, form, results, onBack}){
                   <div style={{display:"flex",gap:6,alignItems:"center"}}>
                     <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",flexShrink:0}}>🎻 Quién toca:</span>
                     {vendorsMusica.length>0
-                      ? <select defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
+                      ? <select name="app-field-13264" defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
                           style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}>
                           <option value="">Sin asignar</option>
                           {vendorsMusica.map(v=><option key={v.id} value={v.nombre||v.id}>{v.nombre||"Proveedor sin nombre"}</option>)}
                           <option value="DJ">DJ</option>
                           <option value="Música grabada">Música grabada</option>
                         </select>
-                      : <input type="text" defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
+                      : <input name="app-field-13271" type="text" defaultValue={ev.quienToca||""} onBlur={e=>updateEv(ev.id,"quienToca",e.target.value)}
                           placeholder="ej: DJ, Violín de Ceci, Banda..."
                           style={{flex:1,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"5px 8px",borderRadius:7,border:"1px solid rgba(74,94,58,.18)",background:"#F5EFE0",color:"#1A1A14"}}/>
                     }
@@ -13013,7 +13878,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
             <button key={id} onClick={()=>setFiltro(id)} style={{padding:"6px 14px",borderRadius:100,border:"none",fontFamily:"'Lora',serif",fontSize:".82rem",cursor:"pointer",background:filtro===id?"#4A5E3A":"transparent",color:filtro===id?"#F5EFE0":"rgba(26,26,20,.45)",transition:"all .2s"}}>{label}</button>
           )}
         </div>
-        <select value={filtroRes} onChange={e=>setFiltroRes(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"6px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
+        <select name="app-field-13668" value={filtroRes} onChange={e=>setFiltroRes(e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"6px 12px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:"#FBF7EF",color:"#1A1A14",cursor:"pointer"}}>
           <option value="todos">Todos los responsables</option>
           {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
         </select>
@@ -13096,20 +13961,20 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
                   </div>
                 </div>
                 {expandKey===`${ei}_${ii}`&&<div style={{display:"flex",gap:6,paddingLeft:0,width:"100%",flexWrap:"wrap",alignItems:"flex-start",marginTop:6}}>
-                  <select value={resp[`${ei}_${ii}`]||""} onChange={e=>setResponsable(`${ei}_${ii}`,e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
+                  <select name="app-field-13751" value={resp[`${ei}_${ii}`]||""} onChange={e=>setResponsable(`${ei}_${ii}`,e.target.value)} style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.25)",background:"#F5EFE0",color:"#1A1A14"}}>
                     <option value="">Sin responsable</option>
                     {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
                   </select>
-                  <input type="text" value={notas[`${ei}_${ii}`]||""} onChange={e=>setNota(`${ei}_${ii}`,e.target.value)} placeholder="Nota (proveedor, recordatorio...)" style={{flex:1,minWidth:120,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}/>
+                  <input name="app-field-13755" type="text" value={notas[`${ei}_${ii}`]||""} onChange={e=>setNota(`${ei}_${ii}`,e.target.value)} placeholder="Nota (proveedor, recordatorio...)" style={{flex:1,minWidth:120,fontFamily:"'Lora',serif",fontSize:".85rem",padding:"4px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14"}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
                     <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Límite:</span>
-                    <input type="date" value={getFecha(`${ei}_${ii}`)} onChange={e=>setFecha(`${ei}_${ii}`,e.target.value)}
+                    <input name="app-field-13758" type="date" value={getFecha(`${ei}_${ii}`)} onChange={e=>setFecha(`${ei}_${ii}`,e.target.value)}
                       style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",width:"min(130px,100%)",boxSizing:"border-box"}}/>
                     {getFecha(`${ei}_${ii}`)&&<button onClick={()=>setFecha(`${ei}_${ii}`,"")} style={{background:"transparent",border:"none",color:"rgba(26,26,20,.3)",cursor:"pointer",fontSize:".9rem",padding:"0 2px",lineHeight:1}}>×</button>}
                   </div>
                   {vendors4Chk.length>0&&<div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
                     <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.tiny,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)"}}>Proveedor:</span>
-                    <select value={getVendorId(`${ei}_${ii}`)} onChange={e=>setVendorId(`${ei}_${ii}`,e.target.value)}
+                    <select name="app-field-13764" value={getVendorId(`${ei}_${ii}`)} onChange={e=>setVendorId(`${ei}_${ii}`,e.target.value)}
                       style={{fontFamily:"'Lora',serif",fontSize:".8rem",padding:"4px 8px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:"#F5EFE0",color:"#1A1A14",maxWidth:140}}>
                       <option value="">Ninguno</option>
                       {vendors4Chk.map(v=><option key={v.id} value={v.id}>{v.nombre||"Sin nombre"}</option>)}
@@ -13141,7 +14006,7 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
             {/* Add custom item */}
             {addingTo===ei
               ? <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
-                  <input autoFocus type="text" value={newText} onChange={e=>setNewText(e.target.value)}
+                  <input name="app-field-13796" autoFocus type="text" value={newText} onChange={e=>setNewText(e.target.value)}
                     onKeyDown={e=>{if(e.key==="Enter")addCustom(ei);if(e.key==="Escape"){setAddingTo(null);setNewText("");}}}
                     placeholder="Escribí la tarea y presioná Enter..."
                     style={{flex:1,fontFamily:"'Lora',serif",fontSize:".9rem",padding:"8px 12px",borderRadius:8,border:"1px solid rgba(74,94,58,.3)",background:"#F5EFE0",color:"#1A1A14"}}/>
@@ -13319,53 +14184,53 @@ function FreeStartChoice({onGuided,onExplore,onLogin,onExit}){
 function ToolsHub({user,hasResults,isDemo=false,onGoModule,onViewResults,onStartNew,onOpenStart,onRequestPurchase}){
   const groups = [
     {title:"Ordenar la planificación",copy:"Las bases para tomar decisiones con claridad.",items:[
-      {id:"checklist-boda",emoji:"📋",label:"Plan y checklist",desc:"Qué hacer, en qué orden y qué falta."},
-      {id:"budget",emoji:"💰",label:"Presupuesto",desc:"Categorías, pagos y control del total."},
-      {id:"vendors",emoji:"🏢",label:"Proveedores",desc:"Propuestas, contactos y decisiones."}
+      {id:"checklist-boda",icon:"plan",label:"Plan y checklist",desc:"Qué hacer, en qué orden y qué falta."},
+      {id:"budget",icon:"budget",label:"Presupuesto",desc:"Categorías, pagos y control del total."},
+      {id:"vendors",icon:"vendors",label:"Proveedores",desc:"Propuestas, contactos y decisiones."}
     ]},
     {title:"Invitados y espacio",copy:"Todo lo que define cómo se vive y se organiza el evento.",items:[
-      {id:"guests",emoji:"👥",label:"Invitados",desc:"Lista, etiquetas, confirmaciones y grupos."},
-      {id:"salon-design",emoji:"🏛️",label:"Diseño del salón",desc:"Medidas, mesas, muebles y circulación."},
-      {id:"timeline",emoji:"⏰",label:"Cronograma",desc:"Secuencia y responsables del gran día."}
+      {id:"guests",icon:"guests",label:"Invitados",desc:"Lista, etiquetas, confirmaciones y grupos."},
+      {id:"salon-design",icon:"salon",label:"Diseño del salón",desc:"Medidas, mesas, muebles y circulación."},
+      {id:"timeline",icon:"timeline",label:"Cronograma",desc:"Secuencia y responsables del gran día."}
     ]},
     {title:"La experiencia de la boda",copy:"Decisiones que hacen que la celebración se sienta propia.",items:[
-      {id:"guia",emoji:"🎵",label:"Música",desc:hasResults?"Tu guion musical personalizado.":"Test y planificación musical."},
-      {id:"guia-novios",emoji:"📖",label:"Guía para novios",desc:"Protocolo, ceremonia y consejos prácticos."}
+      {id:"guia",icon:"music",label:"Música",desc:hasResults?"Tu guion musical personalizado.":"Test y planificación musical."},
+      {id:"guia-novios",icon:"guide",label:"Guía para novios",desc:"Protocolo, ceremonia y consejos prácticos."}
     ]}
   ];
 
   const open=(item)=>{
-    trackProductEvent("module_opened",{module:item.id,is_demo:isDemo,source:"tools_hub"});
+    trackProductEvent("module_opened",{module:item.id,is_demo:isDemo,source:"tools_hub_v10"});
     if(item.id==="guia") return hasResults?onViewResults():onStartNew();
     onGoModule(item.id);
   };
 
-  return <div style={{minHeight:"100svh",padding:"clamp(16px,4vw,48px) clamp(14px,4vw,42px) 110px"}}>
+  return <div style={{minHeight:"100svh",background:"#F5EFE0",padding:"clamp(18px,4vw,44px) clamp(12px,4vw,38px) 112px"}}>
     <div className="fu" style={{maxWidth:980,margin:"0 auto"}}>
-      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap",marginBottom:24}}>
-        <div>
-          <div className="brand-logo" style={{marginBottom:8}}>Tu Boda Organizada</div>
-          <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.25rem)",margin:"0 0 8px"}}>Todos los módulos</h1>
-          <p className="brand-copy" style={{fontSize:"1rem",margin:0,maxWidth:650}}>Elegí directamente qué querés resolver. No necesitás completar el recorrido guiado para usar las herramientas.</p>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr)",gap:16,marginBottom:18}}>
+        <div style={{background:"#FFFDF8",border:"1px solid rgba(201,169,110,.24)",borderRadius:24,padding:"clamp(22px,5vw,36px)"}}>
+          <div className="brand-logo" style={{marginBottom:9}}>Tu Boda Organizada</div>
+          <h1 className="brand-title" style={{fontSize:"clamp(2rem,6vw,3.25rem)",margin:"0 0 8px"}}>Todas las herramientas</h1>
+          <p className="brand-copy" style={{fontSize:".96rem",margin:"0 0 18px",maxWidth:650}}>Entrá directamente cuando ya sabés qué necesitás resolver. También podés volver al recorrido guiado para recibir una recomendación.</p>
+          <button className="gbtn" onClick={onOpenStart} style={{display:"inline-flex",alignItems:"center",gap:9}}><ProductIcon name="compass" size={20}/> Ayudame a priorizar</button>
         </div>
-        <button className="gbtn" onClick={onOpenStart}>🧭 No sé por dónde empezar</button>
       </div>
 
-      {isDemo&&<div style={{background:"rgba(74,94,58,.07)",border:"0.5px solid rgba(74,94,58,.22)",borderRadius:15,padding:"13px 15px",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.45,color:"rgba(26,26,20,.62)"}}><strong style={{color:"#4A5E3A"}}>Prueba gratuita.</strong> Podés recorrer y editar. Guardar, exportar y conservar avances requiere acceso completo.</div>
-        <button className="lbtn" onClick={onRequestPurchase}>Ver acceso completo</button>
+      {isDemo&&<div style={{background:"#FFFDF8",border:"1px solid rgba(74,94,58,.18)",borderRadius:16,padding:"13px 15px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.5,color:"rgba(26,26,20,.66)"}}><strong style={{color:"#4A5E3A"}}>Prueba gratuita.</strong> Podés recorrer y cargar datos temporales. Se borran al recargar o salir.</div>
+        <button className="lbtn" onClick={onRequestPurchase}>Guardar mi planificación</button>
       </div>}
 
-      {groups.map(group=><section key={group.title} style={{marginBottom:27}}>
-        <div style={{marginBottom:12}}>
+      {groups.map(group=><section className="tools-v10-section" key={group.title}>
+        <div style={{marginBottom:14}}>
           <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,3vw,1.75rem)",margin:"0 0 4px"}}>{group.title}</h2>
-          <p style={{fontFamily:"'Lora',serif",fontSize:".84rem",color:"rgba(26,26,20,.46)",margin:0}}>{group.copy}</p>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".84rem",color:"rgba(26,26,20,.48)",margin:0}}>{group.copy}</p>
         </div>
-        <div className="modules-card-grid">
-          {group.items.map(item=><button key={item.id} className="module-card" type="button" onClick={()=>open(item)} style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.3)",borderRadius:17,padding:"18px 12px",textAlign:"left",cursor:"pointer",minHeight:145,boxShadow:"0 5px 16px rgba(49,39,25,.05)"}}>
-            <div style={{fontSize:"1.55rem",marginBottom:10}}>{item.emoji}</div>
-            <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.05rem",marginBottom:6}}>{item.label}</div>
-            <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.48,color:"rgba(26,26,20,.48)"}}>{item.desc}</div>
+        <div className="tools-v10-grid">
+          {group.items.map(item=><button key={item.id} className="tools-v10-card module-card-v10" type="button" onClick={()=>open(item)}>
+            <span className="product-icon-wrap"><ProductIcon name={item.icon} size={23}/></span>
+            <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"1.03rem",marginBottom:6}}>{item.label}</div>
+            <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",lineHeight:1.48,color:"rgba(26,26,20,.5)"}}>{item.desc}</div>
           </button>)}
         </div>
       </section>)}
@@ -13389,20 +14254,43 @@ function AccountScreen({user,isDemo=false,onLogin,onBuy,onLogout}){
   </div>;
 }
 
+function ModuleContextBar({title,onBack,onHome}){
+  return <div className="module-context-bar no-print">
+    <div className="module-context-inner">
+      <button type="button" className="module-context-btn" onClick={onBack}>← Módulos</button>
+      <div className="module-context-title">{title}</div>
+      <button type="button" className="module-context-btn" onClick={onHome} aria-label="Volver al inicio">Inicio</button>
+    </div>
+  </div>;
+}
+
+function DemoPurchaseBar({onBuy,withNav=true}){
+  return <>
+    <div className="demo-purchase-spacer" aria-hidden="true"/>
+    <aside className={`demo-purchase-bar no-print ${withNav?"":"no-nav"}`} aria-label="Opciones de compra de la demo">
+      <div className="demo-purchase-copy">
+        <strong>Estás probando gratis</strong>
+        <span>Comprá para guardar y continuar después.</span>
+      </div>
+      <button type="button" onClick={onBuy}>Comprar y guardar</button>
+    </aside>
+  </>;
+}
+
 // ─── GLOBAL NAV BAR ───────────────────────────────────────────────────────────
 function GlobalNav({view, setView, hasResults, isDemo=false}){
   const items = [
-    {id:"home",icon:"🏠",label:"Inicio",activeIds:["home"]},
-    {id:"tools",icon:"▦",label:"Módulos",activeIds:["tools","budget","vendors","guests","salon-design","timeline","guia-novios"]},
-    {id:"checklist-boda",icon:"📋",label:"Plan",activeIds:["checklist-boda"]},
-    {id:hasResults?"results":"guia",icon:"🎵",label:"Música",activeIds:["guia","form","generating","results"]},
-    {id:"account",icon:"👤",label:"Cuenta",activeIds:["account"]}
+    {id:"home",icon:"home",label:"Inicio",activeIds:["home"]},
+    {id:"tools",icon:"grid",label:"Módulos",activeIds:["tools","budget","vendors","guests","salon-design","timeline","guia-novios"]},
+    {id:"checklist-boda",icon:"plan",label:"Mi plan",activeIds:["checklist-boda"]},
+    {id:hasResults?"results":"guia",icon:"music",label:"Música",activeIds:["guia","form","generating","results"]},
+    {id:"account",icon:"account",label:"Cuenta",activeIds:["account"]}
   ];
-  return <nav style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(251,247,239,.97)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderTop:"0.5px solid rgba(201,169,110,.25)",boxShadow:"0 -4px 24px rgba(26,20,14,.06)"}} className="no-print">
-    <div style={{display:"flex",alignItems:"stretch",maxWidth:680,margin:"0 auto",paddingBottom:"max(4px,env(safe-area-inset-bottom))"}}>
-      {items.map(item=>{const active=item.activeIds.includes(view);return <button key={item.label} onClick={()=>setView(item.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,background:"transparent",border:"none",cursor:"pointer",padding:"9px 5px 7px",minHeight:THEME.tap.comfortable,flex:1,borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent"}}>
-        <span style={{fontSize:"1.18rem",lineHeight:1}}>{item.icon}</span>
-        <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".04em",textTransform:"uppercase",color:active?"#4A5E3A":"rgba(26,26,20,.4)",fontWeight:active?700:400,whiteSpace:"nowrap",marginTop:3,lineHeight:1}}>{item.label}</span>
+  return <nav style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"#FFFDF8",borderTop:"1px solid rgba(74,94,58,.12)",boxShadow:"0 -7px 22px rgba(63,50,31,.07)"}} className="no-print global-nav">
+    <div style={{display:"flex",alignItems:"stretch",maxWidth:680,margin:"0 auto",paddingBottom:"max(5px,env(safe-area-inset-bottom))"}}>
+      {items.map(item=>{const active=item.activeIds.includes(view);return <button key={item.label} onClick={()=>setView(item.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,background:"transparent",border:"none",cursor:"pointer",padding:"9px 5px 7px",minHeight:THEME.tap.comfortable,flex:1,borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent",color:active?"#4A5E3A":"rgba(26,26,20,.46)"}}>
+        <span className="nav-v10-icon"><ProductIcon name={item.icon} size={22} color="currentColor" strokeWidth={active?2.1:1.7}/></span>
+        <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".04em",textTransform:"uppercase",color:"currentColor",fontWeight:active?700:500,whiteSpace:"nowrap",marginTop:3,lineHeight:1}}>{item.label}</span>
       </button>;})}
     </div>
   </nav>;
@@ -13444,6 +14332,23 @@ export default function App(){
   const [fullGuideWelcomeOpen,setFullGuideWelcomeOpen]=useState(false);
   const [authInitialMode,setAuthInitialMode]=useState(getInitialAuthMode);
 
+
+  // Las pantallas operativas usan un fondo limpio para priorizar lectura y concentración.
+  useEffect(()=>{
+    if(typeof document==="undefined") return;
+    const editorialViews = new Set(["landing","auth","free-choice","start","form","generating","guia"]);
+    const operational = !editorialViews.has(view);
+    if(operational){
+      document.documentElement.style.backgroundImage = "none";
+      document.documentElement.style.backgroundColor = "#F5EFE0";
+      document.body.style.backgroundColor = "#F5EFE0";
+    }else{
+      document.documentElement.style.removeProperty("background-image");
+      document.documentElement.style.removeProperty("background-color");
+      document.body.style.removeProperty("background-color");
+    }
+  },[view]);
+
   // El test demo puede recuperarse tras la compra.
   // Los demás módulos funcionan solo en memoria durante la sesión: no llegan a Supabase
   // y no se conservan al recargar o salir.
@@ -13465,6 +14370,13 @@ export default function App(){
     document.head.appendChild(s);
     return()=>{const el=document.getElementById("wsa-css");if(el)el.remove();};
   },[]);
+
+  // Cada pantalla y cada paso empiezan desde arriba. Evita entrar a un módulo
+  // conservando la posición de scroll de la pantalla anterior.
+  useEffect(()=>{
+    const frame=requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:"auto"}));
+    return()=>cancelAnimationFrame(frame);
+  },[view,step]);
 
 
   useEffect(()=>{
@@ -13972,7 +14884,7 @@ export default function App(){
     }
   };
 
-  const startDemo=()=>{
+  const beginDemo=(targetView="free-choice",source="auth_free")=>{
     hasHydrated.current=true;
     demoWeddingMemory={};
     let savedForm=null;
@@ -13992,9 +14904,11 @@ export default function App(){
     setChecked({});
     setArquetipo(null);
     setResultToken(null);
-    trackProductEvent("demo_started", {source:"auth_free"});
-    setView("free-choice");
+    trackProductEvent("demo_started", {source,target_view:targetView});
+    setView(targetView);
   };
+  const startDemo=()=>beginDemo("free-choice","auth_free");
+  const startDemoAtModule=(module)=>beginDemo(module,"landing_module");
 
   const openAuth=(mode="login")=>{
     setAuthInitialMode(mode);
@@ -14028,7 +14942,25 @@ export default function App(){
     setFullGuideWelcomeOpen(false);
     trackProductEvent("full_guide_welcome_closed",{reason});
   };
-  const decorate=(content)=><>{content}<PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/><GuideLeadModal open={guideOpen} onClose={()=>setGuideOpen(false)}/><FullGuideWelcomeModal open={fullGuideWelcomeOpen&&!demo&&accessStatus==="granted"} onClose={dismissFullGuideWelcome} onGoGuide={()=>{dismissFullGuideWelcome("open_guide_module");setView("guia-novios");}}/></>;
+  const moduleContextTitles = {
+    "budget":"Presupuesto",
+    "vendors":"Proveedores",
+    "guests":"Invitados",
+    "salon-design":"Diseño del salón",
+    "timeline":"Cronograma",
+    "checklist-boda":"Mi plan y checklist",
+    "guia-novios":"Guía para novios"
+  };
+  const showModuleContext = !!user && !!moduleContextTitles[view];
+  const showDemoPurchase = demo && !["free-choice","start","auth","landing","account","locked","generating","results"].includes(view);
+  const decorate=(content)=><>
+    {showModuleContext&&<ModuleContextBar title={moduleContextTitles[view]} onBack={()=>setView("tools")} onHome={()=>setView("home")}/>}
+    {content}
+    {showDemoPurchase&&<DemoPurchaseBar withNav={showNav} onBuy={()=>setPurchaseOpen(true)}/>}
+    <PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/>
+    <GuideLeadModal open={guideOpen} onClose={()=>setGuideOpen(false)}/>
+    <FullGuideWelcomeModal open={fullGuideWelcomeOpen&&!demo&&accessStatus==="granted"} onClose={dismissFullGuideWelcome} onGoGuide={()=>{dismissFullGuideWelcome("open_guide_module");setView("guia-novios");}}/>
+  </>;
 
   if(authLoading || (!!user&&!demo&&accessStatus==="checking")) return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
   if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onBack={backToLanding} onPasswordUpdated={()=>{
@@ -14049,7 +14981,7 @@ export default function App(){
   }}/>;
 
   if(!user){
-    if(view==="landing") return decorate(<Landing onTry={startDemo} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)}/>);
+    if(view==="landing") return decorate(<Landing onTry={startDemo} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)} onOpenDemoModule={startDemoAtModule}/>);
     return decorate(<AuthScreen
       initialMode={authInitialMode}
       initialError={authNotice}
@@ -14136,7 +15068,7 @@ export default function App(){
     onLogout={logout}
     onOpenStart={()=>setView("start")}
   />{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
-  if(view==="landing") return decorate(<Landing onTry={()=>setView("free-choice")} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)}/>);
+  if(view==="landing") return decorate(<Landing onTry={()=>setView("free-choice")} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)} onOpenDemoModule={(module)=>setView(module)}/>);
   if(view==="guia") return demo
     ? decorate(<Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")} isDemo={true}/>)
     : decorate(<GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>);
