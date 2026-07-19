@@ -22,6 +22,11 @@ const supabase = SB_URL && SB_KEY
 
 
 const HOTMART_CHECKOUT_URL = "https://pay.hotmart.com/W106077396L?checkoutMode=10&bid=1783991520846";
+const FREE_GUIDE_URL = "/guias/nos-comprometimos-guia-gratuita.pdf";
+const FULL_GUIDE_ENDPOINT = "/api/full-guide";
+const FULL_GUIDE_WELCOME_KEY = "ceci_full_guide_welcome_seen_v1";
+const HOTMART_SEND_FORM_ID = "BEudGxe";
+const HOTMART_SEND_ACTION = "https://handler.send.hotmart.com/subscription/BEudGxe?hotfeature=53";
 const MARKETING_PARAMS_KEY = "ceci_marketing_params_v1";
 const MARKETING_PARAM_NAMES = ["utm_source","utm_medium","utm_campaign","utm_content","utm_term","sck","src"];
 
@@ -395,6 +400,14 @@ html,body{overscroll-behavior-y:none}
     background: url('/bg-desktop.jpg') center center / cover no-repeat fixed, #F5EFE0;
   }
 }
+.mobile-buy-bar{display:none}
+.guide-consent-row{display:flex;align-items:flex-start;gap:10px;text-align:left;margin:12px 0 16px}
+.guide-consent-row input[type="checkbox"]{width:19px!important;height:19px!important;min-height:19px!important;margin:3px 0 0!important;padding:0!important;flex:0 0 19px;-webkit-appearance:auto;appearance:auto;accent-color:#4A5E3A}
+@media(max-width:640px){
+  .mobile-buy-bar{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:850;gap:8px;padding:9px;background:rgba(251,247,239,.96);border:1px solid rgba(201,169,110,.36);border-radius:18px;box-shadow:0 12px 34px rgba(26,20,14,.2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .mobile-buy-bar button{flex:1;min-height:50px;border-radius:13px}
+}
+
 .home-content-card{
   background: rgba(251,247,239,.94);
   backdrop-filter: blur(14px);
@@ -1063,7 +1076,235 @@ function Progress({step}){
   </div>;
 }
 
-function Landing({onTry,onLogin,onBuy}){
+function downloadBrowserFile(url, filename){
+  if(typeof document === "undefined") return;
+  const link=document.createElement("a");
+  link.href=url;
+  link.download=filename||"";
+  link.rel="noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function GuideLeadModal({open,onClose}){
+  const [email,setEmail]=useState("");
+  const [consent,setConsent]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [sent,setSent]=useState(false);
+  const [error,setError]=useState("");
+  const submittedRef=useRef(false);
+  const completedRef=useRef(false);
+  const frameNameRef=useRef(`hotmart-send-${Math.random().toString(36).slice(2)}`);
+
+  useEffect(()=>{
+    if(!open) return;
+    setError("");
+    trackProductEvent("free_guide_modal_opened", {source:"landing"});
+  },[open]);
+
+  if(!open) return null;
+
+  const finish=()=>{
+    if(completedRef.current) return;
+    completedRef.current=true;
+    setLoading(false);
+    setSent(true);
+    trackProductEvent("free_guide_requested", {form_id:HOTMART_SEND_FORM_ID});
+    downloadBrowserFile(FREE_GUIDE_URL,"Nos-comprometimos-y-ahora-que-GUIA-GRATUITA.pdf");
+  };
+
+  const submit=(event)=>{
+    setError("");
+    const cleanEmail=email.toLowerCase().trim();
+    if(!cleanEmail || !cleanEmail.includes("@")){
+      event.preventDefault();
+      return setError("Escribí un email válido para recibir la guía.");
+    }
+    if(!consent){
+      event.preventDefault();
+      return setError("Necesitamos tu autorización para enviarte la guía por email.");
+    }
+    submittedRef.current=true;
+    completedRef.current=false;
+    setLoading(true);
+
+    // El formulario se envía directamente a Hotmart Send sin captcha.
+    // La descarga se habilita cuando el iframe recibe la respuesta de Hotmart.
+    window.setTimeout(()=>{
+      if(!completedRef.current){
+        setLoading(false);
+        setError("Hotmart está tardando más de lo esperado. Volvé a intentarlo con otro email.");
+      }
+    },12000);
+  };
+
+  const actionUrl=(()=>{
+    try{
+      const url=new URL(HOTMART_SEND_ACTION);
+      const params=captureMarketingParams();
+      MARKETING_PARAM_NAMES.forEach(name=>{ if(params[name]) url.searchParams.set(name,params[name]); });
+      return url.toString();
+    }catch(e){ return HOTMART_SEND_ACTION; }
+  })();
+
+  return <div onMouseDown={e=>{if(e.target===e.currentTarget&&!loading)onClose();}} style={{position:"fixed",inset:0,zIndex:10060,background:"rgba(18,18,14,.68)",backdropFilter:"blur(7px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+    <iframe title="Confirmación de guía" name={frameNameRef.current} onLoad={()=>{if(submittedRef.current)finish();}} style={{display:"none"}}/>
+    <div className="fu" style={{width:"100%",maxWidth:760,maxHeight:"calc(100dvh - 32px)",overflowY:"auto",background:"#FBF7EF",borderRadius:24,boxShadow:"0 30px 90px rgba(0,0,0,.38)",position:"relative",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(280px,100%),1fr))"}}>
+      <button type="button" aria-label="Cerrar" disabled={loading} onClick={onClose} style={{position:"absolute",right:14,top:12,zIndex:2,width:40,height:40,borderRadius:999,border:"1px solid rgba(26,26,20,.13)",background:"rgba(251,247,239,.95)",cursor:"pointer",fontSize:"1.25rem"}}>×</button>
+
+      <div style={{background:"#173F49",padding:"clamp(22px,4vw,34px)",display:"flex",alignItems:"center",justifyContent:"center",minHeight:360}}>
+        <img src="/guias/portada-guia-gratuita.png" alt="Portada de la guía gratuita Nos comprometimos, ¿y ahora qué?" style={{width:"100%",maxWidth:270,height:"auto",borderRadius:4,boxShadow:"0 18px 45px rgba(0,0,0,.28)"}}/>
+      </div>
+
+      <div style={{padding:"clamp(28px,5vw,44px)",alignSelf:"center"}}>
+        {!sent?<>
+          <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(239,82,67,.1)",border:"1px solid rgba(239,82,67,.25)",borderRadius:999,padding:"7px 12px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"#B5443A",marginBottom:14}}>PDF gratuito · 12 páginas</div>
+          <h2 className="brand-title" style={{fontSize:"clamp(1.75rem,5vw,2.45rem)",lineHeight:1.08,margin:"0 0 12px"}}>Los primeros pasos que nadie te explica después del “sí”</h2>
+          <p className="brand-copy" style={{fontSize:".98rem",lineHeight:1.62,margin:"0 0 16px"}}>Una guía express para saber qué hacer primero, qué puede esperar y qué conversaciones conviene tener antes de empezar a reservar.</p>
+          <div style={{display:"grid",gap:8,marginBottom:18,fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.7)"}}>
+            <span>✓ Qué hacer durante las primeras semanas</span>
+            <span>✓ Cómo definir prioridades en pareja</span>
+            <span>✓ Detalles que suelen olvidarse</span>
+          </div>
+
+          <form klicksend-form-id={HOTMART_SEND_FORM_ID} autoComplete="off" method="post" action={actionUrl} target={frameNameRef.current} onSubmit={submit}>
+            <label htmlFor="guide-email" style={{display:"block",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,color:"#4A5E3A",marginBottom:4}}>¿Dónde te enviamos la guía?</label>
+            <input id="guide-email" type="email" autoComplete="email" name="email" placeholder="tu@email.com" value={email} onChange={e=>setEmail(e.target.value)} required style={{marginBottom:4}}/>
+            <div className="guide-consent-row">
+              <input type="checkbox" autoComplete="off" name="gdpr" id="guide-gdpr" value="Acepto recibir la guía y los emails" checked={consent} onChange={e=>setConsent(e.target.checked)} required/>
+              <label htmlFor="guide-gdpr" style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.48,color:"rgba(26,26,20,.56)"}}>Acepto recibir por email la guía gratuita “Nos comprometimos, ¿y ahora qué?”, consejos y novedades de El Violín de Ceci. Puedo darme de baja cuando quiera.</label>
+            </div>
+            <div style={{position:"absolute",left:-5000}} aria-hidden="true"><input type="text" autoComplete="new-password" name={`b_${HOTMART_SEND_FORM_ID}`} tabIndex="-1" defaultValue=""/></div>
+            {error&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".84rem",color:"#B5443A",lineHeight:1.45,margin:"0 0 12px"}}>{error}</p>}
+            <button klicksend-form-submit-id={HOTMART_SEND_FORM_ID} className="pbtn" disabled={loading} type="submit" style={{width:"100%",whiteSpace:"normal",background:"#E95A4E",boxShadow:"0 10px 26px rgba(233,90,78,.24)"}}>{loading?"Registrando tu email...":"Enviar y descargar mi guía gratis →"}</button>
+          </form>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.42)",lineHeight:1.45,textAlign:"center",margin:"11px 0 0"}}>Sin costo. Sin tarjeta. Recibirás la guía y contenidos relacionados con la organización de tu boda.</p>
+        </>:<div style={{textAlign:"center"}}>
+          <div style={{fontSize:"2.8rem",marginBottom:12}}>💌</div>
+          <h2 className="brand-title" style={{fontSize:"clamp(1.8rem,5vw,2.35rem)",margin:"0 0 10px"}}>Tu guía ya está lista</h2>
+          <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 20px"}}>La descarga comenzó y también te la enviaremos por email para que puedas volver a encontrarla.</p>
+          <button type="button" className="pbtn" onClick={()=>downloadBrowserFile(FREE_GUIDE_URL,"Nos-comprometimos-y-ahora-que-GUIA-GRATUITA.pdf")} style={{width:"100%",marginBottom:10}}>Descargar nuevamente</button>
+          <button type="button" className="gbtn" onClick={onClose} style={{width:"100%"}}>Seguir conociendo la app</button>
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
+async function openFullGuideDownload(source="unknown"){
+  let newTab=null;
+  try{
+    if(typeof window!=="undefined"){
+      newTab=window.open("about:blank","_blank");
+      if(newTab) newTab.opener=null;
+    }
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session?.access_token) throw new Error("Tu sesión venció. Volvé a ingresar para descargar la guía.");
+    const response=await fetch(FULL_GUIDE_ENDPOINT,{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok || !payload?.url) throw new Error(payload?.error||"No pudimos preparar la descarga.");
+    trackProductEvent("full_guide_downloaded",{source});
+    if(newTab) newTab.location.href=payload.url;
+    else window.location.href=payload.url;
+    return true;
+  }catch(e){
+    try{ if(newTab&&!newTab.closed) newTab.close(); }catch(_e){}
+    throw e;
+  }
+}
+
+function FullGuideDownloadCard({source="guide_module"}){
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
+
+  const download=async()=>{
+    setError("");
+    setLoading(true);
+    try{ await openFullGuideDownload(source); }
+    catch(e){ setError(e.message||"No pudimos preparar la descarga."); }
+    finally{ setLoading(false); }
+  };
+
+  return <section style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(190px,100%),1fr))",gap:"clamp(18px,4vw,32px)",alignItems:"center",background:"linear-gradient(135deg,rgba(217,184,111,.18),rgba(74,94,58,.09))",border:"1px solid rgba(201,169,110,.42)",borderRadius:22,padding:"clamp(20px,4vw,30px)",marginBottom:22,overflow:"hidden"}}>
+    <div style={{display:"flex",justifyContent:"center"}}>
+      <img src="/guias/portada-guia-completa.png" alt="Portada de la guía completa Nos comprometimos, ¿y ahora qué?" style={{width:"min(190px,68vw)",height:"auto",objectFit:"cover",objectPosition:"top",borderRadius:5,boxShadow:"0 16px 34px rgba(26,20,14,.2)"}}/>
+    </div>
+    <div>
+      <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(74,94,58,.09)",border:"1px solid rgba(74,94,58,.2)",borderRadius:999,padding:"7px 11px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:11}}>Incluida con tu compra · 55 páginas</div>
+      <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.55rem,4vw,2.15rem)",lineHeight:1.12,margin:"0 0 9px"}}>Nos comprometimos, ¿y ahora qué?</h2>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".92rem",lineHeight:1.62,color:"rgba(26,26,20,.62)",margin:"0 0 14px"}}>La versión completa para acompañarte con presupuesto, invitados, fecha, clima, salón, ceremonia, proveedores, música y los detalles que suelen olvidarse.</p>
+      <button type="button" className="pbtn" onClick={download} disabled={loading} style={{width:"100%",whiteSpace:"normal"}}>{loading?"Preparando tu guía...":"Descargar guía completa →"}</button>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".72rem",lineHeight:1.45,color:"rgba(26,26,20,.42)",margin:"9px 0 0",textAlign:"center"}}>Se abrirá una descarga privada vinculada a tu acceso.</p>
+      {error&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"#B5443A",lineHeight:1.45,margin:"10px 0 0"}}>{error}</p>}
+    </div>
+  </section>;
+}
+
+function FullGuideLockedCard({onRequestPurchase}){
+  return <section style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:16,alignItems:"center",background:"rgba(251,247,239,.96)",border:"1px solid rgba(201,169,110,.38)",borderRadius:20,padding:"18px",marginBottom:22}}>
+    <div style={{position:"relative"}}>
+      <img src="/guias/portada-guia-completa.png" alt="Portada de la guía completa" style={{width:82,height:114,objectFit:"cover",objectPosition:"top",borderRadius:4,filter:"saturate(.78)",boxShadow:"0 8px 20px rgba(26,20,14,.15)"}}/>
+      <div aria-hidden="true" style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(26,26,20,.34)",borderRadius:4,fontSize:"1.55rem"}}>🔒</div>
+    </div>
+    <div>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:5}}>Guía completa para compradores</div>
+      <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.15rem,3vw,1.42rem)",lineHeight:1.18,margin:"0 0 7px"}}>Todo el camino, en 55 páginas</h2>
+      <p style={{fontFamily:"'Lora',serif",fontSize:".79rem",lineHeight:1.48,color:"rgba(26,26,20,.56)",margin:"0 0 10px"}}>Está incluida con el acceso completo junto con todos los módulos de planificación.</p>
+      <button type="button" className="lbtn" onClick={onRequestPurchase}>Desbloquear guía y módulos →</button>
+    </div>
+  </section>;
+}
+
+function FullGuideWelcomeModal({open,onClose,onGoGuide}){
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
+
+  useEffect(()=>{
+    if(!open) return;
+    setError("");
+    trackProductEvent("full_guide_welcome_shown",{});
+  },[open]);
+
+  if(!open) return null;
+
+  const download=async()=>{
+    setError("");
+    setLoading(true);
+    try{
+      await openFullGuideDownload("purchase_welcome");
+      onClose("downloaded");
+    }catch(e){ setError(e.message||"No pudimos preparar la descarga."); }
+    finally{ setLoading(false); }
+  };
+
+  return <div onMouseDown={e=>{if(e.target===e.currentTarget&&!loading)onClose("backdrop");}} style={{position:"fixed",inset:0,zIndex:10070,background:"rgba(18,18,14,.72)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+    <div role="dialog" aria-modal="true" aria-labelledby="full-guide-welcome-title" className="fu" style={{width:"100%",maxWidth:820,maxHeight:"calc(100dvh - 32px)",overflowY:"auto",background:"#FBF7EF",borderRadius:26,boxShadow:"0 34px 100px rgba(0,0,0,.42)",position:"relative",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(280px,100%),1fr))"}}>
+      <button type="button" aria-label="Cerrar bienvenida" disabled={loading} onClick={()=>onClose("close")} style={{position:"absolute",right:14,top:12,zIndex:3,width:40,height:40,borderRadius:999,border:"1px solid rgba(26,26,20,.13)",background:"rgba(251,247,239,.96)",cursor:"pointer",fontSize:"1.25rem"}}>×</button>
+
+      <div style={{background:"#173F49",padding:"clamp(24px,5vw,42px)",display:"flex",alignItems:"center",justifyContent:"center",minHeight:390}}>
+        <img src="/guias/portada-guia-completa.png" alt="Portada de la guía completa Nos comprometimos, ¿y ahora qué?" style={{width:"100%",maxWidth:275,height:"auto",borderRadius:5,boxShadow:"0 20px 52px rgba(0,0,0,.32)"}}/>
+      </div>
+
+      <div style={{padding:"clamp(30px,5vw,48px)",alignSelf:"center"}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.22)",borderRadius:999,padding:"7px 12px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:14}}>Tu compra fue validada ✓</div>
+        <h2 id="full-guide-welcome-title" className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,2.6rem)",lineHeight:1.08,margin:"0 0 12px"}}>Tu acceso completo ya está listo</h2>
+        <p className="brand-copy" style={{fontSize:"1rem",lineHeight:1.65,margin:"0 0 15px"}}>Además de todas las herramientas para organizar tu boda, tu compra incluye la guía completa <strong>“Nos comprometimos, ¿y ahora qué?”</strong>.</p>
+        <div style={{display:"grid",gap:8,marginBottom:20,fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.68)"}}>
+          <span>✓ 55 páginas de orientación práctica</span>
+          <span>✓ Presupuesto, invitados, salón, ceremonia y música</span>
+          <span>✓ Disponible siempre en “Guía para novios”</span>
+        </div>
+        {error&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"#B5443A",lineHeight:1.45,margin:"0 0 12px"}}>{error}</p>}
+        <button type="button" className="pbtn" onClick={download} disabled={loading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{loading?"Preparando tu guía...":"Descargar guía completa →"}</button>
+        <button type="button" className="gbtn" onClick={()=>onClose("enter_app")} disabled={loading} style={{width:"100%",marginBottom:9}}>Entrar a Organizá tu Boda</button>
+        <button type="button" onClick={onGoGuide} disabled={loading} style={{width:"100%",border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,cursor:"pointer",padding:"8px"}}>Verla en Guía para novios</button>
+      </div>
+    </div>
+  </div>;
+}
+
+function Landing({onTry,onLogin,onBuy,onGuide}){
   const tools = [
     ["📋","Plan y checklist"],
     ["💰","Presupuesto"],
@@ -1073,89 +1314,89 @@ function Landing({onTry,onLogin,onBuy}){
     ["🎵","Música"]
   ];
 
-  const begin = () => { trackProductEvent("landing_start_clicked", {source:"hero"}); onTry(); };
+  const tryDemo = () => { trackProductEvent("demo_cta_clicked", {source:"landing"}); onTry(); };
+  const buy = () => { trackProductEvent("buy_cta_clicked", {source:"landing"}); onBuy(); };
+  const guide = () => { trackProductEvent("free_guide_cta_clicked", {source:"landing"}); onGuide(); };
 
-  return <div className="home-floral-bg" style={{minHeight:"100dvh",backgroundColor:"#F5EFE0",color:"#1A1A14"}}>
-    <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(251,247,239,.9)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:"0.5px solid rgba(201,169,110,.25)"}}>
-      <div className="responsive-shell" style={{minHeight:72,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
+  return <div className="home-floral-bg" style={{minHeight:"100dvh",backgroundColor:"#F5EFE0",color:"#1A1A14",paddingBottom:84}}>
+    <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(251,247,239,.92)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:"0.5px solid rgba(201,169,110,.25)"}}>
+      <div className="responsive-shell" style={{minHeight:72,display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
         <div>
           <div className="brand-logo">El Violín de Ceci</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",marginTop:3}}>Tu Boda Organizada</div>
         </div>
-        <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"10px 4px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.85rem,2vw,1rem)",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4}}>
-          Ya tengo acceso
+        <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"10px 4px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.82rem,2vw,.98rem)",fontWeight:750,textDecoration:"underline",textUnderlineOffset:4}}>
+          ¿Ya compraste? Ingresá
         </button>
       </div>
     </header>
 
     <main>
-      <section className="responsive-shell" style={{paddingTop:"clamp(40px,7vw,88px)",paddingBottom:"clamp(44px,7vw,84px)"}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(360px,100%),1fr))",gap:"clamp(30px,6vw,72px)",alignItems:"center"}}>
+      <section className="responsive-shell" style={{paddingTop:"clamp(32px,6vw,72px)",paddingBottom:"clamp(38px,7vw,76px)"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(370px,100%),1fr))",gap:"clamp(26px,5vw,58px)",alignItems:"center"}}>
           <div className="fu">
-            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.22)",borderRadius:100,padding:"8px 14px",marginBottom:22,fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A"}}>
-              ✦ Primero claridad. Después, herramientas.
-            </div>
-            <h1 className="brand-title" style={{fontSize:"clamp(2.5rem,7vw,4.9rem)",lineHeight:1.03,letterSpacing:"-.025em",margin:"0 0 22px",maxWidth:760}}>
-              No necesitás organizar todo hoy.
-              <br/><span className="gold">Necesitás saber qué sigue.</span>
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.08)",border:"0.5px solid rgba(74,94,58,.22)",borderRadius:100,padding:"8px 14px",marginBottom:20,fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".13em",textTransform:"uppercase",color:"#4A5E3A"}}>✦ Toda tu boda, en un solo lugar</div>
+            <h1 className="brand-title" style={{fontSize:"clamp(2.5rem,7vw,5rem)",lineHeight:1.02,letterSpacing:"-.028em",margin:"0 0 20px",maxWidth:760}}>
+              Organizá tu boda sin depender de
+              <br/><span className="gold">planillas, chats y memoria.</span>
             </h1>
-            <p className="brand-copy" style={{fontSize:"clamp(1.07rem,2.2vw,1.32rem)",lineHeight:1.7,margin:"0 0 28px",maxWidth:680,color:"rgba(26,26,20,.7)"}}>
-              Contanos en qué etapa está tu boda y recibí un próximo paso claro. Después usá presupuesto, invitados, salón, proveedores, cronograma y música sin tener todo disperso.
-            </p>
-            <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-              <button className="pbtn" onClick={begin}>Descubrir mi próximo paso →</button>
-              <button className="gbtn" onClick={onLogin}>Ya compré</button>
+            <p className="brand-copy" style={{fontSize:"clamp(1.04rem,2.1vw,1.28rem)",lineHeight:1.68,margin:"0 0 25px",maxWidth:680,color:"rgba(26,26,20,.7)"}}>Presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados en una experiencia pensada para avanzar con claridad.</p>
+
+            <div style={{display:"grid",gap:10,maxWidth:470}}>
+              <button type="button" onClick={buy} style={{width:"100%",minHeight:62,border:"none",borderRadius:999,background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontSize:"1.08rem",fontWeight:850,cursor:"pointer",boxShadow:"0 13px 30px rgba(74,94,58,.28)"}}>Comprar acceso completo →</button>
+              <button type="button" onClick={tryDemo} style={{width:"100%",minHeight:56,border:"1.5px solid rgba(74,94,58,.42)",borderRadius:999,background:"rgba(251,247,239,.72)",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:750,cursor:"pointer"}}>Probar la demo gratis</button>
             </div>
-            <div style={{display:"flex",gap:"10px 18px",flexWrap:"wrap",marginTop:17,fontFamily:"'Lora',serif",fontSize:".86rem",color:"rgba(26,26,20,.52)"}}>
-              <span>✓ Te lleva menos de 2 minutos</span><span>✓ Sin tarjeta</span><span>✓ Podés probar las herramientas</span>
-            </div>
+            <div style={{display:"flex",gap:"9px 17px",flexWrap:"wrap",marginTop:14,fontFamily:"'Lora',serif",fontSize:".79rem",color:"rgba(26,26,20,.5)"}}><span>✓ Pago único</span><span>✓ Acceso inmediato</span><span>✓ Incluye la guía completa</span></div>
+            <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"18px 0 4px",cursor:"pointer",fontFamily:"'Lora',serif",fontSize:".9rem",color:"rgba(26,26,20,.62)",textDecoration:"underline",textUnderlineOffset:4}}>Ya compré el producto: ingresar a mi cuenta</button>
           </div>
 
-          <div className="fu2" style={{background:"rgba(251,247,239,.97)",border:"0.5px solid rgba(201,169,110,.38)",borderRadius:26,padding:"clamp(20px,4vw,30px)",boxShadow:"0 24px 70px rgba(49,39,25,.16)"}}>
-            <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:8}}>Tu plan de inicio</div>
-            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.45rem,4vw,2rem)",lineHeight:1.18,margin:"0 0 8px"}}>Un recorrido, no otro listado de tareas.</h2>
-            <p className="brand-copy" style={{fontSize:".95rem",margin:"0 0 20px"}}>La experiencia empieza por tu momento real y prioriza lo que destraba el resto.</p>
-            {[
-              ["1","Decinos en qué etapa estás","Recién empezando, ya contratando o cerrando detalles."],
-              ["2","Elegí qué te preocupa hoy","Presupuesto, invitados, salón, proveedores, tiempos o música."],
-              ["3","Recibí un próximo paso","Con una herramienta concreta para avanzar ahora."]
-            ].map(([n,title,copy])=><div key={n} style={{display:"grid",gridTemplateColumns:"42px 1fr",gap:12,alignItems:"start",padding:"14px 0",borderBottom:n!=="3"?"0.5px solid rgba(201,169,110,.22)":"none"}}>
-              <div style={{width:38,height:38,borderRadius:999,display:"grid",placeItems:"center",background:n==="3"?"#4A5E3A":"rgba(74,94,58,.08)",color:n==="3"?"#F5EFE0":"#4A5E3A",fontFamily:"'Cinzel',serif",fontWeight:700}}>{n}</div>
-              <div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,marginBottom:4}}>{title}</div><div style={{fontFamily:"'Lora',serif",fontSize:".86rem",lineHeight:1.5,color:"rgba(26,26,20,.52)"}}>{copy}</div></div>
-            </div>)}
-            <button type="button" className="pbtn" onClick={begin} style={{width:"100%",marginTop:20}}>Crear mi plan gratis →</button>
-          </div>
+          <aside className="fu2" style={{background:"rgba(251,247,239,.97)",border:"1px solid rgba(201,169,110,.42)",borderRadius:26,padding:"clamp(18px,4vw,28px)",boxShadow:"0 24px 70px rgba(49,39,25,.16)"}}>
+            <div style={{display:"grid",gridTemplateColumns:"minmax(112px,155px) 1fr",gap:18,alignItems:"center"}}>
+              <img src="/guias/portada-guia-gratuita.png" alt="Guía gratuita Nos comprometimos, ¿y ahora qué?" style={{width:"100%",borderRadius:4,boxShadow:"0 14px 34px rgba(26,20,14,.22)"}}/>
+              <div>
+                <div style={{display:"inline-block",background:"#E95A4E",color:"white",borderRadius:999,padding:"6px 10px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",fontWeight:800,marginBottom:10}}>Descarga gratuita</div>
+                <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.35rem,4vw,1.8rem)",lineHeight:1.13,margin:"0 0 8px"}}>¿Se comprometieron y ahora no saben por dónde empezar?</h2>
+                <p style={{fontFamily:"'Lora',serif",fontSize:".86rem",lineHeight:1.55,color:"rgba(26,26,20,.58)",margin:0}}>Recibí una guía express para ordenar los primeros pasos sin abrumarte.</p>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,margin:"18px 0"}}>
+              {["Primeras semanas","Conversaciones en pareja","5 prioridades","Lo que suele olvidarse"].map(item=><div key={item} style={{background:"rgba(74,94,58,.06)",borderRadius:10,padding:"9px",fontFamily:"'Lora',serif",fontSize:".75rem",lineHeight:1.35,color:"rgba(26,26,20,.64)"}}>✓ {item}</div>)}
+            </div>
+            <button type="button" onClick={guide} style={{width:"100%",minHeight:58,border:"none",borderRadius:999,background:"#E95A4E",color:"white",fontFamily:"'Lora',serif",fontSize:"1rem",fontWeight:850,cursor:"pointer",boxShadow:"0 10px 26px rgba(233,90,78,.25)"}}>Quiero recibir la guía gratis →</button>
+            <div style={{textAlign:"center",fontFamily:"'Lora',serif",fontSize:".73rem",color:"rgba(26,26,20,.43)",marginTop:9}}>La recibís por email · Sin tarjeta</div>
+          </aside>
         </div>
       </section>
 
-      <section style={{background:"rgba(251,247,239,.76)",borderTop:"0.5px solid rgba(201,169,110,.22)",borderBottom:"0.5px solid rgba(201,169,110,.22)"}}>
-        <div className="responsive-shell" style={{paddingTop:"clamp(42px,7vw,76px)",paddingBottom:"clamp(42px,7vw,76px)"}}>
-          <div style={{textAlign:"center",maxWidth:720,margin:"0 auto 34px"}}>
-            <div className="brand-logo" style={{marginBottom:12}}>Todo conectado</div>
-            <h2 className="brand-title" style={{fontSize:"clamp(2rem,5vw,3.25rem)",margin:"0 0 14px"}}>Una sola boda. Un solo lugar para decidir.</h2>
-            <p className="brand-copy" style={{fontSize:"clamp(1rem,2vw,1.14rem)",margin:0}}>Las herramientas acompañan tu recorrido; no tenés que aprender una aplicación compleja antes de empezar.</p>
+      <section style={{background:"rgba(251,247,239,.78)",borderTop:"0.5px solid rgba(201,169,110,.22)",borderBottom:"0.5px solid rgba(201,169,110,.22)"}}>
+        <div className="responsive-shell" style={{paddingTop:"clamp(40px,7vw,70px)",paddingBottom:"clamp(40px,7vw,70px)"}}>
+          <div style={{textAlign:"center",maxWidth:720,margin:"0 auto 30px"}}>
+            <div className="brand-logo" style={{marginBottom:11}}>Todo conectado</div>
+            <h2 className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,3.1rem)",margin:"0 0 13px"}}>Una sola boda. Un solo lugar para decidir.</h2>
+            <p className="brand-copy" style={{fontSize:"clamp(.98rem,2vw,1.12rem)",margin:0}}>Probá la demo sin crear una cuenta o comprá para guardar, conectar y continuar desde cualquier dispositivo.</p>
           </div>
-          <div className="modules-card-grid">
-            {tools.map(([emoji,label])=><div key={label} className="module-card" style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.27)",borderRadius:17,padding:"19px 12px",textAlign:"center"}}>
-              <div style={{fontSize:"1.55rem",marginBottom:8}}>{emoji}</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:".98rem",fontWeight:650}}>{label}</div>
-            </div>)}
-          </div>
+          <div className="modules-card-grid">{tools.map(([emoji,label])=><div key={label} className="module-card" style={{background:"#FBF7EF",border:"0.5px solid rgba(201,169,110,.27)",borderRadius:17,padding:"19px 12px",textAlign:"center"}}><div style={{fontSize:"1.55rem",marginBottom:8}}>{emoji}</div><div style={{fontFamily:"'Playfair Display',serif",fontSize:".98rem",fontWeight:650}}>{label}</div></div>)}</div>
         </div>
       </section>
 
-      <section className="responsive-shell" style={{paddingTop:"clamp(44px,7vw,78px)",paddingBottom:"clamp(48px,8vw,92px)"}}>
-        <div style={{background:"#4A5E3A",borderRadius:26,padding:"clamp(28px,6vw,56px)",textAlign:"center",boxShadow:"0 20px 55px rgba(74,94,58,.18)"}}>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"rgba(217,184,111,.85)",marginBottom:13}}>Empezá por lo importante</div>
-          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,5vw,3.15rem)",lineHeight:1.08,color:"#F5EFE0",margin:"0 0 15px"}}>Tu próximo paso puede quedar claro hoy.</h2>
-          <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(1rem,2vw,1.16rem)",color:"rgba(245,239,224,.72)",maxWidth:650,margin:"0 auto 26px",lineHeight:1.65}}>Probá el recorrido y avanzá con una decisión concreta. La versión completa guarda, conecta y acompaña toda la planificación.</p>
-          <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap"}}>
-            <button type="button" onClick={begin} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"15px 28px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:800,minHeight:52}}>Descubrir mi próximo paso →</button>
-            <button type="button" onClick={onBuy} style={{background:"transparent",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.42)",padding:"14px 26px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:650,minHeight:52}}>Ver acceso completo</button>
+      <section className="responsive-shell" style={{paddingTop:"clamp(42px,7vw,74px)",paddingBottom:"clamp(48px,8vw,86px)"}}>
+        <div style={{background:"#4A5E3A",borderRadius:26,padding:"clamp(28px,6vw,52px)",textAlign:"center",boxShadow:"0 20px 55px rgba(74,94,58,.18)"}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"rgba(217,184,111,.85)",marginBottom:12}}>Elegí cómo empezar</div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.9rem,5vw,3rem)",lineHeight:1.08,color:"#F5EFE0",margin:"0 0 14px"}}>Comprá, probá la demo o empezá con la guía gratuita.</h2>
+          <p style={{fontFamily:"'Lora',serif",fontSize:"clamp(.98rem,2vw,1.12rem)",color:"rgba(245,239,224,.72)",maxWidth:650,margin:"0 auto 24px",lineHeight:1.62}}>Sin caminos escondidos: quienes ya compraron también pueden ingresar directamente desde acá.</p>
+          <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
+            <button type="button" onClick={buy} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"15px 25px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:850,minHeight:52}}>Comprar acceso completo</button>
+            <button type="button" onClick={tryDemo} style={{background:"transparent",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.42)",padding:"14px 24px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:700,minHeight:52}}>Probar demo</button>
+            <button type="button" onClick={guide} style={{background:"transparent",color:"#F5EFE0",border:"1px solid rgba(245,239,224,.42)",padding:"14px 24px",borderRadius:100,cursor:"pointer",fontFamily:"'Lora',serif",fontWeight:700,minHeight:52}}>Guía gratis</button>
           </div>
         </div>
       </section>
     </main>
+
+    <div className="mobile-buy-bar">
+      <button type="button" onClick={buy} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}>Comprar ahora</button>
+      <button type="button" onClick={tryDemo} style={{border:"1px solid rgba(74,94,58,.35)",background:"#FBF7EF",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Probar demo</button>
+    </div>
   </div>;
 }
 
@@ -2221,11 +2462,12 @@ function LockedAccessScreen({email,onBuy,onLogout,onCreateAccess}){
   </div>;
 }
 
-function AuthScreen({ initialMode="login", initialError="", initialEmail="", onPasswordUpdated, onTryFree, onBuy }={}){
+function AuthScreen({ initialMode="login", initialError="", initialEmail="", onPasswordUpdated, onTryFree, onBuy, onBack }={}){
   const [mode,setMode]=useState(initialMode);
   const [email,setEmail]=useState(initialEmail||"");
   const [password,setPassword]=useState("");
   const [newPassword,setNewPassword]=useState("");
+  const [showPassword,setShowPassword]=useState(false);
   const [loading,setLoading]=useState(false);
   const [msg,setMsg]=useState("");
   const [err,setErr]=useState(initialError || "");
@@ -2253,7 +2495,7 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
     if(!email || !password) return setErr("Completá email y contraseña.");
     if(password.length<6) return setErr("La contraseña debe tener al menos 6 caracteres.");
     setLoading(true);
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/?modo=ingresar`;
     const { data, error } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),
       password,
@@ -2262,17 +2504,17 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
     setLoading(false);
     if(error){
       console.error("Supabase signUp error:", error);
-      const msg = error.message?.toLowerCase() || "";
-      if(msg.includes("already") || msg.includes("registered")) return setErr("Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.");
-      if(msg.includes("redirect") || msg.includes("url")) return setErr("El dominio de la app no está autorizado en Supabase. Agregá https://tu-boda-organizada.vercel.app/** en Auth → URL Configuration → Redirect URLs.");
-      if(msg.includes("signup") || msg.includes("disabled")) return setErr("El registro está desactivado en Supabase. Revisá Auth → Providers → Email.");
-      return setErr(error.message || "No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.");
+      const errorText = error.message?.toLowerCase() || "";
+      if(errorText.includes("already") || errorText.includes("registered")) return setErr("Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.");
+      if(errorText.includes("redirect") || errorText.includes("url")) return setErr("El dominio de la app no está autorizado en Supabase. Agregá https://tu-boda-organizada.vercel.app/** en Auth → URL Configuration → Redirect URLs.");
+      if(errorText.includes("signup") || errorText.includes("disabled")) return setErr("La activación está deshabilitada en Supabase. Revisá Auth → Providers → Email.");
+      return setErr(error.message || "No pudimos activar el acceso. Revisá los datos e intentá de nuevo.");
     }
     if(data?.session){
-      setMsg("Cuenta creada. Ya podés continuar en la app.");
+      setMsg("Acceso activado. Estamos verificando tu compra.");
       return;
     }
-    setMsg("Cuenta creada. Revisá tu email para confirmar el acceso — puede llegar en unos minutos.");
+    setMsg("Revisá tu email para confirmar la cuenta. Después vas a poder ingresar con tu contraseña.");
     setMode("login");
   };
 
@@ -2280,24 +2522,19 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
     clean();
     if(!email || !password) return setErr("Completá email y contraseña.");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
-      password
-    });
+    const { error } = await supabase.auth.signInWithPassword({email:email.toLowerCase().trim(),password});
     setLoading(false);
-    if(error) return setErr("No pudimos iniciar sesión. Revisá el email y la contraseña.");
+    if(error) return setErr("El email o la contraseña no coinciden. Podés volver a intentar o recuperar tu contraseña.");
   };
 
   const forgot=async()=>{
     clean();
     if(!email) return setErr("Escribí tu email para recuperar la contraseña.");
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {
-      redirectTo: `${window.location.origin}/?auth=recovery`
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {redirectTo:`${window.location.origin}/?auth=recovery`});
     setLoading(false);
-    if(error) return setErr(error.message);
-    setMsg("Te enviamos un email para crear una nueva contraseña.");
+    if(error) return setErr("No pudimos enviar el email. Revisá la dirección e intentá nuevamente.");
+    setMsg("Revisá tu correo. Si existe una cuenta asociada, vas a recibir un enlace para crear una nueva contraseña.");
   };
 
   const updatePassword=async()=>{
@@ -2307,130 +2544,70 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
     const { error } = await supabase.auth.updateUser({ password:newPassword });
     setLoading(false);
     if(error) return setErr(error.message);
-    // Clear any saved session so the user starts fresh after recovery
-    try { localStorage.removeItem("bsb_session"); } catch(e) {}
-    try { localStorage.removeItem("bsb_form"); } catch(e) {}
-    try { localStorage.removeItem("bsb_step"); } catch(e) {}
+    try { localStorage.removeItem("bsb_session"); localStorage.removeItem("bsb_form"); localStorage.removeItem("bsb_step"); } catch(e) {}
     setMsg("Contraseña actualizada. Ya podés iniciar sesión con tu nueva contraseña.");
     try { await supabase.auth.signOut(); } catch(e) {}
     setMode("login");
     if(onPasswordUpdated) onPasswordUpdated();
   };
 
-  const title = mode==="signup" ? "Crear mi cuenta" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Entrar a mi organizador";
-  const subtitle = mode==="signup" ? "Usá el mismo email con el que compraste el producto." : mode==="forgot" ? "Te enviaremos un link para crear una nueva contraseña." : mode==="update" ? "Definí una nueva contraseña para volver a entrar." : "Iniciá sesión para continuar organizando tu boda y recuperar tus proyectos guardados.";
+  const submitCurrent=()=>{
+    if(loading) return;
+    if(mode==="login") return signIn();
+    if(mode==="signup") return signUp();
+    if(mode==="forgot") return forgot();
+    if(mode==="update") return updatePassword();
+  };
 
-  return <div style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(18px,4vw,42px)"}}>
-    <div className="fu auth-card" style={{textAlign:"center",position:"relative",zIndex:1}}>
+  const title = mode==="signup" ? "Activar mi acceso" : mode==="forgot" ? "Recuperar contraseña" : mode==="update" ? "Crear nueva contraseña" : "Ingresá a tu compra";
+  const subtitle = mode==="signup" ? "Creá tu contraseña con el mismo email que utilizaste al comprar en Hotmart." : mode==="forgot" ? "Te enviaremos un enlace para que puedas volver a ingresar." : mode==="update" ? "Definí una nueva contraseña para recuperar tu cuenta." : "Usá el mismo email y la contraseña que elegiste al activar tu acceso.";
+
+  return <div className="auth-floral-bg" style={{minHeight:"100svh",display:"flex",alignItems:"center",justifyContent:"center",padding:"clamp(18px,4vw,42px)"}}>
+    <div className="fu auth-card" onKeyDown={e=>{if(e.key==="Enter"&&e.target?.tagName!=="BUTTON")submitCurrent();}} style={{textAlign:"center",position:"relative",zIndex:1}}>
+      {onBack&&mode!=="update"&&<button type="button" onClick={onBack} style={{position:"absolute",left:16,top:14,background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(26,26,20,.55)",cursor:"pointer"}}>← Inicio</button>}
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(1.85rem,6vw,2.35rem)",fontWeight:600,color:"#1A1A14",margin:"0 0 8px",lineHeight:1.15}}>{title}</h1>
-      <p className="brand-copy" style={{fontSize:"clamp(1rem,3vw,1.12rem)",margin:"0 0 22px"}}>{subtitle}</p>
+      <p className="brand-copy" style={{fontSize:"clamp(.96rem,3vw,1.08rem)",margin:"0 0 22px"}}>{subtitle}</p>
 
       {mode!=="update"&&<>
-        <input type="email" placeholder="tu@email.com" value={email} onChange={e=>setEmail(e.target.value)} style={{textAlign:"center",marginBottom:12}} />
-        {mode!=="forgot"&&<input type="password" placeholder="Contraseña" value={password} onChange={e=>setPassword(e.target.value)} style={{textAlign:"center",marginBottom:18}} />}
+        <label htmlFor="auth-email" style={{display:"block",textAlign:"left",fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:700,color:"#4A5E3A"}}>Email</label>
+        <input id="auth-email" type="email" autoComplete="email" placeholder="tu@email.com" value={email} onChange={e=>setEmail(e.target.value)} style={{textAlign:"left",marginBottom:12}} />
+        {mode!=="forgot"&&<div style={{position:"relative",marginBottom:18}}>
+          <label htmlFor="auth-password" style={{display:"block",textAlign:"left",fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:700,color:"#4A5E3A"}}>Contraseña</label>
+          <input id="auth-password" type={showPassword?"text":"password"} autoComplete={mode==="signup"?"new-password":"current-password"} placeholder={mode==="signup"?"Mínimo 6 caracteres":"Tu contraseña"} value={password} onChange={e=>setPassword(e.target.value)} style={{textAlign:"left",paddingRight:74}} />
+          <button type="button" aria-label={showPassword?"Ocultar contraseña":"Mostrar contraseña"} onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:2,bottom:9,background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:700,color:"#4A5E3A",cursor:"pointer",padding:6}}>{showPassword?"Ocultar":"Ver"}</button>
+        </div>}
       </>}
 
-      {mode==="update"&&<input type="password" placeholder="Nueva contraseña" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{textAlign:"center",marginBottom:18}} />}
+      {mode==="update"&&<div style={{position:"relative",marginBottom:18}}>
+        <label htmlFor="auth-new-password" style={{display:"block",textAlign:"left",fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:700,color:"#4A5E3A"}}>Nueva contraseña</label>
+        <input id="auth-new-password" type={showPassword?"text":"password"} autoComplete="new-password" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{textAlign:"left",paddingRight:74}} />
+        <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:2,bottom:9,background:"transparent",border:"none",fontFamily:"'Lora',serif",fontSize:".76rem",fontWeight:700,color:"#4A5E3A",cursor:"pointer",padding:6}}>{showPassword?"Ocultar":"Ver"}</button>
+      </div>}
 
-      {err&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"#ff8b8b",lineHeight:1.5,margin:"0 0 12px"}}>{err}</p>}
-      {msg&&<p style={{fontFamily:"'Lora',serif",fontSize:".95rem",color:"rgba(201,169,110,.85)",lineHeight:1.5,margin:"0 0 12px"}}>{msg}</p>}
+      {err&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"#B5443A",background:"rgba(181,68,58,.07)",borderRadius:10,padding:"10px 12px",lineHeight:1.5,margin:"0 0 12px"}}>{err}</p>}
+      {msg&&<p role="status" style={{fontFamily:"'Lora',serif",fontSize:".9rem",color:"#31512C",background:"rgba(74,94,58,.08)",borderRadius:10,padding:"10px 12px",lineHeight:1.5,margin:"0 0 12px"}}>{msg}</p>}
 
-      {mode==="login"&&<button className="pbtn" disabled={loading} onClick={signIn} style={{width:"100%"}}>{loading?"Entrando...":"Entrar →"}</button>}
-      {mode==="signup"&&<button className="pbtn" disabled={loading} onClick={signUp} style={{width:"100%"}}>{loading?"Creando...":"Crear cuenta →"}</button>}
-      {mode==="forgot"&&<button className="pbtn" disabled={loading} onClick={forgot} style={{width:"100%"}}>{loading?"Enviando...":"Enviar recuperación →"}</button>}
+      {mode==="login"&&<button className="pbtn" disabled={loading} onClick={signIn} style={{width:"100%"}}>{loading?"Ingresando...":"Ingresar a mi cuenta →"}</button>}
+      {mode==="signup"&&<button className="pbtn" disabled={loading} onClick={signUp} style={{width:"100%"}}>{loading?"Activando...":"Activar mi acceso →"}</button>}
+      {mode==="forgot"&&<button className="pbtn" disabled={loading} onClick={forgot} style={{width:"100%"}}>{loading?"Enviando...":"Enviar enlace de recuperación →"}</button>}
       {mode==="update"&&<button className="pbtn" disabled={loading} onClick={updatePassword} style={{width:"100%"}}>{loading?"Guardando...":"Guardar nueva contraseña →"}</button>}
 
-      <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(201,169,110,.12)",display:"flex",flexDirection:"column",gap:8}}>
-        {mode!=="login"&&<button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Ya tengo cuenta</button>}
-        {mode!=="signup"&&mode!=="update"&&<button className="gbtn" onClick={()=>{clean();setMode("signup");}} style={{width:"100%"}}>Crear cuenta nueva</button>}
-        {mode!=="forgot"&&mode!=="update"&&<button onClick={()=>{clean();setMode("forgot");}} style={{background:"transparent",border:"none",color:"rgba(74,94,58,.62)",fontFamily:"'Lora',serif",fontSize:".95rem",cursor:"pointer",textDecoration:"underline",marginTop:2}}>Olvidé mi contraseña</button>}
+      {mode==="login"&&<button type="button" onClick={()=>{clean();setMode("forgot");}} style={{background:"transparent",border:"none",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".9rem",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3,marginTop:14}}>Olvidé mi contraseña</button>}
+
+      <div style={{marginTop:18,paddingTop:16,borderTop:"1px solid rgba(201,169,110,.18)",display:"flex",flexDirection:"column",gap:9}}>
+        {mode==="login"&&<button className="gbtn" onClick={()=>{clean();setMode("signup");}} style={{width:"100%"}}>Primera vez: activar mi acceso</button>}
+        {mode==="signup"&&<button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Ya activé mi acceso</button>}
+        {mode==="forgot"&&<><button className="gbtn" onClick={()=>{clean();setMode("login");}} style={{width:"100%"}}>Volver a ingresar</button><button type="button" onClick={()=>{clean();setEmail("");}} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(26,26,20,.55)",textDecoration:"underline",cursor:"pointer",padding:6}}>Usar otro email</button></>}
       </div>
 
-      {mode==="login"&&onTryFree&&<div style={{
-        marginTop:24,
-        padding:"22px 18px",
-        background:"linear-gradient(135deg, rgba(217,184,111,.20), rgba(74,94,58,.10))",
-        border:"1px solid rgba(201,169,110,.48)",
-        borderRadius:20,
-        textAlign:"center",
-        boxShadow:"0 12px 30px rgba(74,94,58,.11)"
-      }}>
-        <div style={{
-          display:"inline-flex",
-          alignItems:"center",
-          gap:6,
-          background:"#4A5E3A",
-          color:"#F5EFE0",
-          borderRadius:999,
-          padding:"6px 11px",
-          fontFamily:"'Cinzel',serif",
-          fontSize:THEME.text.micro,
-          letterSpacing:".1em",
-          textTransform:"uppercase",
-          marginBottom:12
-        }}>✦ Acceso gratuito</div>
-
-        <h3 style={{
-          fontFamily:"'Playfair Display',serif",
-          fontSize:"clamp(1.2rem,4vw,1.42rem)",
-          lineHeight:1.2,
-          margin:"0 0 8px",
-          color:"#1A1A14"
-        }}>¿Querés conocer el sistema antes de comprar?</h3>
-
-        <p style={{
-          fontFamily:"'Lora',serif",
-          fontSize:".9rem",
-          lineHeight:1.55,
-          color:"rgba(26,26,20,.62)",
-          margin:"0 0 16px"
-        }}>Explorá todos los módulos o recibí una recomendación según lo que hoy más te preocupa.</p>
-
-        <button
-          type="button"
-          onClick={onTryFree}
-          style={{
-            width:"100%",
-            minHeight:58,
-            border:"none",
-            borderRadius:999,
-            background:"#D9B86F",
-            color:"#1A1A14",
-            fontFamily:"'Lora',serif",
-            fontSize:"1.04rem",
-            fontWeight:800,
-            cursor:"pointer",
-            boxShadow:"0 9px 24px rgba(201,169,110,.38)",
-            transition:"transform .2s ease, box-shadow .2s ease"
-          }}
-          onMouseEnter={e=>{
-            e.currentTarget.style.transform="translateY(-2px)";
-            e.currentTarget.style.boxShadow="0 13px 30px rgba(201,169,110,.48)";
-          }}
-          onMouseLeave={e=>{
-            e.currentTarget.style.transform="translateY(0)";
-            e.currentTarget.style.boxShadow="0 9px 24px rgba(201,169,110,.38)";
-          }}
-        >Probar la experiencia gratis →</button>
-
-        <div style={{
-          marginTop:10,
-          fontFamily:"'Lora',serif",
-          fontSize:".76rem",
-          color:"rgba(26,26,20,.46)"
-        }}>Sin tarjeta · No necesitás crear una cuenta</div>
-
-        {onBuy&&<button onClick={onBuy} style={{
-          background:"transparent",
-          border:"none",
-          fontFamily:"'Lora',serif",
-          color:"rgba(26,26,20,.52)",
-          textDecoration:"underline",
-          cursor:"pointer",
-          padding:"14px 8px 0"
-        }}>Ver acceso completo</button>}
+      {mode==="login"&&onTryFree&&<div style={{marginTop:22,padding:"17px",background:"rgba(217,184,111,.12)",border:"1px solid rgba(201,169,110,.34)",borderRadius:16,textAlign:"center"}}>
+        <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",lineHeight:1.5,color:"rgba(26,26,20,.62)",marginBottom:10}}>¿Todavía no compraste? Podés conocer las herramientas antes de decidir.</div>
+        <button type="button" className="gbtn" onClick={onTryFree} style={{width:"100%"}}>Probar la demo sin registro</button>
+        {onBuy&&<button type="button" onClick={onBuy} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"#4A5E3A",textDecoration:"underline",cursor:"pointer",padding:"13px 8px 0"}}>Comprar acceso completo</button>}
       </div>}
+
+      {mode==="signup"&&<p style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.45)",margin:"14px 0 0"}}>La app verificará automáticamente que exista una compra aprobada para este email.</p>}
     </div>
   </div>;
 }
@@ -3051,18 +3228,31 @@ function GuiaNupcial({abierta, seccionInicial="mesas", onClose}){
 }
 
 // ─── MÓDULO GUÍA PARA NOVIOS (página completa) ────────────────────────────
-function GuiaModule({onBack}){
+function GuiaModule({onBack,isDemo=false,onRequestPurchase}){
   const [sec, setSec] = useState("mesas");
   const actual = GUIA_SECCIONES.find(s=>s.id===sec)||GUIA_SECCIONES[0];
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     <div style={{background:THEME.color.sage,padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
+        <button type="button" onClick={onBack} style={{display:"inline-flex",alignItems:"center",gap:7,border:"1px solid rgba(245,239,224,.3)",background:"transparent",color:"rgba(245,239,224,.86)",borderRadius:999,padding:"8px 13px",fontFamily:THEME.font.body,fontSize:".78rem",fontWeight:700,cursor:"pointer",marginBottom:14}}>← Volver</button>
         <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:8}}>Módulo · Guía</div>
         <h1 style={{fontFamily:THEME.font.display,fontSize:"clamp(1.35rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>📖 Guía para novios</h1>
-        <p style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(245,239,224,.65)",margin:0}}>Protocolo, ceremonia, presupuesto y todo lo que se preguntan los novios</p>
+        <p style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(245,239,224,.65)",margin:0}}>Tu biblioteca de orientación, protocolo y decisiones para cada etapa</p>
       </div>
     </div>
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box"}}>
+      {isDemo
+        ? <FullGuideLockedCard onRequestPurchase={onRequestPurchase}/>
+        : <FullGuideDownloadCard source="guide_module"/>
+      }
+
+      <div style={{display:"flex",alignItems:"end",justifyContent:"space-between",gap:12,margin:"4px 0 12px",flexWrap:"wrap"}}>
+        <div>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.label,letterSpacing:".14em",textTransform:"uppercase",color:THEME.color.sage,marginBottom:4}}>Consultar dentro de la app</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:".8rem",color:"rgba(26,26,20,.46)"}}>Elegí un tema y volvé cuando lo necesites.</div>
+        </div>
+      </div>
+
       <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:8,marginBottom:12}}>
         {GUIA_SECCIONES.map(s=>
           <button key={s.id} onClick={()=>setSec(s.id)}
@@ -13218,8 +13408,19 @@ function GlobalNav({view, setView, hasResults, isDemo=false}){
   </nav>;
 }
 
+const getInitialPublicView=()=>{
+  if(typeof window==="undefined") return "landing";
+  const params=new URLSearchParams(window.location.search||"");
+  return params.get("modo")==="ingresar" || params.get("modo")==="activar" || params.get("auth")==="recovery" ? "auth" : "landing";
+};
+
+const getInitialAuthMode=()=>{
+  if(typeof window==="undefined") return "login";
+  return new URLSearchParams(window.location.search||"").get("modo")==="activar" ? "signup" : "login";
+};
+
 export default function App(){
-  const [view,setView]=useState("auth");
+  const [view,setView]=useState(getInitialPublicView);
   const [step,setStep]=useState(()=>{
     try{ const s=localStorage.getItem("bsb_step"); return s?parseInt(s):1; }catch(e){ return 1; }
   });
@@ -13239,7 +13440,9 @@ export default function App(){
   const [accessStatus,setAccessStatus]=useState("idle");
   const [purchaseOpen,setPurchaseOpen]=useState(false);
   const [demoChanged,setDemoChanged]=useState(false);
-  const [authInitialMode,setAuthInitialMode]=useState("login");
+  const [guideOpen,setGuideOpen]=useState(false);
+  const [fullGuideWelcomeOpen,setFullGuideWelcomeOpen]=useState(false);
+  const [authInitialMode,setAuthInitialMode]=useState(getInitialAuthMode);
 
   // El test demo puede recuperarse tras la compra.
   // Los demás módulos funcionan solo en memoria durante la sesión: no llegan a Supabase
@@ -13403,6 +13606,21 @@ export default function App(){
     return()=>{alive=false;};
   },[user?.id]);
 
+
+  // Muestra una bienvenida con la guía completa la primera vez que una compra
+  // validada ingresa en este dispositivo. La guía queda disponible después
+  // de forma permanente dentro de “Guía para novios”.
+  useEffect(()=>{
+    if(!user || isDemoUser(user) || accessStatus!=="granted"){
+      setFullGuideWelcomeOpen(false);
+      return;
+    }
+    const storageKey=`${FULL_GUIDE_WELCOME_KEY}:${user.id}`;
+    try{
+      if(localStorage.getItem(storageKey)!=="1") setFullGuideWelcomeOpen(true);
+    }catch(e){ setFullGuideWelcomeOpen(true); }
+  },[user?.id,accessStatus]);
+
   // ─── Cargar resultado del usuario cuando inicia sesión ────────────────────
   const hydrateFromSession = (remote, email, tokenFromUrl=null, goToResults=false) => {
     const safeForm = {...EMPTY_FORM, ...(remote.form || {}), email: remote.email || email || remote.form?.email || ""};
@@ -13438,7 +13656,7 @@ export default function App(){
         return;
       }
       if(!user){
-        if(view!=="auth") setView("auth");
+        setView(current=>(current==="auth"||current==="landing")?current:"landing");
         return;
       }
       if(isDemoUser(user)){
@@ -13566,7 +13784,7 @@ export default function App(){
       setUser(null);
       setAccessStatus("idle");
       setDemoChanged(false);
-      setView("auth");
+      setView("landing");
       return;
     }
     try{localStorage.removeItem("bsb_session");}catch(e){}
@@ -13574,7 +13792,7 @@ export default function App(){
     window.history.replaceState({}, "", window.location.pathname);
     setUser(null);
     setAccessStatus("idle");
-    setView("auth");
+    setView("landing");
     setStep(1);
     setResults(null);
     setChecked({});
@@ -13781,15 +13999,39 @@ export default function App(){
   const openAuth=(mode="login")=>{
     setAuthInitialMode(mode);
     setView("auth");
+    try{
+      const url=new URL(window.location.href);
+      url.searchParams.set("modo",mode==="signup"?"activar":"ingresar");
+      window.history.replaceState({},document.title,url.toString());
+    }catch(e){}
+  };
+
+  const backToLanding=()=>{
+    setView("landing");
+    try{
+      const url=new URL(window.location.href);
+      url.searchParams.delete("modo");
+      window.history.replaceState({},document.title,url.toString());
+    }catch(e){}
+  };
+
+  const goDirectCheckout=()=>{
+    trackProductEvent("checkout_started",{source:"public_direct"});
+    window.location.href=buildHotmartCheckoutUrl();
   };
 
   const initialPurchaseEmail=(()=>{ try{return localStorage.getItem("ceci_purchase_email")||user?.email||"";}catch(e){return user?.email||"";} })();
   const demo=isDemoUser(user);
   const showNav = !!user && !['auth','entry','landing','free-choice','start','form','generating','locked'].includes(view);
-  const decorate=(content)=><>{content}<PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/></>;
+  const dismissFullGuideWelcome=(reason="dismissed")=>{
+    try{ if(user?.id) localStorage.setItem(`${FULL_GUIDE_WELCOME_KEY}:${user.id}`,"1"); }catch(e){}
+    setFullGuideWelcomeOpen(false);
+    trackProductEvent("full_guide_welcome_closed",{reason});
+  };
+  const decorate=(content)=><>{content}<PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/><GuideLeadModal open={guideOpen} onClose={()=>setGuideOpen(false)}/><FullGuideWelcomeModal open={fullGuideWelcomeOpen&&!demo&&accessStatus==="granted"} onClose={dismissFullGuideWelcome} onGoGuide={()=>{dismissFullGuideWelcome("open_guide_module");setView("guia-novios");}}/></>;
 
   if(authLoading || (!!user&&!demo&&accessStatus==="checking")) return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
-  if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onPasswordUpdated={()=>{
+  if(recoveryMode) return <AuthScreen initialMode="update" initialError={authNotice} onBack={backToLanding} onPasswordUpdated={()=>{
     try { localStorage.removeItem("bsb_session"); } catch(e) {}
     try { localStorage.removeItem("bsb_form"); } catch(e) {}
     try { localStorage.removeItem("bsb_step"); } catch(e) {}
@@ -13807,16 +14049,18 @@ export default function App(){
   }}/>;
 
   if(!user){
+    if(view==="landing") return decorate(<Landing onTry={startDemo} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)}/>);
     return decorate(<AuthScreen
       initialMode={authInitialMode}
       initialError={authNotice}
       initialEmail={initialPurchaseEmail}
       onTryFree={startDemo}
-      onBuy={()=>setPurchaseOpen(true)}
+      onBuy={goDirectCheckout}
+      onBack={backToLanding}
     />);
   }
 
-  if(!demo && accessStatus==="denied") return decorate(<LockedAccessScreen email={user.email||"tu email"} onBuy={()=>setPurchaseOpen(true)} onLogout={logout} onCreateAccess={async()=>{await logout();openAuth("login");}}/>);
+  if(!demo && accessStatus==="denied") return decorate(<LockedAccessScreen email={user.email||"tu email"} onBuy={goDirectCheckout} onLogout={logout} onCreateAccess={async()=>{await logout();openAuth("login");}}/>);
 
   if(view==="free-choice") return decorate(<FreeStartChoice
     onGuided={()=>setView("start")}
@@ -13892,11 +14136,11 @@ export default function App(){
     onLogout={logout}
     onOpenStart={()=>setView("start")}
   />{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
-  if(view==="landing") return decorate(<Landing onTry={()=>setView("free-choice")} onLogin={()=>openAuth("login")} onBuy={()=>setPurchaseOpen(true)}/>);
+  if(view==="landing") return decorate(<Landing onTry={()=>setView("free-choice")} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)}/>);
   if(view==="guia") return demo
     ? decorate(<Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")} isDemo={true}/>)
     : decorate(<GuiaCanciones onStart={()=>setView("form")} onBack={()=>setView("home")}/>);
-  if(view==="guia-novios") return decorate(<><GuiaModule onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
+  if(view==="guia-novios") return decorate(<><GuiaModule onBack={()=>setView("home")} isDemo={demo} onRequestPurchase={()=>setPurchaseOpen(true)}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="budget") return decorate(<><BudgetModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="vendors") return decorate(<><VendorsModule user={user} onBack={()=>setView("home")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
   if(view==="guests") return decorate(<><GuestsModule user={user} onBack={()=>setView("home")} onGoDesigner={()=>setView("salon-design")}/>{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
