@@ -2093,7 +2093,7 @@ function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source=
   const [activeDownload,setActiveDownload]=useState("");
   const [error,setError]=useState("");
   const teaserKey=`tbo_excel_teaser_closed:${source}`;
-  const paidTeaserKey=`tbo_excel_paid_teaser_closed:${source}`;
+  const paidTeaserKey="tbo_excel_paid_teaser_closed";
   const [demoTeaserOpen,setDemoTeaserOpen]=useState(()=>{
     if(!isDemo || typeof window==="undefined") return true;
     try{return sessionStorage.getItem(teaserKey)!=="1";}catch(e){return true;}
@@ -2140,7 +2140,6 @@ function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source=
   };
 
   const reopenPaidTeaser=()=>{
-    try{sessionStorage.removeItem(paidTeaserKey);}catch(e){}
     setPaidTeaserOpen(true);
     setPaidExpanded(false);
     trackProductEvent("excel_paid_teaser_reopened",{source});
@@ -2228,7 +2227,10 @@ function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source=
         <div style={{minWidth:0,flex:1}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",lineHeight:1.18,fontWeight:700,color:"#1A1A14",marginBottom:4}}>¿Preferís trabajar en Excel?</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.58)"}}>
-            Tu compra incluye {templates.length===1?"la plantilla de este módulo":`${templates.length} plantillas para este módulo`} para usar sin conexión o compartir.
+            Son recursos adicionales bonificados para quienes prefieren trabajar en Excel. Podés usarlos sin conexión o compartirlos.
+          </div>
+          <div role="note" style={{marginTop:8,padding:"8px 10px",borderRadius:10,background:"rgba(201,169,110,.12)",border:"1px solid rgba(201,169,110,.28)",fontFamily:"'Lora',serif",fontSize:".68rem",lineHeight:1.42,color:"rgba(26,26,20,.68)"}}>
+            Importante: los Excel no están conectados con la app. Los cambios que hagas en una plantilla no se reflejan en Tu Boda Organizada, y los cambios de la app tampoco actualizan el Excel.
           </div>
 
           <button
@@ -2264,7 +2266,6 @@ function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source=
 
 function FullGuideWelcomeModal({open,onClose,onGoGuide}){
   const [loading,setLoading]=useState(false);
-  const [excelLoading,setExcelLoading]=useState(false);
   const [error,setError]=useState("");
 
   useEffect(()=>{
@@ -2285,36 +2286,43 @@ function FullGuideWelcomeModal({open,onClose,onGoGuide}){
     finally{ setLoading(false); }
   };
 
-  const downloadExcel=async()=>{
-    setError("");
-    setExcelLoading(true);
-    try{ await openExcelTemplateDownload("master","purchase_welcome"); }
-    catch(e){ setError(e.message||"No pudimos preparar el planificador en Excel."); }
-    finally{ setExcelLoading(false); }
-  };
-
-  return <div onMouseDown={e=>{if(e.target===e.currentTarget&&!loading&&!excelLoading)onClose("backdrop");}} style={{position:"fixed",inset:0,zIndex:10070,background:"rgba(18,18,14,.72)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+  return <div onMouseDown={e=>{if(e.target===e.currentTarget&&!loading)onClose("backdrop");}} style={{position:"fixed",inset:0,zIndex:10070,background:"rgba(18,18,14,.72)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
     <div role="dialog" aria-modal="true" aria-labelledby="full-guide-welcome-title" className="fu" style={{width:"100%",maxWidth:820,maxHeight:"calc(100dvh - 32px)",overflowY:"auto",background:"#FBF7EF",borderRadius:26,boxShadow:"0 34px 100px rgba(0,0,0,.42)",position:"relative",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(280px,100%),1fr))"}}>
-      <button type="button" aria-label="Cerrar bienvenida" disabled={loading||excelLoading} onClick={()=>onClose("close")} style={{position:"absolute",right:14,top:12,zIndex:3,width:40,height:40,borderRadius:999,border:"1px solid rgba(26,26,20,.13)",background:"rgba(251,247,239,.96)",cursor:"pointer",fontSize:"1.25rem"}}>×</button>
+      <button type="button" aria-label="Cerrar bienvenida" disabled={loading} onClick={()=>onClose("close")} style={{position:"absolute",right:14,top:12,zIndex:3,width:40,height:40,borderRadius:999,border:"1px solid rgba(26,26,20,.13)",background:"rgba(251,247,239,.96)",cursor:"pointer",fontSize:"1.25rem"}}>×</button>
 
-      <div style={{background:"#173F49",padding:"clamp(24px,5vw,42px)",display:"flex",alignItems:"center",justifyContent:"center",minHeight:390}}>
+      <div style={{background:"#173F49",padding:"clamp(24px,5vw,42px)",display:"flex",alignItems:"center",justifyContent:"center",minHeight:330}}>
         <img src="/guias/portada-guia-completa.png" alt="Portada de la guía completa Nos comprometimos, ¿y ahora qué?" style={{width:"100%",maxWidth:275,height:"auto",borderRadius:5,boxShadow:"0 20px 52px rgba(0,0,0,.32)"}}/>
       </div>
 
-      <div style={{padding:"clamp(30px,5vw,48px)",alignSelf:"center"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.22)",borderRadius:999,padding:"7px 12px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:14}}>Tu compra fue validada ✓</div>
-        <h2 id="full-guide-welcome-title" className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,2.6rem)",lineHeight:1.08,margin:"0 0 12px"}}>Tu acceso completo ya está listo</h2>
-        <p className="brand-copy" style={{fontSize:"1rem",lineHeight:1.65,margin:"0 0 15px"}}>Además de todas las herramientas para organizar tu boda, tu compra incluye el <strong>planificador maestro en Excel</strong>, plantillas específicas por módulo y la guía completa <strong>“Nos comprometimos, ¿y ahora qué?”</strong>.</p>
-        <div style={{display:"grid",gap:8,marginBottom:20,fontFamily:"'Lora',serif",fontSize:".88rem",color:"rgba(26,26,20,.68)"}}>
-          <span>✓ Planificador maestro en Excel para usar offline</span>
-          <span>✓ Plantillas específicas dentro de cada módulo</span>
-          <span>✓ Guía completa de 55 páginas</span>
+      <div style={{padding:"clamp(28px,5vw,46px)",alignSelf:"center"}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(74,94,58,.1)",border:"1px solid rgba(74,94,58,.22)",borderRadius:999,padding:"7px 12px",fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:14}}>Bienvenida · acceso validado ✓</div>
+
+        <h2 id="full-guide-welcome-title" className="brand-title" style={{fontSize:"clamp(1.9rem,5vw,2.6rem)",lineHeight:1.08,margin:"0 0 12px"}}>Qué alegría tenerte acá</h2>
+
+        <p className="brand-copy" style={{fontSize:"1rem",lineHeight:1.62,margin:"0 0 16px"}}>Tu compra ya está activa. Desde ahora tenés un lugar para ordenar decisiones, avances y pendientes sin sentir que tenés que resolver toda la boda de una sola vez.</p>
+
+        <div style={{padding:"14px 15px",marginBottom:16,background:"rgba(201,169,110,.13)",border:"1px solid rgba(201,169,110,.34)",borderRadius:15}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"#A97922",fontWeight:800,marginBottom:6}}>Tu bono de bienvenida</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.08rem",lineHeight:1.3,fontWeight:700,color:"#1A1A14",marginBottom:5}}>La guía completa “Nos comprometimos, ¿y ahora qué?”</div>
+          <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.52,color:"rgba(26,26,20,.66)",margin:0}}>Preparé esta guía para acompañarlos en las primeras decisiones y ayudarlos a empezar con claridad, sin presión y a su propio ritmo.</p>
         </div>
+
+        <div style={{display:"grid",gap:8,marginBottom:17,fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.45,color:"rgba(26,26,20,.68)"}}>
+          <span><strong style={{color:"#4A5E3A"}}>1.</strong> Descargá tu guía completa para tenerla siempre a mano.</span>
+          <span><strong style={{color:"#4A5E3A"}}>2.</strong> Entrá a la app y contanos en qué etapa están.</span>
+          <span><strong style={{color:"#4A5E3A"}}>3.</strong> Elegí un solo próximo paso. Lo demás puede esperar.</span>
+        </div>
+
+        <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.5,color:"rgba(26,26,20,.72)",margin:"0 0 18px"}}>
+          Estoy feliz de acompañarlos en este proceso.<br/>
+          <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontStyle:"italic",color:"#4A5E3A",fontWeight:700}}>Con cariño, Ceci</span>
+        </div>
+
         {error&&<p role="alert" style={{fontFamily:"'Lora',serif",fontSize:".82rem",color:"#B5443A",lineHeight:1.45,margin:"0 0 12px"}}>{error}</p>}
-        <button type="button" className="pbtn" onClick={downloadExcel} disabled={loading||excelLoading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{excelLoading?"Preparando tu Excel...":"Descargar planificador maestro en Excel →"}</button>
-        <button type="button" className="gbtn" onClick={download} disabled={loading||excelLoading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{loading?"Preparando tu guía...":"Descargar guía completa →"}</button>
-        <button type="button" className="gbtn" onClick={()=>onClose("enter_app")} disabled={loading||excelLoading} style={{width:"100%",marginBottom:9}}>Entrar a Tu Boda Organizada</button>
-        <button type="button" onClick={onGoGuide} disabled={loading||excelLoading} style={{width:"100%",border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,cursor:"pointer",padding:"8px"}}>Ver la guía dentro de la app</button>
+
+        <button type="button" className="pbtn" onClick={download} disabled={loading} style={{width:"100%",whiteSpace:"normal",marginBottom:10}}>{loading?"Preparando tu guía...":"Descargar mi guía completa →"}</button>
+        <button type="button" className="gbtn" onClick={()=>onClose("enter_app")} disabled={loading} style={{width:"100%",marginBottom:9}}>Entrar y comenzar mi plan</button>
+        <button type="button" onClick={onGoGuide} disabled={loading} style={{width:"100%",border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontSize:".82rem",fontWeight:700,cursor:"pointer",padding:"8px"}}>Prefiero leer la guía dentro de la app</button>
       </div>
     </div>
   </div>;
