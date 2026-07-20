@@ -13936,6 +13936,8 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   const [vendors4Chk, setVendors4Chk] = useState([]);
   const dragItem    = useRef(null);
   const dragOver    = useRef(null);
+  const pointerDrag = useRef(null);
+  const [pointerDragState, setPointerDragState] = useState(null);
   const timerRef    = useRef(null);
 
   useEffect(()=>{
@@ -14074,19 +14076,66 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
   // Drag reorder for predefined items
   const getOrder = (ei) => order[ei] || CHECKLIST_GENERAL[ei].items.map((_,i)=>i);
   
+  const reorderPredefined = (ei, from, to) => {
+    if(from===undefined || to===undefined || from===to) return;
+    const ord = [...getOrder(ei)];
+    if(from<0 || to<0 || from>=ord.length || to>=ord.length) return;
+    const [moved] = ord.splice(from, 1);
+    ord.splice(to, 0, moved);
+    const next = {...order, [ei]: ord};
+    setOrder(next); persist(null, null, next);
+  };
+
   const handleDragStart = (ei, idx) => { dragItem.current = {ei, idx}; };
   const handleDragEnter = (ei, idx) => { dragOver.current = {ei, idx}; };
   const handleDrop = (ei) => {
     if(!dragItem.current || dragItem.current.ei !== ei) return;
     const from = dragItem.current.idx;
     const to   = dragOver.current?.idx;
-    if(to===undefined || from===to) return;
-    const ord = [...getOrder(ei)];
-    const [moved] = ord.splice(from, 1);
-    ord.splice(to, 0, moved);
-    const next = {...order, [ei]: ord};
-    setOrder(next); persist(null, null, next);
+    reorderPredefined(ei, from, to);
     dragItem.current = null; dragOver.current = null;
+  };
+
+  // Touch/pen reorder from the ⠿ handle. Native HTML drag works on desktop,
+  // but mobile browsers do not reliably emit drag events from a finger.
+  const beginPointerDrag = (e, ei, idx) => {
+    if(e.pointerType==="mouse") return;
+    e.preventDefault();
+    e.stopPropagation();
+    const active = {ei, idx, over:idx, pointerId:e.pointerId};
+    pointerDrag.current = active;
+    setPointerDragState(active);
+    try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){}
+  };
+
+  const movePointerDrag = (e) => {
+    const active = pointerDrag.current;
+    if(!active || active.pointerId!==e.pointerId) return;
+    e.preventDefault();
+
+    const target = document.elementFromPoint(e.clientX,e.clientY)?.closest?.('[data-checklist-drag-row="true"]');
+    const targetStage = Number(target?.dataset?.checklistStage);
+    const targetIdx = Number(target?.dataset?.checklistOrderIndex);
+    if(targetStage===active.ei && Number.isInteger(targetIdx) && targetIdx!==active.over){
+      const next = {...active, over:targetIdx};
+      pointerDrag.current = next;
+      setPointerDragState(next);
+    }
+
+    const edge = 72;
+    if(e.clientY<edge) window.scrollBy(0,-12);
+    else if(e.clientY>window.innerHeight-edge) window.scrollBy(0,12);
+  };
+
+  const endPointerDrag = (e, cancelled=false) => {
+    const active = pointerDrag.current;
+    if(!active || active.pointerId!==e.pointerId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(!cancelled) reorderPredefined(active.ei, active.idx, active.over);
+    pointerDrag.current = null;
+    setPointerDragState(null);
+    try{ e.currentTarget.releasePointerCapture(e.pointerId); }catch(err){}
   };
 
   // Move custom item up/down
@@ -14236,18 +14285,33 @@ function ChecklistModule({user, form, results, onGoMusic, onBack}){
               if(filtro==="completadas" && !done) return false;
               if(filtroRes!=="todos" && r !== filtroRes) return false;
               return true;
-            }).map((ii,dragIdx)=>{
+            }).map((ii)=>{
               const item = etapa.items[ii];
               const done = !!checked[`${ei}_${ii}`];
+              const orderIdx = ord.indexOf(ii);
+              const isPointerTarget = pointerDragState?.ei===ei && pointerDragState?.over===orderIdx;
               return <div key={ii}
+                data-checklist-drag-row="true"
+                data-checklist-stage={ei}
+                data-checklist-order-index={orderIdx}
                 draggable
-                onDragStart={()=>handleDragStart(ei,dragIdx)}
-                onDragEnter={()=>handleDragEnter(ei,dragIdx)}
+                onDragStart={()=>handleDragStart(ei,orderIdx)}
+                onDragEnter={()=>handleDragEnter(ei,orderIdx)}
                 onDragEnd={()=>handleDrop(ei)}
                 onDragOver={e=>e.preventDefault()}
-                style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"default",userSelect:"none",flexDirection:"column"}}>
+                style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"0.5px solid rgba(74,94,58,.08)",cursor:"default",userSelect:"none",flexDirection:"column",background:isPointerTarget?"rgba(74,94,58,.07)":"transparent",borderRadius:isPointerTarget?8:0,transition:"background .12s"}}>
                 <div style={{display:"flex",alignItems:"flex-start",gap:10,width:"100%"}}>
-                  <span style={{color:"rgba(74,94,58,.25)",cursor:"grab",fontSize:"1rem",marginTop:2,flexShrink:0}} title="Arrastrar para reordenar">⠿</span>
+                  <span
+                    role="button"
+                    aria-label={`Mover tarea: ${item}`}
+                    title="Arrastrar para reordenar"
+                    onPointerDown={e=>beginPointerDrag(e,ei,orderIdx)}
+                    onPointerMove={movePointerDrag}
+                    onPointerUp={e=>endPointerDrag(e,false)}
+                    onPointerCancel={e=>endPointerDrag(e,true)}
+                    onContextMenu={e=>e.preventDefault()}
+                    style={{width:34,minWidth:34,minHeight:36,display:"grid",placeItems:"center",color:pointerDragState?.ei===ei&&pointerDragState?.idx===orderIdx?"#4A5E3A":"rgba(74,94,58,.32)",cursor:"grab",fontSize:"1.08rem",marginTop:-6,marginBottom:-6,marginLeft:-7,flexShrink:0,touchAction:"none",userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}
+                  >⠿</span>
                   <div onClick={()=>toggleItem(`${ei}_${ii}`)} style={{display:"flex",alignItems:"flex-start",gap:10,flex:1,cursor:"pointer"}}>
                     <div style={{width:21,height:21,minWidth:21,borderRadius:4,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"flex",alignItems:"center",justifyContent:"center",marginTop:1,flexShrink:0}}>
                       {done&&<span style={{color:"#F5EFE0",fontSize:THEME.text.tiny,fontWeight:700}}>✓</span>}
