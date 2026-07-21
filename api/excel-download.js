@@ -45,11 +45,25 @@ const EXCEL_FILES = Object.freeze({
       "02_Lista_de_Invitados.xlsx",
   },
 
+  guestImportTemplate: {
+    storageName:
+      "invitados_boda.xlsx",
+    downloadName:
+      "invitados_boda.xlsx",
+  },
+
   vendors: {
     storageName:
       "03_Gestion_de_Proveedores.xlsx",
     downloadName:
       "03_Gestion_de_Proveedores.xlsx",
+  },
+
+  vendorImportTemplate: {
+    storageName:
+      "plantilla_proveedores.xlsx",
+    downloadName:
+      "plantilla_proveedores.xlsx",
   },
 
   checklist: {

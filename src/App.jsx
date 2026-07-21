@@ -42,10 +42,20 @@ const EXCEL_TEMPLATES = Object.freeze({
     shortTitle: "Invitados",
     description: "Gestioná confirmaciones, grupos, restricciones y asignación de mesas."
   },
+  guestImportTemplate: {
+    title: "Plantilla XLSX de invitados",
+    shortTitle: "Plantilla de invitados",
+    description: "Descargala vacía, completala en Excel y después importala en Invitados."
+  },
   vendors: {
     title: "Gestión de proveedores",
     shortTitle: "Proveedores",
     description: "Compará propuestas, contactos, contratos, pagos y pendientes."
+  },
+  vendorImportTemplate: {
+    title: "Plantilla XLSX de proveedores",
+    shortTitle: "Plantilla de proveedores",
+    description: "Descargala vacía, completala en Excel y después importala en Proveedores."
   },
   checklist: {
     title: "Cronograma y checklist",
@@ -75,17 +85,8 @@ const EXCEL_TEMPLATES = Object.freeze({
 });
 
 const EXCEL_TEMPLATES_BY_VIEW = Object.freeze({
-  home: ["master"],
-  tools: ["master"],
-  account: ["master"],
-  budget: ["budget", "payments"],
-  vendors: ["vendors", "payments"],
-  guests: ["guests", "tables"],
-  "salon-design": ["tables"],
-  timeline: ["weddingDay", "checklist"],
-  "checklist-boda": ["checklist", "weddingDay"],
-  "guia-novios": ["master"],
-  results: ["music"]
+  vendors: ["vendorImportTemplate"],
+  guests: ["guestImportTemplate"]
 });
 const FULL_GUIDE_WELCOME_KEY = "ceci_full_guide_welcome_seen_v1";
 const HOTMART_SEND_FORM_ID = "BEudGxe";
@@ -481,6 +482,65 @@ html,body{overscroll-behavior-y:none}
 .sheet-overlay{animation:fadeIn .15s ease both}
 .sheet-panel{animation:sheetUp .25s cubic-bezier(.32,.72,.35,1) both}
 .canvas-viewport{touch-action:none;overscroll-behavior:contain}
+
+/* ══ UX/UI v7.2 · Invitados + Distribución + Diseño del salón ══ */
+.guests-v7-sticky-tabs{position:sticky;top:0;z-index:72;padding:8px 0;background:rgba(245,239,224,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.guests-v7-actions{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.guests-v7-actions::-webkit-scrollbar{display:none}
+.guests-v7-table-head{display:none}
+.guests-v71-shell{width:100%;max-width:1380px;margin:0 auto}
+.guests-v71-excel{position:sticky;top:58px;z-index:66}
+.guests-v71-list-view{min-width:0}
+.guests-v71-mesas-view{display:block;min-width:0}
+.guests-v71-table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:14px;min-width:0;align-content:start}
+.guests-v71-waiting-list{display:flex;flex-wrap:wrap;gap:7px}
+.guests-v71-waiting-item{min-width:0}
+.guests-v72-step-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
+.guests-v72-step{display:flex;align-items:flex-start;gap:11px;text-align:left;border:1px solid rgba(74,94,58,.16);border-radius:15px;padding:12px 14px;background:#FFFDF8;color:rgba(26,26,20,.64);cursor:pointer;min-height:72px;transition:border-color .18s,background .18s,box-shadow .18s,transform .18s}
+.guests-v72-step:hover{border-color:rgba(74,94,58,.38);transform:translateY(-1px)}
+.guests-v72-step.is-active{background:rgba(74,94,58,.09);border-color:rgba(74,94,58,.52);box-shadow:0 7px 20px rgba(74,94,58,.08);color:#4A5E3A}
+.guests-v72-step-number{width:28px;height:28px;display:grid;place-items:center;flex:0 0 28px;border-radius:50%;background:rgba(74,94,58,.09);font-family:'Lora',serif;font-weight:800;font-size:.78rem;color:#4A5E3A}
+.guests-v72-step.is-active .guests-v72-step-number{background:#4A5E3A;color:#FBF7EF}
+.guests-v72-step strong{display:block;font-family:'Playfair Display',serif;font-size:.98rem;line-height:1.15}
+.guests-v72-step small{display:block;margin-top:4px;font-family:'Lora',serif;font-size:.7rem;line-height:1.35;color:rgba(26,26,20,.48)}
+.guests-v72-table-card{min-width:0}
+.guests-v72-table-card.is-selected{border-color:rgba(74,94,58,.65)!important;box-shadow:0 10px 28px rgba(74,94,58,.11)}
+.guests-v72-table-inspector{display:none}
+.salon-v7-left-bank{min-width:0;align-self:start;position:sticky;top:10px;max-height:calc(100vh - 28px);overflow:hidden}
+.salon-v7-right-panel{min-width:0;align-self:start;position:sticky;top:10px;max-height:calc(100vh - 28px);overflow-y:auto;padding-right:4px;scrollbar-gutter:stable}
+.salon-v7-mobile-dock{display:none}
+@media(min-width:641px){
+  .guests-v7-table-head{display:grid;grid-template-columns:44px minmax(260px,1fr) 84px 110px 156px 28px;gap:12px;align-items:center;padding:8px 16px;margin-bottom:5px;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(74,94,58,.52)}
+}
+@media(min-width:1180px){
+  .guests-v71-mesas-view{display:grid;grid-template-columns:minmax(260px,290px) minmax(0,1fr) minmax(300px,330px);gap:16px;align-items:start}
+  .guests-v71-mesas-view>:not(.guests-v71-waiting-bank):not(.guests-v71-table-grid):not(.guests-v72-table-inspector){grid-column:1/-1}
+  .guests-v71-waiting-bank{grid-column:1;position:sticky;top:124px;max-height:calc(100vh - 156px);overflow:hidden;display:flex;flex-direction:column;margin-bottom:0!important}
+  .guests-v71-waiting-list{flex-direction:column;flex-wrap:nowrap;overflow-y:auto;min-height:0;padding-right:4px}
+  .guests-v71-waiting-item{width:100%;border-radius:11px!important;justify-content:flex-start}
+  .guests-v71-table-grid{grid-column:2;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start}
+  .guests-v72-table-inspector{display:flex;grid-column:3;position:sticky;top:124px;max-height:calc(100vh - 156px);overflow:hidden;flex-direction:column;background:#FFFDF8;border:1px solid rgba(201,169,110,.28);border-radius:16px;padding:14px;box-shadow:0 9px 26px rgba(63,50,31,.08)}
+}
+@media(min-width:1540px){
+  .guests-v71-mesas-view{grid-template-columns:290px minmax(0,1fr) 330px}
+  .guests-v71-table-grid{grid-template-columns:repeat(2,minmax(340px,1fr))}
+}
+@media(max-width:1179px){
+  .salon-v7-left-bank,.salon-v7-right-panel{position:static;max-height:none;overflow:visible}
+  .guests-v72-step-nav{grid-template-columns:repeat(3,minmax(190px,1fr));overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .guests-v72-step-nav::-webkit-scrollbar{display:none}
+}
+@media(max-width:760px){
+  .guests-v7-sticky-tabs{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+  .guests-v7-actions{width:100%;padding-bottom:2px}
+  .guests-v71-excel{position:static}
+  .guests-v72-step-nav{display:block;overflow:visible}
+  .guests-v72-step{min-height:54px;padding:10px 12px}
+  .guests-v72-step:not(.is-active){display:none}
+  .salon-v7-mobile-dock{display:flex;position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:80;gap:8px;padding:8px;margin:8px 0;background:rgba(251,247,239,.96);border:1px solid rgba(201,169,110,.32);border-radius:16px;box-shadow:0 10px 26px rgba(26,20,14,.16);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .salon-v7-mobile-dock button{flex:1;min-height:46px}
+}
+
 
 .brand-logo{font-family:'Cinzel',serif;font-size:clamp(.7rem,1vw,.92rem);letter-spacing:.32em;text-transform:uppercase;color:#4A5E3A;font-weight:500}
 .brand-title{font-family:'Playfair Display',serif;font-weight:600;color:#1A1A14;letter-spacing:.02em;line-height:1.15;text-wrap:balance}
@@ -2060,26 +2120,32 @@ function FullGuideLockedCard({onRequestPurchase}){
 }
 
 
-async function openExcelTemplateDownload(templateId, source="unknown"){
+async function getExcelTemplateDownloadPayload(templateId){
   const template=EXCEL_TEMPLATES[templateId];
   if(!template) throw new Error("La plantilla solicitada no existe.");
 
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session?.access_token) throw new Error("Tu sesión venció. Volvé a ingresar para descargar el Excel.");
+
+  const response=await fetch(`${EXCEL_DOWNLOAD_ENDPOINT}?file=${encodeURIComponent(templateId)}`,{
+    headers:{Authorization:`Bearer ${session.access_token}`}
+  });
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok || !payload?.url) throw new Error(payload?.error||"No pudimos preparar el archivo Excel.");
+  return payload;
+}
+
+async function openExcelTemplateDownload(templateId, source="unknown"){
   let newTab=null;
   try{
     if(typeof window!=="undefined"){
       newTab=window.open("about:blank","_blank");
       if(newTab) newTab.opener=null;
     }
-    const {data:{session}}=await supabase.auth.getSession();
-    if(!session?.access_token) throw new Error("Tu sesión venció. Volvé a ingresar para descargar el Excel.");
 
-    const response=await fetch(`${EXCEL_DOWNLOAD_ENDPOINT}?file=${encodeURIComponent(templateId)}`,{
-      headers:{Authorization:`Bearer ${session.access_token}`}
-    });
-    const payload=await response.json().catch(()=>({}));
-    if(!response.ok || !payload?.url) throw new Error(payload?.error||"No pudimos preparar el archivo Excel.");
-
+    const payload=await getExcelTemplateDownloadPayload(templateId);
     trackProductEvent("excel_template_downloaded",{source,template:templateId});
+
     if(newTab) newTab.location.href=payload.url;
     else window.location.href=payload.url;
     return true;
@@ -2087,6 +2153,115 @@ async function openExcelTemplateDownload(templateId, source="unknown"){
     try{ if(newTab&&!newTab.closed) newTab.close(); }catch(_e){}
     throw e;
   }
+}
+
+async function loadPrivateExcelTemplateWorkbook(templateId, XL){
+  const payload=await getExcelTemplateDownloadPayload(templateId);
+  const response=await fetch(payload.url,{cache:"no-store"});
+  if(!response.ok) throw new Error("No pudimos leer la plantilla privada.");
+  const buffer=await response.arrayBuffer();
+  return XL.read(buffer,{type:"array",cellStyles:true,cellDates:true});
+}
+
+function replaceTemplateTableRows(XL,workbook,sheetName,rows,options={}){
+  let worksheet=workbook.Sheets[sheetName];
+  if(!worksheet){
+    worksheet=XL.utils.aoa_to_sheet([]);
+    workbook.SheetNames.unshift(sheetName);
+    workbook.Sheets[sheetName]=worksheet;
+  }
+
+  const columns=options.columns||8;
+  const minimumRows=Math.max(options.minimumRows||60,rows.length,2);
+  let existingEndRow=minimumRows-1;
+
+  try{
+    if(worksheet["!ref"]){
+      const decoded=XL.utils.decode_range(worksheet["!ref"]);
+      existingEndRow=Math.max(existingEndRow,decoded.e.r);
+    }
+  }catch(e){}
+
+  const finalRows=Math.max(minimumRows,existingEndRow+1);
+
+  for(let rowIndex=0;rowIndex<finalRows;rowIndex++){
+    for(let columnIndex=0;columnIndex<columns;columnIndex++){
+      const address=XL.utils.encode_cell({r:rowIndex,c:columnIndex});
+      const previous=worksheet[address]||{};
+      const value=rows[rowIndex]?.[columnIndex]??"";
+      const next={...previous};
+
+      delete next.f;
+      delete next.F;
+      delete next.w;
+
+      if(value===null || value===""){
+        next.t="s";
+        next.v="";
+      }else if(typeof value==="number" && Number.isFinite(value)){
+        next.t="n";
+        next.v=value;
+      }else if(typeof value==="boolean"){
+        next.t="b";
+        next.v=value;
+      }else{
+        next.t="s";
+        next.v=String(value);
+      }
+
+      worksheet[address]=next;
+    }
+  }
+
+  worksheet["!ref"]=`A1:${XL.utils.encode_col(columns-1)}${finalRows}`;
+  worksheet["!freeze"]={xSplit:0,ySplit:1,topLeftCell:"A2",activePane:"bottomLeft",state:"frozen"};
+  worksheet["!autofilter"]={ref:`A1:${XL.utils.encode_col(columns-1)}${Math.max(rows.length,2)}`};
+
+  if(Array.isArray(worksheet["!tables"])){
+    worksheet["!tables"]=worksheet["!tables"].map((table,index)=>({
+      ...table,
+      name:table.name||options.tableName||`Tabla${sheetName.replace(/\W/g,"")}${index+1}`,
+      displayName:table.displayName||options.tableName||`Tabla${sheetName.replace(/\W/g,"")}${index+1}`,
+      ref:`A1:${XL.utils.encode_col(columns-1)}${finalRows}`
+    }));
+  }
+
+  return worksheet;
+}
+
+function ensureExcelHowToSheet(XL,workbook,type){
+  if(workbook.SheetNames.includes("Cómo usar")) return;
+
+  const isGuests=type==="guests";
+  const rows=isGuests
+    ? [
+        ["El Violín de Ceci"],
+        ["Lista de invitados"],
+        [""],
+        ["Cómo usar este archivo"],
+        ["1. Completá o editá la hoja «Invitados» sin cambiar los encabezados."],
+        ["2. La única columna obligatoria es «Nombre»."],
+        ["3. Guardá el archivo como .xlsx y volvé a importarlo desde Invitados."],
+        ["4. También podés exportar desde la app y volver a importar ese mismo archivo."],
+        [""],
+        ["Columnas: Nombre | Personas | Mesa | Lado | Parentesco | Confirmacion | Restriccion | Notas"]
+      ]
+    : [
+        ["El Violín de Ceci"],
+        ["Lista de proveedores"],
+        [""],
+        ["Cómo usar este archivo"],
+        ["1. Completá o editá la hoja «Proveedores» sin cambiar los encabezados."],
+        ["2. La única columna obligatoria es «Nombre»."],
+        ["3. Guardá el archivo como .xlsx y volvé a importarlo desde Proveedores."],
+        ["4. También podés exportar desde la app y volver a importar ese mismo archivo."],
+        [""],
+        ["Columnas: Categoria | Nombre | Contacto | Precio | Moneda | Estado | Link | Notas"]
+      ];
+
+  const guide=XL.utils.aoa_to_sheet(rows);
+  guide["!cols"]=[{wch:100}];
+  XL.utils.book_append_sheet(workbook,guide,"Cómo usar");
 }
 
 function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source="unknown",withNav=true}){
@@ -2175,14 +2350,14 @@ function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source=
         <div style={{minWidth:0}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:".98rem",lineHeight:1.2,fontWeight:700,color:"#1A1A14",marginBottom:4}}>¿Preferís trabajar en Excel?</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.48,color:"rgba(26,26,20,.58)"}}>
-            Con la compra recibís {singular?"esta plantilla":"las plantillas de este módulo"} y el planificador completo para usar sin conexión.
+            Con la compra recibís {singular?"una plantilla XLSX vacía":"plantillas XLSX vacías"} para completar en Excel y después importar en la app.
           </div>
           <button
             type="button"
             onClick={openExcelPurchase}
             style={{border:0,background:"transparent",padding:"7px 0 0",fontFamily:"'Lora',serif",fontSize:".72rem",fontWeight:750,color:"#4A5E3A",textDecoration:"underline",textUnderlineOffset:3,cursor:"pointer"}}
           >
-            Ver app + plantillas incluidas →
+            Ver app + plantillas para importar →
           </button>
         </div>
       </div>
@@ -2227,10 +2402,10 @@ function ExcelAccessPanel({templateIds=[],isDemo=false,onRequestPurchase,source=
         <div style={{minWidth:0,flex:1}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",lineHeight:1.18,fontWeight:700,color:"#1A1A14",marginBottom:4}}>¿Preferís trabajar en Excel?</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.58)"}}>
-            Son recursos adicionales bonificados para quienes prefieren trabajar en Excel. Podés usarlos sin conexión o compartirlos.
+            Podés descargar una plantilla XLSX vacía, completarla en Excel y después importarla en este módulo. También podés exportar a Excel los datos que ya cargaste en la app.
           </div>
           <div role="note" style={{marginTop:8,padding:"8px 10px",borderRadius:10,background:"rgba(201,169,110,.12)",border:"1px solid rgba(201,169,110,.28)",fontFamily:"'Lora',serif",fontSize:".68rem",lineHeight:1.42,color:"rgba(26,26,20,.68)"}}>
-            Importante: los Excel no están conectados con la app. Los cambios que hagas en una plantilla no se reflejan en Tu Boda Organizada, y los cambios de la app tampoco actualizan el Excel.
+            Importante: los Excel no se sincronizan automáticamente con la app. Para pasar cambios del Excel a Tu Boda Organizada tenés que importarlo; para llevarte los cambios de la app, usá Exportar XLSX.
           </div>
 
           <button
@@ -5033,6 +5208,139 @@ const VENDOR_ESTADOS = [
   {id:"descartado",label:"Descartado", color:"rgba(26,26,20,.35)",    bg:"rgba(26,26,20,.05)"},
 ];
 
+const VENDOR_CATEGORY_EXPORT_LABELS = Object.freeze({
+  salon:"Salón / Venue",
+  catering:"Catering y bebidas",
+  musica:"Música y entretenimiento",
+  flores:"Flores y decoración",
+  vestuario:"Vestuario",
+  foto:"Fotografía",
+  video:"Video / Cinematografía",
+  torta:"Torta",
+  papel:"Papelería e invitaciones",
+  transport:"Transporte",
+  beauty:"Maquillaje y peluquería",
+  luna:"Luna de miel",
+  otro:"Otros"
+});
+
+function normalizeSpreadsheetKey(value=""){
+  return String(value??"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
+}
+
+const VENDOR_CATEGORY_IMPORT_IDS = Object.freeze({
+  "salon / venue":"salon",
+  "salon":"salon",
+  "catering y bebidas":"catering",
+  "catering":"catering",
+  "musica y entretenimiento":"musica",
+  "musica":"musica",
+  "flores y decoracion":"flores",
+  "flores / decoracion":"flores",
+  "vestuario":"vestuario",
+  "fotografia":"foto",
+  "video / cinematografia":"video",
+  "video":"video",
+  "torta":"torta",
+  "papeleria e invitaciones":"papel",
+  "papeleria":"papel",
+  "transporte":"transport",
+  "maquillaje y peluqueria":"beauty",
+  "maquillaje / peinado":"beauty",
+  "luna de miel":"luna",
+  "otros":"otro",
+  "otro":"otro"
+});
+
+const VENDOR_STATE_IMPORT_IDS = Object.freeze({
+  evaluando:"evaluando",
+  contratado:"contratado",
+  pagado:"pagado",
+  descartado:"descartado"
+});
+
+function parseSpreadsheetNumber(value){
+  if(typeof value==="number") return Number.isFinite(value)?Math.max(0,value):0;
+  let raw=String(value??"").trim();
+  if(!raw) return 0;
+
+  raw=raw.replace(/\s/g,"").replace(/[^0-9,.-]/g,"");
+  const lastComma=raw.lastIndexOf(",");
+  const lastDot=raw.lastIndexOf(".");
+
+  if(lastComma>=0 && lastDot>=0){
+    const decimalSeparator=lastComma>lastDot?",":".";
+    const thousandsSeparator=decimalSeparator===","?".":",";
+    raw=raw.split(thousandsSeparator).join("");
+    raw=raw.replace(decimalSeparator,".");
+  }else if(lastComma>=0){
+    const decimals=raw.length-lastComma-1;
+    raw=decimals>0&&decimals<=2 ? raw.replace(",",".") : raw.replace(/,/g,"");
+  }else if(lastDot>=0){
+    const parts=raw.split(".");
+    if(parts.length>2 || (parts.length===2 && parts[1].length===3)) raw=parts.join("");
+  }
+
+  const parsed=Number(raw);
+  return Number.isFinite(parsed)?Math.max(0,parsed):0;
+}
+
+async function loadSheetJS(){
+  if(window.XLSX) return window.XLSX;
+  await new Promise((resolve,reject)=>{
+    const script=document.createElement("script");
+    script.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    script.onload=resolve;
+    script.onerror=reject;
+    document.head.appendChild(script);
+  });
+  if(!window.XLSX) throw new Error("No se pudo cargar el lector de Excel.");
+  return window.XLSX;
+}
+
+async function spreadsheetFileToRows(file){
+  const lowerName=String(file?.name||"").toLowerCase();
+  if(lowerName.endsWith(".xlsx")||lowerName.endsWith(".xls")){
+    const XL=await loadSheetJS();
+    const data=await file.arrayBuffer();
+    const workbook=XL.read(data);
+    const worksheet=workbook.Sheets[workbook.SheetNames[0]];
+    return XL.utils.sheet_to_json(worksheet,{header:1,defval:""});
+  }
+
+  if(lowerName.endsWith(".csv")){
+    const text=await file.text();
+    return text.split(/\r?\n/).map(line=>{
+      const cells=[];
+      let current="";
+      let quoted=false;
+      for(let index=0;index<line.length;index++){
+        const char=line[index];
+        if(char==='"' && quoted && line[index+1]==='"'){
+          current+='"';
+          index++;
+        }else if(char==='"'){
+          quoted=!quoted;
+        }else if(char===","&&!quoted){
+          cells.push(current.trim());
+          current="";
+        }else{
+          current+=char;
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    });
+  }
+
+  throw new Error("Elegí un archivo .xlsx, .xls o .csv.");
+}
+
 function VendorForm({vendor, onSave, onCancel, budgetCurrency="USD", categories=[]}){
   const categoryOptions = categories.length ? categories : VENDOR_CATS;
   const initialCategory = vendor?.cat || categoryOptions[0]?.id || "salon";
@@ -5147,6 +5455,15 @@ function VendorsModule({user, onBack}){
   const [filterCat, setFilterCat] = useState("all");
   const [filterEst, setFilterEst] = useState("all");
   const [searchVendor, setSearchVendor] = useState("");
+  const [showVendorMenu, setShowVendorMenu] = useState(false);
+  const isMobile = useIsMobile();
+  const isDemo = isDemoUser(user);
+
+  useEffect(()=>{
+    const closeMenu=()=>setShowVendorMenu(false);
+    document.addEventListener("mousedown",closeMenu);
+    return ()=>document.removeEventListener("mousedown",closeMenu);
+  },[]);
 
   useEffect(()=>{
     if(!user) return;
@@ -5221,6 +5538,169 @@ function VendorsModule({user, onBack}){
   const totalCotizado = vendors.filter(v=>v.estado!=="descartado").reduce((s,v)=>s+vendorAmountInBudgetCurrency(v,budgetCurrency),0);
   const budgetCurrencySymbol = getCurrencySymbol(budgetCurrency);
 
+  const importVendorsFromFile = async(event) => {
+    const file=event.target.files?.[0];
+    if(!file) return;
+    event.target.value="";
+
+    try{
+      const rows=await spreadsheetFileToRows(file);
+      const expectedHeaders=["categoria","nombre","contacto","precio","moneda","estado","link","notas"];
+      let headerIndex=-1;
+
+      for(let index=0;index<rows.length;index++){
+        const normalizedRow=(rows[index]||[]).map(normalizeSpreadsheetKey);
+        const recognized=normalizedRow.filter(value=>expectedHeaders.includes(value)).length;
+        if(normalizedRow.includes("nombre")&&recognized>=2){
+          headerIndex=index;
+          break;
+        }
+      }
+
+      if(headerIndex<0){
+        showToast("No se encontró la fila de encabezados de proveedores","error");
+        return;
+      }
+
+      const headers=(rows[headerIndex]||[]).map(normalizeSpreadsheetKey);
+      const column=name=>headers.indexOf(name);
+      const indexes={
+        categoria:column("categoria"),
+        nombre:column("nombre"),
+        contacto:column("contacto"),
+        precio:column("precio"),
+        moneda:column("moneda"),
+        estado:column("estado"),
+        link:column("link"),
+        notas:column("notas")
+      };
+
+      if(indexes.nombre<0){
+        showToast("Falta la columna Nombre en el archivo","error");
+        return;
+      }
+
+      const validCurrencies=new Set(CURRENCIES.map(currency=>currency.code));
+      const imported=[];
+      let fallbackCategories=0;
+      let fallbackCurrencies=0;
+      let fallbackStates=0;
+      const timestamp=Date.now();
+
+      for(let rowIndex=headerIndex+1;rowIndex<rows.length;rowIndex++){
+        const row=rows[rowIndex]||[];
+        if(row.every(cell=>String(cell??"").trim()==="")) continue;
+
+        const nombre=String(row[indexes.nombre]??"").trim();
+        if(!nombre) continue;
+
+        const categoryRaw=indexes.categoria>=0?normalizeSpreadsheetKey(row[indexes.categoria]):"";
+        const categoryId=VENDOR_CATEGORY_IMPORT_IDS[categoryRaw]||"otro";
+        if(categoryRaw&&!VENDOR_CATEGORY_IMPORT_IDS[categoryRaw]) fallbackCategories++;
+
+        const stateRaw=indexes.estado>=0?normalizeSpreadsheetKey(row[indexes.estado]):"";
+        const estado=stateRaw?(VENDOR_STATE_IMPORT_IDS[stateRaw]||"evaluando"):"evaluando";
+        if(stateRaw&&!VENDOR_STATE_IMPORT_IDS[stateRaw]) fallbackStates++;
+
+        const currencyRaw=indexes.moneda>=0?String(row[indexes.moneda]??"").trim().toUpperCase():"";
+        const currency=currencyRaw&&validCurrencies.has(currencyRaw)?currencyRaw:budgetCurrency;
+        if(currencyRaw&&!validCurrencies.has(currencyRaw)) fallbackCurrencies++;
+
+        imported.push({
+          id:`${timestamp}-${rowIndex}`,
+          cat:categoryId,
+          nombre,
+          contacto:indexes.contacto>=0?String(row[indexes.contacto]??"").trim():"",
+          precio:indexes.precio>=0?parseSpreadsheetNumber(row[indexes.precio]):0,
+          currency,
+          exchangeRate:formatExchangeRate(getSuggestedExchangeRate(budgetCurrency,currency)),
+          exchangeRateBaseCurrency:budgetCurrency,
+          estado,
+          link:indexes.link>=0?String(row[indexes.link]??"").trim():"",
+          notas:indexes.notas>=0?String(row[indexes.notas]??"").trim():""
+        });
+      }
+
+      if(imported.length===0){
+        showToast("No se encontraron proveedores válidos en el archivo","error");
+        return;
+      }
+
+      const next=[...(vendors||[]),...imported];
+      setVendors(next);
+      await save(next);
+
+      const warnings=[];
+      if(fallbackCategories) warnings.push(`${fallbackCategories} categorías se guardaron como Otros`);
+      if(fallbackCurrencies) warnings.push(`${fallbackCurrencies} monedas usaron ${budgetCurrency}`);
+      if(fallbackStates) warnings.push(`${fallbackStates} estados se guardaron como Evaluando`);
+      showToast(`✓ ${imported.length} proveedores importados${warnings.length?`. ${warnings.join(". ")}`:""}`,"success");
+    }catch(error){
+      console.error("Error importando proveedores:",error);
+      showToast(error?.message||"No pudimos importar el archivo de proveedores","error");
+    }
+  };
+
+  const exportVendorsToExcel = async() => {
+    if(!vendors?.length){
+      showToast("Todavía no hay proveedores para exportar","info");
+      return;
+    }
+
+    try{
+      const XL=await loadSheetJS();
+      let workbook;
+
+      try{
+        workbook=await loadPrivateExcelTemplateWorkbook("vendorImportTemplate",XL);
+      }catch(templateError){
+        console.warn("No se pudo usar la plantilla privada para exportar proveedores:",templateError);
+        workbook=XL.utils.book_new();
+      }
+
+      const rows=[
+        ["Categoria","Nombre","Contacto","Precio","Moneda","Estado","Link","Notas"],
+        ...vendors.map(vendor=>[
+          VENDOR_CATEGORY_EXPORT_LABELS[vendor.cat]||catMap[vendor.cat]?.label||"Otros",
+          vendor.nombre||"",
+          vendor.contacto||"",
+          parseSpreadsheetNumber(vendor.precio),
+          vendor.currency||budgetCurrency,
+          estMap[vendor.estado]?.label||"Evaluando",
+          vendor.link||"",
+          vendor.notas||""
+        ])
+      ];
+
+      const worksheet=replaceTemplateTableRows(XL,workbook,"Proveedores",rows,{
+        columns:8,
+        minimumRows:Math.max(60,rows.length),
+        tableName:"tblProveedores"
+      });
+      worksheet["!cols"]=[{wch:28},{wch:28},{wch:24},{wch:14},{wch:11},{wch:14},{wch:32},{wch:34}];
+      worksheet["!dataValidation"]=[
+        {sqref:`A2:A${Math.max(60,rows.length)}`,type:"list",formula1:'"Salón / Venue,Catering y bebidas,Música y entretenimiento,Flores y decoración,Vestuario,Fotografía,Video / Cinematografía,Torta,Papelería e invitaciones,Transporte,Maquillaje y peluquería,Luna de miel,Otros"',allowBlank:true},
+        {sqref:`E2:E${Math.max(60,rows.length)}`,type:"list",formula1:`"${CURRENCIES.map(currency=>currency.code).join(",")}"`,allowBlank:true},
+        {sqref:`F2:F${Math.max(60,rows.length)}`,type:"list",formula1:'"Evaluando,Contratado,Pagado,Descartado"',allowBlank:true}
+      ];
+
+      ensureExcelHowToSheet(XL,workbook,"vendors");
+      XL.writeFile(workbook,"proveedores_boda.xlsx");
+      showToast("✓ Proveedores exportados en el mismo formato de importación","success");
+    }catch(error){
+      console.error("Error exportando proveedores:",error);
+      showToast(error?.message||"No pudimos generar el Excel de proveedores","error");
+    }
+  };
+
+  const downloadVendorTemplate = async() => {
+    try{
+      await openExcelTemplateDownload("vendorImportTemplate","vendors_import_template");
+    }catch(error){
+      showToast(error?.message||"No pudimos descargar la plantilla de proveedores","error");
+    }
+  };
+
   return <div style={{minHeight:"100dvh",background:"#F5EFE0",paddingBottom:96}}>
     {/* Header */}
     <div style={{background:"#4A5E3A",padding:"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
@@ -5233,7 +5713,7 @@ function VendorsModule({user, onBack}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"flex-end",marginTop:8}}>
             <div style={{fontFamily:"'Lora',serif",fontSize:".82rem",padding:"8px 12px",borderRadius:100,border:"1px solid rgba(201,169,110,.45)",color:"rgba(245,239,224,.88)"}}>Moneda principal: <strong>{budgetCurrency}</strong></div>
-            {vendors.length>0&&<button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:800,fontSize:".9rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>}
+            <button onClick={()=>{setAdding(true);setEditId("new");}} style={{background:"#D9B86F",color:"#1A1A14",border:"none",padding:"10px 20px",fontFamily:"'Lora',serif",fontWeight:800,fontSize:".9rem",borderRadius:100,cursor:"pointer"}}>+ Agregar</button>
           </div>
         </div>
         <div style={{fontFamily:"'Lora',serif",fontSize:".8rem",color:"rgba(245,239,224,.82)",marginTop:10,lineHeight:1.5}}>Cargá cada proveedor en la moneda en la que te cotizó. También te mostramos el equivalente en {budgetCurrency} para que puedas comparar.</div>
@@ -5247,6 +5727,20 @@ function VendorsModule({user, onBack}){
     </div>
 
     <div style={{maxWidth:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0"}}>
+      <section aria-label="Importar y exportar proveedores en Excel" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:"#FBF7EF",border:"1px solid rgba(74,94,58,.16)",borderRadius:16,padding:"12px 14px",marginBottom:16,boxShadow:"0 5px 18px rgba(63,50,31,.045)"}}>
+        <div style={{minWidth:150}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800}}>Archivo Excel</div>
+          <div style={{fontFamily:"'Lora',serif",fontSize:".75rem",lineHeight:1.4,color:"rgba(26,26,20,.52)",marginTop:3}}>Descargá la plantilla vacía, completala e importala. También podés exportar los datos actuales.</div>
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",width:isMobile?"100%":"auto"}}>
+          <label style={{flex:isMobile?"1 1 135px":"0 0 auto",display:"inline-flex",alignItems:"center",justifyContent:"center",minHeight:42,padding:"9px 14px",border:"1px solid rgba(74,94,58,.3)",borderRadius:100,background:"#FFFDF8",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:750,color:"#4A5E3A",cursor:"pointer",boxSizing:"border-box",whiteSpace:"nowrap"}}>
+            ↑ Importar archivo
+            <input name="vendor-import-file-visible" type="file" accept=".xlsx,.xls,.csv" onChange={importVendorsFromFile} style={{display:"none"}}/>
+          </label>
+          {!isDemo&&<button type="button" onClick={exportVendorsToExcel} disabled={!vendors.length} style={{flex:isMobile?"1 1 135px":"0 0 auto",minHeight:42,padding:"9px 14px",border:"none",borderRadius:100,background:vendors.length?"#4A5E3A":"rgba(74,94,58,.28)",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:800,color:"#FBF7EF",cursor:vendors.length?"pointer":"not-allowed",whiteSpace:"nowrap"}}>↓ Exportar datos</button>}
+          {!isDemo&&<button type="button" onClick={downloadVendorTemplate} style={{flex:isMobile?"1 1 160px":"0 0 auto",minHeight:42,padding:"9px 14px",border:"1px solid rgba(201,169,110,.52)",borderRadius:100,background:"rgba(201,169,110,.12)",fontFamily:"'Lora',serif",fontSize:".8rem",fontWeight:750,color:"#4A5E3A",cursor:"pointer",whiteSpace:"nowrap"}}>Descargar plantilla</button>}
+        </div>
+      </section>
       {/* Add form */}
       {adding && editId==="new" && <VendorForm budgetCurrency={budgetCurrency} categories={vendorCategoryOptions} onSave={saveVendor} onCancel={()=>{setAdding(false);setEditId(null);}}/>}
 
@@ -5431,11 +5925,82 @@ const getGuestSoftStatusStyle = (id) => {
   };
 };
 const LADOS = ["Novio","Novia","Ambos"];
+const ROUND_TABLE_CAPACITIES = [8,10,12];
+const normalizeRoundTableCapacity = (value, fallback=8) => {
+  const parsed = parseInt(value);
+  return ROUND_TABLE_CAPACITIES.includes(parsed) ? parsed : fallback;
+};
+
+
+function GuestImportReviewModal({review,onAuto,onBank,onCancel}){
+  if(!review) return null;
+  const s=review.summary||{};
+  const realMissing=Math.max(0,parseInt(s.mesasNuevasAuto)||0);
+  return <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onCancel}>
+    <div style={{position:"absolute",inset:0,background:"rgba(26,26,20,.56)",backdropFilter:"blur(4px)"}}/>
+    <div role="dialog" aria-modal="true" aria-label="Revisar importación de invitados" onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(100%,560px)",maxHeight:"min(90dvh,760px)",overflowY:"auto",background:THEME.color.cream2,border:"1px solid rgba(201,169,110,.42)",borderRadius:22,padding:"22px 20px",boxShadow:"0 24px 70px rgba(26,20,14,.32)"}}>
+      <button type="button" aria-label="Cerrar" onClick={onCancel} style={{position:"absolute",right:12,top:12,width:34,height:34,borderRadius:999,border:"1px solid rgba(74,94,58,.16)",background:"#FFFDF8",color:"rgba(26,26,20,.52)",fontSize:"1.15rem",cursor:"pointer"}}>×</button>
+      <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:THEME.color.sage,marginBottom:7}}>Revisar antes de importar</div>
+      <h3 style={{fontFamily:THEME.font.display,fontSize:"clamp(1.35rem,5vw,1.9rem)",lineHeight:1.08,color:THEME.color.ink,margin:"0 38px 8px 0"}}>Encontramos {s.totalInvitaciones||0} invitaciones</h3>
+      <p style={{fontFamily:THEME.font.body,fontSize:".88rem",lineHeight:1.55,color:"rgba(26,26,20,.58)",margin:"0 0 14px"}}>La app mantiene cada invitación o familia junta. Nadie se divide entre mesas y ninguna mesa supera la capacidad definida.</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,marginBottom:12}}>
+        {[
+          [s.totalPersonas||0,"Personas en el archivo"],
+          [s.invitacionesSinMesa||0,"Invitaciones sin mesa"],
+          [s.mesasConExceso||0,"Mesas del archivo con exceso"],
+          [s.invitacionesReubicadas||0,"Invitaciones a reubicar"],
+        ].map(([value,label])=><div key={label} style={{background:"rgba(74,94,58,.06)",border:"1px solid rgba(74,94,58,.12)",borderRadius:13,padding:"11px 10px"}}><div style={{fontFamily:THEME.font.display,fontSize:"1.25rem",fontWeight:700,color:THEME.color.sage}}>{value}</div><div style={{fontFamily:THEME.font.body,fontSize:".72rem",lineHeight:1.3,color:"rgba(26,26,20,.5)",marginTop:2}}>{label}</div></div>)}
+      </div>
+      <div style={{background:realMissing>0?"rgba(201,169,110,.11)":"rgba(74,94,58,.06)",border:`1px solid ${realMissing>0?"rgba(201,169,110,.34)":"rgba(74,94,58,.15)"}`,borderRadius:13,padding:"11px 12px",marginBottom:12,fontFamily:THEME.font.body,fontSize:".78rem",lineHeight:1.5,color:"rgba(26,26,20,.65)"}}>
+        <strong style={{display:"block",fontFamily:THEME.font.display,fontSize:".98rem",color:THEME.color.ink,marginBottom:3}}>{realMissing>0?`Faltan aproximadamente ${realMissing} mesas de 8`:`La capacidad actual alcanza`}</strong>
+        Tus {s.mesasActuales||0} mesas actuales ofrecen {s.capacidadActual||0} lugares. {s.lugaresFaltantes>0?`Para ubicar a todas las personas faltan ${s.lugaresFaltantes} lugares.`:"No faltan lugares por capacidad total; igual puede haber familias que necesiten otra mesa para permanecer juntas."}
+      </div>
+      {s.gruposDemasiadoGrandes>0&&<div style={{background:"rgba(200,80,60,.07)",border:"1px solid rgba(200,80,60,.2)",borderRadius:12,padding:"10px 12px",fontFamily:THEME.font.body,fontSize:".78rem",lineHeight:1.45,color:"rgba(150,48,42,.85)",marginBottom:12}}>⚠️ {s.gruposDemasiadoGrandes} {s.gruposDemasiadoGrandes===1?"invitación supera":"invitaciones superan"} la capacidad máxima disponible y quedará en el Banco de espera.</div>}
+      <div style={{display:"grid",gap:9}}>
+        <button type="button" onClick={onAuto} style={{border:0,borderRadius:14,padding:"13px 14px",background:THEME.color.sage,color:THEME.color.cream,textAlign:"left",cursor:"pointer",boxShadow:"0 8px 22px rgba(74,94,58,.18)"}}>
+          <span style={{display:"inline-flex",fontFamily:THEME.font.label,fontSize:".6rem",letterSpacing:".1em",textTransform:"uppercase",background:"rgba(251,247,239,.18)",borderRadius:999,padding:"3px 7px",marginBottom:6}}>Recomendado</span><strong style={{display:"block",fontFamily:THEME.font.body,fontSize:".9rem"}}>Reorganizar respetando capacidades</strong>
+          <span style={{display:"block",fontFamily:THEME.font.body,fontSize:".73rem",lineHeight:1.45,opacity:.78,marginTop:3}}>Completa primero las mesas con lugar, mantiene cada familia junta y propone mesas nuevas cuando hace falta. Después decidís cuándo agregarlas al canvas.</span>
+        </button>
+        <button type="button" onClick={onBank} style={{border:"1px solid rgba(201,169,110,.42)",borderRadius:14,padding:"12px 14px",background:"rgba(201,169,110,.07)",color:THEME.color.ink,textAlign:"left",cursor:"pointer"}}>
+          <strong style={{display:"block",fontFamily:THEME.font.body,fontSize:".86rem"}}>Mantener solo asignaciones válidas</strong>
+          <span style={{display:"block",fontFamily:THEME.font.body,fontSize:".73rem",lineHeight:1.45,color:"rgba(26,26,20,.55)",marginTop:3}}>Deja sin mesa a las invitaciones que no entren completas para que las ubiques después desde el Banco de espera.</span>
+        </button>
+        <button type="button" onClick={onCancel} style={{border:0,background:"transparent",padding:"10px",fontFamily:THEME.font.body,fontSize:".8rem",color:"rgba(26,26,20,.48)",cursor:"pointer"}}>Cancelar importación</button>
+      </div>
+    </div>
+  </div>;
+}
+
+function ClearGuestsModal({count,onExport,onConfirm,onCancel}){
+  return <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onCancel}>
+    <div style={{position:"absolute",inset:0,background:"rgba(26,26,20,.5)",backdropFilter:"blur(3px)"}}/>
+    <div role="dialog" aria-modal="true" aria-label="Limpiar lista de invitados" onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(100%,430px)",background:THEME.color.cream2,border:"1px solid rgba(200,80,60,.22)",borderRadius:20,padding:"22px 20px",boxShadow:"0 20px 60px rgba(26,20,14,.3)"}}>
+      <div style={{width:42,height:42,borderRadius:14,display:"grid",placeItems:"center",background:"rgba(200,80,60,.09)",fontSize:"1.2rem",marginBottom:12}}>🗑️</div>
+      <h3 style={{fontFamily:THEME.font.display,fontSize:"1.45rem",lineHeight:1.12,color:THEME.color.ink,margin:"0 0 8px"}}>¿Querés eliminar {count} {count===1?"invitación":"invitaciones"}?</h3>
+      <p style={{fontFamily:THEME.font.body,fontSize:".84rem",lineHeight:1.55,color:"rgba(26,26,20,.58)",margin:"0 0 16px"}}>Se borrarán los invitados y sus asignaciones. Las mesas y el diseño del salón se conservarán.</p>
+      <div style={{display:"grid",gap:8}}>
+        <button type="button" onClick={onExport} style={{border:"1px solid rgba(74,94,58,.25)",borderRadius:999,padding:"11px 14px",background:"#FFFDF8",fontFamily:THEME.font.body,fontSize:".82rem",fontWeight:750,color:THEME.color.sage,cursor:"pointer"}}>Exportar copia antes de limpiar</button>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <button type="button" onClick={onCancel} style={{border:"1px solid rgba(74,94,58,.18)",borderRadius:999,padding:"11px",background:"transparent",fontFamily:THEME.font.body,fontSize:".82rem",color:"rgba(26,26,20,.55)",cursor:"pointer"}}>Cancelar</button>
+          <button type="button" onClick={onConfirm} style={{border:0,borderRadius:999,padding:"11px",background:"rgba(190,55,48,.92)",fontFamily:THEME.font.body,fontSize:".82rem",fontWeight:800,color:"white",cursor:"pointer"}}>Eliminar todo</button>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
 
 function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   const [guests, setGuests]     = useState(null);
-  const [tableSize, setTableSize] = useState(10);
-  const [viewMode, setViewMode] = useState("lista");
+  const [tableSize, setTableSize] = useState(8);
+  const [viewMode, setViewMode] = useState(()=>{
+    if(typeof window==="undefined") return "lista";
+    try{
+      const saved=sessionStorage.getItem(`ceci_guests_view_mode:${user?.id||"anon"}`);
+      return ["lista","mesas","salon"].includes(saved)?saved:"lista";
+    }catch(error){
+      return "lista";
+    }
+  });
   const [filter, setFilter]     = useState({lado:"",conf:"",mesa:""});
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(false);
@@ -5447,22 +6012,45 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   const [budgetInvitados, setBudgetInvitados] = useState(0);
   const [showGuestMenu, setShowGuestMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const [pendingGuestImport, setPendingGuestImport] = useState(null);
   const [movingGuest, setMovingGuest]     = useState(null); // vista Mesas: invitado en movimiento
+  const [selectedGuestTable, setSelectedGuestTable] = useState(null);
+  const [openGuestTableMenu, setOpenGuestTableMenu] = useState(null);
+  const [deletedGuestTable, setDeletedGuestTable] = useState(null);
   const [guia, setGuia]                   = useState(null); // sección de la guía abierta (o null)
   const isMobile = useIsMobile();
 
   useEffect(()=>{
-    const h=()=>setShowGuestMenu(false);
+    if(typeof window==="undefined") return;
+    try{
+      sessionStorage.setItem(`ceci_guests_view_mode:${user?.id||"anon"}`,viewMode);
+    }catch(error){}
+  },[viewMode,user?.id]);
+
+  useEffect(()=>{
+    if(isMobile&&viewMode!=="lista") setViewMode("lista");
+    if(!isMobile&&viewMode==="salon") setViewMode("mesas");
+  },[isMobile]);
+
+  useEffect(()=>{
+    const h=()=>{setShowGuestMenu(false);setOpenGuestTableMenu(null);};
     document.addEventListener("mousedown",h);
     return ()=>document.removeEventListener("mousedown",h);
   },[]);
+
+  useEffect(()=>{
+    if(!deletedGuestTable) return;
+    const timeout=window.setTimeout(()=>setDeletedGuestTable(null),10000);
+    return ()=>window.clearTimeout(timeout);
+  },[deletedGuestTable]);
 
   useEffect(()=>{
     if(!user) return;
     dataClient(user).from("wedding_data").select("guests,table_size,budget").eq("user_id",user.id).maybeSingle()
       .then(({data:row})=>{
         setGuests(Array.isArray(row?.guests)?row.guests:[]);
-        if(row?.table_size) setTableSize(row.table_size);
+        if(row?.table_size) setTableSize(normalizeRoundTableCapacity(row.table_size,8));
         // Leer invitados del presupuesto
         const bi = parseInt(row?.budget?.invitados||0);
         if(bi>0) setBudgetInvitados(bi);
@@ -5491,215 +6079,259 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   };
 
   const exportToExcel = async() => {
-    if(!guests || guests.length===0) return;
-    // Load SheetJS from CDN if not already loaded
-    if(!window.XLSX){
-      await new Promise((res,rej)=>{
-        const s=document.createElement("script");
-        s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-        s.onload=res; s.onerror=rej;
-        document.head.appendChild(s);
-      });
+    if(!guests || guests.length===0){
+      showToast("Todavía no hay invitados para exportar","info");
+      return;
     }
-    const XL = window.XLSX;
-    const wb = XL.utils.book_new();
 
-    // ── HOJA 1: Lista completa ──
-    const confLabel = c => c==="confirmado"?"Confirmado":c==="no_va"?"No va":"Pendiente";
-    const listData = [
-      ["Nombre","Personas","Mesa","Lado","Parentesco","Confirmación","Restricción alimentaria","Notas"],
-      ...guests.map(g=>[
-        g.nombre||"",
-        parseInt(g.cantidadInvitados||1),
-        g.mesa ? parseInt(g.mesa) : "",
-        g.lado||"",
-        g.parentesco||"",
-        confLabel(g.confirmacion),
-        g.restriccion||"Ninguna",
-        g.notas||""
-      ])
-    ];
-    const ws1 = XL.utils.aoa_to_sheet(listData);
-    ws1["!cols"] = [{wch:28},{wch:11},{wch:10},{wch:12},{wch:14},{wch:24},{wch:32}];
-    // Freeze header row
-    ws1["!freeze"] = {xSplit:0, ySplit:1};
-    XL.utils.book_append_sheet(wb, ws1, "Lista de invitados");
+    try{
+      const XL=await loadSheetJS();
+      let workbook;
 
-    // ── HOJA 2: Por mesas ──
-    const maxMesa = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
-    const mesasData = [["Mesa","Nombre","Personas","Confirmación","Restricción"]];
-    for(let i=1;i<=maxMesa;i++){
-      const guestsAtTable = guests.filter(g=>parseInt(g.mesa)===i);
-      const personas = guestsAtTable.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-      if(guestsAtTable.length===0){
-        mesasData.push([i,"(Sin invitados)","","",""]);
-      } else {
-        guestsAtTable.forEach((g,idx)=>{
-          mesasData.push([
-            idx===0?i:"",
-            g.nombre||"",
-            parseInt(g.cantidadInvitados||1),
-            confLabel(g.confirmacion),
-            g.restriccion||"Ninguna"
-          ]);
-        });
-        mesasData.push([`Subtotal mesa ${i}`,`${guestsAtTable.length} invitaciones`,personas+" personas","",""]);
-        mesasData.push(["","","","",""]);
+      try{
+        workbook=await loadPrivateExcelTemplateWorkbook("guestImportTemplate",XL);
+      }catch(templateError){
+        console.warn("No se pudo usar la plantilla privada para exportar invitados:",templateError);
+        workbook=XL.utils.book_new();
       }
-    }
-    // Sin mesa asignada
-    const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
-    if(sinMesa.length>0){
-      mesasData.push(["SIN MESA",`${sinMesa.length} invitaciones`,sinMesa.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)+" personas","",""]);
-      sinMesa.forEach(g=>mesasData.push(["",g.nombre||"",parseInt(g.cantidadInvitados||1),confLabel(g.confirmacion),g.restriccion||"Ninguna"]));
-    }
-    const ws2 = XL.utils.aoa_to_sheet(mesasData);
-    ws2["!cols"] = [{wch:10},{wch:28},{wch:11},{wch:14},{wch:22}];
-    ws2["!freeze"] = {xSplit:0, ySplit:1};
-    XL.utils.book_append_sheet(wb, ws2, "Por mesas");
 
-    // ── HOJA 3: Resumen ──
-    const totalInv  = guests.length;
-    const totalPers = guests.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-    const confPers  = guests.filter(g=>g.confirmacion==="confirmado").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-    const noVaPers  = guests.filter(g=>g.confirmacion==="no_va").reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0);
-    const pendPers  = totalPers - confPers - noVaPers;
-    const restrMap  = {};
-    guests.forEach(g=>{ if(g.restriccion&&g.restriccion!=="Ninguna") restrMap[g.restriccion]=(restrMap[g.restriccion]||0)+parseInt(g.cantidadInvitados||1); });
-    const resData = [
-      ["RESUMEN GENERAL",""],
-      ["",""],
-      ["Total invitaciones enviadas", totalInv],
-      ["Total personas", totalPers],
-      ["",""],
-      ["CONFIRMACIONES","Personas"],
-      ["Confirmados", confPers],
-      ["Pendientes", pendPers],
-      ["No van", noVaPers],
-      ["",""],
-      ["RESTRICCIONES ALIMENTARIAS","Personas"],
-      ...Object.entries(restrMap).map(([r,n])=>[r,n]),
-      ...(Object.keys(restrMap).length===0?[["(Sin restricciones especiales)",""]]:[]),
-      ["",""],
-      ["MESAS",""],
-      ["Total mesas asignadas", maxMesa],
-      ["Personas por mesa (configuración)", tableSize],
-      ["Invitados sin mesa asignada", sinMesa.length],
-    ];
-    const ws3 = XL.utils.aoa_to_sheet(resData);
-    ws3["!cols"] = [{wch:32},{wch:14}];
-    XL.utils.book_append_sheet(wb, ws3, "Resumen");
+      const confLabel=confirmation=>confirmation==="confirmado"?"Confirmado":confirmation==="no_va"?"No va":"Pendiente";
+      const rows=[
+        ["Nombre","Personas","Mesa","Lado","Parentesco","Confirmacion","Restriccion","Notas"],
+        ...guests.map(guest=>[
+          guest.nombre||"",
+          parseInt(guest.cantidadInvitados||1),
+          guest.mesa?parseInt(guest.mesa)||guest.mesa:"",
+          guest.lado||"Ambos",
+          guest.parentesco||"Otro",
+          confLabel(guest.confirmacion),
+          guest.restriccion||"Ninguna",
+          guest.notas||""
+        ])
+      ];
 
-    // Download
-    XL.writeFile(wb, "invitados_boda.xlsx");
+      const worksheet=replaceTemplateTableRows(XL,workbook,"Invitados",rows,{
+        columns:8,
+        minimumRows:Math.max(60,rows.length),
+        tableName:"tblInvitados"
+      });
+      worksheet["!cols"]=[{wch:30},{wch:10},{wch:8},{wch:12},{wch:18},{wch:16},{wch:18},{wch:30}];
+      worksheet["!dataValidation"]=[
+        {sqref:`D2:D${Math.max(60,rows.length)}`,type:"list",formula1:'"Novio,Novia,Ambos"',allowBlank:true},
+        {sqref:`E2:E${Math.max(60,rows.length)}`,type:"list",formula1:'"Familia directa,Familia,Amigos,Trabajo,Ninos,Otro"',allowBlank:true},
+        {sqref:`F2:F${Math.max(60,rows.length)}`,type:"list",formula1:'"Pendiente,Confirmado,No va"',allowBlank:true},
+        {sqref:`G2:G${Math.max(60,rows.length)}`,type:"list",formula1:'"Ninguna,Vegetariano,Vegano,Sin gluten,Sin lactosa,Kosher,Halal,Alergia,Otra"',allowBlank:true}
+      ];
+
+      ensureExcelHowToSheet(XL,workbook,"guests");
+      XL.writeFile(workbook,"invitados_boda.xlsx");
+      showToast("✓ Invitados exportados en el mismo formato de importación","success");
+    }catch(error){
+      console.error("Error exportando invitados:",error);
+      showToast(error?.message||"No pudimos generar el Excel de invitados","error");
+    }
   };
 
-  // ── Descargar plantilla CSV ──
-  const downloadTemplate = () => {
-    const headers = ["Nombre","Personas","Mesa","Lado","Parentesco","Confirmacion","Restriccion","Notas"];
-    const instrucciones = [
-      "INSTRUCCIONES - Borrar estas filas antes de importar",
-      "Lado: Novio / Novia / Ambos",
-      "Parentesco: Familia directa / Familia / Amigos / Trabajo / Ninos / Otro",
-      "Confirmacion: Pendiente / Confirmado / No va",
-      "Restriccion: Ninguna / Vegetariano / Vegano / Sin gluten / Sin lactosa / Kosher / Halal / Alergia / Otra",
-      "Personas: numero entero - cuantas personas por invitacion",
-      "Mesa: numero opcional"
-    ];
-    const ejemplos = [
-      ["Garcia Juan y Maria","2","3","Novio","Familia","Confirmado","Ninguna",""],
-      ["Lopez Ana","1","","Novia","Amigos","Pendiente","Vegetariano","Alergica a nueces"],
-      ["Familia Rodriguez","5","7","Ambos","Familia directa","Confirmado","Sin gluten",""]
-    ];
-    const toCSV = (row) => row.map(c => String(c).includes(",") ? '"'+c+'"' : c).join(",");
-    const lines = [
-      ...instrucciones.map(i => [i,"","","","","","",""].map(c=>c).join(",")),
-      toCSV(headers),
-      ...ejemplos.map(toCSV)
-    ];
-    const csv = lines.join("\r\n");
-    const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "plantilla_invitados.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+  // ── Descargar plantilla XLSX privada ──
+  const downloadTemplate = async() => {
+    try{
+      await openExcelTemplateDownload("guestImportTemplate","guests_import_template");
+    }catch(error){
+      showToast(error?.message||"No pudimos descargar la plantilla de invitados","error");
+    }
+  };
+
+  const buildGuestImportReview = (newGuests, warningText="") => {
+    const environmentTables=Array.isArray(salonLayoutRef.current?.ambientes)
+      ? salonLayoutRef.current.ambientes.flatMap(ambiente=>Array.isArray(ambiente.mesas)?ambiente.mesas:[])
+      : [];
+    const mesasCanvas = environmentTables.length
+      ? environmentTables
+      : Array.isArray(salonMesas)
+        ? salonMesas
+        : Array.isArray(salonLayoutRef.current?.mesas)
+          ? salonLayoutRef.current.mesas
+          : [];
+    const idsCanvas = new Set(mesasCanvas.map(mesa=>parseInt(mesa.id)).filter(id=>Number.isFinite(id)&&id>0));
+    const capacityFor = (mesaId) => {
+      const mesa = mesasCanvas.find(item=>parseInt(item.id)===parseInt(mesaId));
+      if(!mesa || (mesa.tipo||"round")==="round") return normalizeRoundTableCapacity(mesa?.cap,8);
+      return Math.max(1,parseInt(mesa.cap)||8);
+    };
+    const baseOccupancy = new Map();
+    (guests||[]).forEach(guest=>{
+      const mesaId=parseInt(guest.mesa);
+      if(!mesaId||guest.confirmacion==="no_va") return;
+      baseOccupancy.set(mesaId,(baseOccupancy.get(mesaId)||0)+(parseInt(guest.cantidadInvitados||1)||1));
+    });
+    const requestedIds=newGuests.map(guest=>parseInt(guest.mesa)).filter(id=>Number.isFinite(id)&&id>0);
+    const knownIds=new Set([...idsCanvas,...baseOccupancy.keys(),...requestedIds]);
+    let maxKnown=Math.max(0,...knownIds);
+
+    const overloadedIds=new Set();
+    const requestedOccupancy=new Map(baseOccupancy);
+    newGuests.forEach(guest=>{
+      const mesaId=parseInt(guest.mesa);
+      if(!mesaId||guest.confirmacion==="no_va") return;
+      const quantity=parseInt(guest.cantidadInvitados||1)||1;
+      const next=(requestedOccupancy.get(mesaId)||0)+quantity;
+      requestedOccupancy.set(mesaId,next);
+      if(next>capacityFor(mesaId)) overloadedIds.add(mesaId);
+    });
+
+    const makePlan = (autoReallocate) => {
+      const occupancy=new Map(baseOccupancy);
+      const dynamicIds=new Set(knownIds);
+      let moved=0;
+      let waiting=0;
+      let tooLarge=0;
+      const plan=newGuests.map(guest=>{
+        if(guest.confirmacion==="no_va") return {...guest,mesa:""};
+        const quantity=parseInt(guest.cantidadInvitados||1)||1;
+        const intended=parseInt(guest.mesa);
+        if(!intended) return {...guest,mesa:""};
+        const used=occupancy.get(intended)||0;
+        if(used+quantity<=capacityFor(intended)){
+          occupancy.set(intended,used+quantity);
+          return {...guest,mesa:String(intended)};
+        }
+        moved++;
+        if(!autoReallocate){ waiting++; return {...guest,mesa:""}; }
+
+        const candidates=[...dynamicIds]
+          .filter(id=>id>intended)
+          .sort((a,b)=>a-b);
+        const candidate=candidates.find(id=>(occupancy.get(id)||0)+quantity<=capacityFor(id));
+        if(candidate){
+          occupancy.set(candidate,(occupancy.get(candidate)||0)+quantity);
+          return {...guest,mesa:String(candidate)};
+        }
+        if(quantity>8){
+          waiting++;
+          tooLarge++;
+          return {...guest,mesa:""};
+        }
+        maxKnown+=1;
+        dynamicIds.add(maxKnown);
+        occupancy.set(maxKnown,quantity);
+        return {...guest,mesa:String(maxKnown)};
+      });
+      const requiredCanvasIds=new Set(
+        plan.map(guest=>parseInt(guest.mesa)).filter(id=>Number.isFinite(id)&&id>0&&!idsCanvas.has(id))
+      );
+      return {plan,moved,waiting,tooLarge,requiredCanvasIds:[...requiredCanvasIds].sort((a,b)=>a-b)};
+    };
+
+    const auto=makePlan(true);
+    const bank=makePlan(false);
+    const activeIncomingPeople=newGuests
+      .filter(guest=>guest.confirmacion!=="no_va")
+      .reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0);
+    const existingAssignedPeople=(guests||[])
+      .filter(guest=>guest.confirmacion!=="no_va"&&parseInt(guest.mesa))
+      .reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0);
+    const currentCapacity=mesasCanvas.reduce((sum,mesa)=>sum+capacityFor(mesa.id),0);
+    const missingSeats=Math.max(0,existingAssignedPeople+activeIncomingPeople-currentCapacity);
+    const tablesByTotalCapacity=Math.ceil(missingSeats/8);
+    const withoutTable=newGuests.filter(guest=>guest.confirmacion!=="no_va"&&!parseInt(guest.mesa));
+    return {
+      warningText,
+      autoGuests:auto.plan,
+      bankGuests:bank.plan,
+      autoMeta:auto,
+      bankMeta:bank,
+      summary:{
+        totalInvitaciones:newGuests.length,
+        totalPersonas:newGuests.reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0),
+        mesasConExceso:overloadedIds.size,
+        invitacionesReubicadas:auto.moved,
+        mesasNuevasAuto:Math.max(auto.requiredCanvasIds.length,tablesByTotalCapacity),
+        gruposDemasiadoGrandes:auto.tooLarge,
+        invitacionesSinMesa:withoutTable.length,
+        personasSinMesa:withoutTable.reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0),
+        mesasActuales:mesasCanvas.length,
+        capacidadActual:currentCapacity,
+        lugaresFaltantes:missingSeats,
+      }
+    };
+  };
+
+  const applyPendingGuestImport = async(mode="auto") => {
+    if(!pendingGuestImport) return;
+    const imported=mode==="bank"?pendingGuestImport.bankGuests:pendingGuestImport.autoGuests;
+    const meta=mode==="bank"?pendingGuestImport.bankMeta:pendingGuestImport.autoMeta;
+    const next=[...(guests||[]),...imported];
+    setGuests(next);
+    await save(next);
+    setPendingGuestImport(null);
+    const waiting=meta.waiting>0?` · ${meta.waiting} ${meta.waiting===1?"invitación quedó":"invitaciones quedaron"} en Banco de espera`:"";
+    const missing=meta.requiredCanvasIds.length>0?` · faltan ${meta.requiredCanvasIds.length} ${meta.requiredCanvasIds.length===1?"mesa":"mesas"} por agregar al canvas`:"";
+    const warning=pendingGuestImport.warningText?` · ${pendingGuestImport.warningText}`:"";
+    showToast(`✓ ${imported.length} invitaciones importadas${waiting}${missing}${warning}`,"success",6500);
   };
 
   const importFromFile = async(e) => {
-    const file = e.target.files && e.target.files[0];
+    const file=e.target.files?.[0];
     if(!file) return;
-    e.target.value = "";
-    const isXLSX = file.name.slice(-5) === ".xlsx" || file.name.slice(-4) === ".xls";
-    let rows = [];
-    if(isXLSX){
-      if(!window.XLSX){
-        await new Promise(function(res,rej){
-          const s = document.createElement("script");
-          s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-          s.onload = res;
-          s.onerror = rej;
-          document.head.appendChild(s);
-        });
-      }
-      const data = await file.arrayBuffer();
-      const wb = window.XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      rows = window.XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
-    } else {
-      const text = await file.text();
-      rows = text.split(/[\r\n]+/).map(function(r){
-        const result = [];
-        let cur = "";
-        let inQ = false;
-        for(let i = 0; i < r.length; i++){
-          if(r[i] === '"'){ inQ = !inQ; }
-          else if(r[i] === "," && !inQ){ result.push(cur.trim()); cur = ""; }
-          else { cur += r[i]; }
-        }
-        result.push(cur.trim());
-        return result;
-      });
-    }
-    const HEADER_KEYS = ["nombre","personas","mesa","lado","parentesco","confirmacion","confirmación","restriccion","restricción","notas"];
-    let headerIdx = -1;
-    for(let i = 0; i < rows.length; i++){
-      const row = rows[i].map(function(c){ return String(c).toLowerCase().trim(); });
-      if(row.some(function(c){ return HEADER_KEYS.indexOf(c) >= 0; })){ headerIdx = i; break; }
-    }
-    if(headerIdx < 0){
-      showToast("No se encontró la fila de encabezados en el archivo","error");
+    e.target.value="";
+
+    let rows=[];
+    try{
+      rows=await spreadsheetFileToRows(file);
+    }catch(error){
+      console.error("Error leyendo archivo de invitados:",error);
+      showToast("No pudimos leer el archivo. Usá .xlsx, .xls o .csv.","error");
       return;
     }
-    const headers2 = rows[headerIdx].map(function(c){
-      return String(c).toLowerCase().trim().replace("confirmación","confirmacion").replace("restricción","restriccion");
-    });
-    const col = function(name){ return headers2.indexOf(name); };
-    const iN = col("nombre"), iP = col("personas"), iM = col("mesa");
-    const iL = col("lado"), iC = col("confirmacion"), iR = col("restriccion"), iNt = col("notas"), iPar = col("parentesco");
-    if(iN < 0){ showToast("Falta la columna Nombre en el archivo","error"); return; }
-    const LADOS = ["novio","novia","ambos"];
-    const CONFS = ["pendiente","confirmado","no va"];
-    const RESTRS = ["ninguna","vegetariano","vegano","sin gluten","sin lactosa","kosher","halal","alergia","otra"];
-    const SKIP = ["instrucciones","lado:","confirmacion:","confirmación:","restriccion:","restricción:","personas:","mesa:","──","--"];
+
+    const expectedHeaders=["nombre","personas","mesa","lado","parentesco","confirmacion","restriccion","notas"];
+    let headerIdx=-1;
+
+    for(let index=0;index<rows.length;index++){
+      const normalizedRow=(rows[index]||[]).map(normalizeSpreadsheetKey);
+      const recognized=normalizedRow.filter(value=>expectedHeaders.includes(value)).length;
+      if(normalizedRow.includes("nombre")&&recognized>=2){
+        headerIdx=index;
+        break;
+      }
+    }
+
+    if(headerIdx<0){
+      showToast("No se encontró la fila de encabezados de invitados","error");
+      return;
+    }
+
+    const headers2=(rows[headerIdx]||[]).map(normalizeSpreadsheetKey);
+    const col=name=>headers2.indexOf(name);
+    const iN=col("nombre"),iP=col("personas"),iM=col("mesa");
+    const iL=col("lado"),iC=col("confirmacion"),iR=col("restriccion"),iNt=col("notas"),iPar=col("parentesco");
+
+    if(iN<0){
+      showToast("Falta la columna Nombre en el archivo","error");
+      return;
+    }
+
+    const LADOS=["novio","novia","ambos"];
+    const CONFS=["pendiente","confirmado","no va"];
+    const RESTRS=["ninguna","vegetariano","vegano","sin gluten","sin lactosa","kosher","halal","alergia","otra"];
+    const SKIP=["instrucciones","lado:","confirmacion:","restriccion:","personas:","mesa:","──","--"];
     const newGuests = [];
     const errs = [];
     for(let i = headerIdx + 1; i < rows.length; i++){
       const row = rows[i];
       if(!row || row.every(function(c){ return !c; })) continue;
-      const first = String(row[0] || "").toLowerCase();
-      if(SKIP.some(function(s){ return first.indexOf(s) === 0; })) continue;
-      const nombre = String(row[iN] || "").trim();
+      const first=normalizeSpreadsheetKey(row[0]||"");
+      if(SKIP.some(value=>first.indexOf(value)===0)) continue;
+      const nombre=String(row[iN]||"").trim();
       if(!nombre) continue;
-      const personas = parseInt(row[iP] || 1) || 1;
-      const mesa = row[iM] ? String(row[iM]).trim() : "";
-      const ladoRaw = String(row[iL] || "ambos").trim().toLowerCase();
-      const confRaw = String(row[iC] || "pendiente").trim().toLowerCase();
-      const restrRaw = String(row[iR] || "ninguna").trim().toLowerCase();
-      const notas = String(row[iNt] || "").trim();
-      const parRaw = iPar >= 0 ? String(row[iPar] || "").trim().toLowerCase().replace("niños","ninos") : "";
-      const parentesco = parRaw ? (PARENTESCOS.find(p=>p.toLowerCase().replace("niños","ninos")===parRaw) || "Otro") : "Otro";
+      const personas=parseInt(row[iP]||1)||1;
+      const mesa=row[iM]?String(row[iM]).trim():"";
+      const ladoRaw=normalizeSpreadsheetKey(row[iL]||"ambos");
+      const confRaw=normalizeSpreadsheetKey(row[iC]||"pendiente");
+      const restrRaw=normalizeSpreadsheetKey(row[iR]||"ninguna");
+      const notas=String(row[iNt]||"").trim();
+      const parRaw=iPar>=0?normalizeSpreadsheetKey(row[iPar]||""):"";
+      const parentesco=parRaw?(PARENTESCOS.find(parentesco=>normalizeSpreadsheetKey(parentesco)===parRaw)||"Otro"):"Otro";
       const lado = LADOS.indexOf(ladoRaw) >= 0 ? ladoRaw.charAt(0).toUpperCase()+ladoRaw.slice(1) : "Ambos";
       const confirmacion = confRaw === "confirmado" ? "confirmado" : confRaw === "no va" ? "no_va" : "pendiente";
       const restriccion = RESTRS.indexOf(restrRaw) >= 0 ? restrRaw.charAt(0).toUpperCase()+restrRaw.slice(1) : "Ninguna";
@@ -5710,33 +6342,42 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
       showToast("No se encontraron invitados válidos en el archivo","error");
       return;
     }
-    const warn = errs.length > 0 ? " Advertencias: " + errs.slice(0,3).join(". ") : "";
-    showToast(`✓ ${newGuests.length} invitados importados`+(warn?". "+warn:""),"success",4000);
-    const next = (guests || []).concat(newGuests);
-    setGuests(next);
-    save(next);
+    const warn = errs.length > 0 ? errs.slice(0,3).join(". ") : "";
+    const review=buildGuestImportReview(newGuests,warn);
+    setPendingGuestImport(review);
   };
+
 
 
     const asignarMesasAuto = () => {
     if(!guests || guests.length === 0) return;
     setAutoMesaLoading(true);
-    // Distribuir invitados en mesas según tableSize, respetando grupos familiares juntos
-    let mesaActual = 1;
-    let personasEnMesa = 0;
-    const next = guests.map(g => {
-      const cant = parseInt(g.cantidadInvitados||1);
-      // Si el grupo no cabe en la mesa actual, pasar a la siguiente
-      if(personasEnMesa > 0 && personasEnMesa + cant > tableSize){
+    const mesasCanvas=Array.isArray(salonMesas)?salonMesas:[];
+    const capacidadDe=(mesaId)=>{
+      const mesa=mesasCanvas.find(item=>parseInt(item.id)===parseInt(mesaId));
+      if(!mesa || (mesa.tipo||"round")==="round") return normalizeRoundTableCapacity(mesa?.cap,8);
+      return Math.max(1,parseInt(mesa.cap)||8);
+    };
+    const ocupacion=new Map();
+    let mesaActual=1;
+    const next=guests.map(g=>{
+      if(g.confirmacion==="no_va") return {...g,mesa:""};
+      const cant=parseInt(g.cantidadInvitados||1)||1;
+      let intentos=0;
+      while(intentos<500){
+        const usadas=ocupacion.get(mesaActual)||0;
+        if(usadas+cant<=capacidadDe(mesaActual)) break;
         mesaActual++;
-        personasEnMesa = 0;
+        intentos++;
       }
-      personasEnMesa += cant;
-      return {...g, mesa: String(mesaActual)};
+      if(intentos>=500 || cant>capacidadDe(mesaActual)) return {...g,mesa:""};
+      ocupacion.set(mesaActual,(ocupacion.get(mesaActual)||0)+cant);
+      return {...g,mesa:String(mesaActual)};
     });
     setGuests(next);
     save(next);
     setAutoMesaLoading(false);
+    showToast("✓ Mesas asignadas respetando la capacidad de 8, 10 o 12 personas","success",3600);
   };
 
     const addGuest = () => {
@@ -5748,6 +6389,13 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   };
   const updateGuest = (id,field,val) => { const next=guests.map(g=>g.id===id?{...g,[field]:val}:g); setGuests(next); save(next); };
   const removeGuest = (id) => { const next=guests.filter(g=>g.id!==id); setGuests(next); save(next); };
+  const clearAllGuests = async() => {
+    const removed=(guests||[]).length;
+    setGuests([]);
+    setConfirmClearAll(false);
+    await save([]);
+    showToast(`✓ Se eliminaron ${removed} ${removed===1?"invitación":"invitaciones"}. El diseño del salón se conservó.`,"success",4200);
+  };
 
   // ── Sugerencia de mesa por afinidad ─────────────────────────────
   // Recomienda la mesa donde ya hay invitados del mismo parentesco
@@ -5878,14 +6526,16 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
     let alive=true;
     (async()=>{
       let L=null;
-      if(!isDemoUser(user)){ try{ const s=localStorage.getItem("ceci_salon_layout_v1"); L=s?JSON.parse(s):null; }catch(err){} }
+      if(!isDemoUser(user)){ try{ const s=localStorage.getItem(SALON_LS_KEY); L=s?JSON.parse(s):null; }catch(err){} }
       try{
         const {data:row}=await dataClient(user).from("wedding_data").select("salon_layout").eq("user_id",user.id).maybeSingle();
         if(row?.salon_layout) L=row.salon_layout;
       }catch(err){}
       if(!alive) return;
       salonLayoutRef.current = L;
-      setSalonMesas(Array.isArray(L?.mesas)?L.mesas:null);
+      const activeId=String(L?.activeAmbienteId||L?.ambientes?.[0]?.id||"");
+      const activeEnvironment=Array.isArray(L?.ambientes)?L.ambientes.find(ambiente=>String(ambiente.id)===activeId):null;
+      setSalonMesas(Array.isArray(activeEnvironment?.mesas)?activeEnvironment.mesas:(Array.isArray(L?.mesas)?L.mesas:null));
     })();
     return ()=>{alive=false;};
   },[]);
@@ -5893,11 +6543,14 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   useEffect(()=>{
     if(viewMode!=="mesas" || isDemoUser(user)) return;
     try{
-      const s=localStorage.getItem("ceci_salon_layout_v1");
+      const s=localStorage.getItem(SALON_LS_KEY);
       if(s){
         const L=JSON.parse(s);
         salonLayoutRef.current=L;
-        if(Array.isArray(L.mesas)) setSalonMesas(L.mesas);
+        const activeId=String(L?.activeAmbienteId||L?.ambientes?.[0]?.id||"");
+        const activeEnvironment=Array.isArray(L?.ambientes)?L.ambientes.find(ambiente=>String(ambiente.id)===activeId):null;
+        if(Array.isArray(activeEnvironment?.mesas)) setSalonMesas(activeEnvironment.mesas);
+        else if(Array.isArray(L.mesas)) setSalonMesas(L.mesas);
       }
     }catch(err){}
   },[viewMode]);
@@ -5908,23 +6561,180 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
       {id:"pista-1",tipo:"pista",mx:6,my:8,ew:8,eh:6},
       {id:"entrada-1",tipo:"entrada",mx:8,my:13,ew:3,eh:0.8},
     ]};
-    const layout = {...base, mesas:nuevas};
+    const activeId=String(base.activeAmbienteId||base.ambientes?.[0]?.id||"principal");
+    const nextEnvironments=Array.isArray(base.ambientes)&&base.ambientes.length
+      ? base.ambientes.map(ambiente=>String(ambiente.id)===activeId?{...ambiente,mesas:nuevas}:ambiente)
+      : [{...base,id:activeId,nombre:"Salón principal",mesas:nuevas}];
+    const layout = {...base, mesas:nuevas, ambientes:nextEnvironments, activeAmbienteId:activeId};
     salonLayoutRef.current = layout;
     setSalonMesas(nuevas);
-    if(!isDemoUser(user)){ try{ localStorage.setItem("ceci_salon_layout_v1", JSON.stringify(layout)); }catch(err){} }
+    if(!isDemoUser(user)){ try{ localStorage.setItem(SALON_LS_KEY, JSON.stringify(layout)); }catch(err){} }
     dataClient(user).from("wedding_data")
       .upsert({user_id:user.id,salon_layout:layout,updated_at:new Date().toISOString()},{onConflict:"user_id"})
       .then((res)=>{if(res&&res.error)console.warn("⚠️ No se pudo guardar el salón en Supabase:",res.error.message);});
   };
+  const guardarSalonLayoutCompletoVista = (layout) => {
+    const activeId=String(layout?.activeAmbienteId||layout?.ambientes?.[0]?.id||"principal");
+    const activeEnvironment=Array.isArray(layout?.ambientes)
+      ? layout.ambientes.find(ambiente=>String(ambiente.id)===activeId)
+      : null;
+    const activeTables=Array.isArray(activeEnvironment?.mesas)
+      ? activeEnvironment.mesas
+      : (Array.isArray(layout?.mesas)?layout.mesas:[]);
+    const normalized={...layout,mesas:activeTables,activeAmbienteId:activeId};
+    salonLayoutRef.current=normalized;
+    setSalonMesas(activeTables);
+    if(!isDemoUser(user)){
+      try{localStorage.setItem(SALON_LS_KEY,JSON.stringify(normalized));}catch(error){}
+    }
+    dataClient(user).from("wedding_data")
+      .upsert({user_id:user.id,salon_layout:normalized,updated_at:new Date().toISOString()},{onConflict:"user_id"})
+      .then((res)=>{if(res?.error)console.warn("⚠️ No se pudo guardar el salón en Supabase:",res.error.message);});
+    return normalized;
+  };
+
+  const deleteGuestTableVista = async(tableNumber) => {
+    const tableId=parseInt(tableNumber);
+    if(!tableId) return;
+    const assigned=(guests||[]).filter(guest=>parseInt(guest.mesa)===tableId);
+    const assignedPeople=assigned.reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0);
+    const base=salonLayoutRef.current||{};
+    let removedMesa=null;
+    let removedEnvironmentId=null;
+    if(Array.isArray(base.ambientes)){
+      for(const ambiente of base.ambientes){
+        const found=(ambiente.mesas||[]).find(mesa=>parseInt(mesa.id)===tableId);
+        if(found){removedMesa={...found};removedEnvironmentId=String(ambiente.id);break;}
+      }
+    }
+    if(!removedMesa){
+      const found=(base.mesas||salonMesas||[]).find(mesa=>parseInt(mesa.id)===tableId);
+      if(found) removedMesa={...found};
+    }
+    const detail=assigned.length
+      ? ` ${assigned.length} ${assigned.length===1?"invitación":"invitaciones"} (${assignedPeople} ${assignedPeople===1?"persona":"personas"}) volverán al Banco de espera.`
+      : " La mesa está vacía.";
+    if(typeof window!=="undefined"&&!window.confirm(`¿Eliminar la Mesa ${tableId}?${detail} También desaparecerá del Diseño del salón.`)) return;
+
+    const nextGuests=(guests||[]).map(guest=>parseInt(guest.mesa)===tableId?{...guest,mesa:""}:guest);
+    const nextEnvironments=Array.isArray(base.ambientes)
+      ? base.ambientes.map(ambiente=>({...ambiente,mesas:(ambiente.mesas||[]).filter(mesa=>parseInt(mesa.id)!==tableId)}))
+      : base.ambientes;
+    const activeId=String(base.activeAmbienteId||nextEnvironments?.[0]?.id||"principal");
+    const activeEnvironment=Array.isArray(nextEnvironments)
+      ? nextEnvironments.find(ambiente=>String(ambiente.id)===activeId)
+      : null;
+    const nextRootTables=Array.isArray(activeEnvironment?.mesas)
+      ? activeEnvironment.mesas
+      : (base.mesas||salonMesas||[]).filter(mesa=>parseInt(mesa.id)!==tableId);
+    const nextLayout={...base,ambientes:nextEnvironments,mesas:nextRootTables,activeAmbienteId:activeId};
+
+    setGuests(nextGuests);
+    await save(nextGuests);
+    guardarSalonLayoutCompletoVista(nextLayout);
+    setSelectedGuestTable(null);
+    setOpenGuestTableMenu(null);
+    setDeletedGuestTable({tableId,mesa:removedMesa,environmentId:removedEnvironmentId,guestIds:assigned.map(guest=>guest.id)});
+    showToast(`✓ Mesa ${tableId} eliminada${assignedPeople?` · ${assignedPeople} personas volvieron al Banco de espera`:""}`,"success",4200);
+  };
+
+  const undoDeleteGuestTableVista = async() => {
+    if(!deletedGuestTable) return;
+    const {tableId,mesa,environmentId,guestIds}=deletedGuestTable;
+    const guestIdSet=new Set(guestIds||[]);
+    const restoredGuests=(guests||[]).map(guest=>guestIdSet.has(guest.id)?{...guest,mesa:String(tableId)}:guest);
+    let restoredLayout=salonLayoutRef.current||{};
+    if(mesa){
+      if(Array.isArray(restoredLayout.ambientes)&&restoredLayout.ambientes.length){
+        const targetId=environmentId||String(restoredLayout.activeAmbienteId||restoredLayout.ambientes[0].id);
+        const ambientes=restoredLayout.ambientes.map(ambiente=>{
+          if(String(ambiente.id)!==String(targetId)) return ambiente;
+          const without=(ambiente.mesas||[]).filter(item=>parseInt(item.id)!==parseInt(tableId));
+          return {...ambiente,mesas:[...without,mesa].sort((a,b)=>(parseInt(a.id)||0)-(parseInt(b.id)||0))};
+        });
+        const activeId=String(restoredLayout.activeAmbienteId||ambientes[0].id);
+        const activeEnvironment=ambientes.find(ambiente=>String(ambiente.id)===activeId);
+        restoredLayout={...restoredLayout,ambientes,mesas:activeEnvironment?.mesas||restoredLayout.mesas,activeAmbienteId:activeId};
+      }else{
+        const without=(restoredLayout.mesas||salonMesas||[]).filter(item=>parseInt(item.id)!==parseInt(tableId));
+        restoredLayout={...restoredLayout,mesas:[...without,mesa].sort((a,b)=>(parseInt(a.id)||0)-(parseInt(b.id)||0))};
+      }
+    }
+    setGuests(restoredGuests);
+    await save(restoredGuests);
+    guardarSalonLayoutCompletoVista(restoredLayout);
+    setSelectedGuestTable(tableId);
+    setDeletedGuestTable(null);
+    showToast(`↩ Mesa ${tableId} restaurada`,"success",3000);
+  };
+
+  const getMesasPendientesVista = (mesasActuales=salonMesas||[]) => {
+    const maxMesaAsignada = (guests||[]).reduce((maximo,invitado)=>Math.max(maximo,parseInt(invitado.mesa)||0),0);
+    const idsExistentes = new Set(
+      (mesasActuales||[])
+        .map(mesa=>parseInt(mesa.id))
+        .filter(id=>Number.isFinite(id)&&id>0)
+    );
+    return Array.from({length:maxMesaAsignada},(_,index)=>index+1)
+      .filter(id=>!idsExistentes.has(id));
+  };
+  const getPosicionMesaLibreVista = (mesasActuales,totalObjetivo) => {
+    const layout=salonLayoutRef.current||{};
+    const salonW=Math.max(5,parseFloat(layout.salonW)||20);
+    const salonH=Math.max(5,parseFloat(layout.salonH)||15);
+    const margen=1.5;
+    const separacion=2.8;
+    const cols=Math.max(1,Math.floor((salonW-margen*2)/separacion)+1);
+    const filas=Math.max(1,Math.floor((salonH-margen*2)/separacion)+1);
+    const ocupada=(mx,my)=>(mesasActuales||[]).some(mesa=>Math.hypot((parseFloat(mesa.mx)||0)-mx,(parseFloat(mesa.my)||0)-my)<1.55);
+    const maxSlots=Math.max(cols*filas,totalObjetivo||0,1);
+    for(let slot=0;slot<maxSlots;slot++){
+      const mx=margen+(slot%cols)*separacion;
+      const my=margen+Math.floor(slot/cols)*separacion;
+      if(my<=salonH-margen&&!ocupada(mx,my)) return {mx,my};
+    }
+    const slot=(mesasActuales||[]).length;
+    return {
+      mx:margen+(slot%cols)*separacion,
+      my:margen+Math.floor(slot/cols)*separacion
+    };
+  };
+  const agregarMesasPendientesVista = (cantidad=1) => {
+    const ms=salonMesas||[];
+    const pendientes=getMesasPendientesVista(ms);
+    const idsAAgregar=pendientes.slice(0,Math.max(1,cantidad));
+    if(idsAAgregar.length===0){
+      showToast("No hay mesas pendientes para agregar al salón","info");
+      return;
+    }
+    let nuevas=[...ms];
+    const totalObjetivo=Math.max((guests||[]).reduce((maximo,invitado)=>Math.max(maximo,parseInt(invitado.mesa)||0),0),nuevas.length+idsAAgregar.length);
+    idsAAgregar.forEach(id=>{
+      const posicion=getPosicionMesaLibreVista(nuevas,totalObjetivo);
+      nuevas.push({id,...posicion,tipo:"round",etiqueta:"",cap:tableSize});
+    });
+    nuevas.sort((a,b)=>(parseInt(a.id)||0)-(parseInt(b.id)||0));
+    guardarSalonMesas(nuevas);
+    const texto=idsAAgregar.length===1
+      ? `✓ Se agregó la mesa ${idsAAgregar[0]} al salón`
+      : `✓ Se agregaron ${idsAAgregar.length} mesas al salón`;
+    showToast(texto,"success",3500);
+  };
   const agregarMesaVista = () => {
-    const ms = salonMesas||[];
-    const maxId = Math.max(0, guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0), ...ms.map(m=>m.id));
-    const id = maxId+1;
-    const cols = Math.ceil(Math.sqrt(id+1));
-    guardarSalonMesas([...ms, {id, mx:3+((id-1)%cols)*3.5, my:3+Math.floor((id-1)/cols)*3.5, tipo:"round", etiqueta:"", cap:tableSize}]);
+    const ms=salonMesas||[];
+    const pendientes=getMesasPendientesVista(ms);
+    if(pendientes.length>0){
+      agregarMesasPendientesVista(1);
+      return;
+    }
+    const maxId=Math.max(0,...ms.map(mesa=>parseInt(mesa.id)||0),(guests||[]).reduce((maximo,invitado)=>Math.max(maximo,parseInt(invitado.mesa)||0),0));
+    const id=maxId+1;
+    const posicion=getPosicionMesaLibreVista(ms,id);
+    guardarSalonMesas([...ms,{id,...posicion,tipo:"round",etiqueta:"",cap:tableSize}]);
+    showToast(`✓ Se agregó la mesa ${id} al salón`,"success",3000);
   };
   const setCapMesaVista = (num, n) => {
-    const cap = Math.max(2, Math.min(80, parseInt(n)||tableSize));
+    const cap = normalizeRoundTableCapacity(n,8);
     const ms = salonMesas||[];
     const cols = Math.ceil(Math.sqrt(num+1));
     const existe = ms.some(m=>m.id===num);
@@ -5939,6 +6749,7 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   const filtered = guests.filter(g=>{
     if(filter.lado&&g.lado!==filter.lado) return false;
     if(filter.conf&&g.confirmacion!==filter.conf) return false;
+    if(filter.mesa&&String(g.mesa||"")!==String(filter.mesa)) return false;
     if(search.trim()){
       const q = search.trim().toLowerCase();
       if(!g.nombre?.toLowerCase().includes(q)&&
@@ -5954,14 +6765,39 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
   const pend  = total-conf-noVa;
   const restr = RESTRICCIONES.filter(r=>r!=="Ninguna").map(r=>({r,n:guests.filter(g=>g.restriccion===r).reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)})).filter(x=>x.n>0);
   const maxMesa = guests.reduce((m,g)=>Math.max(m,parseInt(g.mesa)||0),0);
-  const totalMesasVista = Math.max(maxMesa, ...((salonMesas||[]).map(m=>m.id)), 0);
-  const tables = Array.from({length:totalMesasVista},(_,i)=>{
-    const sm=(salonMesas||[]).find(m=>m.id===i+1);
-    const gs=guests.filter(g=>parseInt(g.mesa)===i+1);
-    return {num:i+1, cap:sm?.cap||tableSize, etiqueta:sm?.etiqueta||"", guests:gs,
-      personas:gs.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0)};
+  const mesasDeTodosLosAmbientes=Array.isArray(salonLayoutRef.current?.ambientes)
+    ? salonLayoutRef.current.ambientes.flatMap(ambiente=>Array.isArray(ambiente.mesas)?ambiente.mesas:[])
+    : (salonMesas||[]);
+  const idsMesasEnSalon = new Set(mesasDeTodosLosAmbientes.map(mesa=>parseInt(mesa.id)).filter(id=>Number.isFinite(id)&&id>0));
+  const mesasPendientes = Array.from({length:maxMesa},(_,index)=>index+1).filter(id=>!idsMesasEnSalon.has(id));
+  const mesasRequeridasCreadas = Math.max(0,maxMesa-mesasPendientes.length);
+  const proximaMesaParaAgregar = mesasPendientes[0] || Math.max(maxMesa,...idsMesasEnSalon,0)+1;
+  const tableIdsVista=[...new Set([
+    ...(mesasDeTodosLosAmbientes||[]).map(mesa=>parseInt(mesa.id)),
+    ...(guests||[]).map(guest=>parseInt(guest.mesa))
+  ].filter(id=>Number.isFinite(id)&&id>0))].sort((a,b)=>a-b);
+  const tables = tableIdsVista.map(tableId=>{
+    const sm=(mesasDeTodosLosAmbientes||[]).find(mesa=>parseInt(mesa.id)===tableId);
+    const gs=guests.filter(guest=>parseInt(guest.mesa)===tableId);
+    return {num:tableId, cap:sm?.cap||tableSize, etiqueta:sm?.etiqueta||"", guests:gs,
+      personas:gs.reduce((sum,guest)=>sum+parseInt(guest.cantidadInvitados||1),0)};
   });
+  const selectedGuestTableData=tables.find(table=>table.num===selectedGuestTable)||null;
+  const emptyGuestTable=(tableNumber)=>{
+    const assigned=(guests||[]).filter(guest=>parseInt(guest.mesa)===parseInt(tableNumber));
+    if(!assigned.length) return;
+    if(typeof window!=="undefined"&&!window.confirm(`¿Vaciar la Mesa ${tableNumber}? ${assigned.length} invitaciones volverán al Banco de espera.`)) return;
+    const next=(guests||[]).map(guest=>parseInt(guest.mesa)===parseInt(tableNumber)?{...guest,mesa:""}:guest);
+    setGuests(next);
+    save(next);
+    showToast(`✓ Mesa ${tableNumber} vaciada. Las invitaciones quedaron en el Banco de espera.`,"success");
+  };
   const sinMesa = guests.filter(g=>!g.mesa||g.mesa==="");
+  const ubicadasPersonas = guests.filter(g=>g.mesa&&g.confirmacion!=="no_va").reduce((sum,g)=>sum+(parseInt(g.cantidadInvitados||1)||1),0);
+  const esperaPersonas = guests.filter(g=>(!g.mesa||g.mesa==="")&&g.confirmacion!=="no_va").reduce((sum,g)=>sum+(parseInt(g.cantidadInvitados||1)||1),0);
+  const activeFilterCount = [filter.conf,filter.lado,filter.mesa].filter(Boolean).length + (search.trim()?1:0);
+  const mesaFilterOptions = Array.from(new Set((guests||[]).map(g=>parseInt(g.mesa)).filter(n=>Number.isFinite(n)&&n>0))).sort((a,b)=>a-b);
+
 
   // ── Menú Opciones: contenido compartido (dropdown desktop / bottom sheet mobile) ──
   const menuItemStyle = {display:"flex",alignItems:"center",gap:10,width:"100%",background:"transparent",border:"none",borderRadius:10,padding:"12px",minHeight:THEME.tap.comfortable,fontFamily:THEME.font.body,fontSize:"max(14px,.92rem)",color:THEME.color.ink,cursor:"pointer",textAlign:"left"};
@@ -5969,16 +6805,10 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
     <div style={{padding:"10px 12px",borderBottom:"0.5px solid rgba(74,94,58,.1)",marginBottom:6}}>
       <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(74,94,58,.5)",marginBottom:8}}>Personas por mesa</div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        {[6,8,10,12,14].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?THEME.color.sage:"transparent",color:tableSize===n?THEME.color.cream:"rgba(26,26,20,.6)",border:`1px solid ${tableSize===n?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"8px 14px",minHeight:THEME.tap.min,minWidth:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:tableSize===n?700:400,cursor:"pointer"}}>{n}</button>)}
+        {[8,10,12].map(n=><button key={n} onClick={()=>{setTableSize(n);save(guests,n);}} style={{background:tableSize===n?THEME.color.sage:"transparent",color:tableSize===n?THEME.color.cream:"rgba(26,26,20,.6)",border:`1px solid ${tableSize===n?THEME.color.sage:"rgba(74,94,58,.2)"}`,borderRadius:THEME.radius.pill,padding:"8px 14px",minHeight:THEME.tap.min,minWidth:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:tableSize===n?700:400,cursor:"pointer"}}>{n}</button>)}
       </div>
     </div>
     {guests&&guests.length>0&&guests.some(g=>!g.mesa||g.mesa==="")&&<button onClick={()=>{asignarMesasAuto();setShowGuestMenu(false);}} style={menuItemStyle}>🪑 Asignar mesas automáticamente</button>}
-    {!isDemo&&<button onClick={()=>{exportToExcel();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Exportar a Excel</button>}
-    {!isDemo&&<button onClick={()=>{downloadTemplate();setShowGuestMenu(false);}} style={menuItemStyle}>↓ Descargar plantilla</button>}
-    <label style={menuItemStyle}>
-      ↑ Importar lista
-      <input name="app-field-5455" type="file" accept=".csv,.xlsx,.xls" onChange={e=>{importFromFile(e);setShowGuestMenu(false);}} style={{display:"none"}}/>
-    </label>
     <button onClick={()=>{setGuia("ceremonia");setShowGuestMenu(false);}} style={menuItemStyle}>📖 Guía nupcial (ceremonia, invitaciones...)</button>
   </>;
 
@@ -5989,17 +6819,29 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
       msg={`¿Eliminar a ${guests.find(g=>g.id===confirmDelete)?.nombre}?`}
       onConfirm={()=>{removeGuest(confirmDelete);setConfirmDelete(null);}}
       onCancel={()=>setConfirmDelete(null)}/>}
+    {confirmClearAll&&<ClearGuestsModal
+      count={(guests||[]).length}
+      onExport={exportToExcel}
+      onConfirm={clearAllGuests}
+      onCancel={()=>setConfirmClearAll(false)}/>}
+    {pendingGuestImport&&<GuestImportReviewModal
+      review={pendingGuestImport}
+      onAuto={()=>applyPendingGuestImport("auto")}
+      onBank={()=>applyPendingGuestImport("bank")}
+      onCancel={()=>setPendingGuestImport(null)}/>}
     <div style={{background:THEME.color.sage,padding:isMobile?"10px 12px 12px":"clamp(12px,3vw,28px) clamp(12px,4vw,48px)"}}>
-      <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",transition:"max-width .25s ease"}}>
+      <div style={{maxWidth:1380,margin:"0 auto",transition:"max-width .25s ease"}}>
         <button onClick={onBack} style={{display:"none"}}>← Inicio</button>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
           <div>
             <div style={{fontFamily:THEME.font.label,fontSize:isMobile?"max(10px,.6rem)":THEME.text.label,letterSpacing:".2em",textTransform:"uppercase",color:"rgba(201,169,110,.75)",marginBottom:isMobile?3:8}}>Módulo · Planning</div>
             <h1 style={{fontFamily:THEME.font.display,fontSize:isMobile?"1.35rem":"clamp(1.8rem,4vw,2.6rem)",color:THEME.color.cream,margin:"0 0 4px",lineHeight:1.1}}>👥 Invitados</h1>
+            <div style={{fontFamily:THEME.font.body,fontSize:isMobile?".72rem":".86rem",color:"rgba(245,239,224,.72)",lineHeight:1.45}}>{total} personas · {inv} invitaciones · <strong style={{color:"rgba(226,199,106,.96)"}}>{ubicadasPersonas} ubicadas</strong> · {esperaPersonas} en espera</div>
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             {/* Acción principal siempre visible */}
             <button onClick={()=>setAddMode(true)} style={{background:THEME.color.gold,color:THEME.color.ink,border:"none",padding:isMobile?"8px 14px":"11px 22px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:isMobile?"13px":"max(14px,.95rem)",borderRadius:THEME.radius.pill,cursor:"pointer",boxShadow:"0 2px 8px rgba(201,169,110,.4)",whiteSpace:"nowrap"}}>+ Agregar</button>
+            {guests&&guests.length>0&&<button onClick={()=>setConfirmClearAll(true)} style={{background:"rgba(181,67,58,.12)",color:"#FFF8EE",border:"1px solid rgba(255,248,238,.32)",padding:isMobile?"8px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:750,fontSize:isMobile?"12px":"max(13px,.84rem)",borderRadius:THEME.radius.pill,cursor:"pointer",whiteSpace:"nowrap"}}>🗑 Limpiar lista</button>}
             {/* Menú de opciones secundarias — dropdown en desktop, bottom sheet en mobile */}
             <div style={{position:"relative"}}>
               <button onClick={e=>{e.stopPropagation();setShowGuestMenu(s=>!s);}} style={{background:"rgba(245,239,224,.15)",color:THEME.color.cream,border:"1px solid rgba(245,239,224,.3)",padding:isMobile?"7px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,fontFamily:THEME.font.body,fontSize:isMobile?"12px":"max(13px,.85rem)",borderRadius:THEME.radius.pill,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
@@ -6045,7 +6887,21 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
       </div>
     </div>
 
-    <div style={{maxWidth:viewMode==="salon"?1760:960,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box",transition:"max-width .25s ease"}}>
+    <div className="guests-v71-shell" style={{maxWidth:1380,margin:"0 auto",padding:"clamp(12px,3vw,28px) clamp(10px,4vw,48px) 0",width:"100%",boxSizing:"border-box",transition:"max-width .25s ease"}}>
+      <section className="guests-v71-excel" aria-label="Importar y exportar invitados en Excel" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.16)",borderRadius:16,padding:"12px 14px",marginBottom:14,boxShadow:"0 5px 18px rgba(63,50,31,.045)"}}>
+        <div style={{minWidth:150}}>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:THEME.color.sage,fontWeight:800}}>Archivo Excel</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:".75rem",lineHeight:1.4,color:"rgba(26,26,20,.52)",marginTop:3}}>La plantilla, la importación y la exportación usan exactamente las mismas columnas.</div>
+        </div>
+        <div className="guests-v7-actions" style={{width:isMobile?"100%":"auto"}}>
+          <label style={{flex:isMobile?"1 1 135px":"0 0 auto",display:"inline-flex",alignItems:"center",justifyContent:"center",minHeight:42,padding:"9px 14px",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,background:"#FFFDF8",fontFamily:THEME.font.body,fontSize:".8rem",fontWeight:750,color:THEME.color.sage,cursor:"pointer",boxSizing:"border-box",whiteSpace:"nowrap"}}>
+            ↑ Importar Excel
+            <input name="guest-import-file-visible" type="file" accept=".xlsx,.xls,.csv" onChange={importFromFile} style={{display:"none"}}/>
+          </label>
+          {!isDemo&&<button type="button" onClick={exportToExcel} disabled={!guests.length} style={{flex:isMobile?"1 1 135px":"0 0 auto",minHeight:42,padding:"9px 14px",border:"none",borderRadius:THEME.radius.pill,background:guests.length?THEME.color.sage:"rgba(74,94,58,.28)",fontFamily:THEME.font.body,fontSize:".8rem",fontWeight:800,color:THEME.color.cream,cursor:guests.length?"pointer":"not-allowed",whiteSpace:"nowrap"}}>↓ Exportar Excel</button>}
+          {!isDemo&&<button type="button" onClick={downloadTemplate} style={{flex:isMobile?"1 1 160px":"0 0 auto",minHeight:42,padding:"9px 14px",border:"1px solid rgba(201,169,110,.52)",borderRadius:THEME.radius.pill,background:"rgba(201,169,110,.12)",fontFamily:THEME.font.body,fontSize:".8rem",fontWeight:750,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>Plantilla XLSX</button>}
+        </div>
+      </section>
       {addMode&&<div style={{background:THEME.color.cream2,border:"1.5px solid rgba(74,94,58,.3)",borderRadius:16,padding:"clamp(14px,4vw,20px)",marginBottom:14,boxShadow:"0 4px 20px rgba(74,94,58,.08)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{fontFamily:THEME.font.display,fontSize:"1.05rem",fontWeight:700,color:THEME.color.ink}}>Nuevo invitado</div>
@@ -6105,21 +6961,27 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
         </div>
       </div>}
 
-      {/* Tabs de vista */}
-      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
-        <div style={{display:"flex",background:THEME.color.cream2,borderRadius:100,padding:3,border:"0.5px solid rgba(201,169,110,.2)"}}>
-          {[{id:"lista",label:"📋 Lista"},{id:"mesas",label:"🪑 Mesas"},{id:"salon",label:"🏛️ Diseño del salón"}].map(v=>
-            <button key={v.id} onClick={()=>setViewMode(v.id)} style={{padding:isMobile?"8px 12px":"10px 16px",minHeight:isMobile?40:THEME.tap.min,borderRadius:THEME.radius.pill,border:"none",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:viewMode===v.id?700:500,cursor:"pointer",background:viewMode===v.id?THEME.color.sage:"transparent",color:viewMode===v.id?THEME.color.cream:"rgba(26,26,20,.45)",transition:"all .2s",whiteSpace:"nowrap"}}>{v.label}</button>
-          )}
+      {/* Recorrido principal */}
+      <div className="guests-v7-sticky-tabs" style={{marginBottom:12}}>
+        <div className="guests-v72-step-nav">
+          <button type="button" className={`guests-v72-step ${viewMode==="lista"?"is-active":""}`} onClick={()=>setViewMode("lista")}>
+            <span className="guests-v72-step-number">1</span><span><strong>Lista de invitados</strong><small>Cargar, confirmar, buscar e importar.</small></span>
+          </button>
+          {!isMobile&&<button type="button" className={`guests-v72-step ${viewMode==="mesas"?"is-active":""}`} onClick={()=>setViewMode("mesas")}>
+            <span className="guests-v72-step-number">2</span><span><strong>Distribuir en mesas</strong><small>Banco de espera, capacidades y grupos.</small></span>
+          </button>}
+          {!isMobile&&<button type="button" className="guests-v72-step" onClick={()=>{setViewMode("mesas");onGoDesigner?.();}}>
+            <span className="guests-v72-step-number">3</span><span><strong>Diseñar el salón</strong><small>Presets, ambientes, medidas y canvas.</small></span>
+          </button>}
         </div>
-        <div style={{marginLeft:"auto",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(26,26,20,.35)"}}>{filtered.length} de {guests.length}</div>
+        {isMobile&&<div style={{marginTop:8,background:"rgba(201,169,110,.1)",border:"1px solid rgba(201,169,110,.28)",borderRadius:12,padding:"9px 11px",fontFamily:THEME.font.body,fontSize:".76rem",lineHeight:1.45,color:"rgba(26,26,20,.58)"}}>La distribución de mesas y el diseño del salón están disponibles en computadora o tablet en horizontal para trabajar con comodidad.</div>}
       </div>
 
-      {viewMode!=="salon"&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",background:"rgba(74,94,58,.055)",border:"0.5px solid rgba(74,94,58,.12)",borderRadius:12,padding:"9px 12px",marginBottom:12}}>
+      {!isMobile&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",background:"rgba(74,94,58,.055)",border:"0.5px solid rgba(74,94,58,.12)",borderRadius:12,padding:"9px 12px",marginBottom:12}}>
         <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.58)",lineHeight:1.35}}>
-          <strong style={{color:THEME.color.sage}}>Conectado con Diseño del salón:</strong> las mesas que edites acá se actualizan en el plano y en el canvas.
+          <strong style={{color:THEME.color.sage}}>Todo está conectado:</strong> las mesas que editás acá se reflejan en el plano completo del salón.
         </div>
-        <button onClick={()=>setViewMode("salon")} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:THEME.radius.pill,padding:"8px 13px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:700,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>Ver plano de salón</button>
+        <button onClick={()=>{setViewMode("mesas");onGoDesigner?.();}} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:THEME.radius.pill,padding:"8px 13px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:700,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>Abrir Diseño del salón →</button>
       </div>}
 
       {/* Barra búsqueda + filtros — solo en lista */}
@@ -6136,21 +6998,20 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
         <select name="app-field-5611" value={filter.lado} onChange={e=>setFilter(f=>({...f,lado:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.lado?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
           <option value="">Lado</option>{LADOS.map(l=><option key={l}>{l}</option>)}
         </select>
-        {(search||filter.conf||filter.lado)&&<button onClick={()=>{setSearch("");setFilter({lado:"",conf:"",mesa:""}); }} style={{background:"transparent",border:"none",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(200,60,60,.6)",cursor:"pointer",whiteSpace:"nowrap"}}>✕ Limpiar</button>}
+        <select name="guest-filter-table" value={filter.mesa} onChange={e=>setFilter(f=>({...f,mesa:e.target.value}))} style={{fontFamily:THEME.font.body,fontSize:".82rem",padding:"7px 10px",borderRadius:100,border:"0.5px solid rgba(74,94,58,.2)",background:THEME.color.cream2,color:filter.mesa?THEME.color.sage:"rgba(26,26,20,.5)",cursor:"pointer"}}>
+          <option value="">Todas las mesas</option>
+          {mesaFilterOptions.map(n=><option key={n} value={String(n)}>Mesa {n}</option>)}
+        </select>
+        {activeFilterCount>0&&<button onClick={()=>{setSearch("");setFilter({lado:"",conf:"",mesa:""}); }} style={{background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.14)",borderRadius:999,padding:"7px 10px",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(180,55,50,.7)",cursor:"pointer",whiteSpace:"nowrap"}}>✕ Limpiar {activeFilterCount} {activeFilterCount===1?"filtro":"filtros"}</button>}
       </div>}
 
-      {viewMode==="lista"&&<>
+      {viewMode==="lista"&&<div className="guests-v71-list-view">
         {filtered.length===0&&!addMode&&<div style={{textAlign:"center",padding:"clamp(16px,3.5vw,40px) clamp(10px,2vw,20px)",background:THEME.color.cream2,borderRadius:16,border:"0.5px solid rgba(201,169,110,.2)"}}>
           <div style={{fontSize:"2rem",marginBottom:10}}>👥</div>
           <p style={{fontFamily:THEME.font.display,fontSize:"1.05rem",color:THEME.color.ink,margin:"0 0 6px"}}>Aún no hay invitados</p>
-          <p style={{fontFamily:THEME.font.body,fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel/CSV</p>
+          <p style={{fontFamily:THEME.font.body,fontSize:".88rem",color:"rgba(26,26,20,.45)",margin:"0 0 18px"}}>Podés agregarlos uno a uno o importar una lista desde Excel</p>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button onClick={()=>setAddMode(true)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:100,padding:"11px 22px",fontFamily:THEME.font.body,fontWeight:700,cursor:"pointer"}}>+ Agregar invitado</button>
-            {!isDemo&&<button onClick={downloadTemplate} style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer"}}>↓ Descargar plantilla Excel</button>}
-            <label style={{background:"transparent",border:"1px solid rgba(74,94,58,.3)",borderRadius:THEME.radius.pill,padding:"11px 20px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:600,color:THEME.color.sage,cursor:"pointer",display:"inline-flex",alignItems:"center"}}>
-              ↑ Importar lista
-              <input name="app-field-5627" type="file" accept=".csv,.xlsx,.xls" onChange={importFromFile} style={{display:"none"}}/>
-            </label>
           </div>
         </div>}
         {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"clamp(16px,3vw,32px) clamp(12px,2vw,20px)",background:THEME.color.cream2,borderRadius:14,border:"0.5px solid rgba(201,169,110,.2)"}}>
@@ -6158,6 +7019,7 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
           <p style={{fontFamily:THEME.font.display,fontSize:"1rem",color:THEME.color.ink,margin:"0 0 4px"}}>Sin resultados para "{search}"</p>
           <p style={{fontFamily:THEME.font.body,fontSize:".85rem",color:"rgba(26,26,20,.4)",margin:0}}>Probá con otro nombre o limpiar los filtros</p>
         </div>}
+        {!isMobile&&filtered.length>0&&<div className="guests-v7-table-head"><span></span><span>Invitación</span><span>Personas</span><span>Mesa</span><span>Confirmación</span><span></span></div>}
         {filtered.map(g=>{
           const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
           const isExpanded=expandedId===g.id;
@@ -6165,7 +7027,7 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
           return <div key={g.id} style={{background:THEME.color.cream2,border:`0.5px solid ${isExpanded?"rgba(74,94,58,.3)":"rgba(201,169,110,.18)"}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"border-color .2s, box-shadow .2s",boxShadow:isExpanded?"0 8px 24px rgba(74,94,58,.08)":"none"}}>
             <>
                   {/* Fila principal — siempre visible */}
-                  <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}}
+                  <div style={isMobile?{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",minHeight:56}:{display:"grid",gridTemplateColumns:"44px minmax(220px,1fr) 84px 100px 148px 28px",gap:10,alignItems:"center",padding:"11px 14px",cursor:"pointer",minHeight:58}}
                     onClick={()=>setExpandedId(isExpanded?null:g.id)}>
                     {/* Avatar inicial */}
                     <div style={{width:36,height:36,borderRadius:"50%",background:c.bg||"rgba(74,94,58,.1)",border:`1.5px solid ${c.color}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -6175,14 +7037,16 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                         <span style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:600,color:THEME.color.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{g.nombre}</span>
-                        {cant>1&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:THEME.color.sage,borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
+                        {isMobile&&cant>1&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",background:"rgba(74,94,58,.1)",color:THEME.color.sage,borderRadius:100,padding:"2px 6px",flexShrink:0}}>×{cant}</span>}
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
                         <span style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.4)"}}>{g.lado}{g.parentesco&&g.parentesco!=="Otro"?` · ${g.parentesco}`:""}</span>
-                        {g.mesa&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
+                        {isMobile&&g.mesa&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".06em",background:"rgba(201,169,110,.12)",color:"rgba(201,169,110,.8)",borderRadius:100,padding:"1px 6px"}}>Mesa {g.mesa}</span>}
                         {g.restriccion&&g.restriccion!=="Ninguna"&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(200,130,0,.7)"}}>⚠️ {g.restriccion}</span>}
                       </div>
                     </div>
+                    {!isMobile&&<div style={{fontFamily:THEME.font.body,fontSize:".88rem",fontWeight:700,color:THEME.color.ink}}>{cant}</div>}
+                    {!isMobile&&<div style={{fontFamily:THEME.font.body,fontSize:".82rem",color:g.mesa?THEME.color.sage:"rgba(26,26,20,.38)",fontWeight:g.mesa?700:400}}>{g.mesa?`Mesa ${g.mesa}`:"En espera"}</div>}
                     {/* Chip de confirmación — clickable */}
                     <div style={{flexShrink:0}}>
                       <select name="app-field-5663" value={g.confirmacion} onChange={e=>{e.stopPropagation();updateGuest(g.id,"confirmacion",e.target.value);}} onClick={e=>e.stopPropagation()}
@@ -6237,63 +7101,88 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
                       style={{width:"100%",fontFamily:THEME.font.body,fontSize:".88rem",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(74,94,58,.2)",background:THEME.color.cream,color:THEME.color.ink,boxSizing:"border-box",marginBottom:10}}/>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       <button onClick={()=>setExpandedId(null)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:THEME.radius.pill,padding:"11px 24px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.85rem)",cursor:"pointer"}}>✓ Guardar</button>
-                      <button onClick={()=>setViewMode("salon")} style={{background:"white",color:THEME.color.sage,border:"1px solid rgba(74,94,58,.2)",borderRadius:THEME.radius.pill,padding:"11px 16px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.82rem)",cursor:"pointer"}}>🏛️ Ver en salón</button>
+                      {!isMobile&&<button onClick={()=>{setViewMode("mesas");onGoDesigner?.();}} style={{background:"white",color:THEME.color.sage,border:"1px solid rgba(74,94,58,.2)",borderRadius:THEME.radius.pill,padding:"11px 16px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontWeight:700,fontSize:"max(13px,.82rem)",cursor:"pointer"}}>🏛️ Ver en salón</button>}
                       <button onClick={()=>setConfirmDelete(g.id)} style={{background:"transparent",border:"none",borderRadius:THEME.radius.sm,padding:"11px 14px",minHeight:THEME.tap.min,fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(200,60,60,.65)",cursor:"pointer",marginLeft:"auto"}}>🗑 Eliminar</button>
                     </div>
                   </div>}
                 </>
           </div>
         })}
-      </>}
+      </div>}
 
-      {viewMode==="mesas"&&<>
+      {viewMode==="mesas"&&<div className="guests-v71-mesas-view">
+        {deletedGuestTable&&<div role="status" style={{position:"sticky",top:8,zIndex:55,display:"flex",alignItems:"center",gap:12,background:"#FFFDF8",border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"10px 12px",marginBottom:12,boxShadow:"0 10px 28px rgba(63,50,31,.12)"}}>
+          <div style={{minWidth:0,flex:1,fontFamily:THEME.font.body,fontSize:".78rem",lineHeight:1.4,color:"rgba(26,26,20,.72)"}}>Mesa {deletedGuestTable.tableId} eliminada del plano. Las invitaciones quedaron en el Banco de espera.</div>
+          <button type="button" onClick={undoDeleteGuestTableVista} style={{border:"1px solid rgba(74,94,58,.24)",borderRadius:999,background:"rgba(74,94,58,.08)",padding:"8px 12px",fontFamily:THEME.font.body,fontSize:".74rem",fontWeight:800,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>Deshacer</button>
+          <button type="button" aria-label="Cerrar aviso" onClick={()=>setDeletedGuestTable(null)} style={{width:32,height:32,border:0,borderRadius:999,background:"transparent",fontSize:"1rem",color:"rgba(26,26,20,.45)",cursor:"pointer"}}>×</button>
+        </div>}
+        {mesasPendientes.length>0&&<div style={{background:"rgba(201,169,110,.10)",border:"1px solid rgba(201,169,110,.34)",borderRadius:14,padding:"13px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div style={{minWidth:0,flex:"1 1 260px"}}>
+            <div style={{fontFamily:THEME.font.display,fontSize:"1rem",fontWeight:700,color:THEME.color.ink}}>Faltan {mesasPendientes.length} {mesasPendientes.length===1?"mesa":"mesas"} en el salón</div>
+            <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.58)",lineHeight:1.45,marginTop:3}}>
+              Tus invitados usan mesas hasta la {maxMesa}. Ya creaste {mesasRequeridasCreadas} de {maxMesa}. Podés agregarlas de a una para acomodarlas con calma en el canvas.
+            </div>
+          </div>
+          <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
+            <button onClick={()=>agregarMesasPendientesVista(1)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:THEME.radius.pill,padding:"10px 14px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:800,cursor:"pointer"}}>+ Mesa {mesasPendientes[0]}</button>
+            {mesasPendientes.length>1&&<button onClick={()=>agregarMesasPendientesVista(Math.min(5,mesasPendientes.length))} style={{background:"white",color:THEME.color.sage,border:"1px solid rgba(74,94,58,.22)",borderRadius:THEME.radius.pill,padding:"9px 13px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:750,cursor:"pointer"}}>Agregar {Math.min(5,mesasPendientes.length)}</button>}
+            {mesasPendientes.length>5&&<button onClick={()=>agregarMesasPendientesVista(mesasPendientes.length)} style={{background:"transparent",color:"rgba(74,94,58,.78)",border:"1px solid rgba(74,94,58,.18)",borderRadius:THEME.radius.pill,padding:"9px 13px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.76rem)",fontWeight:700,cursor:"pointer"}}>Agregar todas</button>}
+          </div>
+        </div>}
         {/* Barra de movimiento activo */}
         {movingGuest&&(()=>{const mg=guests.find(g=>g.id===movingGuest);return mg?<div style={{position:"sticky",top:8,zIndex:50,display:"flex",alignItems:"center",gap:10,background:THEME.color.sage,color:THEME.color.cream,borderRadius:THEME.radius.pill,padding:"10px 16px",marginBottom:12,boxShadow:THEME.shadow.pop}}>
           <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",flex:1}}>Moviendo a <strong>{mg.nombre}</strong> — tocá la mesa destino</span>
           <button onClick={()=>setMovingGuest(null)} style={{background:"rgba(245,239,224,.2)",border:"none",borderRadius:THEME.radius.pill,padding:"8px 14px",minHeight:36,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:THEME.color.cream,cursor:"pointer"}}>✕ Cancelar</button>
         </div>:null;})()}
         {/* Zona Sin mesa — también es destino para desasignar */}
-        {(sinMesa.length>0||movingGuest||dragMG)&&<div data-mesa-drop=""
+        {(sinMesa.length>0||movingGuest||dragMG)&&<div className="guests-v71-waiting-bank" data-mesa-drop=""
           onDragOver={e=>e.preventDefault()}
           onDrop={e=>{e.preventDefault();const id=e.dataTransfer.getData("guestId");if(id){updateGuest(id,"mesa","");setMovingGuest(null);}}}
           onClick={()=>{if(movingGuest){updateGuest(movingGuest,"mesa","");setMovingGuest(null);}}}
           style={{background:dragMG?.over===""?"rgba(74,94,58,.12)":"rgba(201,169,110,.08)",border:`${(movingGuest||dragMG)?"1.5px dashed rgba(74,94,58,.5)":"0.5px solid rgba(201,169,110,.3)"}`,borderRadius:12,padding:"12px 16px",marginBottom:14,cursor:movingGuest?"pointer":"default",transition:"border .15s, background .15s"}}>
-          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:sinMesa.length>0?8:0}}>Sin mesa asignada ({sinMesa.length}){movingGuest?" — tocá acá para quitar de la mesa":""}</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-            {sinMesa.map(g=><div key={g.id} draggable
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.tiny,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.65)",marginBottom:sinMesa.length>0?8:0}}>Banco de espera ({sinMesa.length}){movingGuest?" — tocá acá para quitar de la mesa":""}</div>
+          <div className="guests-v71-waiting-list" style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {sinMesa.map(g=><div className="guests-v71-waiting-item" key={g.id} draggable
               onDragStart={e=>{e.dataTransfer.setData("guestId",g.id);setMovingGuest(g.id);}}
               onDragEnd={()=>setMovingGuest(null)}
               onClick={e=>{e.stopPropagation();setMovingGuest(movingGuest===g.id?null:g.id);}}
               style={{display:"flex",alignItems:"center",gap:4,background:movingGuest===g.id?"rgba(74,94,58,.12)":"rgba(255,255,255,.78)",border:movingGuest===g.id?"1px solid rgba(74,94,58,.5)":"1px solid rgba(201,169,110,.22)",borderRadius:100,padding:"5px 12px 5px 4px",minHeight:38,cursor:"grab",userSelect:"none"}}>
               <span onMouseDown={e=>beginDragMG(e,g)} onTouchStart={e=>beginDragMG(e,g)} onClick={e=>e.stopPropagation()} onContextMenu={e=>e.preventDefault()}
                 style={{cursor:"grab",touchAction:"none",padding:"8px 6px",color:"rgba(26,26,20,.35)",fontSize:".85rem",lineHeight:1,flexShrink:0,userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}>⠿</span>
-              <span style={{fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(26,26,20,.7)"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span>
+              <div style={{minWidth:0,flex:1}}><span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(26,26,20,.72)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.nombre}{parseInt(g.cantidadInvitados||1)>1?` ×${g.cantidadInvitados}`:""}</span><small style={{display:"block",fontFamily:THEME.font.body,fontSize:".66rem",lineHeight:1.3,color:"rgba(26,26,20,.4)",marginTop:2}}>Sin mesa o no entró completa · elegí una mesa con lugar</small></div>
             </div>)}
           </div>
         </div>}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:10}}>
+        <div className="guests-v71-table-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(280px,100%),1fr))",gap:12}}>
           {tables.map(t=>{
             const pct=Math.round(t.personas/t.cap*100);
             const over=t.personas>t.cap;
             const esDestino=movingGuest&&!t.guests.some(g=>g.id===movingGuest);
             const hoverDrag=dragMG?.over===String(t.num);
-            return <div key={t.num} data-mesa-drop={String(t.num)}
+            return <div key={t.num} className={`guests-v72-table-card ${selectedGuestTable===t.num?"is-selected":""}`} data-mesa-drop={String(t.num)}
               onDragOver={e=>e.preventDefault()}
               onDrop={e=>{e.preventDefault();const id=e.dataTransfer.getData("guestId");if(id){updateGuest(id,"mesa",String(t.num));setMovingGuest(null);}}}
-              onClick={()=>{if(esDestino){updateGuest(movingGuest,"mesa",String(t.num));setMovingGuest(null);}}}
+              onClick={()=>{if(esDestino){updateGuest(movingGuest,"mesa",String(t.num));setMovingGuest(null);}else{setSelectedGuestTable(t.num);}}}
               style={{background:hoverDrag?"rgba(74,94,58,.08)":THEME.color.cream2,border:(esDestino||hoverDrag)?"1.5px dashed rgba(74,94,58,.55)":`0.5px solid ${over?"rgba(200,80,60,.4)":"rgba(201,169,110,.22)"}`,borderRadius:14,padding:"14px",cursor:esDestino?"pointer":"default",transition:"border .15s, transform .15s, background .15s",transform:(esDestino||hoverDrag)?"scale(1.01)":"none"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,marginBottom:8}}>
                 <div style={{minWidth:0}}>
                   <div style={{fontFamily:THEME.font.display,fontWeight:700,fontSize:"1.05rem",color:THEME.color.ink}}>Mesa {t.num}</div>
                   {t.etiqueta&&<div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.6)"}}>{t.etiqueta}</div>}
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}} onClick={e=>e.stopPropagation()}>
+                <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0,position:"relative"}} onClick={e=>e.stopPropagation()}>
                   <span style={{fontFamily:THEME.font.body,fontSize:".82rem",color:over?"rgba(200,80,60,.8)":pct>=80?"rgba(201,169,110,.8)":"rgba(74,94,58,.6)"}}>{t.personas}{over&&" ⚠️"} /</span>
                   <input name="app-field-5767" type="number" min="2" max="80" key={`cap-${t.num}-${t.cap}`} defaultValue={t.cap}
                     onBlur={e=>{const v=parseInt(e.target.value); if(v&&v!==t.cap) setCapMesaVista(t.num,v);}}
                     onKeyDown={e=>{if(e.key==="Enter")e.target.blur();}}
                     title="Personas por mesa"
                     style={{width:44,fontFamily:THEME.font.body,fontSize:".85rem",fontWeight:600,padding:"5px 3px",borderRadius:7,border:"1px solid rgba(74,94,58,.25)",background:THEME.color.cream,color:THEME.color.ink,textAlign:"center"}}/>
+                  <button type="button" aria-label={`Opciones de Mesa ${t.num}`} title="Opciones de mesa" onClick={e=>{e.stopPropagation();setOpenGuestTableMenu(openGuestTableMenu===t.num?null:t.num);}} style={{width:34,height:34,border:"1px solid rgba(74,94,58,.14)",borderRadius:9,background:"rgba(255,255,255,.72)",fontFamily:THEME.font.body,fontSize:"1rem",fontWeight:800,color:"rgba(26,26,20,.55)",cursor:"pointer",lineHeight:1}}>···</button>
+                  {openGuestTableMenu===t.num&&<div role="menu" onMouseDown={e=>e.stopPropagation()} style={{position:"absolute",right:0,top:40,zIndex:80,width:190,background:"#FFFDF8",border:"1px solid rgba(74,94,58,.16)",borderRadius:12,padding:6,boxShadow:"0 14px 38px rgba(32,27,20,.18)"}}>
+                    <button type="button" role="menuitem" onClick={()=>{setSelectedGuestTable(t.num);setOpenGuestTableMenu(null);}} style={{width:"100%",border:0,borderRadius:8,background:"transparent",padding:"9px 10px",textAlign:"left",fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,cursor:"pointer"}}>Ver detalle</button>
+                    <button type="button" role="menuitem" disabled={!t.guests.length} onClick={()=>{setOpenGuestTableMenu(null);emptyGuestTable(t.num);}} style={{width:"100%",border:0,borderRadius:8,background:"transparent",padding:"9px 10px",textAlign:"left",fontFamily:THEME.font.body,fontSize:".76rem",color:"rgba(26,26,20,.68)",cursor:t.guests.length?"pointer":"default",opacity:t.guests.length?1:.42}}>Vaciar mesa</button>
+                    <div style={{height:1,background:"rgba(74,94,58,.1)",margin:"4px 0"}}/>
+                    <button type="button" role="menuitem" onClick={()=>deleteGuestTableVista(t.num)} style={{width:"100%",border:0,borderRadius:8,background:"rgba(181,67,58,.055)",padding:"9px 10px",textAlign:"left",fontFamily:THEME.font.body,fontSize:".76rem",fontWeight:750,color:"rgba(181,67,58,.82)",cursor:"pointer"}}>Eliminar mesa…</button>
+                  </div>}
                 </div>
               </div>
               <div style={{height:4,background:"rgba(74,94,58,.1)",borderRadius:4,overflow:"hidden",marginBottom:10}}>
@@ -6305,7 +7194,7 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
                 const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
                 return top?<div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(74,94,58,.72)",background:"rgba(74,94,58,.06)",borderRadius:8,padding:"6px 8px",marginBottom:8}}>💡 Mesa {t.num}: mayoría de {PARENTESCO_HUMANO[top[0]]||top[0]} ({top[1]} pers.)</div>:null;
               })()}
-              {t.guests.map(g=>{
+              {t.guests.slice(0,3).map(g=>{
                 const c=confMap[g.confirmacion]||CONFIRMACIONES[0];
                 const enMov=movingGuest===g.id;
                 return <div key={g.id} draggable
@@ -6324,6 +7213,7 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
                   <span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".06em",padding:"2px 6px",borderRadius:100,background:c.bg,color:c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</span>
                 </div>;
               })}
+              {t.guests.length>3&&<button type="button" onClick={e=>{e.stopPropagation();setSelectedGuestTable(t.num);}} style={{width:"100%",marginTop:7,border:"1px solid rgba(74,94,58,.14)",borderRadius:8,background:"rgba(74,94,58,.045)",padding:"7px 9px",fontFamily:THEME.font.body,fontSize:".74rem",fontWeight:750,color:THEME.color.sage,cursor:"pointer"}}>Ver {t.guests.length-3} invitaciones más →</button>}
               {t.personas<t.cap
                 ? <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,background:"rgba(74,94,58,.06)",borderRadius:8,padding:"6px 10px"}}>
                     <span style={{fontSize:".85rem"}}>🪑</span>
@@ -6343,12 +7233,37 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
             style={{background:"transparent",border:"1.5px dashed rgba(74,94,58,.35)",borderRadius:14,padding:"14px",minHeight:120,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontFamily:THEME.font.body,color:THEME.color.sage,transition:"background .15s"}}>
             <span style={{fontSize:"1.6rem",lineHeight:1}}>+</span>
             <span style={{fontSize:"max(13px,.85rem)",fontWeight:600}}>Agregar mesa</span>
-            <span style={{fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.4)"}}>Mesa {totalMesasVista+1} · {tableSize} personas</span>
+            <span style={{fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.4)"}}>Mesa {proximaMesaParaAgregar} · {tableSize} personas</span>
           </button>
         </div>
+        <aside className="guests-v72-table-inspector" aria-label="Detalle de mesa seleccionada">
+          {selectedGuestTableData?<>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10,marginBottom:10}}>
+              <div><div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.55)"}}>Mesa seleccionada</div><h3 style={{fontFamily:THEME.font.display,fontSize:"1.28rem",margin:"3px 0 0",color:THEME.color.ink}}>Mesa {selectedGuestTableData.num}</h3></div>
+              <strong style={{fontFamily:THEME.font.display,fontSize:"1.05rem",color:selectedGuestTableData.personas>selectedGuestTableData.cap?"#B5443A":THEME.color.sage}}>{selectedGuestTableData.personas} / {selectedGuestTableData.cap}</strong>
+            </div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.42)",marginBottom:6}}>Capacidad</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:12}}>
+              {[8,10,12].map(cap=><button key={cap} type="button" onClick={()=>setCapMesaVista(selectedGuestTableData.num,cap)} style={{border:`1px solid ${selectedGuestTableData.cap===cap?THEME.color.sage:"rgba(74,94,58,.18)"}`,borderRadius:999,padding:"8px",background:selectedGuestTableData.cap===cap?THEME.color.sage:THEME.color.cream,color:selectedGuestTableData.cap===cap?THEME.color.cream:"rgba(26,26,20,.58)",fontFamily:THEME.font.body,fontWeight:750,cursor:"pointer"}}>{cap}</button>)}
+            </div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(26,26,20,.42)",marginBottom:6}}>Invitaciones asignadas · {selectedGuestTableData.guests.length}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:6,overflowY:"auto",minHeight:0,maxHeight:"min(46vh,460px)",paddingRight:3}}>
+              {selectedGuestTableData.guests.map(guest=><div key={guest.id} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(74,94,58,.045)",border:"1px solid rgba(74,94,58,.09)",borderRadius:10,padding:"8px 9px"}}>
+                <div style={{minWidth:0,flex:1}}><strong style={{display:"block",fontFamily:THEME.font.body,fontSize:".82rem",color:THEME.color.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{guest.nombre}</strong><small style={{fontFamily:THEME.font.body,fontSize:".68rem",color:"rgba(26,26,20,.45)"}}>{parseInt(guest.cantidadInvitados||1)} {parseInt(guest.cantidadInvitados||1)===1?"persona":"personas"}{guest.restriccion&&guest.restriccion!=="Ninguna"?` · ${guest.restriccion}`:""}</small></div>
+                <button type="button" aria-label={`Mover ${guest.nombre} al Banco de espera`} title="Mover al Banco de espera" onClick={()=>updateGuest(guest.id,"mesa","")} style={{width:32,height:32,borderRadius:999,border:"1px solid rgba(181,67,58,.18)",background:"rgba(181,67,58,.06)",color:"rgba(181,67,58,.72)",cursor:"pointer"}}>×</button>
+              </div>)}
+              {!selectedGuestTableData.guests.length&&<div style={{fontFamily:THEME.font.body,fontSize:".78rem",lineHeight:1.5,color:"rgba(26,26,20,.42)",fontStyle:"italic",padding:"8px 0"}}>Esta mesa está vacía. Elegí una invitación del Banco de espera y después tocá esta mesa.</div>}
+            </div>
+            <div style={{display:"grid",gap:8,marginTop:12}}>
+              <button type="button" disabled={!selectedGuestTableData.guests.length} onClick={()=>emptyGuestTable(selectedGuestTableData.num)} style={{width:"100%",border:"1px solid rgba(181,67,58,.22)",borderRadius:10,padding:"10px",background:"rgba(181,67,58,.06)",fontFamily:THEME.font.body,fontSize:".78rem",fontWeight:750,color:"rgba(181,67,58,.76)",cursor:selectedGuestTableData.guests.length?"pointer":"default",opacity:selectedGuestTableData.guests.length?1:.45}}>Vaciar esta mesa</button>
+              <button type="button" onClick={()=>deleteGuestTableVista(selectedGuestTableData.num)} style={{width:"100%",border:"1px solid rgba(181,67,58,.32)",borderRadius:10,padding:"10px",background:"transparent",fontFamily:THEME.font.body,fontSize:".76rem",fontWeight:800,color:"rgba(181,67,58,.85)",cursor:"pointer"}}>Eliminar mesa del evento…</button>
+              <small style={{fontFamily:THEME.font.body,fontSize:".65rem",lineHeight:1.4,color:"rgba(26,26,20,.42)"}}>También se elimina del Diseño del salón. Las invitaciones vuelven al Banco de espera.</small>
+            </div>
+          </>:<div style={{display:"grid",placeItems:"center",minHeight:260,textAlign:"center",padding:"20px 12px"}}><div><div style={{fontSize:"1.5rem",marginBottom:8}}>👆</div><strong style={{display:"block",fontFamily:THEME.font.display,fontSize:"1rem",color:THEME.color.ink}}>Elegí una mesa</strong><p style={{fontFamily:THEME.font.body,fontSize:".76rem",lineHeight:1.5,color:"rgba(26,26,20,.45)",margin:"6px 0 0"}}>Vas a ver todas sus invitaciones, cambiar la capacidad o vaciarla.</p></div></div>}
+        </aside>
         {/* Ghost flotante durante el drag */}
         {dragMG&&<div style={{position:"fixed",left:dragMG.x-12,top:dragMG.y-42,zIndex:9999,pointerEvents:"none",background:THEME.color.sage,color:THEME.color.cream,borderRadius:THEME.radius.pill,padding:"9px 16px",fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:600,boxShadow:"0 8px 24px rgba(0,0,0,.35)",whiteSpace:"nowrap"}}>↔ {dragMG.nombre}</div>}
-      </>}
+      </div>}
       {/* ── VISTA SALÓN ── */}
       {viewMode==="salon"&&<SalonView
         mode="guests"
@@ -6387,7 +7302,7 @@ function GuestsModule({user, onBack, onGoDesigner, isDemo=false}){
 // ─── MÓDULO DISEÑO DEL SALÓN ──────────────────────────────────────────────────
 function SalonDesignerModule({user, onBack, onGoGuests}){
   const [guests, setGuests] = useState(null);
-  const [tableSize, setTableSize] = useState(10);
+  const [tableSize, setTableSize] = useState(8);
   const [budgetInvitados, setBudgetInvitados] = useState(0);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -6405,7 +7320,7 @@ function SalonDesignerModule({user, onBack, onGoGuests}){
         if(!alive) return;
         const list = Array.isArray(row?.guests) ? row.guests : [];
         setGuests(list);
-        if(row?.table_size) setTableSize(row.table_size);
+        if(row?.table_size) setTableSize(normalizeRoundTableCapacity(row.table_size,8));
         const bi = parseInt(row?.budget?.invitados||0);
         setBudgetInvitados(bi>0 ? bi : list.reduce((s,g)=>s+parseInt(g.cantidadInvitados||1),0));
       }catch(err){
@@ -6441,7 +7356,7 @@ function SalonDesignerModule({user, onBack, onGoGuests}){
   }
 
   return <div style={{minHeight:"100vh",background:THEME.color.cream,padding:isMobile?"12px":"24px"}}>
-    <div style={{maxWidth:1260,margin:"0 auto"}}>
+    <div style={{maxWidth:1760,margin:"0 auto"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:14,flexWrap:"wrap"}}>
         <div>
           <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"rgba(74,94,58,.58)",marginBottom:4}}>Diseño del salón</div>
@@ -6449,7 +7364,7 @@ function SalonDesignerModule({user, onBack, onGoGuests}){
           <p style={{fontFamily:THEME.font.body,fontSize:".9rem",color:"rgba(26,26,20,.52)",margin:"6px 0 0",maxWidth:720}}>Acá diseñás el salón completo. Las mesas se comparten con Invitados, pero la decoración queda fuera del canvas limpio de seating.</p>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-          {onGoGuests&&<button onClick={onGoGuests} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:10,padding:"10px 14px",fontFamily:THEME.font.body,color:THEME.color.sage,cursor:"pointer"}}>👥 Volver a invitados</button>}
+          {onGoGuests&&<button onClick={onGoGuests} style={{background:"white",border:"1px solid rgba(74,94,58,.18)",borderRadius:10,padding:"10px 14px",fontFamily:THEME.font.body,color:THEME.color.sage,cursor:"pointer"}}>← Volver a Distribuir en mesas</button>}
           {onBack&&<button onClick={onBack} style={{background:THEME.color.sage,border:"1px solid rgba(74,94,58,.18)",borderRadius:10,padding:"10px 14px",fontFamily:THEME.font.body,color:THEME.color.cream,cursor:"pointer"}}>Inicio</button>}
         </div>
       </div>
@@ -6698,7 +7613,7 @@ const DECOR_STYLES = [
 // Cuadrada de 12 → 3 por lado → 2.0 m de lado. La capacidad se puede
 // ajustar por mesa y las medidas se recalculan solas.
 const MESA_TIPOS = [
-  {v:"round",   l:"⭕", desc:"Redonda",  ew:undefined, eh:undefined, cap:10},
+  {v:"round",   l:"⭕", desc:"Redonda",  ew:undefined, eh:undefined, cap:8},
   {v:"square",  l:"◻",  desc:"Cuadrada", ew:2.0, eh:2.0, cap:10},
   {v:"rect_h",  l:"▬",  desc:"Rect. H",  ew:5.4, eh:0.9, cap:20},
   {v:"rect_v",  l:"▮",  desc:"Rect. V",  ew:0.9, eh:5.4, cap:20},
@@ -6707,7 +7622,7 @@ const MESA_TIPOS = [
 
 // Capacidades seleccionables por tipo de mesa
 const CAP_OPCIONES = {
-  round:    [6,8,10,12],
+  round:    [8,10,12],
   square:   [8,10,12],
   rect_h:   [16,20,24,30],
   rect_v:   [16,20,24,30],
@@ -6751,9 +7666,9 @@ const getRoomSizeForGuests = (total=150) => {
 };
 const normToMetersX = (x, roomW) => +((Number(x)||0) * roomW / 100).toFixed(2);
 const normToMetersY = (y, roomH) => +((Number(y)||0) * roomH / 100).toFixed(2);
-const tableDiameterForGuests = (tableSize=10) => (Number(tableSize)||10) <= 8 ? 1.50 : 1.80;
+const tableDiameterForGuests = (tableSize=8) => (Number(tableSize)||8) <= 8 ? 1.50 : 1.80;
 const isNormalizedSalonLayout = (L) => !!L && ((Number(L.salonW)||0) >= 80 || (Number(L.salonH)||0) >= 80);
-const convertNormalizedLayoutToMeters = (L, totalPeople=150, tableSize=10) => {
+const convertNormalizedLayoutToMeters = (L, totalPeople=150, tableSize=8) => {
   if(!isNormalizedSalonLayout(L)) return L;
   const room = getRoomSizeForGuests(totalPeople);
   const W = room.w, H = room.h;
@@ -6919,7 +7834,7 @@ const decorPackShape = (style, W, H, shape="rectangulo") => {
   return decorPack(style,W,H);
 };
 
-const mesasRedondas = (coords, offset=1) => coords.map(([mx,my],i)=>mesa(i+offset,mx,my,"round",{cap:10}));
+const mesasRedondas = (coords, offset=1) => coords.map(([mx,my],i)=>mesa(i+offset,mx,my,"round",{cap:8}));
 
 
 // ── Presets reales de boda (canvas normalizado 100 x 100) ────────────────
@@ -9696,7 +10611,7 @@ const presetElementToCanvas = (p, raw, room) => {
   );
 };
 
-const presetTableToCanvas = (raw, index, tableSize=10, room={w:22,h:16}) => {
+const presetTableToCanvas = (raw, index, tableSize=8, room={w:22,h:16}) => {
   const tipo = raw.type || "round";
   const round = tipo === "round";
   const cap = round ? tableSize : (raw.cap || tableSize);
@@ -9714,7 +10629,7 @@ const presetTableToCanvas = (raw, index, tableSize=10, room={w:22,h:16}) => {
   });
 };
 
-const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=10, room={w:22,h:16}) => {
+const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=8, room={w:22,h:16}) => {
   const normalized = tablePattern.map((t,i)=>presetTableToCanvas(t,i,tableSize,room));
   if(!totalPeople || totalPeople <= 0) return {tables: normalized, overflow:false, seats: normalized.reduce((s,m)=>s+(m.cap||tableSize),0)};
   let seats = 0;
@@ -9728,10 +10643,10 @@ const selectPresetTablesByGuests = (tablePattern=[], totalPeople=0, tableSize=10
   return {tables: selected, overflow: totalPeople > maxSeats, seats: Math.min(seats, maxSeats), maxSeats};
 };
 
-const buildReferenceWeddingPreset = (presetId, totalPeople=150, tableSize=10) => {
+const buildReferenceWeddingPreset = (presetId, totalPeople=150, tableSize=8) => {
   const p = REFERENCE_WEDDING_PRESETS.find(x=>x.id===presetId) || REFERENCE_WEDDING_PRESETS[0];
   const room = getRoomSizeForGuests(totalPeople || 150);
-  const picked = selectPresetTablesByGuests(p.tables || [], totalPeople, tableSize || 10, room);
+  const picked = selectPresetTablesByGuests(p.tables || [], totalPeople, tableSize || 8, room);
   return {
     salonW: room.w,
     salonH: room.h,
@@ -9749,7 +10664,7 @@ const buildReferenceWeddingPreset = (presetId, totalPeople=150, tableSize=10) =>
 };
 
 const PRESET_BUILDERS = Object.fromEntries(
-  REFERENCE_WEDDING_PRESETS.map(p => [p.id, (_decor, totalPeople=0, tableSize=10) => buildReferenceWeddingPreset(p.id, totalPeople, tableSize)])
+  REFERENCE_WEDDING_PRESETS.map(p => [p.id, (_decor, totalPeople=0, tableSize=8) => buildReferenceWeddingPreset(p.id, totalPeople, tableSize)])
 );
 PRESET_BUILDERS.desde_cero = () => { const r=getRoomSizeForGuests(150); return {salonW:r.w,salonH:r.h,salonShape:"rectangulo",salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,estiloDistrib:"desde_cero",estiloDecor:"desde_cero",mesas:[],elementos:[]}; };
 
@@ -10711,9 +11626,27 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   // Layout guardado de sesiones anteriores (se lee una sola vez)
   const totalInvitadosInicial = budgetInvitados>0 ? budgetInvitados : (guests||[]).reduce((s,g)=>s+(parseInt(g.cantidadInvitados||1)||1),0);
   const salonInitRef = useRef();
-  if(salonInitRef.current===undefined) salonInitRef.current = convertNormalizedLayoutToMeters(isDemoUser(user) ? null : cargarSalon(), totalInvitadosInicial || 150, tableSize || 10);
-  const S0 = salonInitRef.current;
+  if(salonInitRef.current===undefined) salonInitRef.current = convertNormalizedLayoutToMeters(isDemoUser(user) ? null : cargarSalon(), totalInvitadosInicial || 150, tableSize || 8);
+  const S0Raw = salonInitRef.current;
   const M0 = SALON_MODELO(); // default: salón proporcional 22×16 para 150 personas
+  const initialAmbientesRef = useRef();
+  if(initialAmbientesRef.current===undefined){
+    const rawList=Array.isArray(S0Raw?.ambientes)&&S0Raw.ambientes.length
+      ? S0Raw.ambientes
+      : [{...M0,...(S0Raw||{}),id:"principal",nombre:"Salón principal"}];
+    initialAmbientesRef.current=rawList.map((ambiente,index)=>({
+      ...M0,
+      ...ambiente,
+      id:String(ambiente.id||`ambiente-${index+1}`),
+      nombre:String(ambiente.nombre||ambiente.label||(index===0?"Salón principal":`Ambiente ${index+1}`)),
+      mesas:Array.isArray(ambiente.mesas)?ambiente.mesas:[],
+      elementos:Array.isArray(ambiente.elementos)?ambiente.elementos:[],
+      salonShapeConfig:normalizeSalonShapeConfig(ambiente.salonShape||M0.salonShape,ambiente.salonShapeConfig),
+    }));
+  }
+  const initialAmbientes=initialAmbientesRef.current;
+  const initialActiveAmbienteId=String(S0Raw?.activeAmbienteId||initialAmbientes[0]?.id||"principal");
+  const S0=initialAmbientes.find(ambiente=>ambiente.id===initialActiveAmbienteId)||initialAmbientes[0]||M0;
   const isDesignerMode = mode === "designer";
   const isGuestMode = mode !== "designer";
 
@@ -10723,7 +11656,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [salonShape, setSalonShape] = useState(S0?.salonShape ?? M0.salonShape);
   const [salonShapeConfig, setSalonShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [zoom, setZoom]           = useState(1);
-  const [mesas, setMesas]         = useState(()=> (S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas);
+  const [mesas, setMesas]         = useState(()=>{
+    const iniciales=(S0?.mesas&&Array.isArray(S0.mesas)&&S0.mesas.length>0) ? S0.mesas : M0.mesas;
+    return (iniciales||[]).map(mesa=>(mesa.tipo||"round")==="round"
+      ? {...mesa,cap:normalizeRoundTableCapacity(mesa.cap,8)}
+      : mesa
+    );
+  });
   const [elementos, setElementos] = useState(()=> makeElementsEditable((S0?.elementos&&Array.isArray(S0.elementos)) ? S0.elementos : M0.elementos));
   const [estiloDistrib, setEstiloDistrib] = useState(NORMALIZE_DISTRIB(S0?.estiloDistrib ?? M0.estiloDistrib ?? "banquet"));
   const [estiloDecor, setEstiloDecor] = useState(S0?.estiloDecor ?? M0.estiloDecor ?? "romantico_floral");
@@ -10737,6 +11676,88 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [roomSizeOption, setRoomSizeOption] = useState(S0?.roomSizeOption || "recommended");
   const [selectedTableTypeId, setSelectedTableTypeId] = useState(S0?.selectedTableTypeId || "auto");
   const [layoutSummary, setLayoutSummary] = useState(S0?.layoutSummary || null);
+  const [ambientes, setAmbientes] = useState(()=>initialAmbientes);
+  const [activeAmbienteId, setActiveAmbienteId] = useState(initialActiveAmbienteId);
+
+  const currentEnvironmentSnapshot = (id=activeAmbienteId, nombreOverride) => {
+    const currentMeta=ambientes.find(ambiente=>ambiente.id===id);
+    return {
+      id,
+      nombre:nombreOverride||currentMeta?.nombre||"Ambiente",
+      salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,
+      mesas,elementos,selectedGuestCount,roomSizeOption,selectedTableTypeId,selectedSalonType,layoutSummary,
+    };
+  };
+  const environmentsWithCurrent = () => {
+    const current=currentEnvironmentSnapshot();
+    const exists=ambientes.some(ambiente=>ambiente.id===activeAmbienteId);
+    return exists
+      ? ambientes.map(ambiente=>ambiente.id===activeAmbienteId?{...ambiente,...current}:ambiente)
+      : [...ambientes,current];
+  };
+  const loadEnvironmentIntoCanvas = (ambiente) => {
+    if(!ambiente) return;
+    setSalonW(ambiente.salonW||M0.salonW);
+    setSalonH(ambiente.salonH||M0.salonH);
+    setSalonShape(ambiente.salonShape||M0.salonShape);
+    setSalonShapeConfig(normalizeSalonShapeConfig(ambiente.salonShape||M0.salonShape,ambiente.salonShapeConfig));
+    setEstiloDistrib(NORMALIZE_DISTRIB(ambiente.estiloDistrib||M0.estiloDistrib||"banquet"));
+    setEstiloDecor(ambiente.estiloDecor||M0.estiloDecor||"romantico_floral");
+    setMesas((Array.isArray(ambiente.mesas)?ambiente.mesas:[]).map(mesa=>(mesa.tipo||"round")==="round"?{...mesa,cap:normalizeRoundTableCapacity(mesa.cap,8)}:mesa));
+    setElementos(makeElementsEditable(Array.isArray(ambiente.elementos)?ambiente.elementos:[]));
+    setSelectedGuestCount(nearestGuestOption(ambiente.selectedGuestCount||totalInvitadosInicial||150));
+    setRoomSizeOption(ambiente.roomSizeOption||"recommended");
+    setSelectedTableTypeId(ambiente.selectedTableTypeId||"auto");
+    setSelectedSalonType(ambiente.selectedSalonType||"fiesta_latina");
+    setLayoutSummary(ambiente.layoutSummary||null);
+    setSelectedMesa(null);
+    setSelectedElem(null);
+    setTimeout(fitToScreen,140);
+  };
+  const switchEnvironment = (id) => {
+    if(id===activeAmbienteId) return;
+    const updated=environmentsWithCurrent();
+    const target=updated.find(ambiente=>ambiente.id===id);
+    if(!target) return;
+    setAmbientes(updated);
+    setActiveAmbienteId(id);
+    loadEnvironmentIntoCanvas(target);
+    try{sessionStorage.setItem(`ceci_salon_active_environment:${user?.id||"anon"}`,id);}catch(error){}
+  };
+  const addBlankEnvironment = () => {
+    const updated=environmentsWithCurrent();
+    const number=updated.length+1;
+    const id=`ambiente-${Date.now()}`;
+    const room=getRoomSizeForGuests(Math.max(80,Math.ceil((totalInvitadosInicial||150)/Math.max(2,number))));
+    const next={
+      ...M0,
+      id,
+      nombre:`Ambiente ${number}`,
+      salonW:room.w,
+      salonH:room.h,
+      salonShape:"rectangulo",
+      salonShapeConfig:DEFAULT_SALON_SHAPE_CONFIG,
+      estiloDistrib:"banquet",
+      estiloDecor:"romantico_floral",
+      mesas:[],
+      elementos:[],
+      selectedGuestCount:nearestGuestOption(Math.max(50,Math.ceil((totalInvitadosInicial||150)/number))),
+      roomSizeOption:"recommended",
+      selectedTableTypeId:"auto",
+      selectedSalonType:"desde_cero",
+      layoutSummary:null,
+    };
+    const nextList=[...updated,next];
+    setAmbientes(nextList);
+    setActiveAmbienteId(id);
+    loadEnvironmentIntoCanvas(next);
+    showToast(`✓ Se agregó ${next.nombre} en blanco`,"success",3200);
+  };
+  const renameActiveEnvironment = (nombre) => {
+    const clean=String(nombre||"").trim().slice(0,42);
+    if(!clean) return;
+    setAmbientes(list=>list.map(ambiente=>ambiente.id===activeAmbienteId?{...ambiente,nombre:clean}:ambiente));
+  };
 
   // Guardado dual: localStorage (instantáneo, por dispositivo) + Supabase (sincronizado).
   // remoteLoaded evita que el autoguardado con defaults pise el layout remoto
@@ -10744,7 +11765,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const remoteLoaded = useRef(false);
   useEffect(()=>{
     const t=setTimeout(()=>{
-      const layout={salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos,selectedGuestCount,roomSizeOption,selectedTableTypeId,selectedSalonType,layoutSummary};
+      const nextAmbientes=environmentsWithCurrent();
+      const current=nextAmbientes.find(ambiente=>ambiente.id===activeAmbienteId)||currentEnvironmentSnapshot();
+      const layout={...current,ambientes:nextAmbientes,activeAmbienteId};
       if(!isDemoUser(user)){ try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layout)); } catch(err){} }
       if(user&&remoteLoaded.current){
         dataClient(user).from("wedding_data")
@@ -10753,12 +11776,16 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       }
     },800);
     return ()=>clearTimeout(t);
-  },[salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos,selectedGuestCount,roomSizeOption,selectedTableTypeId,selectedSalonType,layoutSummary]);
+  },[salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos,selectedGuestCount,roomSizeOption,selectedTableTypeId,selectedSalonType,layoutSummary,ambientes,activeAmbienteId]);
 
   // Flush al desmontar: el debounce de arriba se cancela al salir de la vista,
   // así que guardamos el estado final de forma inmediata para no perder el último cambio
   const layoutFlushRef = useRef(null);
-  layoutFlushRef.current = {salonW,salonH,salonShape,salonShapeConfig,estiloDistrib,estiloDecor,mesas,elementos,selectedGuestCount,roomSizeOption,selectedTableTypeId,selectedSalonType,layoutSummary};
+  {
+    const nextAmbientes=environmentsWithCurrent();
+    const current=nextAmbientes.find(ambiente=>ambiente.id===activeAmbienteId)||currentEnvironmentSnapshot();
+    layoutFlushRef.current = {...current,ambientes:nextAmbientes,activeAmbienteId};
+  }
   useEffect(()=>()=>{
     if(!isDemoUser(user)){ try { localStorage.setItem(SALON_LS_KEY, JSON.stringify(layoutFlushRef.current)); } catch(err){} }
     if(user&&remoteLoaded.current){
@@ -10776,60 +11803,33 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       try{
         const {data:row}=await dataClient(user).from("wedding_data").select("salon_layout").eq("user_id",user.id).maybeSingle();
         if(!alive) return;
-        const L=convertNormalizedLayoutToMeters(row?.salon_layout, totalInvitadosInicial || 150, tableSize || 10);
+        const L=convertNormalizedLayoutToMeters(row?.salon_layout, totalInvitadosInicial || 150, tableSize || 8);
         if(L){
-          if(L.salonW) setSalonW(L.salonW);
-          if(L.salonH) setSalonH(L.salonH);
-          if(L.salonShape){ setSalonShape(L.salonShape); setSelectedSalonShape(L.salonShape); }
-          if(L.salonShapeConfig){ const cfg=normalizeSalonShapeConfig(L.salonShape||salonShape,L.salonShapeConfig); setSalonShapeConfig(cfg); setSelectedShapeConfig(cfg); }
-          if(L.estiloDistrib) setEstiloDistrib(NORMALIZE_DISTRIB(L.estiloDistrib));
-          if(L.estiloDecor) setEstiloDecor(L.estiloDecor);
-          if(L.selectedGuestCount) setSelectedGuestCount(nearestGuestOption(L.selectedGuestCount));
-          if(L.roomSizeOption) setRoomSizeOption(L.roomSizeOption);
-          if(L.selectedTableTypeId) setSelectedTableTypeId(L.selectedTableTypeId);
-          if(L.selectedSalonType) setSelectedSalonType(L.selectedSalonType);
-          if(L.layoutSummary) setLayoutSummary(L.layoutSummary);
-          if(Array.isArray(L.elementos)) setElementos(makeElementsEditable(L.elementos));
-          if(Array.isArray(L.mesas)&&L.mesas.length>0){
-            // Completar mesas faltantes referidas por invitados
-            const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
-            const ids=new Set(L.mesas.map(m=>m.id));
-            const faltan=[]; for(let i=1;i<=maxM;i++) if(!ids.has(i)) faltan.push(i);
-            const cols=Math.ceil(Math.sqrt(Math.max(maxM,1)+1));
-            setMesas([...L.mesas,...faltan.map(id=>({id,mx:3+((id-1)%cols)*3.5,my:3+Math.floor((id-1)/cols)*3.5,tipo:"round",etiqueta:""}))]);
-          }
-          setTimeout(fitToScreen,150);
+          const remoteList=(Array.isArray(L.ambientes)&&L.ambientes.length?L.ambientes:[{...L,id:"principal",nombre:"Salón principal"}]).map((ambiente,index)=>({
+            ...M0,
+            ...ambiente,
+            id:String(ambiente.id||`ambiente-${index+1}`),
+            nombre:String(ambiente.nombre||ambiente.label||(index===0?"Salón principal":`Ambiente ${index+1}`)),
+            mesas:Array.isArray(ambiente.mesas)?ambiente.mesas:[],
+            elementos:Array.isArray(ambiente.elementos)?ambiente.elementos:[],
+            salonShapeConfig:normalizeSalonShapeConfig(ambiente.salonShape||M0.salonShape,ambiente.salonShapeConfig),
+          }));
+          let preferredId=String(L.activeAmbienteId||remoteList[0]?.id||"principal");
+          try{
+            const savedId=sessionStorage.getItem(`ceci_salon_active_environment:${user?.id||"anon"}`);
+            if(savedId&&remoteList.some(ambiente=>ambiente.id===savedId)) preferredId=savedId;
+          }catch(error){}
+          const target=remoteList.find(ambiente=>ambiente.id===preferredId)||remoteList[0];
+          setAmbientes(remoteList);
+          setActiveAmbienteId(target.id);
+          loadEnvironmentIntoCanvas(target);
+          if(target.salonShape){ setSelectedSalonShape(target.salonShape); }
+          if(target.salonShapeConfig){ setSelectedShapeConfig(normalizeSalonShapeConfig(target.salonShape||salonShape,target.salonShapeConfig)); }
         }
       }catch(err){}
       remoteLoaded.current=true;
     })();
     return ()=>{alive=false;};
-  },[]);
-
-  // Si hay invitados asignados a números de mesa que no existen en el
-  // layout guardado (p. ej. sugeridos desde la Lista), crearlas al entrar
-  useEffect(()=>{
-    const maxM=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
-    if(maxM===0) return;
-    setMesas(ms=>{
-      const ids=new Set(ms.map(m=>m.id));
-      const faltan=[];
-      for(let i=1;i<=maxM;i++) if(!ids.has(i)) faltan.push(i);
-      if(faltan.length===0) return ms;
-      // Etiquetar la mesa nueva según el parentesco dominante de sus invitados
-      const etiquetaDe=(id)=>{
-        const cnt={};
-        (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>{
-          const p=g.parentesco||"Otro";
-          cnt[p]=(cnt[p]||0)+(parseInt(g.cantidadInvitados||1)||1);
-        });
-        const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
-        if(!top||top[0]==="Otro") return "";
-        return top[0]==="Familia directa"?"Familia":top[0];
-      };
-      const cols=Math.ceil(Math.sqrt(maxM+1));
-      return [...ms,...faltan.map(id=>({id,mx:3+((id-1)%cols)*3.5,my:3+Math.floor((id-1)/cols)*3.5,tipo:"round",etiqueta:etiquetaDe(id)}))];
-    });
   },[]);
 
   // ── Selección e interacción ──
@@ -10874,6 +11874,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const [selectedShapeConfig, setSelectedShapeConfig] = useState(()=>normalizeSalonShapeConfig(S0?.salonShape ?? M0.salonShape, S0?.salonShapeConfig));
   const [selectedGuestForAssign, setSelectedGuestForAssign] = useState(null); // mobile/tablet: invitado elegido para sentar con tap
   const isMobile = useIsMobile();
+  const isTabletLayout = useIsMobile(1179);
+  const isWideDesktop = !isTabletLayout;
+  const useThreePanelWorkspace = isWideDesktop && (isGuestMode || isDesignerMode);
   const isTouchAssignment = useIsMobile(1024); // smartphones y tablets: tocar invitado → tocar mesa
   useEffect(()=>{ draggingRef.current = dragging; }, [dragging]);
   useEffect(()=>{ hoveredMesaRef.current = hoveredMesa; }, [hoveredMesa]);
@@ -10898,6 +11901,16 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const SIN_MESA_CANVAS_LIMIT = searchSinMesa ? 80 : 50;
   const sinMesaVisible = sinMesaFilt.slice(0, SIN_MESA_CANVAS_LIMIT);
   const sinMesaHiddenCount = Math.max(0, sinMesaFilt.length - sinMesaVisible.length);
+  const waitingInvitations=(guests||[]).filter(guest=>(!guest.mesa||guest.mesa==="")&&guest.confirmacion!=="no_va").map(guest=>({
+    guestId:guest.id,
+    personIdx:0,
+    nombre:guest.nombre,
+    confirmacion:guest.confirmacion,
+    cantidadInvitados:parseInt(guest.cantidadInvitados||1)||1,
+  }));
+  const waitingInvitationsFiltered=waitingInvitations.filter(item=>!searchSinMesa||item.nombre.toLowerCase().includes(searchSinMesa.toLowerCase()));
+  const waitingInvitationsVisible=waitingInvitationsFiltered.slice(0,searchSinMesa?80:50);
+  const waitingInvitationsHiddenCount=Math.max(0,waitingInvitationsFiltered.length-waitingInvitationsVisible.length);
   const CONF_COLORS = {confirmado:THEME.color.sage,pendiente:THEME.color.gold,no_va:"rgba(26,26,20,.3)"};
   const MESA_R_M    = 0.90;
   const ASIENTO_R_M = 0.28;
@@ -10907,9 +11920,32 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const CH          = salonH*PX;
 
   const circlePts=(n,r)=>Array.from({length:n},(_,i)=>{const a=(i/n)*2*Math.PI-Math.PI/2;return{x:Math.cos(a)*r,y:Math.sin(a)*r};});
-  const mesaPersonas=(id)=>personas.filter(p=>p.mesa===id);
-  const selectedMesaObj = mesas.find(m=>m.id===selectedMesa);
-  const selectedPersonas = selectedMesa?mesaPersonas(selectedMesa):[];
+  const mesaPersonas=(id)=>personas.filter(p=>parseInt(p.mesa)===parseInt(id));
+  const selectedMesaObj = mesas.find(m=>String(m.id)===String(selectedMesa));
+  const selectedPersonas = selectedMesa!==null?mesaPersonas(selectedMesa):[];
+
+  const tryAssignGuestToMesa=(guestId,mesaId)=>{
+    const invitacion=(guests||[]).find(g=>g.id===guestId);
+    const mesa=mesas.find(item=>parseInt(item.id)===parseInt(mesaId));
+    if(!invitacion||!mesa||!onAssign) return false;
+    const actualMesa=parseInt(invitacion.mesa)||0;
+    if(actualMesa===parseInt(mesaId)) return true;
+    const cantidad=parseInt(invitacion.cantidadInvitados||1)||1;
+    const ocupadas=mesaPersonas(parseInt(mesaId))
+      .filter(persona=>persona.guestId!==guestId)
+      .length;
+    const capacidad=(mesa.tipo||"round")==="round"
+      ? normalizeRoundTableCapacity(mesa.cap,8)
+      : (parseInt(mesa.cap)||8);
+    if(ocupadas+cantidad>capacidad){
+      if(typeof showToast==="function"){
+        showToast(`Mesa ${mesaId} completa: ${ocupadas}/${capacidad}. Mové otra invitación al Banco de espera o aumentá la mesa a 10 o 12.`,"error",4200);
+      }
+      return false;
+    }
+    onAssign(guestId,mesaId);
+    return true;
+  };
 
   const selectGuestForTapAssign=(p)=>{
     if(!p) return;
@@ -10921,7 +11957,8 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
   const assignSelectedGuestToMesa=(mesaId)=>{
     if(!selectedGuestForAssign) return false;
-    onAssign(selectedGuestForAssign.guestId,mesaId);
+    const asignado=tryAssignGuestToMesa(selectedGuestForAssign.guestId,mesaId);
+    if(!asignado) return false;
     if(typeof showToast==="function") showToast(`✓ ${selectedGuestForAssign.nombre} asignado/a a Mesa ${mesaId}`,"success",2200);
     setSelectedGuestForAssign(null);
     setSelectedMesa(mesaId);
@@ -11348,7 +12385,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
   const elementCenter=(el)=>({x:(el.mx||0)+(el.ew||3)/2,y:(el.my||0)+(el.eh||2)/2});
   const nearestEl=(els,tipo)=>els.find(e=>e.tipo===tipo);
   const generateTablesSmart=(placed, shape, W, H, cfg, presetId)=>{
-    const needed=Math.max(6,Math.min(16,Math.ceil((totalInvWarn||90)/(tableSize||10))||10));
+    const needed=Math.max(6,Math.min(40,Math.ceil((totalInvWarn||90)/(tableSize||8))||12));
     const modern=presetId==="moderno_minimalista";
     const imperial=presetId==="rectangular" && estiloDecor==="minimalista";
     const tipoMesa=modern||imperial?"rect_v":"round";
@@ -11742,7 +12779,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       const clientX=e?.changedTouches?.[0]?.clientX??e?.clientX;
       const clientY=e?.changedTouches?.[0]?.clientY??e?.clientY;
       if(clientX!==undefined&&clientY!==undefined) drop=mesaIdAtClient(clientX,clientY,!!e?.changedTouches);
-      if(drop) onAssign(dragging.id,drop);
+      if(drop) tryAssignGuestToMesa(dragging.id,drop);
     }
     draggingRef.current=null;
     setDragging(null);setHoveredMesa(null);
@@ -11763,7 +12800,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
       const p=ev.changedTouches?.[0]||ev;
       let drop=hoveredMesaRef.current;
       if(p?.clientX!==undefined&&p?.clientY!==undefined) drop=mesaIdAtClient(p.clientX,p.clientY,!!ev.changedTouches);
-      if(drop&&onAssign) onAssign(d.id,drop);
+      if(drop) tryAssignGuestToMesa(d.id,drop);
       draggingRef.current=null;
       setDragging(null);
       setHoveredMesa(null);
@@ -11782,9 +12819,73 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     };
   },[dragging?.type,mesas,zoom,salonW,salonH,onAssign]);
 
+  const maxMesaAsignadaSalon=Math.max(0,...(guests||[]).filter(g=>g.mesa).map(g=>parseInt(g.mesa)||0));
+  const ambientesConActual=environmentsWithCurrent();
+  const idsMesasGlobales=new Set(
+    ambientesConActual.flatMap(ambiente=>Array.isArray(ambiente.mesas)?ambiente.mesas:[])
+      .map(mesa=>parseInt(mesa.id))
+      .filter(id=>Number.isFinite(id)&&id>0)
+  );
+  const mesasPendientesSalon=Array.from({length:maxMesaAsignadaSalon},(_,index)=>index+1).filter(id=>!idsMesasGlobales.has(id));
+  const mesasRequeridasCreadasSalon=Math.max(0,maxMesaAsignadaSalon-mesasPendientesSalon.length);
+
+  const getPosicionLibreSalon=(mesasActuales,totalObjetivo)=>{
+    const margen=1.5;
+    const separacion=2.8;
+    const cols=Math.max(1,Math.floor((Math.max(5,salonW)-margen*2)/separacion)+1);
+    const filas=Math.max(1,Math.floor((Math.max(5,salonH)-margen*2)/separacion)+1);
+    const ocupada=(mx,my)=>(mesasActuales||[]).some(mesa=>Math.hypot((parseFloat(mesa.mx)||0)-mx,(parseFloat(mesa.my)||0)-my)<1.55);
+    const maxSlots=Math.max(cols*filas,totalObjetivo||0,1);
+    for(let slot=0;slot<maxSlots;slot++){
+      const mx=margen+(slot%cols)*separacion;
+      const my=margen+Math.floor(slot/cols)*separacion;
+      if(my<=salonH-margen&&!ocupada(mx,my)) return {mx,my};
+    }
+    const slot=(mesasActuales||[]).length;
+    return {mx:margen+(slot%cols)*separacion,my:margen+Math.floor(slot/cols)*separacion};
+  };
+  const etiquetaMesaSegunInvitados=(id)=>{
+    const conteo={};
+    (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>{
+      const parentesco=g.parentesco||"Otro";
+      conteo[parentesco]=(conteo[parentesco]||0)+(parseInt(g.cantidadInvitados||1)||1);
+    });
+    const principal=Object.entries(conteo).sort((a,b)=>b[1]-a[1])[0];
+    if(!principal||principal[0]==="Otro") return "";
+    return principal[0]==="Familia directa"?"Familia":principal[0];
+  };
+  const agregarMesasPendientesSalon=(cantidad=1)=>{
+    const idsAAgregar=mesasPendientesSalon.slice(0,Math.max(1,cantidad));
+    if(idsAAgregar.length===0){
+      showToast("No hay mesas pendientes para agregar al salón","info");
+      return;
+    }
+    setMesas(ms=>{
+      let nuevas=[...ms];
+      const totalObjetivo=Math.max(maxMesaAsignadaSalon,nuevas.length+idsAAgregar.length);
+      idsAAgregar.forEach(id=>{
+        if(nuevas.some(mesa=>parseInt(mesa.id)===id)) return;
+        const posicion=getPosicionLibreSalon(nuevas,totalObjetivo);
+        nuevas.push({id,...posicion,tipo:"round",etiqueta:etiquetaMesaSegunInvitados(id),cap:tableSize});
+      });
+      return nuevas.sort((a,b)=>(parseInt(a.id)||0)-(parseInt(b.id)||0));
+    });
+    const texto=idsAAgregar.length===1
+      ? `✓ Se agregó la mesa ${idsAAgregar[0]} al canvas`
+      : `✓ Se agregaron ${idsAAgregar.length} mesas al canvas`;
+    showToast(texto,"success",3500);
+    setTimeout(fitToScreen,120);
+  };
   const addMesa=()=>{
-    const newId=Math.max(0,...mesas.map(m=>m.id))+1;
-    setMesas(ms=>[...ms,{id:newId,mx:salonW/2,my:salonH/2,tipo:"round",etiqueta:""}]);
+    if(mesasPendientesSalon.length>0){
+      agregarMesasPendientesSalon(1);
+      return;
+    }
+    const newId=Math.max(0,...idsMesasGlobales,maxMesaAsignadaSalon)+1;
+    const posicion=getPosicionLibreSalon(mesas,newId);
+    setMesas(ms=>[...ms,{id:newId,...posicion,tipo:"round",etiqueta:"",cap:tableSize}]);
+    showToast(`✓ Se agregó la mesa ${newId} al canvas`,"success",3000);
+    setTimeout(fitToScreen,120);
   };
   const removeMesa=(id)=>{
     (guests||[]).filter(g=>parseInt(g.mesa)===id).forEach(g=>onRemove(g.id));
@@ -12131,7 +13232,9 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
   // ── Render mesa en SVG ──
   // Capacidad de una mesa: la propia de su tipo, o la global si no tiene
-  const capDe=(m)=>m?.cap||tableSize;
+  const capDe=(m)=>(m?.tipo||"round")==="round"
+    ? normalizeRoundTableCapacity(m?.cap,8)
+    : (parseInt(m?.cap)||8);
 
   // Medidas derivadas de la capacidad: 0.6 m de borde por cubierto,
   // cabeceras incluidas en rectangulares e imperiales.
@@ -12157,12 +13260,56 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     const t=mesa.tipo||"round";
     const w=Math.max(0.6,Math.min(25,+ew||0.6));
     const h=t==="round"||t==="square"?w:Math.max(0.6,Math.min(25,+eh||0.6));
-    updateMesa(mesa.id,{ew:w,eh:h,cap:capPorMedidas(t,w,h)});
+    const capacidad=t==="round"
+      ? normalizeRoundTableCapacity(capPorMedidas(t,w,h),8)
+      : capPorMedidas(t,w,h);
+    updateMesa(mesa.id,{ew:w,eh:h,cap:capacidad});
   };
   const setCapacidadA=(mesa,n)=>{
     if(!mesa) return;
-    updateMesa(mesa.id,{cap:n,...medidasPorCap(mesa.tipo||"round",n)});
+    const tipo=mesa.tipo||"round";
+    const capacidad=tipo==="round"?normalizeRoundTableCapacity(n,8):n;
+    updateMesa(mesa.id,{cap:capacidad,...medidasPorCap(tipo,capacidad)});
   };
+  const vaciarMesa=(mesaId)=>{
+    if(!onAssignMany) return;
+    const guestIds=[...new Set(mesaPersonas(mesaId).map(persona=>persona.guestId))];
+    if(guestIds.length===0){
+      showToast(`La mesa ${mesaId} ya está vacía`,"info");
+      return;
+    }
+    if(typeof window!=="undefined"&&!window.confirm(`¿Mover todas las invitaciones de la mesa ${mesaId} al Banco de espera?`)) return;
+    onAssignMany(guestIds.map(guestId=>({guestId,mesa:""})));
+    setSelectedGuestForAssign(null);
+    showToast(`✓ Mesa ${mesaId} vaciada. Las invitaciones quedaron en el Banco de espera.`,"success",3600);
+  };
+
+  const vaciarTodasLasMesas=()=>{
+    if(!onAssignMany) return;
+    const asignados=(guests||[]).filter(invitado=>parseInt(invitado.mesa));
+    if(asignados.length===0){
+      showToast("Todas las invitaciones ya están en el Banco de espera","info");
+      return;
+    }
+    if(typeof window!=="undefined"&&!window.confirm(`¿Vaciar todas las mesas? ${asignados.length} invitaciones volverán al Banco de espera.`)) return;
+    onAssignMany(asignados.map(invitado=>({guestId:invitado.id,mesa:""})));
+    setSelectedMesa(null);
+    setSelectedGuestForAssign(null);
+    if(isMobile) setShowSheet(false);
+    showToast("✓ Se vaciaron todas las mesas. Podés volver a ubicar las invitaciones desde el Banco de espera.","success",4200);
+  };
+
+  const usarOchoEnTodasLasRedondas=()=>{
+    const redondas=mesas.filter(mesa=>(mesa.tipo||"round")==="round");
+    if(redondas.length===0) return;
+    if(typeof window!=="undefined"&&!window.confirm(`¿Restablecer la capacidad de las ${redondas.length} mesas redondas a 8 personas? Las invitaciones no se eliminan; las mesas que queden excedidas se marcarán para revisar.`)) return;
+    setMesas(actuales=>actuales.map(mesa=>(mesa.tipo||"round")==="round"
+      ? {...mesa,cap:8,...medidasPorCap("round",8)}
+      : mesa
+    ));
+    showToast(`✓ ${redondas.length} mesas redondas configuradas para 8 personas`,"success",3200);
+  };
+
   const medidaDe=(m)=>{
     if(!m) return "";
     const t=m.tipo||"round";
@@ -12392,7 +13539,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
   const renderMesaSVG=(mesa)=>{
     const ps=mesaPersonas(mesa.id);
-    const isSelected=selectedMesa===mesa.id,isHovered=hoveredMesa===mesa.id;
+    const isSelected=String(selectedMesa)===String(mesa.id),isHovered=String(hoveredMesa)===String(mesa.id);
     const tipoM=mesa.tipo||"round";
     const capM=capDe(mesa);
     const over=ps.length>capM;
@@ -12424,7 +13571,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           <filter id={`shadow-table-${gid}`} x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000" floodOpacity=".22"/></filter>
         </defs>
         <circle cx={cx+2} cy={cy+4} r={R+2} fill="rgba(0,0,0,.16)"/>
-        {pts.map((pt,i)=>{const p=ps[i];const a=Math.atan2(pt.y,pt.x)*180/Math.PI;return<g key={i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
+        {pts.map((pt,i)=>{const p=ps[i];const a=Math.atan2(pt.y,pt.x)*180/Math.PI;return<g key={i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment){selectGuestForTapAssign(p);return;} setSelectedMesa(mesa.id); setSelectedElem(null);}:undefined}>
           {p&&<circle cx={cx+pt.x} cy={cy+pt.y} r={Math.max(AR+6,18)} fill="transparent"/>}
           <rect x={cx+pt.x-AR*.85} y={cy+pt.y-AR*.85} width={AR*1.7} height={AR*1.7} rx={AR*.42} fill={visual.chair} stroke={chairStroke} strokeWidth="1.1" transform={`rotate(${a+90},${cx+pt.x},${cy+pt.y})`}/>
           <circle cx={cx+pt.x} cy={cy+pt.y} r={AR*.64} fill={seatFill(p)} stroke={p?"rgba(255,255,255,.85)":chairStroke} strokeWidth="1.5"/>
@@ -12466,7 +13613,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     const gid=safeSvgId(`mesa_rect_${mesa.id}`);
     return{w:wD,h:hD,angle,jsx:<svg width={wD} height={hD} style={{overflow:"visible",display:"block"}}>
       <defs><filter id={`shadow-rect-${gid}`} x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000" floodOpacity=".24"/></filter></defs>
-      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={'s'+i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment) selectGuestForTapAssign(p);}:undefined}>
+      {seatPts.map((pt,i)=>{const p=ps[i];return<g key={'s'+i} style={{cursor:p?"grab":"default",touchAction:"none"}} onMouseDown={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onTouchStart={p?e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}:undefined} onClick={p?e=>{e.stopPropagation(); if(dragMoved.current){dragMoved.current=false;return;} if(isTouchAssignment){selectGuestForTapAssign(p);return;} setSelectedMesa(mesa.id); setSelectedElem(null);}:undefined}>
         {p&&<circle cx={pt.x} cy={pt.y} r={Math.max(AR+5,16)} fill="transparent"/>}
         <rect x={pt.x-AR*.75} y={pt.y-AR*.75} width={AR*1.5} height={AR*1.5} rx={AR*.35} fill={visual.chair} stroke={chairStroke} strokeWidth="1.1" transform={`rotate(${pt.rot},${pt.x},${pt.y})`}/>
         <circle cx={pt.x} cy={pt.y} r={AR*.58} fill={seatFill(p)} stroke={p?"rgba(255,255,255,.85)":chairStroke} strokeWidth="1.4"/>
@@ -12487,8 +13634,50 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
 
   // Estilo de los controles flotantes sobre el canvas
   const fabStyle={width:THEME.tap.min,height:THEME.tap.min,borderRadius:"50%",border:"1px solid rgba(245,239,224,.25)",background:"rgba(26,26,20,.55)",color:THEME.color.cream,fontSize:"1.25rem",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",padding:0,lineHeight:1};
+  const totalPeopleForEnvironments=budgetInvitados>0?budgetInvitados:(guests||[]).filter(guest=>guest.confirmacion!=="no_va").reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0);
+  const comfortableCapacityAll=environmentsWithCurrent().reduce((sum,ambiente)=>sum+Math.max(20,Math.floor((parseFloat(ambiente.salonW)||20)*(parseFloat(ambiente.salonH)||15)/1.8)),0);
+  const needsAnotherEnvironment=totalPeopleForEnvironments>comfortableCapacityAll;
+  const activeEnvironmentName=ambientes.find(ambiente=>ambiente.id===activeAmbienteId)?.nombre||"Ambiente";
 
   return <div style={{display:"flex",flexDirection:"column",gap:0}}>
+
+    <section aria-label="Ambientes del evento" style={{background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.15)",borderRadius:16,padding:"12px",marginBottom:10,boxShadow:"0 5px 18px rgba(63,50,31,.05)"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10,flexWrap:"wrap",marginBottom:9}}>
+        <div>
+          <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(74,94,58,.58)"}}>Ambientes del evento</div>
+          <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.74rem)",lineHeight:1.4,color:"rgba(26,26,20,.5)",marginTop:3}}>Cada ambiente tiene su propio canvas. Las mesas conservan una numeración única en todo el evento.</div>
+        </div>
+        <button type="button" onClick={addBlankEnvironment} style={{border:"1px solid rgba(74,94,58,.26)",borderRadius:999,padding:"8px 12px",background:"rgba(74,94,58,.08)",fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:800,color:THEME.color.sage,cursor:"pointer",whiteSpace:"nowrap"}}>+ Agregar ambiente</button>
+      </div>
+      {isMobile
+        ?<label style={{display:"grid",gap:5,fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.52)"}}>Ambiente activo
+          <select name="salon-active-environment" value={activeAmbienteId} onChange={event=>switchEnvironment(event.target.value)} style={{width:"100%",minHeight:46,border:"1px solid rgba(74,94,58,.2)",borderRadius:11,padding:"10px 12px",background:"white",fontFamily:THEME.font.body,fontSize:".9rem",fontWeight:700,color:THEME.color.sage}}>
+            {ambientes.map(ambiente=><option key={ambiente.id} value={ambiente.id}>{ambiente.nombre} · {(ambiente.id===activeAmbienteId?mesas:(ambiente.mesas||[])).length} mesas</option>)}
+          </select>
+        </label>
+        :<div style={{display:"flex",gap:7,overflowX:"auto",paddingBottom:3,WebkitOverflowScrolling:"touch"}}>
+          {ambientes.map(ambiente=>{
+            const isActive=ambiente.id===activeAmbienteId;
+            const environmentTables=isActive?mesas:(ambiente.mesas||[]);
+            const tableCount=environmentTables.length;
+            const tableIds=new Set(environmentTables.map(table=>String(table.id)));
+            const peopleCount=(guests||[]).filter(guest=>guest.confirmacion!=="no_va"&&tableIds.has(String(guest.mesa||""))).reduce((sum,guest)=>sum+(parseInt(guest.cantidadInvitados||1)||1),0);
+            return <button key={ambiente.id} type="button" onClick={()=>switchEnvironment(ambiente.id)} style={{flex:"0 0 auto",minWidth:154,textAlign:"left",border:isActive?"1.5px solid rgba(74,94,58,.62)":"1px solid rgba(74,94,58,.14)",borderRadius:12,padding:"9px 11px",background:isActive?"rgba(74,94,58,.09)":"#FFFDF8",cursor:"pointer",boxShadow:isActive?"0 5px 16px rgba(74,94,58,.09)":"none"}}>
+              <strong style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:isActive?THEME.color.sage:THEME.color.ink,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ambiente.nombre}</strong>
+              <span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(10px,.66rem)",color:"rgba(26,26,20,.44)",marginTop:2}}>{peopleCount} personas · {tableCount} {tableCount===1?"mesa":"mesas"}</span>
+              <span style={{display:"block",fontFamily:THEME.font.body,fontSize:"max(10px,.64rem)",color:"rgba(26,26,20,.34)",marginTop:1}}>{ambiente.salonW||20}×{ambiente.salonH||15}m</span>
+            </button>;
+          })}
+        </div>}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginTop:9,flexWrap:"wrap"}}>
+        <label style={{fontFamily:THEME.font.body,fontSize:"max(11px,.72rem)",color:"rgba(26,26,20,.5)"}}>Nombre del ambiente</label>
+        <input name="salon-environment-name" value={activeEnvironmentName} onChange={event=>renameActiveEnvironment(event.target.value)} maxLength={42} style={{flex:"1 1 180px",minWidth:0,border:"1px solid rgba(74,94,58,.18)",borderRadius:9,padding:"8px 10px",background:"white",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:THEME.color.ink}}/>
+      </div>
+      {needsAnotherEnvironment&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",marginTop:10,background:"rgba(201,169,110,.12)",border:"1px solid rgba(201,169,110,.3)",borderRadius:12,padding:"10px 11px"}}>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(11px,.74rem)",lineHeight:1.45,color:"rgba(26,26,20,.62)"}}><strong style={{color:THEME.color.ink}}>El espacio puede quedar demasiado cargado.</strong> Hay {totalPeopleForEnvironments} personas para una capacidad cómoda estimada de {comfortableCapacityAll} entre los ambientes actuales.</div>
+        <button type="button" onClick={addBlankEnvironment} style={{border:0,borderRadius:999,padding:"8px 12px",background:THEME.color.sage,color:THEME.color.cream,fontFamily:THEME.font.body,fontSize:"max(11px,.74rem)",fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Agregar otro ambiente</button>
+      </div>}
+    </section>
 
     {isDesignerMode&&<div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.22)",borderRadius:16,padding:"12px",marginBottom:10,boxShadow:"0 6px 22px rgba(74,94,58,.06)"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:10,flexWrap:"wrap"}}>
@@ -12678,10 +13867,24 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     {salonChico&&<div style={{display:"flex",alignItems:"center",gap:8,background:salonMuyChico?"rgba(200,60,60,.07)":"rgba(201,169,110,.07)",border:`1px solid ${salonMuyChico?"rgba(200,60,60,.3)":"rgba(201,169,110,.3)"}`,borderRadius:8,padding:"7px 12px",marginBottom:8}}>
       <span style={{fontSize:".9rem",flexShrink:0}}>{salonMuyChico?"🔴":"⚠️"}</span>
       <span style={{fontFamily:THEME.font.body,fontSize:".78rem",color:salonMuyChico?"rgba(200,60,60,.8)":"rgba(139,107,40,.85)"}}>
-        {salonMuyChico?"El salón es muy chico":"El salón podría quedar justo"} · {totalInvWarn} inv · capacidad recomendada ~{capacidadMax} (1.5m²/persona)
+        {salonMuyChico?"Este ambiente está demasiado cargado":"Este ambiente está quedando ajustado"} · {totalInvWarn} personas · capacidad cómoda estimada ~{capacidadMax}. Podés ampliar sus medidas o distribuir mesas en otro ambiente.
       </span>
     </div>}
 
+
+    {isGuestMode&&mesasPendientesSalon.length>0&&<div style={{background:"rgba(201,169,110,.10)",border:"1px solid rgba(201,169,110,.34)",borderRadius:12,padding:"11px 12px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+      <div style={{minWidth:0,flex:"1 1 260px"}}>
+        <div style={{fontFamily:THEME.font.display,fontSize:"1rem",fontWeight:700,color:THEME.color.ink}}>Faltan {mesasPendientesSalon.length} {mesasPendientesSalon.length===1?"mesa":"mesas"} en el canvas</div>
+        <div style={{fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",color:"rgba(26,26,20,.58)",lineHeight:1.45,marginTop:3}}>
+          Tus invitados están asignados hasta la mesa {maxMesaAsignadaSalon}. Ya insertaste {mesasRequeridasCreadasSalon} de {maxMesaAsignadaSalon}. Agregalas de a una o en grupos y acomodalas manualmente.
+        </div>
+      </div>
+      <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
+        <button onClick={()=>agregarMesasPendientesSalon(1)} style={{background:THEME.color.sage,color:THEME.color.cream,border:"none",borderRadius:THEME.radius.pill,padding:"10px 14px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:800,cursor:"pointer"}}>+ Mesa {mesasPendientesSalon[0]}</button>
+        {mesasPendientesSalon.length>1&&<button onClick={()=>agregarMesasPendientesSalon(Math.min(5,mesasPendientesSalon.length))} style={{background:"white",color:THEME.color.sage,border:"1px solid rgba(74,94,58,.22)",borderRadius:THEME.radius.pill,padding:"9px 13px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.78rem)",fontWeight:750,cursor:"pointer"}}>Agregar {Math.min(5,mesasPendientesSalon.length)}</button>}
+        {mesasPendientesSalon.length>5&&<button onClick={()=>agregarMesasPendientesSalon(mesasPendientesSalon.length)} style={{background:"transparent",color:"rgba(74,94,58,.78)",border:"1px solid rgba(74,94,58,.18)",borderRadius:THEME.radius.pill,padding:"9px 13px",minHeight:40,fontFamily:THEME.font.body,fontSize:"max(12px,.76rem)",fontWeight:700,cursor:"pointer"}}>Agregar todas</button>}
+      </div>
+    </div>}
 
     {isDesignerMode&&layoutSummary&&<div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(4,minmax(0,1fr))",gap:8,background:"rgba(251,247,239,.96)",border:"1px solid rgba(74,94,58,.18)",borderRadius:12,padding:"10px 12px",marginBottom:8,boxShadow:"0 4px 14px rgba(0,0,0,.04)"}}>
       <div style={{gridColumn:isMobile?"auto":"span 2",fontFamily:THEME.font.body,fontSize:"max(12px,.8rem)",color:"rgba(26,26,20,.72)",lineHeight:1.35}}><strong style={{color:THEME.color.sage}}>Preset:</strong> {layoutSummary.preset}<br/><span style={{color:"rgba(26,26,20,.48)"}}>{layoutSummary.salon} · {layoutSummary.medidas} · {layoutSummary.area} m²</span></div>
@@ -12706,13 +13909,45 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
     </div>}
 
     {/* ── LAYOUT PRINCIPAL: Canvas + Panel ── */}
-    <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"flex-start",width:"100%"}}>
+    <div style={{display:"grid",gridTemplateColumns:useThreePanelWorkspace?"minmax(230px,280px) minmax(0,1fr) minmax(280px,320px)":isMobile?"1fr":"minmax(0,1fr) 320px",gap:12,alignItems:"start",width:"100%",minWidth:0}}>
+
+      {useThreePanelWorkspace&&<aside className="salon-v7-left-bank" aria-label="Banco de espera" style={{gridColumn:"1",background:THEME.color.cream2,border:"1px solid rgba(201,169,110,.24)",borderRadius:16,padding:"12px",boxShadow:"0 8px 24px rgba(63,50,31,.07)"}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:9}}>
+          <div>
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(139,107,40,.82)"}}>Banco de espera</div>
+            <div style={{fontFamily:THEME.font.display,fontSize:"1.08rem",fontWeight:700,color:THEME.color.ink,marginTop:3}}>{waitingInvitations.length} {waitingInvitations.length===1?"invitación":"invitaciones"} · {sinMesa.length} personas</div>
+          </div>
+          <span style={{fontFamily:THEME.font.body,fontSize:".68rem",color:"rgba(26,26,20,.42)",textAlign:"right",lineHeight:1.35}}>Arrastrá al plano<br/>o tocá y elegí mesa</span>
+        </div>
+        {isGuestMode&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:9}}>
+          <button onClick={vaciarTodasLasMesas} style={{background:"rgba(200,60,60,.055)",border:"1px solid rgba(200,60,60,.18)",borderRadius:9,padding:"8px",fontFamily:THEME.font.body,fontSize:".7rem",fontWeight:750,color:"rgba(170,55,55,.76)",cursor:"pointer"}}>Vaciar mesas</button>
+          <button onClick={usarOchoEnTodasLasRedondas} style={{background:"rgba(74,94,58,.065)",border:"1px solid rgba(74,94,58,.18)",borderRadius:9,padding:"8px",fontFamily:THEME.font.body,fontSize:".7rem",fontWeight:750,color:THEME.color.sage,cursor:"pointer"}}>Capacidad global · 8</button>
+        </div>}
+        <div style={{position:"relative",marginBottom:8}}>
+          <input name="salon-waiting-search-desktop" value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar invitación..." style={{width:"100%",boxSizing:"border-box",border:"1px solid rgba(201,169,110,.24)",borderRadius:999,padding:"9px 30px 9px 30px",background:"rgba(201,169,110,.055)",fontFamily:THEME.font.body,fontSize:".78rem",outline:"none"}}/>
+          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:".78rem",opacity:.42}}>🔍</span>
+          {searchSinMesa&&<button onClick={()=>setSearchSinMesa("")} aria-label="Limpiar búsqueda" style={{position:"absolute",right:7,top:"50%",transform:"translateY(-50%)",border:0,background:"transparent",cursor:"pointer",color:"rgba(26,26,20,.42)"}}>×</button>}
+        </div>
+        {sinMesa.length===0
+          ?<div style={{padding:"18px 10px",textAlign:"center",fontFamily:THEME.font.body,fontSize:".78rem",color:"rgba(74,94,58,.58)",background:"rgba(74,94,58,.045)",borderRadius:11}}>✓ Todos los invitados están ubicados</div>
+          :<div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:"calc(100vh - 250px)",overflowY:"auto",paddingRight:2}}>
+            {waitingInvitationsVisible.map(p=>{
+              const selected=selectedGuestForAssign?.guestId===p.guestId;
+              return <button key={`${p.guestId}-${p.personIdx}`} type="button" onMouseDown={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}} onTouchStart={e=>{e.stopPropagation();startDragGuest(e,p.guestId);}} onClick={e=>{e.stopPropagation();if(dragMoved.current){dragMoved.current=false;return;}selectGuestForTapAssign(p);}} style={{display:"grid",gridTemplateColumns:"30px minmax(0,1fr) auto",gap:8,alignItems:"center",width:"100%",textAlign:"left",border:selected?"1.5px solid rgba(74,94,58,.48)":"1px solid rgba(201,169,110,.16)",borderRadius:10,padding:"8px",background:selected?"rgba(74,94,58,.11)":"rgba(201,169,110,.045)",cursor:"grab"}}>
+                <span style={{width:30,height:30,borderRadius:"50%",display:"grid",placeItems:"center",background:CONF_COLORS[p.confirmacion]||"#999",color:"white",fontFamily:THEME.font.body,fontSize:".72rem",fontWeight:800}}>{p.nombre.charAt(0)}</span>
+                <span style={{minWidth:0}}><strong style={{display:"block",fontFamily:THEME.font.body,fontSize:".78rem",color:THEME.color.ink,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.nombre}</strong><span style={{display:"block",fontFamily:THEME.font.body,fontSize:".66rem",color:"rgba(26,26,20,.42)",marginTop:2}}>{p.cantidadInvitados} {p.cantidadInvitados===1?"persona":"personas"} · elegí una mesa con lugar</span></span>
+                <span style={{fontFamily:THEME.font.label,fontSize:".58rem",letterSpacing:".08em",textTransform:"uppercase",color:selected?THEME.color.sage:"rgba(26,26,20,.3)"}}>{selected?"Mesa?":"⠿"}</span>
+              </button>;
+            })}
+            {waitingInvitationsHiddenCount>0&&<div style={{fontFamily:THEME.font.body,fontSize:".7rem",color:"rgba(26,26,20,.42)",padding:"7px 3px"}}>Mostrando {waitingInvitationsVisible.length} de {waitingInvitationsFiltered.length}. Buscá por nombre para encontrar más rápido.</div>}
+          </div>}
+      </aside>}
 
       {/* ── CANVAS ── */}
-      <div style={{flex:"1 1 300px",minWidth:0}}>
+      <div style={{minWidth:0,gridColumn:useThreePanelWorkspace?"2":"1"}}>
         <div style={{position:"relative"}}>
         <div ref={viewportRef} className="canvas-viewport"
-          style={{width:"100%",height:isMobile?"clamp(320px,55vh,480px)":"clamp(540px,78vh,1040px)",background:isGuestMode?"#EDEDED":"repeating-linear-gradient(45deg,#7C9B5A 0,#7C9B5A 16px,#759354 16px,#759354 32px)",borderRadius:12,overflow:"auto",position:"relative",cursor:dragging?.type==="guest"?"crosshair":"default",touchAction:"pan-x pan-y",WebkitUserSelect:"none",userSelect:"none",WebkitOverflowScrolling:"touch"}}
+          style={{width:"100%",height:isMobile?"clamp(360px,58vh,520px)":isTabletLayout?"clamp(520px,72vh,820px)":"clamp(680px,78vh,1160px)",background:isGuestMode?"#EDEDED":"repeating-linear-gradient(45deg,#7C9B5A 0,#7C9B5A 16px,#759354 16px,#759354 32px)",borderRadius:12,overflow:"auto",position:"relative",cursor:dragging?.type==="guest"?"crosshair":"default",touchAction:"pan-x pan-y",WebkitUserSelect:"none",userSelect:"none",WebkitOverflowScrolling:"touch"}}
           onMouseDown={e=>{
             const tgt=e.target;
             const isBg=tgt===viewportRef.current||tgt===canvasRef.current||tgt.tagName==="svg"||tgt.tagName==="rect"||tgt.tagName==="path";
@@ -12796,13 +14031,12 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                 e.stopPropagation();
                 if(dragMoved.current){
                   dragMoved.current=false;
-                  return;
                 }
-                if(isTouchAssignment && selectedGuestForAssign){
+                if(selectedGuestForAssign){
                   assignSelectedGuestToMesa(mesa.id);
                   return;
                 }
-                setSelectedMesa(isSelected?null:mesa.id);
+                setSelectedMesa(prev=>String(prev)===String(mesa.id)?null:mesa.id);
                 setSelectedElem(null);
                 if(isMobile) setShowSheet(true);
               }}
@@ -12852,8 +14086,13 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
         </div>
       </div>
 
+      {isMobile&&<div className="salon-v7-mobile-dock" aria-label="Controles rápidos del salón">
+        <button type="button" onClick={()=>document.getElementById("salon-waiting-bank")?.scrollIntoView({behavior:"smooth",block:"start"})} style={{border:"1px solid rgba(201,169,110,.3)",borderRadius:12,background:"rgba(201,169,110,.09)",fontFamily:THEME.font.body,fontSize:".78rem",fontWeight:800,color:"rgba(120,88,30,.86)",cursor:"pointer"}}>Banco de espera · {waitingInvitations.length}</button>
+        <button type="button" onClick={()=>selectedMesaObj?setShowSheet(true):showToast("Tocá una mesa para editarla","info")} style={{border:"1px solid rgba(74,94,58,.24)",borderRadius:12,background:selectedMesaObj?"rgba(74,94,58,.1)":"rgba(74,94,58,.04)",fontFamily:THEME.font.body,fontSize:".78rem",fontWeight:800,color:THEME.color.sage,cursor:"pointer"}}>{selectedMesaObj?`Mesa ${selectedMesa} · ${selectedPersonas.length}/${capDe(selectedMesaObj)}`:"Elegir mesa"}</button>
+      </div>}
+
       {/* ── PANEL LATERAL ── (desktop) */}
-      <div style={{flex:"1 1 200px",minWidth:0,maxWidth:320,display:"flex",flexDirection:"column",gap:8}}>
+      <div className="salon-v7-right-panel" style={{gridColumn:useThreePanelWorkspace?"3":isMobile?"1":"2",maxWidth:useThreePanelWorkspace?"none":320,minWidth:0,display:"flex",flexDirection:"column",gap:8,alignSelf:"start",position:useThreePanelWorkspace?"sticky":"static",top:useThreePanelWorkspace?8:"auto",maxHeight:useThreePanelWorkspace?"calc(100vh - 120px)":"none",overflowY:useThreePanelWorkspace?"auto":"visible",paddingRight:useThreePanelWorkspace?2:0}}>
 
         {/* Elemento seleccionado — medidas tipeables (desktop) */}
         {isDesignerMode&&!isMobile&&!selectedMesaObj&&selectedElem&&(()=>{
@@ -12902,12 +14141,26 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           </div>;
         })()}
 
+        {!useThreePanelWorkspace&&<>
         {/* Lista sin mesa */}
-        <div style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:"0 0 auto",position:"sticky",top:0,zIndex:12,boxShadow:"0 10px 22px rgba(251,247,239,.92)"}}>
+        <div id="salon-waiting-bank" style={{background:THEME.color.cream2,border:"0.5px solid rgba(201,169,110,.2)",borderRadius:12,padding:"10px",flex:"0 0 auto",position:"sticky",top:0,zIndex:12,boxShadow:"0 10px 22px rgba(251,247,239,.92)"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.7)"}}>Sin mesa ({sinMesa.length})</div>
+            <div>
+              <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(201,169,110,.78)"}}>Banco de espera ({waitingInvitations.length})</div>
+              <div style={{fontFamily:THEME.font.body,fontSize:".7rem",color:"rgba(26,26,20,.46)",marginTop:3,lineHeight:1.35}}>Invitaciones todavía no ubicadas. Arrastrá o tocá una y después elegí una mesa.</div>
+            </div>
             {sinMesa.length>0&&<span style={{fontFamily:THEME.font.body,fontSize:THEME.text.label,color:"rgba(201,169,110,.6)",fontStyle:"italic"}}>{isTouchAssignment?"tocá o arrastrá a una mesa":"arrastrá al plano"}</span>}
           </div>
+          {isGuestMode&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+            <button onClick={vaciarTodasLasMesas}
+              style={{flex:"1 1 120px",background:"rgba(200,60,60,.055)",border:"1px solid rgba(200,60,60,.2)",borderRadius:8,padding:"8px 9px",fontFamily:THEME.font.body,fontSize:".72rem",fontWeight:700,color:"rgba(170,55,55,.76)",cursor:"pointer"}}>
+              Vaciar todas las mesas
+            </button>
+            <button onClick={usarOchoEnTodasLasRedondas}
+              style={{flex:"1 1 120px",background:"rgba(74,94,58,.065)",border:"1px solid rgba(74,94,58,.18)",borderRadius:8,padding:"8px 9px",fontFamily:THEME.font.body,fontSize:".72rem",fontWeight:700,color:THEME.color.sage,cursor:"pointer"}}>
+              Restablecer redondas en 8
+            </button>
+          </div>}
           {sinMesa.length>0&&<div style={{position:"relative",marginBottom:6}}>
             <input name="app-field-12387" value={searchSinMesa} onChange={e=>setSearchSinMesa(e.target.value)} placeholder="Buscar..."
               style={{width:"100%",fontFamily:THEME.font.body,fontSize:".78rem",padding:"4px 8px 4px 24px",borderRadius:100,border:"1px solid rgba(201,169,110,.25)",background:"rgba(201,169,110,.06)",outline:"none",boxSizing:"border-box"}}/>
@@ -12917,7 +14170,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
           {sinMesa.length===0
             ?<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Todos asignados ✓</div>
             :<div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(420px,46vh)",overflowY:"auto"}}>
-              {sinMesaVisible.map(p=>{
+              {waitingInvitationsVisible.map(p=>{
                 const isGuestSelected=selectedGuestForAssign?.guestId===p.guestId;
                 return <div key={`${p.guestId}-${p.personIdx}`}
                   onMouseDown={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
@@ -12932,21 +14185,23 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                   <div style={{width:18,height:18,borderRadius:"50%",background:CONF_COLORS[p.confirmacion]||"#999",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
-                  <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
+                  <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}{p.cantidadInvitados>1?` · ${p.cantidadInvitados} pers.`:""}</span>
                   {isGuestSelected&&<span style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,color:THEME.color.sage,letterSpacing:".08em",textTransform:"uppercase"}}>mesa?</span>}
                 </div>;
               })}
-              {sinMesaFilt.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
-              {sinMesaHiddenCount>0&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.42)",fontStyle:"italic",padding:"6px 2px 2px"}}>Mostrando {sinMesaVisible.length} de {sinMesaFilt.length}. Usá el buscador para encontrar más rápido.</div>}
+              {waitingInvitationsFiltered.length===0&&searchSinMesa&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Sin resultados</div>}
+              {waitingInvitationsHiddenCount>0&&<div style={{fontFamily:THEME.font.body,fontSize:".74rem",color:"rgba(26,26,20,.42)",fontStyle:"italic",padding:"6px 2px 2px"}}>Mostrando {waitingInvitationsVisible.length} de {waitingInvitationsFiltered.length}. Usá el buscador para encontrar más rápido.</div>}
             </div>
           }
         </div>
+        </>}
 
 
         {/* Info mesa seleccionada — solo desktop; en mobile se usa el bottom sheet */}
         {!isMobile&&(selectedMesaObj
-          ?<div style={{background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px",overflow:"hidden"}}>
+          ?<div style={{background:THEME.color.cream2,border:"1px solid rgba(74,94,58,.25)",borderRadius:12,padding:"12px",overflow:"visible"}}>
             {/* Header */}
+            <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".12em",textTransform:"uppercase",color:"rgba(74,94,58,.52)",marginBottom:5}}>Mesa seleccionada</div>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
               <div style={{fontFamily:THEME.font.display,fontSize:".95rem",fontWeight:700,color:THEME.color.ink}}>
                 {selectedMesaObj.etiqueta||`Mesa ${selectedMesa}`}
@@ -13036,7 +14291,7 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
             <div style={{fontFamily:THEME.font.label,fontSize:THEME.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(26,26,20,.38)",marginBottom:5}}>
               Asignados · {selectedPersonas.length}/{capDe(selectedMesaObj)}
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:160,overflowY:"auto",marginBottom:8}}>
+            <div style={{display:"flex",flexDirection:"column",gap:3,maxHeight:"min(42vh,360px)",overflowY:"auto",marginBottom:8,paddingRight:3}}>
               {selectedPersonas.map(p=>(
                 <div key={`${p.guestId}-${p.personIdx}`}
                   onMouseDown={e=>{e.stopPropagation(); startDragGuest(e,p.guestId);}}
@@ -13048,15 +14303,21 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
                     <span style={{fontSize:"7px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
                   </div>
                   <span style={{fontFamily:THEME.font.body,fontSize:".76rem",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-                  <button onClick={e=>{e.stopPropagation();onRemove(p.guestId); if(selectedGuestForAssign?.guestId===p.guestId) setSelectedGuestForAssign(null);}} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.4)",cursor:"pointer",fontSize:".8rem",padding:0,flexShrink:0}}>×</button>
+                  <button aria-label={`Mover ${p.nombre} al Banco de espera`} title="Mover esta invitación al Banco de espera" onClick={e=>{e.stopPropagation();onRemove(p.guestId); if(selectedGuestForAssign?.guestId===p.guestId) setSelectedGuestForAssign(null);}} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.5)",cursor:"pointer",fontSize:".8rem",padding:"3px 5px",flexShrink:0}}>×</button>
                 </div>
               ))}
-              {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Arrastrá personas acá</div>}
+              {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(26,26,20,.3)",fontStyle:"italic"}}>Elegí personas desde el Banco de espera</div>}
             </div>
 
-            <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"6px",fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
-              Eliminar esta mesa
-            </button>
+            <div style={{display:"grid",gap:6}}>
+              <button onClick={()=>vaciarMesa(selectedMesa)} disabled={selectedPersonas.length===0}
+                style={{width:"100%",background:"rgba(201,169,110,.08)",border:"1px solid rgba(201,169,110,.26)",borderRadius:7,padding:"8px",fontFamily:THEME.font.body,fontSize:".75rem",fontWeight:700,color:"rgba(120,88,30,.78)",cursor:selectedPersonas.length===0?"default":"pointer",opacity:selectedPersonas.length===0?.5:1}}>
+                Vaciar mesa · pasar al Banco de espera
+              </button>
+              <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:7,padding:"7px",fontFamily:THEME.font.body,fontSize:".75rem",color:"rgba(200,60,60,.65)",cursor:"pointer"}}>
+                Eliminar esta mesa
+              </button>
+            </div>
           </div>
 
           :<div style={{background:"rgba(74,94,58,.04)",border:"0.5px dashed rgba(74,94,58,.18)",borderRadius:12,padding:"20px 12px",textAlign:"center"}}>
@@ -13146,12 +14407,16 @@ function SalonView({ mode="guests", user, guests, tableSize, budgetInvitados=0, 
               <span style={{fontSize:"10px",fontWeight:700,color:"#fff"}}>{p.nombre.charAt(0)}</span>
             </div>
             <span style={{fontFamily:THEME.font.body,fontSize:"max(14px,.88rem)",color:THEME.color.ink,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nombre}</span>
-            <button onClick={e=>{e.stopPropagation();onRemove(p.guestId); if(selectedGuestForAssign?.guestId===p.guestId) setSelectedGuestForAssign(null);}} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.55)",cursor:"pointer",fontSize:"1.05rem",padding:"8px 12px",minHeight:THEME.tap.min,lineHeight:1,flexShrink:0}}>×</button>
+            <button aria-label={`Mover ${p.nombre} al Banco de espera`} title="Mover esta invitación al Banco de espera" onClick={e=>{e.stopPropagation();onRemove(p.guestId); if(selectedGuestForAssign?.guestId===p.guestId) setSelectedGuestForAssign(null);}} style={{background:"transparent",border:"none",color:"rgba(200,60,60,.62)",cursor:"pointer",fontSize:"1.05rem",padding:"8px 12px",minHeight:THEME.tap.min,lineHeight:1,flexShrink:0}}>×</button>
           </div>
         ))}
-        {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(26,26,20,.3)",fontStyle:"italic",padding:"8px 0"}}>Sin invitados asignados todavía · Arrastralos desde "Sin mesa" en el canvas</div>}
+        {selectedPersonas.length===0&&<div style={{fontFamily:THEME.font.body,fontSize:"max(13px,.82rem)",color:"rgba(26,26,20,.3)",fontStyle:"italic",padding:"8px 0"}}>Sin invitados asignados todavía · Elegilos desde el Banco de espera</div>}
       </div>
-      <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",marginTop:14,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:THEME.radius.sm,padding:"12px",minHeight:THEME.tap.comfortable,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(200,60,60,.7)",cursor:"pointer"}}>
+      <button onClick={()=>vaciarMesa(selectedMesa)} disabled={selectedPersonas.length===0}
+        style={{width:"100%",marginTop:14,background:"rgba(201,169,110,.08)",border:"1px solid rgba(201,169,110,.28)",borderRadius:THEME.radius.sm,padding:"12px",minHeight:THEME.tap.comfortable,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",fontWeight:750,color:"rgba(120,88,30,.8)",cursor:selectedPersonas.length===0?"default":"pointer",opacity:selectedPersonas.length===0?.5:1}}>
+        Vaciar mesa · pasar al Banco de espera
+      </button>
+      <button onClick={()=>removeMesa(selectedMesa)} style={{width:"100%",marginTop:8,background:"rgba(200,60,60,.06)",border:"1px solid rgba(200,60,60,.2)",borderRadius:THEME.radius.sm,padding:"12px",minHeight:THEME.tap.comfortable,fontFamily:THEME.font.body,fontSize:"max(13px,.85rem)",color:"rgba(200,60,60,.7)",cursor:"pointer"}}>
         🗑 Eliminar mesa {selectedMesa}
       </button>
     </BottomSheet>}
@@ -14672,6 +15937,22 @@ function GlobalNav({view, setView, hasResults, isDemo=false}){
   </nav>;
 }
 
+const RESTORABLE_APP_VIEWS = new Set([
+  "home","tools","budget","vendors","guests","salon-design","timeline",
+  "checklist-boda","guia-novios","results","guia","form","start"
+]);
+const getSavedAppView = (userId, hasResults=false) => {
+  if(typeof window==="undefined"||!userId) return null;
+  try{
+    const saved=localStorage.getItem(`ceci_last_app_view:${userId}`);
+    if(!RESTORABLE_APP_VIEWS.has(saved)) return null;
+    if(saved==="results"&&!hasResults) return "home";
+    return saved;
+  }catch(error){
+    return null;
+  }
+};
+
 const getInitialPublicView=()=>{
   if(typeof window==="undefined") return "landing";
   const params=new URLSearchParams(window.location.search||"");
@@ -14849,7 +16130,8 @@ export default function App(){
         setView("auth");
       }
       if(session?.user){
-        if(event === "SIGNED_IN") hasHydrated.current=false;
+        // Supabase puede emitir SIGNED_IN otra vez al volver a una pestaña.
+        // No reiniciamos la hidratación porque eso sacaba a la usuaria del módulo activo.
         setUser(session.user);
       } else setUser(current=>isDemoUser(current)?current:null);
       setAuthLoading(false);
@@ -14917,7 +16199,8 @@ export default function App(){
     setArquetipo(remote.arquetipo || null);
     setChecked(remote.checked || {});
     setResultToken(remote.result_token || tokenFromUrl || null);
-    setView(goToResults ? "results" : "home");
+    const savedView=getSavedAppView(user?.id,!!remote.results);
+    setView(goToResults ? "results" : (savedView||"home"));
 
     try{
       localStorage.setItem("bsb_session", JSON.stringify({
@@ -15011,7 +16294,7 @@ export default function App(){
               setArquetipo(s.arquetipo || null);
               setChecked(s.checked || {});
               setResultToken(s.result_token || null);
-              setView("home"); // returning users go to dashboard
+              setView(getSavedAppView(user.id,true)||"home");
               return;
             }
           }
@@ -15020,7 +16303,7 @@ export default function App(){
         // Si no existe resultado, limpiamos la URL y mostramos tablero limpio
         window.history.replaceState({}, "", window.location.pathname);
         setResults(null);
-        setView("home");
+        setView(getSavedAppView(user.id,false)||"home");
       }catch(e){
         console.error("Error cargando sesión del usuario:", e);
         setView("home");
@@ -15057,6 +16340,15 @@ export default function App(){
   // ─── Sincronizar checklist en Supabase ────────────────────────────────────
   const checkedTimer = useRef(null);
   const hasHydrated = useRef(false);
+
+  useEffect(()=>{
+    if(!user?.id || isDemoUser(user) || accessStatus!=="granted") return;
+    if(!RESTORABLE_APP_VIEWS.has(view)) return;
+    try{
+      localStorage.setItem(`ceci_last_app_view:${user.id}`,view);
+    }catch(error){}
+  },[view,user?.id,accessStatus]);
+
   const syncChecked = (newChecked) => {
     if(!user?.id) return;
     clearTimeout(checkedTimer.current);
