@@ -14,6 +14,7 @@ const GuiaModule = lazy(() => import("./modules/GuiaModule.jsx"));
 const GuiaNupcial = lazy(() => import("./modules/GuiaModule.jsx").then(module => ({ default: module.GuiaNupcial })));
 const GuiaCancionesModule = lazy(() => import("./modules/GuiaCancionesModule.jsx"));
 const ResultsModule = lazy(() => import("./modules/ResultsModule.jsx"));
+const GuidedDiscoveryModule = lazy(() => import("./modules/GuidedDiscoveryModule.jsx"));
 
 // ─── Supabase inline (funciona en preview y en Vercel) ─────────────────────
 // En Vercel: configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY
@@ -32,6 +33,8 @@ const supabase = SB_URL && SB_KEY
 
 
 const HOTMART_CHECKOUT_URL = "https://pay.hotmart.com/W106077396L?checkoutMode=10&bid=1783991520846";
+const PURCHASE_PRICE_USD = 37;
+const PURCHASE_PRICE_LABEL = `USD ${PURCHASE_PRICE_USD}`;
 const FREE_GUIDE_URL = "/guias/nos-comprometimos-guia-gratuita.pdf";
 const FULL_GUIDE_ENDPOINT = "/api/full-guide";
 const EXCEL_DOWNLOAD_ENDPOINT = "/api/excel-download";
@@ -1244,7 +1247,7 @@ function FullGuideWelcomeModal({open,onClose,onGoGuide}){
   </div>;
 }
 
-function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
+function Landing({onDiscover,onLogin,onBuy,onGuide}){
   const [showMobileBar,setShowMobileBar] = useState(false);
   const tools = [
     {id:"checklist-boda",icon:"✓",title:"Plan y checklist",copy:"Qué hacer ahora, después y qué ya resolvieron."},
@@ -1255,9 +1258,20 @@ function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
     {id:"guia",icon:"♫",title:"Música",copy:"Momentos, canciones y guion musical personalizado."}
   ];
 
-  const tryDemo = () => { trackProductEvent("demo_cta_clicked", {source:"landing"}); onTry(); };
-  const buy = () => { trackProductEvent("buy_cta_clicked", {source:"landing"}); onBuy(); };
+  const discover = (source="landing") => {
+    trackProductEvent("guided_discovery_cta_clicked", {source});
+    onDiscover();
+  };
+  const buy = (source="landing") => {
+    trackProductEvent("organize_wedding_clicked", {source});
+    trackProductEvent("buy_cta_clicked", {source});
+    onBuy();
+  };
   const guide = () => { trackProductEvent("free_guide_cta_clicked", {source:"landing"}); onGuide(); };
+  const login = (source="landing_header") => {
+    trackProductEvent("existing_buyer_login_clicked", {source});
+    onLogin();
+  };
 
   useEffect(()=>{
     const update = () => setShowMobileBar(window.scrollY > Math.min(560, window.innerHeight * .72));
@@ -1273,8 +1287,8 @@ function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
           <div className="brand-logo">El Violín de Ceci</div>
           <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",marginTop:3}}>Tu Boda Organizada</div>
         </div>
-        <button type="button" onClick={onLogin} style={{background:"transparent",border:"none",padding:"10px 2px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.78rem,2vw,.95rem)",fontWeight:750,textDecoration:"underline",textUnderlineOffset:4}}>
-          Ya compré: ingresar
+        <button type="button" onClick={()=>login("landing_header")} style={{background:"transparent",border:"none",padding:"10px 2px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.78rem,2vw,.95rem)",fontWeight:750,textDecoration:"underline",textUnderlineOffset:4}}>
+          Ya compré / Ingresar
         </button>
       </div>
     </header>
@@ -1286,35 +1300,35 @@ function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
             <div>
               <div className="landing-v9-kicker">✦ Un sistema para toda la boda</div>
               <h1 className="landing-v9-title">Ordená la boda.<br/><em>Disfrutá el proceso.</em></h1>
-              <p className="landing-v9-copy">Presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados en un solo lugar. Para saber qué hacer ahora sin depender de planillas, chats y memoria.</p>
+              <p className="landing-v9-copy">Toda la organización de su boda en un solo lugar: presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados para saber qué hacer ahora.</p>
               <div className="landing-v9-actions">
-                <button type="button" className="landing-v9-primary" onClick={buy}>Comprar acceso completo →</button>
-                <button type="button" className="landing-v9-secondary" onClick={tryDemo}>Probar la demo gratis</button>
+                <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_hero")}>Organizar mi boda · USD 37 →</button>
+                <button type="button" className="landing-v9-secondary" onClick={()=>discover("landing_hero")}>Ver cómo funciona</button>
               </div>
               <div className="landing-v9-proof">
-                <span>✓ Pago único</span>
+                <span>✓ Pago único · USD 37</span>
                 <span>✓ Acceso inmediato</span>
-                <span>✓ Planificador Excel incluido</span>
-                <span>✓ Guía completa de regalo</span>
+                <span>✓ 9 archivos Excel</span>
+                <span>✓ Guía completa de 55 páginas</span>
               </div>
             </div>
 
             <div className="landing-v9-preview fu2">
               <div className="landing-v9-preview-card">
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"#D9B86F"}}>Tu próximo paso</div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"#D9B86F"}}>Descubrí tu próximo paso</div>
                 <h2>No necesitás organizar todo hoy.</h2>
-                <p>Contanos en qué etapa están y qué les preocupa. El sistema les recomienda una acción concreta para avanzar.</p>
+                <p>Respondé dos preguntas y mirá cómo el sistema transforma una preocupación concreta en un plan conectado.</p>
                 <div className="landing-v9-progress">
                   {[
                     "Elegí la etapa actual de la boda.",
                     "Marcá qué les preocupa más hoy.",
-                    "Recibí una ruta para empezar."
+                    "Recibí una ruta clara para avanzar."
                   ].map((item,index)=><div className="landing-v9-progress-row" key={item}>
                     <span style={{width:22,height:22,borderRadius:999,display:"grid",placeItems:"center",background:"rgba(217,184,111,.18)",color:"#D9B86F",fontWeight:800}}>{index+1}</span>
                     <span>{item}</span>
                   </div>)}
                 </div>
-                <button type="button" onClick={tryDemo} style={{marginTop:20,width:"100%",minHeight:50,border:"1px solid rgba(217,184,111,.5)",borderRadius:100,background:"transparent",color:"#FFF8E8",fontFamily:"'Lora',serif",fontWeight:750,cursor:"pointer"}}>Ver cómo funciona →</button>
+                <button type="button" onClick={()=>discover("landing_preview")} style={{marginTop:20,width:"100%",minHeight:50,border:"1px solid rgba(217,184,111,.5)",borderRadius:100,background:"transparent",color:"#FFF8E8",fontFamily:"'Lora',serif",fontWeight:750,cursor:"pointer"}}>Ver cómo funciona →</button>
               </div>
             </div>
           </div>
@@ -1342,23 +1356,20 @@ function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
           <div className="landing-v9-tools-header">
             <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#D9B86F"}}>Todo conectado</div>
             <h2>Una sola boda. Un solo lugar para decidir.</h2>
-            <p>No son ocho herramientas separadas. Cada decisión puede acompañar a la siguiente para que la información no quede repartida.</p>
+            <p>No son herramientas aisladas. Una decisión puede actualizar el presupuesto, ordenar una tarea y acompañar el cronograma sin volver a buscarla entre chats y planillas.</p>
           </div>
           <div className="landing-v9-tools-grid">
             {tools.map(tool=><button
               type="button"
               className="landing-v9-tool"
               key={tool.title}
-              onClick={()=>{
-                trackProductEvent("landing_module_demo_clicked",{module:tool.id});
-                onOpenDemoModule?.(tool.id);
-              }}
-              aria-label={`Probar ${tool.title} en la demo`}
+              onClick={()=>discover(`landing_connection_${tool.id}`)}
+              aria-label={`Ver cómo ${tool.title} se conecta con el sistema`}
             >
               <div className="landing-v9-tool-icon">{tool.icon}</div>
               <strong>{tool.title}</strong>
               <span>{tool.copy}</span>
-              <span className="landing-v9-tool-arrow">Probar este módulo →</span>
+              <span className="landing-v9-tool-arrow">Ver cómo se conecta →</span>
             </button>)}
           </div>
         </div>
@@ -1367,22 +1378,22 @@ function Landing({onTry,onLogin,onBuy,onGuide,onOpenDemoModule}){
       <section className="responsive-shell landing-v9-section">
         <div className="landing-v9-final">
           <div>
-            <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:8}}>Empezá a tu manera</div>
-            <h2>Probá primero o guardá toda la organización desde hoy.</h2>
-            <p>La demo no pide registro. El acceso completo permite guardar avances y continuar desde cualquier dispositivo.</p>
+            <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:8}}>De la sobrecarga a un plan claro</div>
+            <h2>Dejá de organizarte entre chats, notas y planillas.</h2>
+            <p>Con el acceso completo guardás cada avance, continuás desde cualquier dispositivo y ves cómo las decisiones se conectan.</p>
           </div>
           <div style={{display:"grid",gap:10,minWidth:"min(100%,270px)"}}>
-            <button type="button" className="landing-v9-primary" onClick={buy}>Comprar acceso completo</button>
-            <button type="button" className="landing-v9-secondary" onClick={tryDemo}>Probar demo gratis</button>
-            <button type="button" onClick={onLogin} style={{background:"transparent",border:0,color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4,cursor:"pointer"}}>Ya compré: ingresar</button>
+            <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_final")}>Organizar mi boda · USD 37</button>
+            <button type="button" className="landing-v9-secondary" onClick={()=>discover("landing_final")}>Ver cómo funciona</button>
+            <button type="button" onClick={()=>login("landing_final")} style={{background:"transparent",border:0,color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4,cursor:"pointer"}}>Ya compré / Ingresar</button>
           </div>
         </div>
       </section>
     </main>
 
     <div className="mobile-buy-bar" style={{display:showMobileBar?undefined:"none"}}>
-      <button type="button" onClick={buy} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}>Comprar ahora</button>
-      <button type="button" onClick={tryDemo} style={{border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Probar demo</button>
+      <button type="button" onClick={()=>buy("landing_mobile_bar")} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}>Organizar mi boda · USD 37</button>
+      <button type="button" onClick={()=>discover("landing_mobile_bar")} style={{border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Ver cómo funciona</button>
     </div>
   </div>;
 }
@@ -1982,7 +1993,7 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
         autoComplete="tel"
       />
       {error&&<p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:"#b64343",lineHeight:1.45,margin:"8px 0 12px"}}>{error}</p>}
-      <button className="pbtn" disabled={loading} onClick={submit} style={{width:"100%",marginTop:8}}>{loading?"Preparando pago...":"Ir al pago seguro →"}</button>
+      <button className="pbtn" disabled={loading} onClick={submit} style={{width:"100%",marginTop:8}}>{loading?"Preparando pago...":"Ir al pago seguro · USD 37 →"}</button>
       <p style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:DIMSOFT,lineHeight:1.45,textAlign:"center",margin:"14px 0 0"}}>El pago se procesa en Hotmart. Usá el mismo email para comprar y para crear tu acceso.</p>
     </div>
   </div>;
@@ -1994,7 +2005,7 @@ function LockedAccessScreen({email,onBuy,onLogout,onCreateAccess}){
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 className="brand-title" style={{fontSize:"clamp(1.8rem,6vw,2.35rem)",margin:"0 0 10px"}}>Tu cuenta todavía no está habilitada</h1>
       <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px"}}>No encontramos una compra aprobada para <strong>{email}</strong>. Si acabás de pagar, esperá la confirmación de Hotmart y volvé a entrar con el mismo email.</p>
-      <button className="pbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar el acceso →</button>
+      <button className="pbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar el acceso · USD 37 →</button>
       <button className="gbtn" onClick={onCreateAccess} style={{width:"100%",marginBottom:10}}>Usar otro email</button>
       <button onClick={onLogout} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:DIM,textDecoration:"underline",cursor:"pointer",padding:8}}>Cerrar sesión</button>
     </div>
@@ -2141,12 +2152,15 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
       </div>
 
       {mode==="login"&&onTryFree&&<div style={{marginTop:22,padding:"17px",background:"rgba(217,184,111,.12)",border:"1px solid rgba(201,169,110,.34)",borderRadius:16,textAlign:"center"}}>
-        <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",lineHeight:1.5,color:"rgba(26,26,20,.62)",marginBottom:10}}>¿Todavía no compraste? Podés conocer las herramientas antes de decidir.</div>
-        <button type="button" className="gbtn" onClick={onTryFree} style={{width:"100%"}}>Probar la demo sin registro</button>
-        {onBuy&&<button type="button" onClick={onBuy} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"#4A5E3A",textDecoration:"underline",cursor:"pointer",padding:"13px 8px 0"}}>Comprar acceso completo</button>}
+        <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",lineHeight:1.5,color:"rgba(26,26,20,.62)",marginBottom:10}}>¿Todavía no compraste? Mirá un recorrido breve antes de decidir.</div>
+        <button type="button" className="gbtn" onClick={onTryFree} style={{width:"100%"}}>Ver cómo funciona</button>
       </div>}
 
       {mode==="signup"&&<p style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.45)",margin:"14px 0 0"}}>La app verificará automáticamente que exista una compra aprobada para este email.</p>}
+      {onBuy&&<div className="auth-purchase-cta">
+        <span><strong>Acceso completo por USD 37</strong><small>Pago único · acceso inmediato · sin suscripción</small></span>
+        <button type="button" onClick={onBuy}>Organizar mi boda →</button>
+      </div>}
     </div>
   </div>;
 }
@@ -2177,6 +2191,23 @@ const getWeddingTimingLabel = (days) => {
   if(days<30) return `Faltan ${days} días`;
   const months = Math.max(1,Math.round(days/30.4));
   return months===1 ? "Falta cerca de 1 mes" : `Faltan cerca de ${months} meses`;
+};
+
+const isWeddingProfileComplete = (profile={}) => {
+  const hasNames = String(profile?.nombre1 || "").trim() && String(profile?.nombre2 || "").trim();
+  const hasDateDecision = Boolean(profile?.fechaBoda || profile?.weddingDateUnknown);
+  return Boolean(hasNames && hasDateDecision);
+};
+
+const formatWeddingDate = (dateValue) => {
+  if(!dateValue) return "";
+  const date = new Date(`${dateValue}T12:00:00`);
+  if(Number.isNaN(date.getTime())) return "";
+  try{
+    return new Intl.DateTimeFormat("es-419",{day:"numeric",month:"long",year:"numeric"}).format(date);
+  }catch(e){
+    return dateValue;
+  }
 };
 
 function ProductIcon({name,size=24,color="currentColor",strokeWidth=1.8}){
@@ -2286,13 +2317,192 @@ function GlobalProgress({ user, hasResults }){
   </div>;
 }
 
-function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout, onGoModule, isDemo=false, onRequestPurchase, onOpenStart }){
+
+function WeddingProfileSetupModal({open,initialForm,userEmail,required=false,onClose,onSave}){
+  const [draft,setDraft]=useState({
+    nombre1:"",
+    nombre2:"",
+    fechaBoda:"",
+    ciudad:"",
+    weddingDateUnknown:false,
+    marketingConsent:false
+  });
+  const [saving,setSaving]=useState(false);
+  const [error,setError]=useState("");
+
+  useEffect(()=>{
+    if(!open) return;
+    setDraft({
+      nombre1:String(initialForm?.nombre1||""),
+      nombre2:String(initialForm?.nombre2||""),
+      fechaBoda:String(initialForm?.fechaBoda||""),
+      ciudad:String(initialForm?.ciudad||""),
+      weddingDateUnknown:Boolean(initialForm?.weddingDateUnknown),
+      marketingConsent:Boolean(initialForm?.marketingConsent)
+    });
+    setError("");
+    trackProductEvent("wedding_profile_opened",{source:required?"first_access":"home_edit"});
+  },[open,initialForm?.nombre1,initialForm?.nombre2,initialForm?.fechaBoda,initialForm?.ciudad,initialForm?.weddingDateUnknown,initialForm?.marketingConsent,required]);
+
+  useEffect(()=>{
+    if(!open || required) return;
+    const closeOnEscape=(event)=>{ if(event.key==="Escape"&&!saving) onClose(); };
+    window.addEventListener("keydown",closeOnEscape);
+    return()=>window.removeEventListener("keydown",closeOnEscape);
+  },[open,required,saving,onClose]);
+
+  if(!open) return null;
+
+  const update=(key,value)=>setDraft(current=>({...current,[key]:value}));
+  const submit=async(event)=>{
+    event.preventDefault();
+    setError("");
+    const nombre1=draft.nombre1.trim();
+    const nombre2=draft.nombre2.trim();
+    const fechaBoda=draft.weddingDateUnknown?"":draft.fechaBoda;
+
+    if(!nombre1 || !nombre2){
+      setError("Completá los dos nombres para personalizar la experiencia.");
+      return;
+    }
+    if(!fechaBoda && !draft.weddingDateUnknown){
+      setError("Elegí la fecha de la boda o marcá que todavía no está definida.");
+      return;
+    }
+    if(fechaBoda){
+      const days=getDaysUntilWedding(fechaBoda);
+      if(days!==null && days<0){
+        setError("La fecha elegida ya pasó. Revisala antes de guardar.");
+        return;
+      }
+    }
+
+    setSaving(true);
+    try{
+      await onSave({
+        nombre1,
+        nombre2,
+        fechaBoda,
+        ciudad:draft.ciudad.trim(),
+        weddingDateUnknown:Boolean(draft.weddingDateUnknown),
+        marketingConsent:Boolean(draft.marketingConsent)
+      });
+    }catch(saveError){
+      setError(saveError?.message||"No pudimos guardar los datos. Probá nuevamente.");
+    }finally{
+      setSaving(false);
+    }
+  };
+
+  return <div
+    className="wedding-profile-overlay no-print"
+    onMouseDown={event=>{if(event.target===event.currentTarget&&!required&&!saving)onClose();}}
+  >
+    <section className="wedding-profile-modal" role="dialog" aria-modal="true" aria-labelledby="wedding-profile-title">
+      {!required&&<button type="button" className="wedding-profile-close" onClick={onClose} disabled={saving} aria-label="Cerrar">×</button>}
+
+      <div className="wedding-profile-intro">
+        <span className="wedding-profile-icon"><ProductIcon name="spark" size={27}/></span>
+        <div className="wedding-profile-kicker">{required?"Antes de empezar":"Datos de la pareja"}</div>
+        <h2 id="wedding-profile-title">{required?"Hagamos que el planner se sienta de ustedes":"Actualizá su información"}</h2>
+        <p>Con estos datos podemos mostrar la cuenta regresiva, personalizar el inicio y recomendar tareas según el momento real de la boda.</p>
+      </div>
+
+      <form className="wedding-profile-form" onSubmit={submit}>
+        <div className="wedding-profile-fields-two">
+          <label>
+            <span>Nombre de una persona</span>
+            <input
+              type="text"
+              autoComplete="given-name"
+              value={draft.nombre1}
+              onChange={event=>update("nombre1",event.target.value)}
+              placeholder="Ej.: Cecilia"
+              maxLength={80}
+              disabled={saving}
+            />
+          </label>
+          <label>
+            <span>Nombre de la otra persona</span>
+            <input
+              type="text"
+              value={draft.nombre2}
+              onChange={event=>update("nombre2",event.target.value)}
+              placeholder="Ej.: Martín"
+              maxLength={80}
+              disabled={saving}
+            />
+          </label>
+        </div>
+
+        <label>
+          <span>Fecha de la boda</span>
+          <input
+            type="date"
+            value={draft.fechaBoda}
+            onChange={event=>update("fechaBoda",event.target.value)}
+            disabled={saving||draft.weddingDateUnknown}
+          />
+        </label>
+
+        <label className="wedding-profile-check">
+          <input
+            type="checkbox"
+            checked={draft.weddingDateUnknown}
+            onChange={event=>setDraft(current=>({...current,weddingDateUnknown:event.target.checked,fechaBoda:event.target.checked?"":current.fechaBoda}))}
+            disabled={saving}
+          />
+          <span>Todavía no definimos la fecha</span>
+        </label>
+
+        <label>
+          <span>Ciudad o país <small>opcional</small></span>
+          <input
+            type="text"
+            value={draft.ciudad}
+            onChange={event=>update("ciudad",event.target.value)}
+            placeholder="Ej.: Asunción, Paraguay"
+            maxLength={120}
+            disabled={saving}
+          />
+        </label>
+
+        <div className="wedding-profile-email">
+          <ProductIcon name="account" size={20}/>
+          <span>El acceso está asociado a <strong>{userEmail||"tu email de compra"}</strong>.</span>
+        </div>
+
+        <label className="wedding-profile-consent">
+          <input
+            type="checkbox"
+            checked={draft.marketingConsent}
+            onChange={event=>update("marketingConsent",event.target.checked)}
+            disabled={saving}
+          />
+          <span>Quiero recibir por email recordatorios y consejos personalizados según la fecha de mi boda. Podré darme de baja cuando quiera.</span>
+        </label>
+
+        {error&&<p className="wedding-profile-error" role="alert">{error}</p>}
+
+        <div className="wedding-profile-actions">
+          {!required&&<button type="button" className="gbtn" onClick={onClose} disabled={saving}>Cancelar</button>}
+          <button type="submit" className="pbtn" disabled={saving}>{saving?"Guardando…":required?"Personalizar mi planner →":"Guardar cambios"}</button>
+        </div>
+
+        <p className="wedding-profile-privacy">La fecha y los nombres se usan para personalizar el planner. No se incluyen en los eventos de analítica.</p>
+      </form>
+    </section>
+  </div>;
+}
+
+function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStartNew, onLogout, onGoModule, isDemo=false, onRequestPurchase, onOpenStart, onEditProfile }){
   const pareja = [form?.nombre1, form?.nombre2].filter(Boolean).join(" & ");
   const profile = readStartProfile();
   const recommendation = getWeddingRecommendation(profile || {});
   const stageMeta = START_STAGE_META[profile?.stage] || START_STAGE_META.starting;
   const daysUntilWedding = getDaysUntilWedding(form?.fechaBoda);
   const timingLabel = getWeddingTimingLabel(daysUntilWedding);
+  const weddingDateLabel = formatWeddingDate(form?.fechaBoda);
   const finalWeeks = profile?.stage==="final" || (daysUntilWedding!==null && daysUntilWedding>=0 && daysUntilWedding<=45);
   const [demoHasChanges,setDemoHasChanges] = useState(()=>Object.keys(readDemoWeddingData() || {}).length > 0);
 
@@ -2334,6 +2544,22 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
           <span className="home-v10-chip"><ProductIcon name={stageMeta.icon} size={17}/>{profile?stageMeta.label:"Etapa todavía no definida"}</span>
           <span className="home-v10-chip"><ProductIcon name="timeline" size={17}/>{timingLabel}</span>
         </div>
+
+        {form?.fechaBoda?<div className={`home-wedding-countdown${daysUntilWedding!==null&&daysUntilWedding<=45?" is-near":""}`}>
+          <div className="home-wedding-countdown-main">
+            <span className="home-wedding-countdown-number">{daysUntilWedding===0?"Hoy":Math.max(0,daysUntilWedding??0)}</span>
+            <span className="home-wedding-countdown-label">{daysUntilWedding===0?"es el gran día":daysUntilWedding===1?"día para su boda":"días para su boda"}</span>
+          </div>
+          <div className="home-wedding-countdown-meta">
+            <strong>{weddingDateLabel}</strong>
+            <span>{form?.ciudad||"Su celebración"}</span>
+          </div>
+          <button type="button" onClick={onEditProfile}>Editar datos</button>
+        </div>:<button type="button" className="home-wedding-date-prompt" onClick={onEditProfile}>
+          <span className="product-icon-wrap"><ProductIcon name="timeline" size={22}/></span>
+          <span><strong>Agregá la fecha de la boda</strong><small>Activá la cuenta regresiva y recomendaciones según el tiempo que falta.</small></span>
+          <span aria-hidden="true">→</span>
+        </button>}
       </header>
 
       <section style={{background:"#4A5E3A",borderRadius:24,padding:"clamp(22px,5vw,34px)",color:"#F5EFE0",marginBottom:16,boxShadow:"0 16px 38px rgba(74,94,58,.16)"}}>
@@ -2408,7 +2634,7 @@ function HomeScreen({ user, hasResults, form, resultToken, onViewResults, onStar
 }
 
 const EMPTY_FORM={
-  nombre1:"",nombre2:"",fechaBoda:"",ciudad:"",invitados:"",
+  nombre1:"",nombre2:"",fechaBoda:"",ciudad:"",invitados:"",weddingDateUnknown:false,profileSetupCompletedAt:"",marketingConsent:false,marketingConsentAt:"",marketingConsentRevokedAt:"",
   tipoCeremonia:[],lugarCeremonia:"",duracion:"",restriccionIglesia:"",
   palabrasEstilo:[],objetivoEmocional:"",personalidad:"",
   generos:[],artistas:"",cancionesProhibidas:"",idioma:"",
@@ -11931,7 +12157,7 @@ function ToolsHub({user,hasResults,isDemo=false,onGoModule,onViewResults,onStart
 
       {isDemo&&<div style={{background:"#FFFDF8",border:"1px solid rgba(74,94,58,.18)",borderRadius:16,padding:"13px 15px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
         <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.5,color:"rgba(26,26,20,.66)"}}><strong style={{color:"#4A5E3A"}}>Prueba gratuita.</strong> Podés recorrer y cargar datos temporales. Se borran al recargar o salir.</div>
-        <button className="lbtn" onClick={onRequestPurchase}>Guardar mi planificación</button>
+        <button className="lbtn" onClick={onRequestPurchase}>Guardar mi planificación · USD 37</button>
       </div>}
 
       {groups.map(group=><section className="tools-v10-section" key={group.title}>
@@ -11960,7 +12186,7 @@ function AccountScreen({user,isDemo=false,onLogin,onBuy,onLogout}){
       <p className="brand-copy" style={{fontSize:".98rem",margin:"0 0 22px"}}>{isDemo?"La prueba no requiere cuenta. Para guardar tu planificación, ingresá con el email usado en Hotmart.":`Sesión iniciada como ${user?.email||"usuario"}.`}</p>
       {isDemo?<>
         <button className="pbtn" onClick={onLogin} style={{width:"100%",marginBottom:10}}>Ya compré: iniciar sesión →</button>
-        <button className="gbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar acceso completo</button>
+        <button className="gbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar acceso completo · USD 37</button>
         <button onClick={onLogout} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(26,26,20,.5)",textDecoration:"underline",cursor:"pointer",padding:10}}>Salir de la prueba</button>
       </>:<button className="gbtn" onClick={onLogout} style={{width:"100%"}}>Cerrar sesión</button>}
     </div>
@@ -11984,46 +12210,223 @@ function DemoPurchaseBar({onBuy,withNav=true}){
         <strong>Estás probando gratis</strong>
         <span>Comprá para guardar y descargar las plantillas en Excel.</span>
       </div>
-      <button type="button" onClick={onBuy}>Comprar acceso</button>
+      <button type="button" onClick={onBuy}>Comprar acceso · USD 37</button>
     </aside>
     <div className={`demo-purchase-spacer ${withNav?"":"no-nav"}`} aria-hidden="true"/>
   </>;
 }
 
+function UniversalPurchaseCTA({onBuy,withNav=false,isDemo=false,view=""}){
+  return <>
+    <aside className={`purchase-everywhere-cta no-print ${withNav?"with-nav":"no-nav"}`} aria-label="Comprar acceso completo">
+      <div className="purchase-everywhere-copy">
+        <span className="purchase-everywhere-eyebrow">{isDemo?"Guardá lo que estás organizando":"Tu boda organizada"}</span>
+        <strong>Acceso completo · USD 37</strong>
+        <small>Pago único · acceso inmediato · sin suscripción</small>
+      </div>
+      <button type="button" onClick={()=>onBuy?.(`purchase_everywhere_${view||"unknown"}`)}>
+        Organizar mi boda
+        <span>USD 37 →</span>
+      </button>
+    </aside>
+    <div className={`purchase-everywhere-spacer ${withNav?"with-nav":"no-nav"}`} aria-hidden="true"/>
+  </>;
+}
+
 // ─── GLOBAL NAV BAR ───────────────────────────────────────────────────────────
 function GlobalNav({view, setView, hasResults, isDemo=false}){
-  const items = [
-    {id:"home",icon:"home",label:"Inicio",activeIds:["home"]},
-    {id:"tools",icon:"grid",label:"Módulos",activeIds:["tools","budget","vendors","guests","salon-design","timeline","guia-novios"]},
-    {id:"checklist-boda",icon:"plan",label:"Mi plan",activeIds:["checklist-boda"]},
-    {id:hasResults?"results":"guia",icon:"music",label:"Música",activeIds:["guia","form","generating","results"]},
-    {id:"account",icon:"account",label:"Cuenta",activeIds:["account"]}
+  const [moreOpen,setMoreOpen]=useState(false);
+  const musicTarget=hasResults?"results":"guia";
+
+  const sidebarGroups = [
+    {
+      label:"General",
+      items:[
+        {id:"home",icon:"home",label:"Inicio",activeIds:["home"]},
+        {id:"tools",icon:"grid",label:"Todos los módulos",activeIds:["tools"]}
+      ]
+    },
+    {
+      label:"Organización",
+      items:[
+        {id:"checklist-boda",icon:"plan",label:"Plan y checklist",activeIds:["checklist-boda"]},
+        {id:"budget",icon:"budget",label:"Presupuesto",activeIds:["budget"]},
+        {id:"vendors",icon:"vendors",label:"Proveedores",activeIds:["vendors"]}
+      ]
+    },
+    {
+      label:"Invitados y espacio",
+      items:[
+        {id:"guests",icon:"guests",label:"Invitados y mesas",activeIds:["guests"]},
+        {id:"salon-design",icon:"salon",label:"Diseño del salón",activeIds:["salon-design"]}
+      ]
+    },
+    {
+      label:"Día de la boda",
+      items:[
+        {id:"timeline",icon:"timeline",label:"Cronograma",activeIds:["timeline"]},
+        {id:musicTarget,icon:"music",label:"Música",activeIds:["guia","form","generating","results"]}
+      ]
+    },
+    {
+      label:"Recursos",
+      items:[
+        {id:"guia-novios",icon:"guide",label:"Guía para novios",activeIds:["guia-novios"]}
+      ]
+    }
   ];
-  return <nav style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"#FFFDF8",borderTop:"1px solid rgba(74,94,58,.12)",boxShadow:"0 -7px 22px rgba(63,50,31,.07)"}} className="no-print global-nav">
-    <div style={{display:"flex",alignItems:"stretch",maxWidth:680,margin:"0 auto",paddingBottom:"max(5px,env(safe-area-inset-bottom))"}}>
-      {items.map(item=>{const active=item.activeIds.includes(view);return <button key={item.label} onClick={()=>setView(item.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,background:"transparent",border:"none",cursor:"pointer",padding:"9px 5px 7px",minHeight:THEME.tap.comfortable,flex:1,borderTop:active?"2.5px solid #4A5E3A":"2.5px solid transparent",color:active?"#4A5E3A":"rgba(26,26,20,.46)"}}>
-        <span className="nav-v10-icon"><ProductIcon name={item.icon} size={22} color="currentColor" strokeWidth={active?2.1:1.7}/></span>
-        <span style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".04em",textTransform:"uppercase",color:"currentColor",fontWeight:active?700:500,whiteSpace:"nowrap",marginTop:3,lineHeight:1}}>{item.label}</span>
-      </button>;})}
-    </div>
-  </nav>;
+
+  const mobilePrimary = [
+    {id:"home",icon:"home",label:"Inicio",activeIds:["home","tools"]},
+    {id:"checklist-boda",icon:"plan",label:"Plan",activeIds:["checklist-boda"]},
+    {id:"guests",icon:"guests",label:"Invitados",activeIds:["guests"]},
+    {id:musicTarget,icon:"music",label:"Música",activeIds:["guia","form","generating","results"]}
+  ];
+
+  const mobileMore = [
+    {id:"tools",icon:"grid",label:"Todos los módulos",copy:"Vista general de todas las herramientas.",activeIds:["tools"]},
+    {id:"budget",icon:"budget",label:"Presupuesto",copy:"Montos, pagos y control del total.",activeIds:["budget"]},
+    {id:"vendors",icon:"vendors",label:"Proveedores",copy:"Contactos, propuestas y acuerdos.",activeIds:["vendors"]},
+    {id:"salon-design",icon:"salon",label:"Diseño del salón",copy:"Mesas, espacios y circulación.",activeIds:["salon-design"]},
+    {id:"timeline",icon:"timeline",label:"Cronograma",copy:"Horarios y responsables del gran día.",activeIds:["timeline"]},
+    {id:"guia-novios",icon:"guide",label:"Guía para novios",copy:"Consejos y recursos para cada etapa.",activeIds:["guia-novios"]},
+    {id:"account",icon:"account",label:"Mi cuenta",copy:"Acceso, compra y sesión.",activeIds:["account"]}
+  ];
+
+  useEffect(()=>{
+    if(!moreOpen) return;
+    const closeOnEscape=(event)=>{ if(event.key==="Escape") setMoreOpen(false); };
+    window.addEventListener("keydown",closeOnEscape);
+    return()=>window.removeEventListener("keydown",closeOnEscape);
+  },[moreOpen]);
+
+  const isActive=(item)=>item.activeIds.includes(view);
+  const navigate=(item,source)=>{
+    trackProductEvent("app_navigation_clicked",{target:item.id,source,is_demo:isDemo});
+    setMoreOpen(false);
+    setView(item.id);
+  };
+
+  const accountItem={id:"account",icon:"account",label:"Mi cuenta",activeIds:["account"]};
+
+  return <>
+    <aside className="app-sidebar no-print" aria-label="Navegación principal">
+      <div className="app-sidebar-brand">
+        <div className="app-sidebar-brand-mark">C</div>
+        <div>
+          <div className="app-sidebar-brand-name">El Violín de Ceci</div>
+          <div className="app-sidebar-brand-product">Tu Boda Organizada</div>
+        </div>
+      </div>
+
+      <nav className="app-sidebar-nav">
+        {sidebarGroups.map(group=><div className="app-sidebar-group" key={group.label}>
+          <div className="app-sidebar-group-label">{group.label}</div>
+          <div className="app-sidebar-group-items">
+            {group.items.map(item=>{
+              const active=isActive(item);
+              return <button
+                type="button"
+                key={`${group.label}-${item.label}`}
+                className={`app-sidebar-item${active?" is-active":""}`}
+                onClick={()=>navigate(item,"desktop_sidebar")}
+                aria-current={active?"page":undefined}
+              >
+                <span className="app-sidebar-item-icon"><ProductIcon name={item.icon} size={20} color="currentColor" strokeWidth={active?2.1:1.7}/></span>
+                <span>{item.label}</span>
+              </button>;
+            })}
+          </div>
+        </div>)}
+      </nav>
+
+      <div className="app-sidebar-footer">
+        <button
+          type="button"
+          className={`app-sidebar-account${isActive(accountItem)?" is-active":""}`}
+          onClick={()=>navigate(accountItem,"desktop_sidebar")}
+          aria-current={isActive(accountItem)?"page":undefined}
+        >
+          <span className="app-sidebar-account-icon"><ProductIcon name="account" size={20} color="currentColor"/></span>
+          <span>
+            <strong>Mi cuenta</strong>
+            <small>{isDemo?"Exploración temporal":"Acceso al sistema"}</small>
+          </span>
+        </button>
+        <div className="app-sidebar-status">
+          <span className="app-sidebar-status-dot"/>
+          {isDemo?"Los cambios no se guardan":"Tu planificación se guarda"}
+        </div>
+      </div>
+    </aside>
+
+    <nav className="app-bottom-nav no-print global-nav" aria-label="Navegación móvil">
+      <div className="app-bottom-nav-inner">
+        {mobilePrimary.map(item=>{
+          const active=isActive(item);
+          return <button
+            type="button"
+            key={item.label}
+            className={`app-bottom-nav-item${active?" is-active":""}`}
+            onClick={()=>navigate(item,"mobile_bottom_nav")}
+            aria-current={active?"page":undefined}
+          >
+            <span className="nav-v10-icon"><ProductIcon name={item.icon} size={22} color="currentColor" strokeWidth={active?2.1:1.7}/></span>
+            <span>{item.label}</span>
+          </button>;
+        })}
+        <button
+          type="button"
+          className={`app-bottom-nav-item${moreOpen||mobileMore.some(isActive)?" is-active":""}`}
+          onClick={()=>{if(!moreOpen)trackProductEvent("app_navigation_more_opened",{is_demo:isDemo});setMoreOpen(value=>!value);}}
+          aria-expanded={moreOpen}
+          aria-controls="app-more-navigation"
+        >
+          <span className="app-more-dots" aria-hidden="true"><i/><i/><i/></span>
+          <span>Más</span>
+        </button>
+      </div>
+    </nav>
+
+    {moreOpen&&<div className="app-more-overlay no-print" onMouseDown={event=>{if(event.target===event.currentTarget)setMoreOpen(false);}}>
+      <section id="app-more-navigation" className="app-more-sheet" role="dialog" aria-modal="true" aria-labelledby="app-more-title">
+        <div className="app-more-handle" aria-hidden="true"/>
+        <div className="app-more-header">
+          <div>
+            <div className="app-more-kicker">Tu Boda Organizada</div>
+            <h2 id="app-more-title">Todas las secciones</h2>
+          </div>
+          <button type="button" className="app-more-close" onClick={()=>setMoreOpen(false)} aria-label="Cerrar menú">×</button>
+        </div>
+        <div className="app-more-grid">
+          {mobileMore.map(item=>{
+            const active=isActive(item);
+            return <button
+              type="button"
+              key={item.label}
+              className={`app-more-card${active?" is-active":""}`}
+              onClick={()=>navigate(item,"mobile_more_menu")}
+              aria-current={active?"page":undefined}
+            >
+              <span className="app-more-card-icon"><ProductIcon name={item.icon} size={22} color="currentColor" strokeWidth={active?2.1:1.7}/></span>
+              <span className="app-more-card-copy">
+                <strong>{item.label}</strong>
+                <small>{item.copy}</small>
+              </span>
+              <span className="app-more-card-arrow" aria-hidden="true">›</span>
+            </button>;
+          })}
+        </div>
+      </section>
+    </div>}
+  </>;
 }
 
 const RESTORABLE_APP_VIEWS = new Set([
   "home","tools","budget","vendors","guests","salon-design","timeline",
   "checklist-boda","guia-novios","results","guia","form","start"
 ]);
-const getSavedAppView = (userId, hasResults=false) => {
-  if(typeof window==="undefined"||!userId) return null;
-  try{
-    const saved=localStorage.getItem(`ceci_last_app_view:${userId}`);
-    if(!RESTORABLE_APP_VIEWS.has(saved)) return null;
-    if(saved==="results"&&!hasResults) return "home";
-    return saved;
-  }catch(error){
-    return null;
-  }
-};
+const getSavedAppView = () => "home";
 
 const getInitialPublicView=()=>{
   if(typeof window==="undefined") return "landing";
@@ -12059,13 +12462,15 @@ export default function App(){
   const [demoChanged,setDemoChanged]=useState(false);
   const [guideOpen,setGuideOpen]=useState(false);
   const [fullGuideWelcomeOpen,setFullGuideWelcomeOpen]=useState(false);
+  const [profileSetupOpen,setProfileSetupOpen]=useState(false);
+  const [profileHydrated,setProfileHydrated]=useState(false);
   const [authInitialMode,setAuthInitialMode]=useState(getInitialAuthMode);
 
 
   // Las pantallas operativas usan un fondo limpio para priorizar lectura y concentración.
   useEffect(()=>{
     if(typeof document==="undefined") return;
-    const editorialViews = new Set(["landing","auth","free-choice","start","form","generating","guia"]);
+    const editorialViews = new Set(["landing","auth","free-choice","start","form","generating","guia","guided-discovery"]);
     const operational = !editorialViews.has(view);
     if(operational){
       document.documentElement.style.backgroundImage = "none";
@@ -12265,8 +12670,8 @@ export default function App(){
     setArquetipo(remote.arquetipo || null);
     setChecked(remote.checked || {});
     setResultToken(remote.result_token || tokenFromUrl || null);
-    const savedView=getSavedAppView(user?.id,!!remote.results);
-    setView(goToResults ? "results" : (savedView||"home"));
+    setView(goToResults && !!remote.results ? "results" : "home");
+    setProfileHydrated(true);
 
     try{
       localStorage.setItem("bsb_session", JSON.stringify({
@@ -12279,9 +12684,11 @@ export default function App(){
       }));
     }catch(e){}
 
-    if(remote.result_token){
+    if(tokenFromUrl && remote.result_token){
       const newUrl = `${window.location.origin}${window.location.pathname}?r=${remote.result_token}`;
       window.history.replaceState({}, "", newUrl);
+    }else{
+      window.history.replaceState({}, "", window.location.pathname);
     }
   };
 
@@ -12293,6 +12700,8 @@ export default function App(){
         return;
       }
       if(!user){
+        setProfileHydrated(false);
+        setProfileSetupOpen(false);
         setView(current=>(current==="auth"||current==="landing")?current:"landing");
         return;
       }
@@ -12302,6 +12711,8 @@ export default function App(){
       }
       if(accessStatus==="idle"||accessStatus==="checking") return;
       if(accessStatus!=="granted"){
+        setProfileHydrated(false);
+        setProfileSetupOpen(false);
         setView("locked");
         return;
       }
@@ -12342,7 +12753,7 @@ export default function App(){
           if(byEmail && byEmail.user_id === user.id) remote = byEmail;
         }
 
-        if(remote?.results){
+        if(remote){
           hydrateFromSession(remote, email, token, !!token);
           return;
         }
@@ -12354,13 +12765,14 @@ export default function App(){
             const s = JSON.parse(saved);
             const sameUser = s.user_id && s.user_id === user.id;
             const sameEmail = s.form?.email && email && s.form.email.toLowerCase() === email.toLowerCase();
-            if(s.results && (sameUser || sameEmail)){
-              setResults(s.results);
+            if(s.form && (sameUser || sameEmail)){
+              setResults(s.results || null);
               setForm({...EMPTY_FORM, ...s.form, email});
               setArquetipo(s.arquetipo || null);
               setChecked(s.checked || {});
               setResultToken(s.result_token || null);
-              setView(getSavedAppView(user.id,true)||"home");
+              setProfileHydrated(true);
+              setView("home");
               return;
             }
           }
@@ -12369,9 +12781,11 @@ export default function App(){
         // Si no existe resultado, limpiamos la URL y mostramos tablero limpio
         window.history.replaceState({}, "", window.location.pathname);
         setResults(null);
-        setView(getSavedAppView(user.id,false)||"home");
+        setProfileHydrated(true);
+        setView("home");
       }catch(e){
         console.error("Error cargando sesión del usuario:", e);
+        setProfileHydrated(true);
         setView("home");
       }
     };
@@ -12663,14 +13077,94 @@ export default function App(){
     }catch(e){}
   };
 
-  const goDirectCheckout=()=>{
-    trackProductEvent("checkout_started",{source:"public_direct"});
+  const goDirectCheckout=(source="public_direct")=>{
+    trackProductEvent("checkout_started",{source});
     window.location.href=buildHotmartCheckoutUrl();
   };
 
   const initialPurchaseEmail=(()=>{ try{return localStorage.getItem("ceci_purchase_email")||user?.email||"";}catch(e){return user?.email||"";} })();
   const demo=isDemoUser(user);
-  const showNav = !!user && !['auth','entry','landing','free-choice','start','form','generating','locked'].includes(view);
+  const weddingProfileComplete=isWeddingProfileComplete(form);
+  const openUniversalPurchase=(source="purchase_everywhere")=>{
+    trackProductEvent("buy_cta_clicked",{source,price_usd:PURCHASE_PRICE_USD,is_demo:demo});
+    if(demo) setPurchaseOpen(true);
+    else goDirectCheckout(source);
+  };
+
+  useEffect(()=>{
+    if(!user || demo || accessStatus!=="granted" || !profileHydrated){
+      if(!user || demo || accessStatus!=="granted") setProfileSetupOpen(false);
+      return;
+    }
+    if(!fullGuideWelcomeOpen && !weddingProfileComplete) setProfileSetupOpen(true);
+  },[user?.id,demo,accessStatus,profileHydrated,fullGuideWelcomeOpen,weddingProfileComplete]);
+
+  useEffect(()=>{
+    if(typeof window==="undefined") return;
+    if(view!=="results"){
+      const params=new URLSearchParams(window.location.search||"");
+      if(params.has("r")){
+        params.delete("r");
+        const next=params.toString()?`${window.location.pathname}?${params.toString()}`:window.location.pathname;
+        window.history.replaceState({},document.title,next);
+      }
+    }
+  },[view]);
+
+  const saveWeddingProfile=async(profileValues)=>{
+    if(!user?.id || demo) return;
+    const wasIncomplete=!isWeddingProfileComplete(form);
+    const now=new Date().toISOString();
+    const previousConsent=Boolean(form.marketingConsent);
+    const nextConsent=Boolean(profileValues.marketingConsent);
+    const nextForm={
+      ...form,
+      ...profileValues,
+      email:user.email||form.email||"",
+      profileSetupCompletedAt:form.profileSetupCompletedAt||now,
+      marketingConsent:nextConsent,
+      marketingConsentAt:nextConsent?(form.marketingConsentAt||now):"",
+      marketingConsentRevokedAt:previousConsent&&!nextConsent?now:(nextConsent?"":form.marketingConsentRevokedAt||"")
+    };
+
+    setForm(nextForm);
+    try{
+      localStorage.setItem("bsb_form",JSON.stringify(nextForm));
+      localStorage.setItem("bsb_session",JSON.stringify({
+        results,
+        form:nextForm,
+        arquetipo,
+        checked,
+        result_token:resultToken,
+        user_id:user.id
+      }));
+    }catch(e){}
+
+    const saved=await guardarSesion({
+      user_id:user.id,
+      email:nextForm.email,
+      nombre1:nextForm.nombre1,
+      nombre2:nextForm.nombre2,
+      fechaBoda:nextForm.fechaBoda,
+      ciudad:nextForm.ciudad,
+      form:nextForm,
+      results,
+      arquetipo,
+      checked,
+      result_token:resultToken
+    });
+
+    if(!saved) throw new Error("No pudimos guardar los datos en este momento.");
+    setProfileSetupOpen(false);
+    trackProductEvent("wedding_profile_saved",{
+      has_date:Boolean(nextForm.fechaBoda),
+      date_unknown:Boolean(nextForm.weddingDateUnknown),
+      marketing_opt_in:nextConsent,
+      source:wasIncomplete?"first_access":"home_edit"
+    });
+    setView(wasIncomplete&&!readStartProfile()?"start":"home");
+  };
+  const showNav = !!user && !['auth','entry','landing','free-choice','start','form','generating','locked','guided-discovery'].includes(view);
   const dismissFullGuideWelcome=(reason="dismissed")=>{
     try{ if(user?.id) localStorage.setItem(`${FULL_GUIDE_WELCOME_KEY}:${user.id}`,"1"); }catch(e){}
     setFullGuideWelcomeOpen(false);
@@ -12686,7 +13180,8 @@ export default function App(){
     "guia-novios":"Guía para novios"
   };
   const showModuleContext = !!user && !!moduleContextTitles[view];
-  const showDemoPurchase = demo && !["free-choice","start","auth","landing","account","locked","generating","results"].includes(view);
+  const inlinePurchaseViews = new Set(["landing","auth","locked","account"]);
+  const showUniversalPurchase = accessStatus!=="granted" && !inlinePurchaseViews.has(view);
   const excelTemplateIds = EXCEL_TEMPLATES_BY_VIEW[view] || [];
   const showExcelAccess = !!user && excelTemplateIds.length>0 && (demo || accessStatus==="granted");
   const excelPanel = showExcelAccess
@@ -12698,10 +13193,23 @@ export default function App(){
     {excelBeforeContent&&excelPanel}
     {content}
     {!excelBeforeContent&&excelPanel}
-    {showDemoPurchase&&<DemoPurchaseBar withNav={showNav} onBuy={()=>setPurchaseOpen(true)}/>}
+    {showUniversalPurchase&&<UniversalPurchaseCTA
+      withNav={showNav}
+      isDemo={demo}
+      view={view}
+      onBuy={openUniversalPurchase}
+    />}
     <PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/>
     <GuideLeadModal open={guideOpen} onClose={()=>setGuideOpen(false)}/>
     <FullGuideWelcomeModal open={fullGuideWelcomeOpen&&!demo&&accessStatus==="granted"} onClose={dismissFullGuideWelcome} onGoGuide={()=>{dismissFullGuideWelcome("open_guide_module");setView("guia-novios");}}/>
+    <WeddingProfileSetupModal
+      open={profileSetupOpen&&!fullGuideWelcomeOpen&&!demo&&accessStatus==="granted"}
+      initialForm={form}
+      userEmail={user?.email||form.email}
+      required={!weddingProfileComplete}
+      onClose={()=>setProfileSetupOpen(false)}
+      onSave={saveWeddingProfile}
+    />
   </>;
 
   if(authLoading || (!!user&&!demo&&accessStatus==="checking")) return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",display:"flex",alignItems:"center",justifyContent:"center",color:C,fontFamily:"'Lora',serif"}}>Cargando acceso...</div>;
@@ -12722,13 +13230,21 @@ export default function App(){
     window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
   }}/>;
 
+  if(view==="guided-discovery") return decorate(<Suspense fallback={<div style={{minHeight:"100svh",display:"grid",placeItems:"center",background:"#F5EFE0",fontFamily:"'Lora',serif",color:"rgba(74,94,58,.72)"}}>Preparando el recorrido…</div>}><GuidedDiscoveryModule
+    onBack={backToLanding}
+    onBuy={()=>goDirectCheckout("guided_discovery")}
+    onLogin={()=>openAuth("login")}
+    getRecommendation={getWeddingRecommendation}
+    trackEvent={trackProductEvent}
+  /></Suspense>);
+
   if(!user){
-    if(view==="landing") return decorate(<Landing onTry={startDemo} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)} onOpenDemoModule={startDemoAtModule}/>);
+    if(view==="landing") return decorate(<Landing onDiscover={()=>setView("guided-discovery")} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)}/>);
     return decorate(<AuthScreen
       initialMode={authInitialMode}
       initialError={authNotice}
       initialEmail={initialPurchaseEmail}
-      onTryFree={startDemo}
+      onTryFree={()=>setView("guided-discovery")}
       onBuy={goDirectCheckout}
       onBack={backToLanding}
     />);
@@ -12809,8 +13325,9 @@ export default function App(){
     }}
     onLogout={logout}
     onOpenStart={()=>setView("start")}
+    onEditProfile={()=>setProfileSetupOpen(true)}
   />{showNav&&<GlobalNav view={view} setView={setView} hasResults={!!results} isDemo={demo}/>}</>);
-  if(view==="landing") return decorate(<Landing onTry={()=>setView("free-choice")} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)} onOpenDemoModule={(module)=>setView(module)}/>);
+  if(view==="landing") return decorate(<Landing onDiscover={()=>setView("guided-discovery")} onLogin={()=>openAuth("login")} onBuy={goDirectCheckout} onGuide={()=>setGuideOpen(true)}/>);
   if(view==="guia") return demo
     ? decorate(<Form step={step} setStep={setStep} form={form} setForm={setForm} onSubmit={generate} error={error} onGoHome={()=>setView("home")} isDemo={true}/>)
     : decorate(<Suspense fallback={<div style={{minHeight:"55vh",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"\'Lora\',serif",color:"rgba(74,94,58,.7)"}}>Cargando guía musical…</div>}><GuiaCancionesModule onStart={()=>setView("form")} onBack={()=>setView("home")} theme={THEME} AudioButtonComponent={AudioButton} BackToHomeComponent={BackToHome}/></Suspense>);
