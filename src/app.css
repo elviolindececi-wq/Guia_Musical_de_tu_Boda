@@ -16,7 +16,7 @@ button{-webkit-tap-highlight-color:transparent}
 .fu3{animation:fadeUp .5s .21s ease both;opacity:0}
 .fu4{animation:fadeUp .5s .28s ease both;opacity:0}
 .fu5{animation:fadeUp .5s .35s ease both;opacity:0}
-input,textarea{background:transparent;border:none;border-bottom:1px solid rgba(74,94,58,.28);color:#1A1A14;font-family:'Lora',serif;font-weight:500;font-size:1.15rem;padding:12px 2px;width:100%;outline:none;transition:border-color .3s;-webkit-appearance:none}
+input,textarea{background:transparent;border:none;border-bottom:1px solid rgba(74,94,58,.28);color:#1A1A14;font-family:'Lora',serif;font-weight:500;font-size:1.15rem;padding:12px 2px;width:100%;outline:none;transition:border-color .3s;-webkit-appearance:none;appearance:none}
 input:focus,textarea:focus{border-bottom-color:#4A5E3A;outline:none}
 input[type="date"]{color-scheme:light;color:#1A1A14}
 input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.25) sepia(1) saturate(4) hue-rotate(75deg);cursor:pointer;opacity:0.7}

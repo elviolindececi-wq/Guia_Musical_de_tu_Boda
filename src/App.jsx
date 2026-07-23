@@ -15,6 +15,7 @@ const GuiaNupcial = lazy(() => import("./modules/GuiaModule.jsx").then(module =>
 const GuiaCancionesModule = lazy(() => import("./modules/GuiaCancionesModule.jsx"));
 const ResultsModule = lazy(() => import("./modules/ResultsModule.jsx"));
 const GuidedDiscoveryModule = lazy(() => import("./modules/GuidedDiscoveryModule.jsx"));
+const CeciGuideModule = lazy(() => import("./modules/CeciGuideModule.jsx"));
 
 // ─── Supabase inline (funciona en preview y en Vercel) ─────────────────────
 // En Vercel: configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY
@@ -13182,6 +13183,8 @@ export default function App(){
   const showModuleContext = !!user && !!moduleContextTitles[view];
   const inlinePurchaseViews = new Set(["landing","auth","locked","account"]);
   const showUniversalPurchase = accessStatus!=="granted" && !inlinePurchaseViews.has(view);
+  const ceciGuideViews = new Set(["home","checklist-boda","budget","vendors","guests","salon-design","timeline","guia","results","guia-novios"]);
+  const showCeciGuide = !!user && (demo || accessStatus==="granted") && ceciGuideViews.has(view);
   const excelTemplateIds = EXCEL_TEMPLATES_BY_VIEW[view] || [];
   const showExcelAccess = !!user && excelTemplateIds.length>0 && (demo || accessStatus==="granted");
   const excelPanel = showExcelAccess
@@ -13199,6 +13202,17 @@ export default function App(){
       view={view}
       onBuy={openUniversalPurchase}
     />}
+    {showCeciGuide&&<Suspense fallback={null}><CeciGuideModule
+      view={view}
+      form={form}
+      user={user}
+      profile={readStartProfile()}
+      isDemo={demo}
+      dataClient={dataClient}
+      onNavigate={(target)=>setView(target)}
+      trackEvent={trackProductEvent}
+      purchaseVisible={showUniversalPurchase}
+    /></Suspense>}
     <PurchaseGateModal open={purchaseOpen} onClose={()=>setPurchaseOpen(false)} initialEmail={initialPurchaseEmail}/>
     <GuideLeadModal open={guideOpen} onClose={()=>setGuideOpen(false)}/>
     <FullGuideWelcomeModal open={fullGuideWelcomeOpen&&!demo&&accessStatus==="granted"} onClose={dismissFullGuideWelcome} onGoGuide={()=>{dismissFullGuideWelcome("open_guide_module");setView("guia-novios");}}/>
