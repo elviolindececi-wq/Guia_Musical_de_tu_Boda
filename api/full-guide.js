@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BUCKET = process.env.FULL_GUIDE_BUCKET || "private-guides";
-const FILE_PATH = process.env.FULL_GUIDE_PATH || "nos-comprometimos-guia-completa.pdf";
+const FILE_PATH = process.env.FULL_GUIDE_PATH || "Nos-comprometimos-y-ahora-que-El-Violin-de-Ceci.pdf";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
