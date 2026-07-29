@@ -276,7 +276,7 @@ export default function GuidedDiscoveryModule({onBack,onBuy,onLogin,getRecommend
 
         <div className="guided-discovery-offer-highlight">
           <span>Pago único</span>
-          <strong>USD 37</strong>
+          <strong>USD 37 · pago único</strong>
           <span>Acceso inmediato · Sin suscripción</span>
         </div>
 
@@ -290,8 +290,8 @@ export default function GuidedDiscoveryModule({onBack,onBuy,onLogin,getRecommend
         <button type="button" className="guided-discovery-secondary" onClick={()=>setShowIncludes(value=>!value)} aria-expanded={showIncludes}>
           {showIncludes?"Ver menos":"Ver todo lo que incluye"}
         </button>
-        <button type="button" className="guided-discovery-primary guided-discovery-buy" onClick={buy}>Quiero organizar mi boda · USD 37 →</button>
-        <p className="guided-discovery-trust">USD 37 · Pago seguro en Hotmart · Usá el mismo email para comprar y crear tu acceso.</p>
+        <button type="button" className="guided-discovery-primary guided-discovery-buy" onClick={buy}>Quiero organizar mi boda · USD 37 · pago único →</button>
+        <p className="guided-discovery-trust">USD 37 · pago único · Pago seguro en Hotmart · Usá el mismo email para comprar y crear tu acceso.</p>
         <div className="guided-discovery-offer-links">
           <button type="button" onClick={()=>setStep(4)}>Volver a la demostración</button>
           <button type="button" onClick={login}>Ya compré / Ingresar</button>

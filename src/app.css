@@ -2445,3 +2445,161 @@ button.landing-v9-tool:active{
     width:100%;
   }
 }
+/* Tutorial de YouTube - landing */
+.landing-v9-tutorial-section{
+  scroll-margin-top:90px;
+}
+.landing-v9-tutorial{
+  display:grid;
+  grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr);
+  align-items:center;
+  gap:clamp(24px,5vw,54px);
+  padding:clamp(26px,5vw,50px);
+  border:1px solid rgba(74,94,58,.14);
+  border-radius:28px;
+  background:#fbf7ef;
+  box-shadow:0 22px 64px rgba(63,50,31,.1);
+}
+.landing-v9-tutorial-tag{
+  display:inline-flex;
+  margin-bottom:12px;
+  padding:7px 11px;
+  border:1px solid rgba(169,121,34,.28);
+  border-radius:999px;
+  background:rgba(201,169,110,.13);
+  color:#a97922;
+  font-family:'Cinzel',serif;
+  font-size:.68rem;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.landing-v9-tutorial h2{
+  margin:0 0 13px;
+  color:#1a1a14;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.9rem,4vw,3rem);
+  line-height:1.08;
+}
+.landing-v9-tutorial-copy p{
+  margin:0;
+  color:rgba(26,26,20,.68);
+  font-family:'Lora',serif;
+  font-size:clamp(.94rem,1.6vw,1.05rem);
+  line-height:1.7;
+}
+.landing-v9-tutorial-benefits{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  margin-top:18px;
+  color:#4a5e3a;
+  font-family:'Lora',serif;
+  font-size:.82rem;
+  font-weight:750;
+}
+.landing-v9-video-shell{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  aspect-ratio:16 / 9;
+  border-radius:20px;
+  background:#111;
+  box-shadow:0 20px 46px rgba(0,0,0,.2);
+}
+.landing-v9-video-shell iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+}
+.landing-v9-video-help{
+  margin:10px 4px 0;
+  color:rgba(26,26,20,.56);
+  font-family:'Lora',serif;
+  font-size:.76rem;
+  line-height:1.45;
+  text-align:center;
+}
+
+@media (max-width:820px){
+  .landing-v9-tutorial{
+    grid-template-columns:1fr;
+    padding:24px 18px;
+    border-radius:22px;
+  }
+  .landing-v9-tutorial-copy{
+    text-align:center;
+  }
+  .landing-v9-tutorial-benefits{
+    justify-content:center;
+  }
+  .landing-v9-video-shell{
+    border-radius:14px;
+  }
+}
+
+@media (orientation:landscape) and (max-height:520px){
+  .landing-v9-video-help{
+    font-size:.7rem;
+  }
+}
+
+/* Ajustes finales tutorial y barra movil */
+.landing-v9-tutorial-section{
+  padding-bottom:clamp(20px,4vw,36px);
+}
+.landing-v9-tutorial-section + .landing-v9-section{
+  padding-top:clamp(20px,4vw,36px);
+}
+
+@media(max-width:640px){
+  .mobile-buy-bar{
+    gap:6px;
+    padding:7px;
+    bottom:max(8px,env(safe-area-inset-bottom));
+  }
+
+  .mobile-buy-bar button{
+    min-height:48px;
+    padding:7px 9px;
+    font-size:.8rem;
+    line-height:1.15;
+  }
+
+  .mobile-buy-bar button:first-child{
+    display:flex;
+    flex:1.65;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1px;
+  }
+
+  .mobile-buy-bar button:first-child span{
+    white-space:nowrap;
+  }
+
+  .mobile-buy-bar button:first-child small{
+    font-size:.66rem;
+    font-weight:700;
+    opacity:.88;
+  }
+
+  .mobile-buy-bar button:last-child{
+    flex:.75;
+    font-size:.76rem;
+    line-height:1.18;
+  }
+}
+
+@media(max-width:350px){
+  .mobile-buy-bar button:first-child span{
+    font-size:.75rem;
+  }
+
+  .mobile-buy-bar button:last-child{
+    font-size:.7rem;
+  }
+}
