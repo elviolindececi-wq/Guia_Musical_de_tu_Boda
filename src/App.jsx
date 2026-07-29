@@ -35,7 +35,7 @@ const supabase = SB_URL && SB_KEY
 
 const HOTMART_CHECKOUT_URL = "https://pay.hotmart.com/W106077396L?checkoutMode=10&bid=1783991520846";
 const PURCHASE_PRICE_USD = 37;
-const PURCHASE_PRICE_LABEL = `USD ${PURCHASE_PRICE_USD}`;
+const PURCHASE_PRICE_LABEL = `USD ${PURCHASE_PRICE_USD} · pago único`;
 const FREE_GUIDE_URL = "/guias/nos-comprometimos-guia-gratuita.pdf";
 const FULL_GUIDE_ENDPOINT = "/api/full-guide";
 const EXCEL_DOWNLOAD_ENDPOINT = "/api/excel-download";
@@ -1303,7 +1303,7 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
               <h1 className="landing-v9-title">Ordená la boda.<br/><em>Disfrutá el proceso.</em></h1>
               <p className="landing-v9-copy">Toda la organización de su boda en un solo lugar: presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados para saber qué hacer ahora.</p>
               <div className="landing-v9-actions">
-                <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_hero")}>Organizar mi boda · USD 37 →</button>
+                <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_hero")}>Organizar mi boda · USD 37 · pago único →</button>
                 <button type="button" className="landing-v9-secondary" onClick={()=>discover("landing_hero")}>Ver cómo funciona</button>
               </div>
               <div className="landing-v9-proof">
@@ -1332,6 +1332,34 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
                 <button type="button" onClick={()=>discover("landing_preview")} style={{marginTop:20,width:"100%",minHeight:50,border:"1px solid rgba(217,184,111,.5)",borderRadius:100,background:"transparent",color:"#FFF8E8",fontFamily:"'Lora',serif",fontWeight:750,cursor:"pointer"}}>Ver cómo funciona →</button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v9-section landing-v9-tutorial-section" aria-labelledby="landing-tutorial-title">
+        <div className="landing-v9-tutorial">
+          <div className="landing-v9-tutorial-copy">
+            <span className="landing-v9-tutorial-tag">Tutorial de la plataforma</span>
+            <h2 id="landing-tutorial-title">Mirá cómo funciona Tu Boda Organizada</h2>
+            <p>En este video te muestro cómo empezar, dónde encontrar cada herramienta y cómo usar el sistema para organizar la boda paso a paso.</p>
+            <div className="landing-v9-tutorial-benefits">
+              <span>✓ Recorrido completo</span>
+              <span>✓ Explicado paso a paso</span>
+              <span>✓ USD 37 · pago único</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="landing-v9-video-shell">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/CoHKehTBP-Y?rel=0&modestbranding=1&playsinline=1"
+                title="Tutorial de Tu Boda Organizada"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+            <p className="landing-v9-video-help">En el celular, giralo en horizontal y tocá el ícono de pantalla completa del reproductor.</p>
           </div>
         </div>
       </section>
@@ -1384,7 +1412,7 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
             <p>Con el acceso completo guardás cada avance, continuás desde cualquier dispositivo y ves cómo las decisiones se conectan.</p>
           </div>
           <div style={{display:"grid",gap:10,minWidth:"min(100%,270px)"}}>
-            <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_final")}>Organizar mi boda · USD 37</button>
+            <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_final")}>Organizar mi boda · USD 37 · pago único</button>
             <button type="button" className="landing-v9-secondary" onClick={()=>discover("landing_final")}>Ver cómo funciona</button>
             <button type="button" onClick={()=>login("landing_final")} style={{background:"transparent",border:0,color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4,cursor:"pointer"}}>Ya compré / Ingresar</button>
           </div>
@@ -1393,7 +1421,7 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
     </main>
 
     <div className="mobile-buy-bar" style={{display:showMobileBar?undefined:"none"}}>
-      <button type="button" onClick={()=>buy("landing_mobile_bar")} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}>Organizar mi boda · USD 37</button>
+      <button type="button" onClick={()=>buy("landing_mobile_bar")} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}><span>Comprar · USD 37</span><small>Pago único</small></button>
       <button type="button" onClick={()=>discover("landing_mobile_bar")} style={{border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Ver cómo funciona</button>
     </div>
   </div>;
@@ -1994,7 +2022,7 @@ function PurchaseGateModal({open,onClose,initialEmail=""}){
         autoComplete="tel"
       />
       {error&&<p style={{fontFamily:"'Lora',serif",fontSize:".92rem",color:"#b64343",lineHeight:1.45,margin:"8px 0 12px"}}>{error}</p>}
-      <button className="pbtn" disabled={loading} onClick={submit} style={{width:"100%",marginTop:8}}>{loading?"Preparando pago...":"Ir al pago seguro · USD 37 →"}</button>
+      <button className="pbtn" disabled={loading} onClick={submit} style={{width:"100%",marginTop:8}}>{loading?"Preparando pago...":"Ir al pago seguro · USD 37 · pago único →"}</button>
       <p style={{fontFamily:"'Lora',serif",fontSize:".78rem",color:DIMSOFT,lineHeight:1.45,textAlign:"center",margin:"14px 0 0"}}>El pago se procesa en Hotmart. Usá el mismo email para comprar y para crear tu acceso.</p>
     </div>
   </div>;
@@ -2006,7 +2034,7 @@ function LockedAccessScreen({email,onBuy,onLogout,onCreateAccess}){
       <div className="brand-logo" style={{marginBottom:14}}>El Violín de Ceci</div>
       <h1 className="brand-title" style={{fontSize:"clamp(1.8rem,6vw,2.35rem)",margin:"0 0 10px"}}>Tu cuenta todavía no está habilitada</h1>
       <p className="brand-copy" style={{fontSize:"1rem",margin:"0 0 22px"}}>No encontramos una compra aprobada para <strong>{email}</strong>. Si acabás de pagar, esperá la confirmación de Hotmart y volvé a entrar con el mismo email.</p>
-      <button className="pbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar el acceso · USD 37 →</button>
+      <button className="pbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar el acceso · USD 37 · pago único →</button>
       <button className="gbtn" onClick={onCreateAccess} style={{width:"100%",marginBottom:10}}>Usar otro email</button>
       <button onClick={onLogout} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:DIM,textDecoration:"underline",cursor:"pointer",padding:8}}>Cerrar sesión</button>
     </div>
@@ -2159,7 +2187,7 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
 
       {mode==="signup"&&<p style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.45)",margin:"14px 0 0"}}>La app verificará automáticamente que exista una compra aprobada para este email.</p>}
       {onBuy&&<div className="auth-purchase-cta">
-        <span><strong>Acceso completo por USD 37</strong><small>Pago único · acceso inmediato · sin suscripción</small></span>
+        <span><strong>Acceso completo · USD 37 · pago único</strong><small>Acceso inmediato · sin suscripción</small></span>
         <button type="button" onClick={onBuy}>Organizar mi boda →</button>
       </div>}
     </div>
@@ -12158,7 +12186,7 @@ function ToolsHub({user,hasResults,isDemo=false,onGoModule,onViewResults,onStart
 
       {isDemo&&<div style={{background:"#FFFDF8",border:"1px solid rgba(74,94,58,.18)",borderRadius:16,padding:"13px 15px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
         <div style={{fontFamily:"'Lora',serif",fontSize:".84rem",lineHeight:1.5,color:"rgba(26,26,20,.66)"}}><strong style={{color:"#4A5E3A"}}>Prueba gratuita.</strong> Podés recorrer y cargar datos temporales. Se borran al recargar o salir.</div>
-        <button className="lbtn" onClick={onRequestPurchase}>Guardar mi planificación · USD 37</button>
+        <button className="lbtn" onClick={onRequestPurchase}>Guardar mi planificación · USD 37 · pago único</button>
       </div>}
 
       {groups.map(group=><section className="tools-v10-section" key={group.title}>
@@ -12187,7 +12215,7 @@ function AccountScreen({user,isDemo=false,onLogin,onBuy,onLogout}){
       <p className="brand-copy" style={{fontSize:".98rem",margin:"0 0 22px"}}>{isDemo?"La prueba no requiere cuenta. Para guardar tu planificación, ingresá con el email usado en Hotmart.":`Sesión iniciada como ${user?.email||"usuario"}.`}</p>
       {isDemo?<>
         <button className="pbtn" onClick={onLogin} style={{width:"100%",marginBottom:10}}>Ya compré: iniciar sesión →</button>
-        <button className="gbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar acceso completo · USD 37</button>
+        <button className="gbtn" onClick={onBuy} style={{width:"100%",marginBottom:10}}>Comprar acceso completo · USD 37 · pago único</button>
         <button onClick={onLogout} style={{background:"transparent",border:"none",fontFamily:"'Lora',serif",color:"rgba(26,26,20,.5)",textDecoration:"underline",cursor:"pointer",padding:10}}>Salir de la prueba</button>
       </>:<button className="gbtn" onClick={onLogout} style={{width:"100%"}}>Cerrar sesión</button>}
     </div>
@@ -12211,7 +12239,7 @@ function DemoPurchaseBar({onBuy,withNav=true}){
         <strong>Estás probando gratis</strong>
         <span>Comprá para guardar y descargar las plantillas en Excel.</span>
       </div>
-      <button type="button" onClick={onBuy}>Comprar acceso · USD 37</button>
+      <button type="button" onClick={onBuy}>Comprar acceso · USD 37 · pago único</button>
     </aside>
     <div className={`demo-purchase-spacer ${withNav?"":"no-nav"}`} aria-hidden="true"/>
   </>;
@@ -12222,12 +12250,12 @@ function UniversalPurchaseCTA({onBuy,withNav=false,isDemo=false,view=""}){
     <aside className={`purchase-everywhere-cta no-print ${withNav?"with-nav":"no-nav"}`} aria-label="Comprar acceso completo">
       <div className="purchase-everywhere-copy">
         <span className="purchase-everywhere-eyebrow">{isDemo?"Guardá lo que estás organizando":"Tu boda organizada"}</span>
-        <strong>Acceso completo · USD 37</strong>
+        <strong>Acceso completo · USD 37 · pago único</strong>
         <small>Pago único · acceso inmediato · sin suscripción</small>
       </div>
       <button type="button" onClick={()=>onBuy?.(`purchase_everywhere_${view||"unknown"}`)}>
         Organizar mi boda
-        <span>USD 37 →</span>
+        <span>USD 37 · pago único →</span>
       </button>
     </aside>
     <div className={`purchase-everywhere-spacer ${withNav?"with-nav":"no-nav"}`} aria-hidden="true"/>
