@@ -1248,181 +1248,1039 @@ function FullGuideWelcomeModal({open,onClose,onGoGuide}){
   </div>;
 }
 
+const LANDING_BUDGET_CALCULATOR = Object.freeze({
+  currencyCodes:["PYG","USD","ARS","BRL","UYU","BOB","CLP","COP","PEN","CRC","GTQ","HNL","NIO","PAB","DOP","CAD","MXN","EUR","GBP","CHF","SEK","NOK","DKK","PLN","CZK","HUF","RON","JPY","CNY","KRW","INR","AUD","NZD","SGD","HKD","TWD","THB","MYR","IDR","PHP","VND","AED","SAR","QAR","BHD","KWD","OMR","JOD","ILS","ZAR","EGP","MAD","NGN","KES","GHS"],
+  fxFromUsd:{PYG:7500,USD:1,ARS:900,BRL:5,UYU:40,BOB:6.9,CLP:920,COP:4000,PEN:3.8,CRC:520,GTQ:7.8,HNL:24.7,NIO:36.6,PAB:1,DOP:59,CAD:1.35,MXN:17,EUR:.92,GBP:.79,CHF:.89,SEK:10.5,NOK:10.6,DKK:6.85,PLN:4,CZK:23,HUF:360,RON:4.6,JPY:150,CNY:7.2,KRW:1330,INR:83,AUD:1.53,NZD:1.63,SGD:1.34,HKD:7.8,TWD:32,THB:36,MYR:4.7,IDR:16000,PHP:57,VND:25000,AED:3.67,SAR:3.75,QAR:3.64,BHD:.376,KWD:.31,OMR:.385,JOD:.71,ILS:3.7,ZAR:18.6,EGP:48,MAD:10,NGN:1500,KES:130,GHS:15},
+  tiers:{
+    essential:{label:"Esencial",eyebrow:"Priorizar lo importante",perGuestUsd:85,fixedUsd:2500},
+    classic:{label:"Clásica",eyebrow:"Equilibrio y experiencia",perGuestUsd:145,fixedUsd:5000},
+    premium:{label:"Premium",eyebrow:"Más producción y detalle",perGuestUsd:240,fixedUsd:8500}
+  },
+  reservePct:.08,
+  categories:[
+    {id:"venue",label:"Salón / lugar",pct:.14},
+    {id:"catering",label:"Catering",pct:.31},
+    {id:"drinks",label:"Bebidas",pct:.09},
+    {id:"decor",label:"Decoración",pct:.06},
+    {id:"flowers",label:"Flores",pct:.03},
+    {id:"photo",label:"Fotografía y video",pct:.09},
+    {id:"music",label:"Música",pct:.06},
+    {id:"attire",label:"Vestuario",pct:.08},
+    {id:"beauty",label:"Belleza",pct:.03},
+    {id:"ceremony",label:"Ceremonia",pct:.03},
+    {id:"stationery",label:"Papelería",pct:.02},
+    {id:"transport",label:"Transporte",pct:.02},
+    {id:"other",label:"Otros",pct:.04}
+  ]
+});
+
+const LANDING_TESTIMONIALS = Object.freeze([]);
+
+const landingMoney = (value,currency) => {
+  const amount = Number.isFinite(value)?value:0;
+  const symbol = CURRENCIES.find(item=>item.code===currency)?.symbol || currency;
+  return `${symbol} ${new Intl.NumberFormat("es-PY",{maximumFractionDigits:0}).format(Math.round(amount))}`;
+};
+
+function LandingSectionHeading({eyebrow,title,copy,align="left"}){
+  return <div className={`landing-v11-heading is-${align}`}>
+    {eyebrow&&<span className="landing-v11-eyebrow">{eyebrow}</span>}
+    <h2>{title}</h2>
+    {copy&&<p>{copy}</p>}
+  </div>;
+}
+
+function LandingConnectionDemo({trackEvent}){
+  const flows = [
+    {
+      id:"guests",
+      label:"Invitados",
+      icon:"guests",
+      title:"Una confirmación deja de ser un dato suelto.",
+      steps:["María confirma · 2 personas","La invitación queda actualizada","La asignás a Mesa 6","La mesa forma parte del salón"],
+      note:"En Invitados podés gestionar confirmaciones, grupos, restricciones y asignación de mesas."
+    },
+    {
+      id:"vendors",
+      label:"Proveedor",
+      icon:"vendors",
+      title:"El precio del proveedor no queda perdido en un chat.",
+      steps:["Fotógrafo · presupuesto recibido","Estado: contratado","Pago registrado","Presupuesto actualizado"],
+      note:"Los importes de proveedores alimentan el presupuesto y distinguen lo cotizado de lo pagado."
+    },
+    {
+      id:"tasks",
+      label:"Tarea",
+      icon:"plan",
+      title:"Un pendiente ocupa menos cabeza cuando tiene dueño y fecha.",
+      steps:["Confirmar menú","Responsable asignado","Fecha límite definida","Pendiente visible en el plan"],
+      note:"La checklist admite responsables, etapas y vencimientos para ordenar qué toca hacer ahora."
+    }
+  ];
+  const [active,setActive] = useState(flows[0].id);
+  const current = flows.find(flow=>flow.id===active) || flows[0];
+  const select = (id) => {
+    setActive(id);
+    trackEvent?.("landing_connection_demo_selected",{flow:id});
+  };
+  return <div className="landing-v11-connection-demo">
+    <div className="landing-v11-connection-tabs" role="tablist" aria-label="Ejemplos de conexiones dentro de la app">
+      {flows.map(flow=><button
+        key={flow.id}
+        type="button"
+        role="tab"
+        aria-selected={active===flow.id}
+        className={active===flow.id?"is-active":""}
+        onClick={()=>select(flow.id)}
+      ><ProductIcon name={flow.icon} size={18}/>{flow.label}</button>)}
+    </div>
+    <div className="landing-v11-connection-panel" role="tabpanel">
+      <div>
+        <span className="landing-v11-product-chip">Así se conecta</span>
+        <h3>{current.title}</h3>
+        <p>{current.note}</p>
+      </div>
+      <div className="landing-v11-flow">
+        {current.steps.map((step,index)=><div key={step} className="landing-v11-flow-step">
+          <span>{index+1}</span><strong>{step}</strong>{index<current.steps.length-1&&<i aria-hidden="true">↓</i>}
+        </div>)}
+      </div>
+    </div>
+  </div>;
+}
+
+function LandingBudgetCalculator({onBuy,trackEvent}){
+  const [currency,setCurrency] = useState("");
+  const [guests,setGuests] = useState(120);
+  const [tier,setTier] = useState("classic");
+  const tracked = useRef(false);
+  const completed = useRef(false);
+  const viewed = useRef(false);
+  const rootRef = useRef(null);
+
+  useEffect(()=>{
+    if(viewed.current || !rootRef.current || typeof IntersectionObserver==="undefined") return;
+    const observer = new IntersectionObserver(entries=>{
+      if(entries.some(entry=>entry.isIntersecting)){
+        viewed.current=true;
+        trackEvent?.("landing_calculator_viewed",{});
+        observer.disconnect();
+      }
+    },{threshold:.3});
+    observer.observe(rootRef.current);
+    return()=>observer.disconnect();
+  },[trackEvent]);
+
+  const markUsed = (field) => {
+    if(!tracked.current){
+      tracked.current=true;
+      trackEvent?.("landing_calculator_used",{first_field:field});
+    }
+  };
+
+  useEffect(()=>{
+    if(!currency || !tracked.current || completed.current) return;
+    completed.current=true;
+    trackEvent?.("landing_calculator_completed",{currency,guests,tier});
+  },[currency,guests,tier,trackEvent]);
+
+  const cfg = LANDING_BUDGET_CALCULATOR;
+  const tierCfg = cfg.tiers[tier];
+  const usdSubtotal = tierCfg.fixedUsd + guests*tierCfg.perGuestUsd;
+  const hasCurrency = Boolean(currency);
+  const fx = hasCurrency ? (cfg.fxFromUsd[currency] || 1) : 1;
+  const subtotal = usdSubtotal*fx;
+  const reserve = subtotal*cfg.reservePct;
+  const total = subtotal+reserve;
+  const perGuest = subtotal/Math.max(guests,1);
+  const rangeProgress = ((guests-20)/(500-20))*100;
+
+  return <div className="landing-v11-calculator" ref={rootRef}>
+    <div className="landing-v11-calculator-controls">
+      <span className="landing-v11-product-chip">Herramienta gratuita</span>
+      <h3>¿Cuánto podría costar tu boda?</h3>
+      <p>Mové tres variables para obtener una referencia inicial. No necesitás dejar tu email.</p>
+
+      <label className="landing-v11-field">
+        <span>Moneda</span>
+        <select value={currency} onChange={event=>{markUsed("currency");setCurrency(event.target.value);}}>
+          <option value="" disabled>Seleccioná una moneda</option>
+          {cfg.currencyCodes.map(code=>{
+            const item=CURRENCIES.find(currencyItem=>currencyItem.code===code);
+            return <option key={code} value={code}>{code}{item?.label?` · ${item.label}`:""}</option>;
+          })}
+        </select>
+      </label>
+
+      <label className="landing-v11-field landing-v11-range-field">
+        <span>Invitados <strong>{guests}</strong></span>
+        <input
+          type="range"
+          min="20"
+          max="500"
+          step="5"
+          value={guests}
+          aria-valuemin="20"
+          aria-valuemax="500"
+          aria-valuenow={guests}
+          aria-label="Cantidad de invitados"
+          style={{"--range-progress":`${rangeProgress}%`}}
+          onChange={event=>{markUsed("guests");setGuests(parseInt(event.target.value)||20);}}
+        />
+        <small><span>20</span><span>500</span></small>
+      </label>
+
+      <fieldset className="landing-v11-tier-field">
+        <legend>Tipo de boda</legend>
+        <div>
+          {Object.entries(cfg.tiers).map(([id,item])=><button
+            type="button"
+            key={id}
+            className={tier===id?"is-active":""}
+            aria-pressed={tier===id}
+            onClick={()=>{markUsed("tier");setTier(id);}}
+          ><strong>{item.label}</strong><span>{item.eyebrow}</span></button>)}
+        </div>
+      </fieldset>
+    </div>
+
+    <div className="landing-v11-calculator-result" aria-live="polite">
+      <span>Presupuesto estimado</span>
+      <strong className="landing-v11-total">{hasCurrency ? landingMoney(total,currency) : "Seleccioná una moneda"}</strong>
+      <div className="landing-v11-result-pills">
+        <div><small>Aprox. por invitado</small><b>{hasCurrency ? landingMoney(perGuest,currency) : "—"}</b></div>
+        <div><small>Reserva orientativa</small><b>{hasCurrency ? landingMoney(reserve,currency) : "—"}</b></div>
+      </div>
+      <div className="landing-v11-category-list">
+        {cfg.categories.map(item=>{
+          const value=subtotal*item.pct;
+          return <div key={item.id} className="landing-v11-category-row">
+            <div><span>{item.label}</span><strong>{hasCurrency ? landingMoney(value,currency) : "—"}</strong></div>
+            <div className="landing-v11-category-bar" aria-hidden="true"><i style={{width:`${Math.max(5,item.pct*100)}%`}}/></div>
+          </div>;
+        })}
+      </div>
+      <p className="landing-v11-disclaimer">Los valores son orientativos y pueden variar según país, ciudad, fecha, proveedores, cantidad de invitados y decisiones de cada pareja.</p>
+      <div className="landing-v11-calculator-bridge">
+        <strong>Esta es una estimación.</strong>
+        <p>Una boda se vuelve mucho más fácil de decidir cuando dejás de adivinar y empezás a ver los números.</p>
+        <p>Dentro de Tu Boda Organizada reemplazás estas referencias por tus números reales y seguís lo presupuestado, cotizado, pagado y pendiente.</p>
+        <button type="button" className="landing-v11-primary" onClick={()=>{trackEvent?.("landing_calculator_cta_clicked",{currency,guests,tier});onBuy();}}>Quiero llevar mis números reales · USD 37</button>
+        <small>Pago único</small>
+      </div>
+    </div>
+  </div>;
+}
+
+function LandingSalonMiniDemo({onBuy,trackEvent}){
+  const [tableCount,setTableCount] = useState(6);
+  const [dancePosition,setDancePosition] = useState("center");
+  const [extras,setExtras] = useState({
+    head:true,
+    dj:true,
+    bar:false
+  });
+  const [customPositions,setCustomPositions] = useState({});
+  const [draggingTable,setDraggingTable] = useState(null);
+  const canvasRef = useRef(null);
+
+  const layouts = {
+    6:[
+      [18,29],[50,25],[82,29],
+      [18,74],[50,79],[82,74]
+    ],
+    8:[
+      [13,28],[37,24],[63,24],[87,28],
+      [13,75],[37,80],[63,80],[87,75]
+    ],
+    10:[
+      [10,27],[30,23],[50,22],[70,23],[90,27],
+      [10,76],[30,80],[50,82],[70,80],[90,76]
+    ]
+  };
+
+  const getDefaultCoords = () => layouts[tableCount].map(([x,y])=>{
+    if(dancePosition==="front"){
+      return [x,42+(y*.5)];
+    }
+
+    if(dancePosition==="side"){
+      return [34+(x*.6),10+(y*.82)];
+    }
+
+    return [x,y];
+  });
+
+  const resetPositions = () => setCustomPositions({});
+
+  const updateTables = (value) => {
+    resetPositions();
+    setTableCount(value);
+    trackEvent?.("salon_demo_interaction",{
+      source:"landing_salon_demo",
+      control:"tables",
+      value
+    });
+  };
+
+  const updateDance = (value) => {
+    resetPositions();
+    setDancePosition(value);
+    trackEvent?.("salon_demo_interaction",{
+      source:"landing_salon_demo",
+      control:"dance_position",
+      value
+    });
+  };
+
+  const toggleExtra = (key) => {
+    setExtras(current=>{
+      const next={...current,[key]:!current[key]};
+      trackEvent?.("salon_demo_interaction",{
+        source:"landing_salon_demo",
+        control:key,
+        value:next[key]
+      });
+      return next;
+    });
+  };
+
+  const moveTableFromPointer = (index,event) => {
+    const canvas=canvasRef.current;
+    if(!canvas) return;
+
+    const rect=canvas.getBoundingClientRect();
+    if(!rect.width || !rect.height) return;
+
+    const rawX=((event.clientX-rect.left)/rect.width)*100;
+    const rawY=((event.clientY-rect.top)/rect.height)*100;
+
+    const x=Math.max(7,Math.min(93,rawX));
+    const y=Math.max(8,Math.min(92,rawY));
+
+    setCustomPositions(current=>({
+      ...current,
+      [index]:[x,y]
+    }));
+  };
+
+  const startTableDrag = (index,event) => {
+    if(event.button!==undefined && event.button!==0) return;
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setDraggingTable(index);
+    moveTableFromPointer(index,event);
+  };
+
+  const continueTableDrag = (index,event) => {
+    if(draggingTable!==index) return;
+    event.preventDefault();
+    moveTableFromPointer(index,event);
+  };
+
+  const finishTableDrag = (index,event) => {
+    if(draggingTable!==index) return;
+
+    moveTableFromPointer(index,event);
+
+    try{
+      if(event.currentTarget.hasPointerCapture?.(event.pointerId)){
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    }catch(_e){}
+
+    setDraggingTable(null);
+
+    trackEvent?.("salon_demo_table_moved",{
+      source:"landing_salon_demo",
+      table:index+1,
+      table_count:tableCount
+    });
+  };
+
+  const defaultCoords=getDefaultCoords();
+
+  const tableCoords=defaultCoords.map((coords,index)=>
+    customPositions[index] || coords
+  );
+
+  const hasCustomPositions=Object.keys(customPositions).length>0;
+
+  return <div className="landing-v12-salon-demo">
+    <div className="landing-v12-salon-controls">
+      <div>
+        <span className="landing-v12-salon-control-label">1 · Cantidad de mesas</span>
+        <div className="landing-v12-salon-segment">
+          {[6,8,10].map(value=>
+            <button
+              key={value}
+              type="button"
+              className={tableCount===value?"is-active":""}
+              onClick={()=>updateTables(value)}
+            >
+              {value} mesas
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <span className="landing-v12-salon-control-label">2 · ¿Dónde querés la pista?</span>
+        <div className="landing-v12-salon-segment">
+          {[
+            ["center","Centro"],
+            ["front","Frente"],
+            ["side","Lateral"]
+          ].map(([value,label])=>
+            <button
+              key={value}
+              type="button"
+              className={dancePosition===value?"is-active":""}
+              onClick={()=>updateDance(value)}
+            >
+              {label}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <span className="landing-v12-salon-control-label">3 · Agregá elementos</span>
+        <div className="landing-v12-salon-toggles">
+          <button
+            type="button"
+            className={extras.head?"is-active":""}
+            onClick={()=>toggleExtra("head")}
+          >
+            <span>{extras.head?"✓":"+"}</span>
+            Mesa principal
+          </button>
+
+          <button
+            type="button"
+            className={extras.dj?"is-active":""}
+            onClick={()=>toggleExtra("dj")}
+          >
+            <span>{extras.dj?"✓":"+"}</span>
+            DJ
+          </button>
+
+          <button
+            type="button"
+            className={extras.bar?"is-active":""}
+            onClick={()=>toggleExtra("bar")}
+          >
+            <span>{extras.bar?"✓":"+"}</span>
+            Bar
+          </button>
+        </div>
+      </div>
+
+      <p className="landing-v12-salon-demo-note">
+        Esta prueba es simplificada y no guarda información. Está pensada para que puedas probarla fácilmente desde el celular.
+      </p>
+    </div>
+
+    <div className="landing-v12-salon-preview">
+      <div className="landing-v12-salon-preview-head">
+        <div>
+          <span>Vista rápida</span>
+          <strong>Tu salón</strong>
+        </div>
+
+        <div className="landing-v12-salon-preview-actions">
+          {hasCustomPositions&&
+            <button
+              type="button"
+              className="landing-v12-salon-reset"
+              onClick={()=>{
+                resetPositions();
+                trackEvent?.("salon_demo_positions_reset",{
+                  source:"landing_salon_demo"
+                });
+              }}
+            >
+              ↺ Reordenar
+            </button>
+          }
+
+          <span>{tableCount} mesas</span>
+        </div>
+      </div>
+
+      <div className="landing-v12-salon-drag-hint">
+        ☝️ Tocá y arrastrá una mesa para moverla
+      </div>
+
+      <div
+        ref={canvasRef}
+        className={`landing-v12-salon-canvas is-${dancePosition}`}
+      >
+        <span className="landing-v12-salon-room-label">SALÓN</span>
+
+        {extras.head&&
+          <div className="landing-v12-salon-head-table">
+            Mesa principal
+          </div>
+        }
+
+        <div className="landing-v12-salon-dance-zone">
+          <span>Pista</span>
+        </div>
+
+        {tableCoords.map(([x,y],index)=>
+          <div
+            key={`${tableCount}-${index}`}
+            role="button"
+            tabIndex={0}
+            aria-label={`Mover mesa ${index+1}`}
+            className={`landing-v12-salon-table${draggingTable===index?" is-dragging":""}`}
+            style={{
+              left:`${x}%`,
+              top:`${y}%`
+            }}
+            onPointerDown={event=>startTableDrag(index,event)}
+            onPointerMove={event=>continueTableDrag(index,event)}
+            onPointerUp={event=>finishTableDrag(index,event)}
+            onPointerCancel={event=>finishTableDrag(index,event)}
+          >
+            <span>{index+1}</span>
+          </div>
+        )}
+
+        {extras.dj&&
+          <div className="landing-v12-salon-dj">DJ</div>
+        }
+
+        {extras.bar&&
+          <div className="landing-v12-salon-bar">Bar</div>
+        }
+      </div>
+
+      <div className="landing-v12-salon-unlock">
+        <span className="landing-v12-salon-unlock-title">
+          En la plataforma completa
+        </span>
+
+        <div className="landing-v12-salon-lock-grid">
+          <span>🔒 Guardar distintas versiones</span>
+          <span>🔒 Trabajar con dimensiones</span>
+          <span>🔒 Agregar mobiliario y decoración</span>
+          <span>🔒 Guardar tu diseño completo</span>
+        </div>
+
+        <button
+          type="button"
+          className="landing-v11-primary landing-v12-salon-buy"
+          onClick={onBuy}
+        >
+          Diseñar mi salón completo · {PURCHASE_PRICE_LABEL}
+        </button>
+
+        <small>Pago único · acceso a toda la plataforma</small>
+      </div>
+    </div>
+  </div>;
+}
+function LandingFaq({trackEvent}){
+  const items = [
+    ["¿Tengo que cargar toda mi boda para empezar?","No. Podés empezar por lo que ya tenés: tus invitados, algunos proveedores o tu presupuesto actual. La idea es ordenar lo que ya estás administrando, no pedirte que reconstruyas todo en una tarde."],
+    ["¿Qué diferencia tiene con mi Excel o Google Sheets?","Las planillas siguen siendo útiles y la compra incluye recursos Excel. La diferencia es que dentro de la app hay datos que se relacionan: proveedores con presupuesto, invitados con mesas y salón, tareas con responsables y cronograma."],
+    ["¿Puedo importar y exportar información?","Invitados y proveedores cuentan con flujos de importación y exportación en Excel. También tenés plantillas descargables para trabajar fuera de la app cuando te resulte más cómodo."],
+    ["¿Puedo usarla si ya tengo wedding planner?","Sí. No busca reemplazar a tu planner. Podés usar solamente las áreas que querés seguir personalmente: presupuesto, invitados, mesas, preferencias, música, pagos y pendientes propios."],
+    ["¿Puedo asignar responsables?","Sí. La checklist permite trabajar con responsables y el cronograma también contempla responsables para los momentos del día. No prometemos colaboración multiusuario con cuentas separadas."],
+    ["¿Funciona desde el celular?","Sí. La aplicación y la landing son responsive. Algunas tareas visuales complejas, como diseñar el salón con mucho detalle, son naturalmente más cómodas en una pantalla grande."],
+    ["¿Cómo funciona la inteligencia artificial?","La IA se usa en la construcción de la propuesta musical: toma datos reales de la pareja, tipo de ceremonia, gustos, restricciones, idioma, momentos y canciones personales para preparar un guion musical. La ayuda “Ceci te guía” dentro de las pantallas usa respuestas preparadas, no un chat abierto."],
+    ["¿El pago de USD 37 es único?","Sí. El checkout actual es de USD 37 en un solo pago y no tiene una suscripción mensual asociada a esta compra."],
+    ["¿Puedo verla antes de comprar?","Sí. “Ver cómo funciona” te lleva directamente al tutorial en video. Si querés probar el recorrido interactivo, elegí “Explorar la plataforma”."],
+    ["¿Qué pasa con mis datos y los datos de mis invitados?","La planificación se guarda asociada a la cuenta del usuario en Supabase y el acceso a los datos de la app se controla por usuario. El producto no está planteado para vender los datos de clientes a terceros."],
+    ["¿Qué ayuda tengo si no entiendo una pantalla?","Dentro de la app está “Ceci te guía”, una ayuda contextual con respuestas preparadas para cada módulo y acciones visibles de la plataforma."]
+  ];
+  return <div className="landing-v11-faq-list">
+    {items.map(([question,answer],index)=><details key={question} onToggle={event=>{if(event.currentTarget.open)trackEvent?.("landing_faq_opened",{index,question});}}>
+      <summary>{question}<span aria-hidden="true">+</span></summary>
+      <p>{answer}</p>
+    </details>)}
+  </div>;
+}
+
 function Landing({onDiscover,onLogin,onBuy,onGuide}){
   const [showMobileBar,setShowMobileBar] = useState(false);
-  const tools = [
-    {id:"checklist-boda",icon:"✓",title:"Plan y checklist",copy:"Qué hacer ahora, después y qué ya resolvieron."},
-    {id:"budget",icon:"$",title:"Presupuesto",copy:"Categorías, pagos y control de lo comprometido."},
-    {id:"guests",icon:"◎",title:"Invitados",copy:"Lista, confirmaciones, grupos y necesidades."},
-    {id:"salon-design",icon:"⌂",title:"Salón y mesas",copy:"Medidas, mobiliario, circulación y distribución."},
-    {id:"vendors",icon:"↔",title:"Proveedores",copy:"Propuestas, contactos, acuerdos y pendientes."},
-    {id:"guia",icon:"♫",title:"Música",copy:"Momentos, canciones y guion musical personalizado."}
-  ];
-
-  const discover = (source="landing") => {
-    trackProductEvent("guided_discovery_cta_clicked", {source});
-    onDiscover();
-  };
   const buy = (source="landing") => {
     trackProductEvent("organize_wedding_clicked", {source});
     trackProductEvent("buy_cta_clicked", {source});
     onBuy();
   };
-  const guide = () => { trackProductEvent("free_guide_cta_clicked", {source:"landing"}); onGuide(); };
-  const login = (source="landing_header") => {
-    trackProductEvent("existing_buyer_login_clicked", {source});
-    onLogin();
+  const discover = (source="landing") => {
+    trackProductEvent("guided_discovery_cta_clicked", {source});
+    onDiscover();
   };
+  const tutorial = (source="landing") => {
+    trackProductEvent("tutorial_cta_clicked", {source});
+    const target = document.getElementById("landing-v11-tutorial");
+    if (!target) return;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start"
+    });
+  };
+  const guide = () => { trackProductEvent("free_guide_cta_clicked", {source:"landing"}); onGuide(); };
+  const login = (source="landing_header") => { trackProductEvent("existing_buyer_login_clicked", {source}); onLogin(); };
 
   useEffect(()=>{
-    const update = () => setShowMobileBar(window.scrollY > Math.min(560, window.innerHeight * .72));
+    const update = () => setShowMobileBar(window.scrollY > Math.min(620, window.innerHeight * .76));
     update();
     window.addEventListener("scroll", update, {passive:true});
     return()=>window.removeEventListener("scroll", update);
   },[]);
 
-  return <div className="landing-v9">
-    <header className="landing-v9-header">
-      <div className="responsive-shell" style={{minHeight:70,display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
+  const painQuestions = [
+    "¿Cuánto llevamos gastado de verdad?",
+    "¿Ya pagamos la seña?",
+    "¿Dónde estaba esa cotización?",
+    "¿Cuántas personas confirmaron realmente?",
+    "¿Quién todavía no respondió?",
+    "¿Quién está sin mesa?",
+    "¿Qué toca hacer esta semana?",
+    "¿Quién recibe al fotógrafo mientras yo me estoy preparando?",
+    "¿Quién sabe todo esto además de mí?"
+  ];
+
+  const offerGroups = [
+    {title:"Organización",items:["Presupuesto y pagos","Proveedores","Plan y checklist","Responsables","Cronograma del día"]},
+    {title:"Invitados",items:["Lista y confirmaciones","Grupos y restricciones","Mesas","Diseño visual del salón"]},
+    {title:"Tu día",items:["Guía para novios","Planificación de momentos y pendientes"]},
+    {title:"Música",items:["Banda Sonora de Boda","Guion musical personalizado","Propuesta musical asistida por IA"]},
+    {title:"También",items:["9 recursos Excel","Acceso inmediato"]}
+  ];
+
+  return <div className="landing-v11">
+    <header className="landing-v11-header">
+      <div className="responsive-shell landing-v11-header-inner">
         <div>
           <div className="brand-logo">El Violín de Ceci</div>
-          <div style={{fontFamily:"'Lora',serif",fontSize:THEME.text.label,color:"rgba(26,26,20,.48)",marginTop:3}}>Tu Boda Organizada</div>
+          <div className="landing-v11-brand-sub">Tu Boda Organizada</div>
         </div>
-        <button type="button" onClick={()=>login("landing_header")} style={{background:"transparent",border:"none",padding:"10px 2px",cursor:"pointer",fontFamily:"'Lora',serif",color:"#4A5E3A",fontSize:"clamp(.78rem,2vw,.95rem)",fontWeight:750,textDecoration:"underline",textUnderlineOffset:4}}>
-          Ya compré / Ingresar
-        </button>
+        <div className="landing-v11-header-actions">
+          <button type="button" className="landing-v11-header-demo" onClick={()=>tutorial("landing_header")}>Ver cómo funciona</button>
+          <button type="button" className="landing-v11-login" onClick={()=>login("landing_header")}>Ya compré / Ingresar</button>
+        </div>
       </div>
     </header>
 
     <main>
-      <section className="responsive-shell" style={{paddingTop:"clamp(18px,4vw,44px)"}}>
-        <div className="landing-v9-hero fu">
-          <div className="landing-v9-hero-inner">
-            <div>
-              <div className="landing-v9-kicker">✦ Un sistema para toda la boda</div>
-              <h1 className="landing-v9-title">Ordená la boda.<br/><em>Disfrutá el proceso.</em></h1>
-              <p className="landing-v9-copy">Toda la organización de su boda en un solo lugar: presupuesto, invitados, proveedores, salón, checklist, cronograma y música conectados para saber qué hacer ahora.</p>
-              <div className="landing-v9-actions">
-                <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_hero")}>Organizar mi boda · USD 37 · pago único →</button>
-                <button type="button" className="landing-v9-secondary" onClick={()=>discover("landing_hero")}>Ver cómo funciona</button>
-              </div>
-              <div className="landing-v9-proof">
-                <span>✓ Pago único · USD 37</span>
-                <span>✓ Acceso inmediato</span>
-                <span>✓ 9 archivos Excel</span>
-                <span>✓ Guía completa de 55 páginas</span>
-              </div>
+      <section className="responsive-shell landing-v11-hero-wrap">
+        <div className="landing-v11-hero fu">
+          <div className="landing-v11-hero-copy">
+            <span className="landing-v11-kicker">✦ Un lugar para ver cómo encaja toda la boda</span>
+            <h1>Tu boda no debería <em>vivir en tu cabeza.</em></h1>
+            <p>Presupuestos en WhatsApp. Pagos en una planilla. Invitados todavía sin confirmar. Proveedores, tareas, mesas, horarios y canciones repartidos por todos lados.</p>
+            <p className="landing-v11-hero-emphasis"><strong>Tu Boda Organizada conecta esas decisiones</strong> para que puedas ver qué ya resolviste, qué falta y qué hacer después.</p>
+            <div className="landing-v11-actions">
+              <button type="button" className="landing-v11-primary" onClick={()=>buy("landing_hero")}>Organizar mi boda · USD 37</button>
+              <button type="button" className="landing-v11-secondary" onClick={()=>tutorial("landing_hero")}>Ver cómo funciona</button>
             </div>
+            <div className="landing-v11-proof">
+              <span><strong>Pago único</strong> · sin suscripción</span>
+              <span>Acceso inmediato</span>
+              <span>App + 9 recursos Excel</span>
+            </div>
+            <div className="landing-v11-brand-line">Ordená la boda. Disfrutá el proceso.</div>
+          </div>
 
-            <div className="landing-v9-preview fu2">
-              <div className="landing-v9-preview-card">
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"#D9B86F"}}>Descubrí tu próximo paso</div>
-                <h2>No necesitás organizar todo hoy.</h2>
-                <p>Respondé dos preguntas y mirá cómo el sistema transforma una preocupación concreta en un plan conectado.</p>
-                <div className="landing-v9-progress">
-                  {[
-                    "Elegí la etapa actual de la boda.",
-                    "Marcá qué les preocupa más hoy.",
-                    "Recibí una ruta clara para avanzar."
-                  ].map((item,index)=><div className="landing-v9-progress-row" key={item}>
-                    <span style={{width:22,height:22,borderRadius:999,display:"grid",placeItems:"center",background:"rgba(217,184,111,.18)",color:"#D9B86F",fontWeight:800}}>{index+1}</span>
-                    <span>{item}</span>
-                  </div>)}
-                </div>
-                <button type="button" onClick={()=>discover("landing_preview")} style={{marginTop:20,width:"100%",minHeight:50,border:"1px solid rgba(217,184,111,.5)",borderRadius:100,background:"transparent",color:"#FFF8E8",fontFamily:"'Lora',serif",fontWeight:750,cursor:"pointer"}}>Ver cómo funciona →</button>
-              </div>
+          <div className="landing-v11-hero-visual" aria-label="Pantallas reales de Tu Boda Organizada en computadora, tablet y celular">
+            <div className="landing-v11-hero-image-frame">
+              <img src="/landing/tu-boda-organizada-screens.webp" alt="Pantallas de Tu Boda Organizada mostrando inicio, checklist, presupuesto y diseño del salón" decoding="async" fetchpriority="high"/>
             </div>
+            <div className="landing-v11-hero-float is-budget"><ProductIcon name="budget" size={17}/><span><b>Proveedor → Pago</b><small>Presupuesto actualizado</small></span></div>
+            <div className="landing-v11-hero-float is-guests"><ProductIcon name="guests" size={17}/><span><b>Invitado → Mesa</b><small>Salón visible</small></span></div>
+            <button type="button" className="landing-v11-hero-explore" onClick={()=>discover("landing_hero_preview")}>Explorar la plataforma →</button>
           </div>
         </div>
       </section>
 
-      <section className="responsive-shell landing-v9-section landing-v9-tutorial-section" aria-labelledby="landing-tutorial-title">
-        <div className="landing-v9-tutorial">
-          <div className="landing-v9-tutorial-copy">
-            <span className="landing-v9-tutorial-tag">Tutorial de la plataforma</span>
-            <h2 id="landing-tutorial-title">Mirá cómo funciona Tu Boda Organizada</h2>
-            <p>En este video te muestro cómo empezar, dónde encontrar cada herramienta y cómo usar el sistema para organizar la boda paso a paso.</p>
-            <div className="landing-v9-tutorial-benefits">
-              <span>✓ Recorrido completo</span>
-              <span>✓ Explicado paso a paso</span>
-              <span>✓ USD 37 · pago único</span>
-            </div>
+      <section className="landing-v11-pain-band">
+        <div className="responsive-shell landing-v11-section">
+          <LandingSectionHeading
+            eyebrow="La carga que no aparece en ninguna lista"
+            title="No es solamente recordar cosas. Es recordar cómo se conecta todo."
+            copy="Cada respuesta abre otra pregunta. Y cuando la información está repartida, alguien termina siendo el puente entre todas las partes."
+            align="center"
+          />
+          <div className="landing-v11-question-grid">
+            {painQuestions.map(question=><div key={question}>{question}</div>)}
           </div>
+          <div className="landing-v11-pain-conclusion">
+            <strong>El problema no es que seas desorganizada.</strong>
+            <p>El problema es intentar sostener una boda completa entre herramientas que no se hablan entre sí.</p>
+          </div>
+        </div>
+      </section>
 
+      <section className="responsive-shell landing-v11-section landing-v11-start-section">
+        <div className="landing-v11-start-card">
           <div>
-            <div className="landing-v9-video-shell">
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/CoHKehTBP-Y?rel=0&modestbranding=1&playsinline=1"
-                title="Tutorial de Tu Boda Organizada"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
+            <span className="landing-v11-eyebrow">Empezar sin reconstruir todo</span>
+            <h2>No necesitás tener toda tu boda organizada para empezar.</h2>
+            <p>Empezá por lo que ya tenés. Tus proveedores. Tu lista de invitados. Tu presupuesto actual. La información puede entrar de a poco.</p>
+            <strong>La idea no es darte otra cosa que administrar. Es ayudarte a ordenar lo que ya estás administrando.</strong>
+          </div>
+          <div className="landing-v11-start-steps">
+            {["Cargá una parte","Ordená lo que ya existe","Volvé cuando tengas una nueva decisión"].map((item,index)=><div key={item}><span>{index+1}</span><b>{item}</b></div>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section landing-v11-product-section">
+        <LandingSectionHeading
+          eyebrow="Producto real"
+          title="No te pedimos que imagines cómo sería. Podés verlo."
+          copy="La plataforma reúne presupuesto, proveedores, invitados, mesas, salón, checklist, cronograma y música dentro de la misma planificación."
+        />
+        <div className="landing-v11-product-overview landing-v12-product-overview">
+          <div className="landing-v12-product-visual">
+            <div className="landing-v11-overview-image-wrap landing-v12-product-screen" aria-label="Pantallas reales de Tu Boda Organizada">
+              <img
+                src="/landing/tu-boda-organizada-screens.webp"
+                alt="Tu Boda Organizada mostrando distintas herramientas de planificación de la boda"
+                decoding="async"
               />
             </div>
-            <p className="landing-v9-video-help">En el celular, giralo en horizontal y tocá el ícono de pantalla completa del reproductor.</p>
-          </div>
-        </div>
-      </section>
 
-      <section className="responsive-shell landing-v9-section">
-        <div className="landing-v9-guide">
-          <img className="landing-v9-guide-cover" src="/guias/portada-guia-gratuita.png" alt="Guía gratuita Nos comprometimos, ¿y ahora qué?"/>
-          <div>
-            <span className="landing-v9-guide-tag">Guía gratuita · 12 páginas</span>
-            <h2>¿Se comprometieron y no saben por dónde empezar?</h2>
-            <p>Recibí una guía express para ordenar las primeras conversaciones, definir prioridades y avanzar sin abrumarte.</p>
-            <div className="landing-v9-guide-list">
-              {["Primeras semanas","Conversaciones en pareja","5 prioridades","Lo que suele olvidarse"].map(item=><div key={item}>✓ {item}</div>)}
+            <div className="landing-v12-product-connections" aria-label="Ejemplos de información conectada dentro de la plataforma">
+              <div>
+                <ProductIcon name="vendors" size={18}/>
+                <span><b>Proveedor → Presupuesto</b><small>Cotizado, pagado y pendiente</small></span>
+              </div>
+              <div>
+                <ProductIcon name="guests" size={18}/>
+                <span><b>Invitados → Mesas</b><small>Confirmaciones y distribución</small></span>
+              </div>
+              <div>
+                <ProductIcon name="plan" size={18}/>
+                <span><b>Tareas → Responsables</b><small>Quién hace qué y para cuándo</small></span>
+              </div>
+              <div>
+                <ProductIcon name="timeline" size={18}/>
+                <span><b>Cronograma → Proveedores</b><small>Todo ubicado en el momento correcto</small></span>
+              </div>
             </div>
-            <button type="button" className="landing-v9-guide-action" onClick={guide} style={{minHeight:54,border:0,borderRadius:100,background:"#E95A4E",color:"white",padding:"14px 24px",fontFamily:"'Lora',serif",fontWeight:800,cursor:"pointer",boxShadow:"0 10px 24px rgba(233,90,78,.2)"}}>Quiero recibir la guía gratis →</button>
-            <div style={{marginTop:9,fontFamily:"'Lora',serif",fontSize:".72rem",color:"rgba(26,26,20,.42)"}}>La recibís por email · No necesitás tarjeta</div>
+          </div>
+
+          <div className="landing-v11-overview-copy landing-v12-product-copy">
+            <span className="landing-v11-product-chip">App responsive</span>
+            <h3>La boda deja de ser una colección de archivos y empieza a verse como un sistema.</h3>
+            <p>Las decisiones dejan de estar aisladas: podés ver qué ya resolviste, qué depende de otra cosa y qué necesita tu atención.</p>
+            <button type="button" className="landing-v11-secondary" onClick={()=>discover("landing_product_real")}>Explorar la plataforma</button>
           </div>
         </div>
       </section>
 
-      <section className="landing-v9-tools">
-        <div className="responsive-shell landing-v9-section">
-          <div className="landing-v9-tools-header">
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:THEME.text.label,letterSpacing:".18em",textTransform:"uppercase",color:"#D9B86F"}}>Todo conectado</div>
-            <h2>Una sola boda. Un solo lugar para decidir.</h2>
-            <p>No son herramientas aisladas. Una decisión puede actualizar el presupuesto, ordenar una tarea y acompañar el cronograma sin volver a buscarla entre chats y planillas.</p>
+      <section className="landing-v11-connection-section">
+        <div className="responsive-shell landing-v11-section">
+          <LandingSectionHeading
+            eyebrow="Lo que un Excel aislado no te muestra"
+            title="No te explicamos las conexiones. Te las mostramos."
+            copy="Elegí un ejemplo y seguí el recorrido de una decisión dentro del sistema."
+            align="center"
+          />
+          <LandingConnectionDemo trackEvent={trackProductEvent}/>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section landing-v11-feature-split" id="presupuesto">
+        <div className="landing-v11-feature-copy">
+          <span className="landing-v11-eyebrow">Presupuesto</span>
+          <h2>¿Cuánto llevamos gastado de verdad?</h2>
+          <p>No siempre te pasás del presupuesto por una compra enorme. A veces son extras, diferencias entre cotizaciones y varios “ya que estamos”.</p>
+          <p>El módulo separa lo que <strong>estimaste</strong>, lo que ya está <strong>cotizado o comprometido</strong>, lo que efectivamente <strong>pagaste</strong> y cuánto de ese importe todavía queda pendiente. Los proveedores alimentan esas categorías.</p>
+          <div className="landing-v11-feature-points">
+            <span>Estimado</span><span>Cotizado</span><span>Pagado</span><span>Pendiente</span>
           </div>
-          <div className="landing-v9-tools-grid">
-            {tools.map(tool=><button
-              type="button"
-              className="landing-v9-tool"
-              key={tool.title}
-              onClick={()=>discover(`landing_connection_${tool.id}`)}
-              aria-label={`Ver cómo ${tool.title} se conecta con el sistema`}
-            >
-              <div className="landing-v9-tool-icon">{tool.icon}</div>
-              <strong>{tool.title}</strong>
-              <span>{tool.copy}</span>
-              <span className="landing-v9-tool-arrow">Ver cómo se conecta →</span>
-            </button>)}
+        </div>
+        <div className="landing-v11-budget-ui" aria-label="Ejemplo visual del módulo de presupuesto">
+          <div className="landing-v11-ui-title"><ProductIcon name="budget" size={20}/><div><small>Presupuesto</small><strong>Resumen real</strong></div><span>USD</span></div>
+          <div className="landing-v11-budget-stat-grid">
+            <div><small>Presupuestado</small><strong>$ 18.000</strong></div>
+            <div><small>Cotizado</small><strong>$ 17.420</strong></div>
+            <div><small>Pagado</small><strong>$ 9.760</strong></div>
+            <div><small>Pendiente</small><strong>$ 7.660</strong></div>
+          </div>
+          <div className="landing-v11-budget-line"><span>Fotografía y video</span><b>$ 1.800 / $ 2.100</b><i><u style={{width:"86%"}}/></i></div>
+          <div className="landing-v11-budget-line"><span>Música</span><b>$ 820 / $ 1.000</b><i><u style={{width:"82%"}}/></i></div>
+          <div className="landing-v11-budget-line"><span>Decoración</span><b>$ 1.250 / $ 1.600</b><i><u style={{width:"78%"}}/></i></div>
+          <small className="landing-v11-ui-note">La interfaz real también puede advertir categorías sin cotizar, diferencias contra el estimado e invitados por encima de lo presupuestado.</small>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section">
+        <LandingBudgetCalculator onBuy={()=>buy("landing_calculator")} trackEvent={trackProductEvent}/>
+      </section>
+
+      <section className="landing-v11-deep-features">
+        <div className="responsive-shell landing-v11-section">
+          <LandingSectionHeading
+            eyebrow="La información deja de pedirte que la recuerdes"
+            title="Menos reconstruir. Más decidir."
+            copy="Cada módulo resuelve una pregunta concreta que suele volver una y otra vez durante la organización."
+            align="center"
+          />
+          <div className="landing-v11-feature-grid">
+            <article>
+              <ProductIcon name="vendors" size={24}/><span>Proveedores + pagos</span>
+              <h3>“¿Qué habíamos acordado?”</h3>
+              <p>Guardá contacto, categoría, precio, moneda, estado, enlaces y notas. El presupuesto toma lo cotizado y pagado de los proveedores.</p>
+              <b>No reconstruyas la historia de cada proveedor cada vez que necesitás decidir.</b>
+            </article>
+            <article>
+              <ProductIcon name="guests" size={24}/><span>Invitados</span>
+              <h3>“¿Cuántas personas vienen de verdad?”</h3>
+              <p>Confirmaciones, acompañantes, grupos, restricciones, notas y asignación de mesa en una misma lista.</p>
+              <b>La cantidad real también puede compararse con la que usaste para presupuestar.</b>
+            </article>
+            <article>
+              <ProductIcon name="salon" size={24}/><span>Mesas</span>
+              <h3>Cuando cambia una confirmación, cambia el mapa.</h3>
+              <p>Controlá capacidad, personas por mesa, invitaciones sin mesa y reubicaciones sin dividir familias o grupos.</p>
+              <b>La distribución deja de ser una cuenta mental.</b>
+            </article>
           </div>
         </div>
       </section>
 
-      <section className="responsive-shell landing-v9-section">
-        <div className="landing-v9-final">
+      <section className="responsive-shell landing-v11-section landing-v12-salon-section">
+        <div className="landing-v12-salon-intro">
+          <span className="landing-v11-eyebrow">Diseño del salón</span>
+          <h2>Probá cómo podría verse tu salón.</h2>
+          <p>Elegí una base y mové las mesas con el dedo. En la plataforma completa podés trabajar el espacio con mucho más detalle.</p>
+        </div>
+
+        <LandingSalonMiniDemo
+          onBuy={()=>buy("landing_salon_demo")}
+          trackEvent={trackProductEvent}
+        />
+      </section>
+      <section className="landing-v11-excel-section">
+        <div className="responsive-shell landing-v11-section">
+          <div className="landing-v11-excel-card">
+            <div>
+              <span className="landing-v11-eyebrow">¿Ya tenés una planilla?</span>
+              <h2>¿Preferís Excel? También te damos las planillas.</h2>
+              <p>No queremos obligarte a abandonar una herramienta que ya te sirve. Invitados y proveedores tienen flujos de Excel, y la compra incluye 9 recursos descargables.</p>
+              <strong>La diferencia es que no dependés de una planilla para conectar cada parte de la boda.</strong>
+            </div>
+            <div className="landing-v11-excel-connections">
+              {["Invitado → Mesa → Salón","Proveedor → Pago → Presupuesto","Tarea → Responsable → Cronograma","Momento → Música → Guion"].map(item=><div key={item}>{item}</div>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section">
+        <div className="landing-v11-ops-grid">
+          <article>
+            <ProductIcon name="plan" size={25}/>
+            <span className="landing-v11-eyebrow">Plan y checklist</span>
+            <h3>No solamente saber qué falta. Saber qué toca ahora.</h3>
+            <p>Más de 60 tareas por etapas, con fechas, responsables, estados y progreso para que el plan sea accionable.</p>
+          </article>
+          <article>
+            <ProductIcon name="account" size={25}/>
+            <span className="landing-v11-eyebrow">Responsables</span>
+            <h3>Una tarea ocupa menos espacio en tu cabeza cuando alguien sabe que es suya.</h3>
+            <p>Asigná responsables en la checklist y dejá claro quién interviene en momentos del cronograma.</p>
+          </article>
+          <article>
+            <ProductIcon name="timeline" size={25}/>
+            <span className="landing-v11-eyebrow">Cronograma</span>
+            <h3>La ceremonia empieza a las 19:00. ¿Y qué pasa antes?</h3>
+            <p>Ordená hora, momento, duración, responsables, proveedores y notas. El cronograma también contempla aprobación de ambos novios dentro de la planificación.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="landing-v11-planner-section">
+        <div className="responsive-shell landing-v11-section">
+          <div className="landing-v11-planner-card">
+            <div>
+              <span className="landing-v11-eyebrow">¿Ya tenés wedding planner?</span>
+              <h2>Perfecto. Tu Boda Organizada no viene a reemplazarla.</h2>
+              <p>Tu wedding planner puede llevar la coordinación general. <strong>Delegar la coordinación no significa perder de vista tu propia boda.</strong> Vos seguís teniendo decisiones que querés ver y conservar: presupuesto personal, invitados, mesas, preferencias, música, pagos y pendientes propios.</p>
+              <strong>Usá solamente las áreas que necesitás. No hace falta duplicar lo que ya delegaste.</strong>
+            </div>
+            <div className="landing-v11-planner-list">
+              {["Tus números","Tus invitados","Tus preferencias","Tu música","Tus decisiones de pareja"].map(item=><span key={item}>✓ {item}</span>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-v11-final-stretch">
+        <div className="responsive-shell landing-v11-section">
+          <LandingSectionHeading
+            eyebrow="La recta final"
+            title="Y después aparecen las preguntas que nadie te hizo ocho meses antes."
+            copy="No son grandes decisiones. Son pequeñas dependencias que necesitan una respuesta, una persona y un momento."
+            align="center"
+          />
+          <div className="landing-v11-final-questions">
+            {["¿Quién lleva los anillos?","¿Quién tiene los documentos?","¿Quién recibe al fotógrafo?","¿Quién paga lo pendiente?","¿Quién tiene todos los teléfonos?","¿Quién avisa que empieza la ceremonia?","¿Quién le da la señal al músico?","¿Qué dejamos listo la noche anterior?","¿Qué pasa si nos retrasamos?","¿Qué pasa si llueve?"].map(question=><div key={question}>{question}</div>)}
+          </div>
+          <div className="landing-v11-final-statement">¿Quién resuelve todo esto <em>sin venir a preguntarme a mí?</em></div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section landing-v11-guide-paid">
+        <img src="/guias/portada-guia-completa.png" alt="Portada de la guía completa Nos comprometimos, ¿y ahora qué?" loading="lazy" decoding="async"/>
+        <div>
+          <span className="landing-v11-eyebrow">Una segunda capa del producto</span>
+          <h2>La guía para esas cosas que nadie te explica hasta que la boda ya está cerca.</h2>
+          <p>La app te ayuda a organizar las cosas que sabés que tenés que resolver. La guía completa te acompaña con decisiones, criterios y preguntas que quizá todavía no sabías que ibas a tener.</p>
+          <div className="landing-v11-guide-paid-points"><span>Decisiones iniciales</span><span>Presupuesto</span><span>Invitados</span><span>Proveedores</span><span>Ceremonia</span><span>Gran día</span></div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section landing-v11-ai-section">
+        <div className="landing-v11-ai-copy">
+          <span className="landing-v11-eyebrow">IA aplicada donde realmente ayuda</span>
+          <h2>No necesitás leer veinte páginas hasta encontrar un caso parecido al tuyo.</h2>
+          <p>En la Banda Sonora, la IA usa respuestas de la pareja —tipo de ceremonia, gustos, idioma, restricciones, momentos y canciones personales— para preparar una propuesta musical más cercana a su boda.</p>
+          <small>No es un chat general de protocolo ni una promesa de reglas universales. La propuesta musical se adapta al contexto que cargás.</small>
+        </div>
+        <div className="landing-v11-ai-demo" aria-label="Ejemplo ilustrativo de personalización musical con inteligencia artificial">
+          <span className="landing-v11-demo-label">Ejemplo ilustrativo</span>
+          <div className="landing-v11-ai-question"><b>Ustedes cuentan</b><p>“Nuestra ceremonia es civil, queremos entrar juntos y buscamos un momento cálido, no solemne. ¿Qué música podría acompañarlo?”</p></div>
+          <div className="landing-v11-ai-answer"><b>La propuesta musical organiza</b><div><span>Momento</span><strong>Entrada conjunta</strong></div><div><span>Emoción</span><strong>Cálida · luminosa</strong></div><div><span>Versión</span><strong>Definir versión exacta y timing</strong></div><small>Después podés ordenar la selección dentro del guion para DJ o músicos.</small></div>
+        </div>
+      </section>
+
+      <section className="landing-v11-music-section">
+        <div className="responsive-shell landing-v11-section landing-v11-music-grid">
+          <div className="landing-v11-feature-copy">
+            <span className="landing-v11-eyebrow">Banda Sonora de tu Boda</span>
+            <h2>Y cuando lo importante ya tiene un lugar, también podés pensar en cómo querés que se sienta.</h2>
+            <p>Pensabas que tenías que elegir “la canción de entrada”. Hasta que empezás a descubrir cuántos momentos distintos necesitan música.</p>
+            <p>El recorrido musical toma el tipo de ceremonia, gustos, artistas, restricciones, idioma, momentos y la historia de la pareja para preparar una propuesta personalizada con IA.</p>
+            <strong>No vende una playlist: construye un guion musical para ceremonia, recepción y momentos especiales.</strong>
+          </div>
+          <div className="landing-v11-music-ui">
+            <div className="landing-v11-ui-title"><ProductIcon name="music" size={20}/><div><small>Música</small><strong>Tu Banda Sonora</strong></div><span>IA</span></div>
+            {["Ceremonia","Salida","Cóctel","Cena","Brindis","Apertura de fiesta"].map((moment,index)=><div className="landing-v11-music-row" key={moment}><span>{String(index+1).padStart(2,"0")}</span><b>{moment}</b><small>{index%2===0?"Emoción + versión":"Canción + timing"}</small></div>)}
+            <div className="landing-v11-music-note">Versión, momento y detalles útiles para DJ o músicos quedan ordenados en el guion.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="landing-v11-tutorial" className="responsive-shell landing-v11-section landing-v11-tutorial-section" aria-labelledby="landing-v11-tutorial-title">
+        <div className="landing-v11-tutorial-copy">
+          <span className="landing-v11-eyebrow">Antes de comprar</span>
+          <h2 id="landing-v11-tutorial-title">Antes de comprar, mirá cómo funciona de verdad.</h2>
+          <p>Te mostramos la plataforma real antes de que decidas. Mirá cada herramienta en uso y comprobá si encaja con tu manera de organizarte.</p>
+          <div><span>✓ Recorrido completo</span><span>✓ Explicado paso a paso</span><span>✓ USD 37 · pago único</span></div>
+        </div>
+        <div>
+          <div className="landing-v11-video-shell">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/CoHKehTBP-Y?rel=0&modestbranding=1&playsinline=1"
+              title="Tutorial de Tu Boda Organizada"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading="lazy"
+              allowFullScreen
+            />
+          </div>
+          <p className="landing-v11-video-help">En el celular, podés girarlo en horizontal y usar pantalla completa.</p>
+        </div>
+      </section>
+
+      {LANDING_TESTIMONIALS.length>0&&<section className="landing-v11-testimonials">
+        <div className="responsive-shell landing-v11-section">
+          <LandingSectionHeading eyebrow="Experiencias reales" title="Lo que cambió cuando dejaron de sostener todo mentalmente." align="center"/>
+          <div className="landing-v11-testimonial-grid">
+            {LANDING_TESTIMONIALS.map(item=><article key={item.id}><p>“{item.quote}”</p><strong>{item.name}</strong>{item.context&&<span>{item.context}</span>}</article>)}
+          </div>
+        </div>
+      </section>}
+
+      <section className="responsive-shell landing-v11-section landing-v11-offer-section">
+        <div className="landing-v11-offer-card">
           <div>
-            <div className="brand-logo" style={{fontSize:THEME.text.label,marginBottom:8}}>De la sobrecarga a un plan claro</div>
-            <h2>Dejá de organizarte entre chats, notas y planillas.</h2>
-            <p>Con el acceso completo guardás cada avance, continuás desde cualquier dispositivo y ves cómo las decisiones se conectan.</p>
+            <span className="landing-v11-eyebrow">Tu Boda Organizada · El Sistema de Ceci</span>
+            <h2>Todo esto queda dentro de tu boda.</h2>
+            <p className="landing-v11-offer-intro">No es una colección de bonus. Son distintas capas del mismo sistema para que información, decisiones y pendientes tengan un lugar visible.</p>
+            <div className="landing-v11-offer-groups">{offerGroups.map(group=><div key={group.title}><strong>{group.title}</strong>{group.items.map(item=><span key={item}>✓ {item}</span>)}</div>)}</div>
           </div>
-          <div style={{display:"grid",gap:10,minWidth:"min(100%,270px)"}}>
-            <button type="button" className="landing-v9-primary" onClick={()=>buy("landing_final")}>Organizar mi boda · USD 37 · pago único</button>
-            <button type="button" className="landing-v9-secondary" onClick={()=>discover("landing_final")}>Ver cómo funciona</button>
-            <button type="button" onClick={()=>login("landing_final")} style={{background:"transparent",border:0,color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:700,textDecoration:"underline",textUnderlineOffset:4,cursor:"pointer"}}>Ya compré / Ingresar</button>
+          <div className="landing-v11-price-card">
+            <small>Acceso completo</small>
+            <strong>USD 37</strong>
+            <b>Pago único</b>
+            <p>Acceso inmediato · sin suscripción</p>
+            <button type="button" className="landing-v11-primary" onClick={()=>buy("landing_offer")}>Organizar mi boda</button>
+            <button type="button" className="landing-v11-secondary" onClick={()=>tutorial("landing_offer")}>Ver cómo funciona</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-v11-ceci-section">
+        <div className="responsive-shell landing-v11-section">
+          <div className="landing-v11-ceci-card">
+            <div className="landing-v11-ceci-mark">C</div>
+            <div>
+              <span className="landing-v11-eyebrow">El Violín de Ceci</span>
+              <h2>Esto nace de acompañar bodas reales, no de convertir una planilla en una app.</h2>
+              <p>Después de ver muchas bodas, hay cosas que empezás a notar que se repiten: decisiones que dependen unas de otras, datos que se buscan una y otra vez y detalles que terminan viviendo en la cabeza de una sola persona.</p>
+              <p><strong>Tu Boda Organizada convierte esa experiencia en un sistema que la pareja puede ver y usar.</strong></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section">
+        <LandingSectionHeading eyebrow="Preguntas frecuentes" title="Antes de sumar una herramienta, está bien querer saber exactamente qué hace." align="center"/>
+        <LandingFaq trackEvent={trackProductEvent}/>
+      </section>
+
+      <section className="landing-v11-closing-section">
+        <div className="responsive-shell landing-v11-section">
+          <div className="landing-v11-closing-card">
+            <span className="landing-v11-eyebrow">No tenés que seguir siendo la única persona que entiende cómo encaja todo.</span>
+            <h2>Tu boda va a seguir teniendo decisiones. Pero no todas tienen que seguir viviendo en tu cabeza.</h2>
+            <p>Sacate una parte de la boda de la cabeza sin perder el control. Empezá con lo que ya tenés; lo demás puede entrar después.</p>
+            <div className="landing-v11-actions is-center">
+              <button type="button" className="landing-v11-primary" onClick={()=>buy("landing_final")}>Organizar mi boda · USD 37</button>
+              <button type="button" className="landing-v11-secondary" onClick={()=>tutorial("landing_final")}>Ver cómo funciona</button>
+            </div>
+            <small>Pago único · acceso inmediato · sin suscripción</small>
+          </div>
+        </div>
+      </section>
+
+      <section className="responsive-shell landing-v11-section landing-v11-free-guide-section">
+        <div className="landing-v11-free-guide">
+          <img src="/guias/portada-guia-gratuita.png" alt="Guía gratuita Nos comprometimos, ¿y ahora qué?" loading="lazy" decoding="async"/>
+          <div>
+            <span className="landing-v11-guide-tag">Guía gratuita · 12 páginas</span>
+            <h2>¿Todavía no estás lista para comprar?</h2>
+            <p>Empezá con “Nos comprometimos, ¿y ahora qué?”: una guía express para ordenar las primeras conversaciones, definir prioridades y saber qué mirar primero.</p>
+            <button type="button" className="landing-v11-free-guide-btn" onClick={guide}>Quiero recibir la guía gratis →</button>
+            <small>La recibís por email · no necesitás tarjeta</small>
           </div>
         </div>
       </section>
     </main>
 
-    <div className="mobile-buy-bar" style={{display:showMobileBar?undefined:"none"}}>
-      <button type="button" onClick={()=>buy("landing_mobile_bar")} style={{border:"none",background:"#4A5E3A",color:"#F5EFE0",fontFamily:"'Lora',serif",fontWeight:850}}><span>Comprar · USD 37</span><small>Pago único</small></button>
-      <button type="button" onClick={()=>discover("landing_mobile_bar")} style={{border:"none",background:"transparent",color:"#4A5E3A",fontFamily:"'Lora',serif",fontWeight:750}}>Ver cómo funciona</button>
+    <footer className="landing-v11-footer">
+      <div className="responsive-shell">
+        <div><div className="brand-logo">El Violín de Ceci</div><span>Tu Boda Organizada · El Sistema de Ceci</span></div>
+        <button type="button" onClick={()=>login("landing_footer")}>Ya compré / Ingresar</button>
+      </div>
+    </footer>
+
+    <div className="mobile-buy-bar landing-v11-mobile-bar" style={{display:showMobileBar?undefined:"none"}}>
+      <button type="button" onClick={()=>buy("landing_mobile_bar")}><span>Comprar · USD 37</span><small>Pago único</small></button>
+      <button type="button" onClick={()=>tutorial("landing_mobile_bar")}>Ver cómo funciona</button>
     </div>
   </div>;
 }
@@ -2182,7 +3040,7 @@ function AuthScreen({ initialMode="login", initialError="", initialEmail="", onP
 
       {mode==="login"&&onTryFree&&<div style={{marginTop:22,padding:"17px",background:"rgba(217,184,111,.12)",border:"1px solid rgba(201,169,110,.34)",borderRadius:16,textAlign:"center"}}>
         <div style={{fontFamily:"'Lora',serif",fontSize:".85rem",lineHeight:1.5,color:"rgba(26,26,20,.62)",marginBottom:10}}>¿Todavía no compraste? Mirá un recorrido breve antes de decidir.</div>
-        <button type="button" className="gbtn" onClick={onTryFree} style={{width:"100%"}}>Ver cómo funciona</button>
+        <button type="button" className="gbtn" onClick={onTryFree} style={{width:"100%"}}>Explorar la plataforma</button>
       </div>}
 
       {mode==="signup"&&<p style={{fontFamily:"'Lora',serif",fontSize:".74rem",lineHeight:1.45,color:"rgba(26,26,20,.45)",margin:"14px 0 0"}}>La app verificará automáticamente que exista una compra aprobada para este email.</p>}

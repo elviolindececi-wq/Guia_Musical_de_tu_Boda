@@ -10,3 +10,4 @@ dist
 .env*.local
 
 src/App.backup*.jsx
+.vercel
