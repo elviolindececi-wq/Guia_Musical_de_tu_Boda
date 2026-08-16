@@ -88,6 +88,22 @@ const CHECKLIST_GENERAL = [
   ]},
 ];
 
+const EXTRA_RECOMMENDED = [
+  {id:"coordinar-dia", etapa:"Con tiempo", texto:"Definir quién coordinará proveedores y decisiones el día de la boda"},
+  {id:"invitaciones-estilo", etapa:"6–9 meses", texto:"Revisar que invitaciones y comunicación acompañen el estilo de la boda"},
+  {id:"musica-dj", etapa:"1–3 meses", texto:"Definir con DJ o músicos los momentos clave, canciones imprescindibles y canciones que no quieren"},
+  {id:"skincare", etapa:"Meses antes", texto:"Si vas a cambiar tu rutina de skincare o hacer tratamientos, planificarlos con anticipación"},
+  {id:"maquillaje-luz", etapa:"1–3 meses", texto:"Revisar la prueba de maquillaje también con luz natural y sacar algunas fotos"},
+  {id:"zapatos", etapa:"1–3 meses", texto:"Usar los zapatos de la boda varias veces antes del gran día"},
+  {id:"manicura", etapa:"Semana de la boda", texto:"Agendar manicura y pedicura con margen, sin cargarlas el mismo día"},
+  {id:"cabello", etapa:"Semana de la boda", texto:"Confirmar con tu estilista cómo conviene preparar y lavar el cabello antes del peinado"},
+  {id:"plan-b-personal", etapa:"Semana de la boda", texto:"Preparar abrigo, paraguas o calzado alternativo si el clima puede cambiar"},
+  {id:"anillos", etapa:"Último mes", texto:"Definir quién tendrá y entregará los anillos"},
+  {id:"objetos-personales", etapa:"Último mes", texto:"Definir quién guardará celular, documentos, llaves y objetos personales importantes"},
+  {id:"flores-personales", etapa:"Semana de la boda", texto:"Coordinar entrega y conservación de flores personales o accesorios frescos"},
+  {id:"delegar-dia", etapa:"Día de la boda", texto:"Dejar la coordinación en manos de la persona designada y enfocarse en vivir el día"},
+];
+
 export default function ChecklistModule({
   user,
   form,
@@ -345,6 +361,8 @@ export default function ChecklistModule({
   const doneCust = Object.values(custom).flat().filter(x=>x.completada).length;
   const doneItems = donePre + doneCust;
   const pct = totalItems>0?Math.round(doneItems/totalItems*100):0;
+  // Los extras se guardan aparte y NO alteran el porcentaje histórico del checklist principal.
+  const extrasDone = EXTRA_RECOMMENDED.filter(item=>checked?.[`extra_${item.id}`]).length;
 
   return <div style={{minHeight:"100dvh",background:"rgba(245,239,224,.88)",paddingBottom:"calc(88px + env(safe-area-inset-bottom))"}}>
     {/* Header */}
@@ -577,6 +595,37 @@ export default function ChecklistModule({
           </div>}
         </div>;
       })}
+
+      {/* Extras recomendados: no cambian índices ni porcentaje de tareas históricas */}
+      <section style={{background:"linear-gradient(135deg,rgba(201,169,110,.10),rgba(74,94,58,.06))",border:"1px solid rgba(201,169,110,.28)",borderRadius:16,padding:"18px",marginTop:20}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14,flexWrap:"wrap",marginBottom:14}}>
+          <div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:theme.text.micro,letterSpacing:".16em",textTransform:"uppercase",color:"#4A5E3A",fontWeight:800,marginBottom:5}}>Revisiones recomendadas</div>
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.18rem",lineHeight:1.2,color:"#1A1A14",margin:"0 0 5px"}}>Detalles que conviene dejar resueltos</h2>
+            <p style={{fontFamily:"'Lora',serif",fontSize:".82rem",lineHeight:1.55,color:"rgba(26,26,20,.52)",margin:0,maxWidth:620}}>Son recordatorios adicionales para la recta final. No modifican tu progreso principal ni las tareas que ya completaste.</p>
+          </div>
+          <span style={{fontFamily:"'Cinzel',serif",fontSize:theme.text.tiny,letterSpacing:".08em",color:"#4A5E3A",background:"rgba(74,94,58,.08)",border:"1px solid rgba(74,94,58,.15)",borderRadius:999,padding:"6px 10px",whiteSpace:"nowrap"}}>{extrasDone}/{EXTRA_RECOMMENDED.length} revisados</span>
+        </div>
+
+        <div style={{display:"grid",gap:8}}>
+          {EXTRA_RECOMMENDED.map(item=>{
+            const key=`extra_${item.id}`;
+            const done=!!checked?.[key];
+            return <button
+              type="button"
+              key={item.id}
+              onClick={()=>toggleItem(key)}
+              style={{width:"100%",display:"flex",alignItems:"flex-start",gap:10,textAlign:"left",background:done?"rgba(74,94,58,.07)":"#FBF7EF",border:"1px solid rgba(74,94,58,.13)",borderRadius:12,padding:"11px 12px",cursor:"pointer"}}
+            >
+              <span aria-hidden="true" style={{width:21,height:21,minWidth:21,borderRadius:5,border:`1px solid ${done?"#4A5E3A":"rgba(74,94,58,.3)"}`,background:done?"#4A5E3A":"transparent",display:"grid",placeItems:"center",marginTop:1,color:"#F5EFE0",fontSize:".72rem",fontWeight:800}}>{done?"✓":""}</span>
+              <span style={{flex:1,minWidth:0}}>
+                <span style={{display:"block",fontFamily:"'Lora',serif",fontSize:".91rem",lineHeight:1.45,color:done?"rgba(26,26,20,.42)":"rgba(26,26,20,.76)",textDecoration:done?"line-through":"none"}}>{item.texto}</span>
+                <span style={{display:"inline-block",fontFamily:"'Cinzel',serif",fontSize:theme.text.micro,letterSpacing:".08em",textTransform:"uppercase",color:"rgba(74,94,58,.55)",marginTop:4}}>{item.etapa}</span>
+              </span>
+            </button>;
+          })}
+        </div>
+      </section>
 
       <div style={{background:"rgba(74,94,58,.06)",border:"0.5px solid rgba(74,94,58,.15)",borderRadius:12,padding:"14px 18px",marginTop:20,display:"flex",gap:10}}>
         <span>⠿</span>

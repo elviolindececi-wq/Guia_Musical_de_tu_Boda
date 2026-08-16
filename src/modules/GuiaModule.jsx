@@ -52,6 +52,40 @@ const GUIA_SECCIONES = [
     {t:"Plan B para el clima", p:"Si hay algo al aire libre, definí ANTES con el salón cuál es el plan de lluvia: qué espacio techado se usa, quién decide el cambio y con cuánta anticipación. Que no te lo estén inventando a las 18:00 del día D."},
     {t:"Degustación y visita técnica", p:"Con el catering: degustá el menú real, no el de muestra. Con el salón: visitalo a la misma hora de tu evento (la luz cambia todo) y preguntá por generador, aire acondicionado, estacionamiento y accesibilidad."},
   ]},
+
+  {id:"errores", icon:"⚠️", titulo:"Errores que conviene evitar", bloques:[
+    {t:"1. Empezar demasiado tarde con el vestido", p:"Muchos vestidos requieren pedido, confección y varias pruebas. Empezar a buscarlo con meses de anticipación te da margen para talles, ajustes y cambios sin convertirlo en una urgencia de último momento."},
+
+    {t:"2. Diseñar invitaciones desconectadas del estilo de la boda", p:"La invitación es una de las primeras señales que reciben los invitados. Conviene que el tono, los colores y la información acompañen el estilo que definieron para la boda, sea digital o impresa."},
+
+    {t:"3. Dejar toda la música librada al DJ", p:"El DJ puede aportar muchísimo, pero la pareja debería definir los momentos importantes, las canciones imprescindibles, las que no quiere escuchar, las versiones y el clima que quiere lograr. Así la música se siente realmente de ustedes."},
+
+    {t:"4. Tomar decisiones sin una dirección clara", p:"Definir desde temprano qué quieren que se vea y se sienta ayuda a elegir decoración, invitaciones, vestuario, fotos y música con más coherencia. No necesitás una temática rígida: necesitás una dirección."},
+
+    {t:"5. Llegar al día sin una persona responsable de coordinar", p:"Los novios no deberían convertirse en el centro de consultas de cada proveedor. Puede ser una wedding planner, coordinadora o una persona de confianza con el cronograma y los contactos. Si está dentro de su presupuesto, contar con una wedding planner puede ser una inversión muy valiosa para que todo tenga una persona responsable mientras ustedes viven la boda."},
+  ]},
+
+  {id:"detalles-personales", icon:"✨", titulo:"Antes del gran día", bloques:[
+    {t:"Cuidado de la piel con tiempo", p:"Si querés incorporar una rutina de skincare o algún tratamiento, planificalo con anticipación. Evitá estrenar productos agresivos justo antes de la boda y, si tenés alguna condición o sensibilidad particular, consultá con un profesional."},
+
+    {t:"No estrenes los zapatos ese día", p:"Usalos varias veces en casa antes de la boda. Así podés detectar roces, probar la altura real y saber cuánto tiempo te resultan cómodos."},
+
+    {t:"Manicura y pedicura con margen", p:"Reservalas cerca de la boda, pero dejá suficiente margen para no convertirlas en otra cita urgente dentro del mismo día."},
+
+    {t:"Preparación del cabello", p:"No existe una regla que sirva para todos los cabellos. Preguntale a tu estilista si prefiere que lo laves el día anterior, el mismo día o de otra manera según el peinado elegido."},
+
+    {t:"Tené un Plan B para el clima", p:"Si el tiempo puede cambiar, dejá previsto abrigo, paraguas, calzado alternativo o cualquier adaptación que necesites para seguir cómoda sin improvisar."},
+
+    {t:"Probá el maquillaje también con luz natural", p:"Durante la prueba, miralo junto a una ventana o en exterior y sacá algunas fotos. La luz del estudio puede verse diferente a la luz real del día."},
+
+    {t:"Definí quién guarda tus objetos personales", p:"Celular, documentos, llaves, retoques y otros objetos importantes deberían quedar a cargo de una persona definida."},
+
+    {t:"Nombrá a la persona responsable de los anillos", p:"Definan quién tendrá las alianzas, dónde las guardará y en qué momento las entregará. Cuanto más explícito quede, menos posibilidades de confusión."},
+
+    {t:"Flores y accesorios frescos", p:"Si vas a usar flores naturales en el pelo, boutonnières u otros detalles delicados, coordiná con el proveedor cuándo deben prepararse y entregarse para que lleguen en buenas condiciones."},
+
+    {t:"Y después, disfrutá", p:"La boda pasa rápido. Delegar, dejar teléfonos y responsabilidades claras, comer algo, hidratarte y regalarte momentos para mirar alrededor también forma parte de haber organizado bien."},
+  ]},
 ];
 
 function FullGuideDownloadCard({source="guide_module", openFullGuideDownload, theme}){
