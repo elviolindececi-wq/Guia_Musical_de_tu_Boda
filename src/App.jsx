@@ -1472,6 +1472,317 @@ function LandingBudgetCalculator({onBuy,trackEvent}){
   </div>;
 }
 
+function LandingSalonMiniDemo({onBuy,trackEvent}){
+  const [tableCount,setTableCount] = useState(6);
+  const [dancePosition,setDancePosition] = useState("center");
+  const [extras,setExtras] = useState({
+    head:true,
+    dj:true,
+    bar:false
+  });
+  const [customPositions,setCustomPositions] = useState({});
+  const [draggingTable,setDraggingTable] = useState(null);
+  const canvasRef = useRef(null);
+
+  const layouts = {
+    6:[
+      [18,29],[50,25],[82,29],
+      [18,74],[50,79],[82,74]
+    ],
+    8:[
+      [13,28],[37,24],[63,24],[87,28],
+      [13,75],[37,80],[63,80],[87,75]
+    ],
+    10:[
+      [10,27],[30,23],[50,22],[70,23],[90,27],
+      [10,76],[30,80],[50,82],[70,80],[90,76]
+    ]
+  };
+
+  const getDefaultCoords = () => layouts[tableCount].map(([x,y])=>{
+    if(dancePosition==="front"){
+      return [x,42+(y*.5)];
+    }
+
+    if(dancePosition==="side"){
+      return [34+(x*.6),10+(y*.82)];
+    }
+
+    return [x,y];
+  });
+
+  const resetPositions = () => setCustomPositions({});
+
+  const updateTables = (value) => {
+    resetPositions();
+    setTableCount(value);
+    trackEvent?.("salon_demo_interaction",{
+      source:"landing_salon_demo",
+      control:"tables",
+      value
+    });
+  };
+
+  const updateDance = (value) => {
+    resetPositions();
+    setDancePosition(value);
+    trackEvent?.("salon_demo_interaction",{
+      source:"landing_salon_demo",
+      control:"dance_position",
+      value
+    });
+  };
+
+  const toggleExtra = (key) => {
+    setExtras(current=>{
+      const next={...current,[key]:!current[key]};
+      trackEvent?.("salon_demo_interaction",{
+        source:"landing_salon_demo",
+        control:key,
+        value:next[key]
+      });
+      return next;
+    });
+  };
+
+  const moveTableFromPointer = (index,event) => {
+    const canvas=canvasRef.current;
+    if(!canvas) return;
+
+    const rect=canvas.getBoundingClientRect();
+    if(!rect.width || !rect.height) return;
+
+    const rawX=((event.clientX-rect.left)/rect.width)*100;
+    const rawY=((event.clientY-rect.top)/rect.height)*100;
+
+    const x=Math.max(7,Math.min(93,rawX));
+    const y=Math.max(8,Math.min(92,rawY));
+
+    setCustomPositions(current=>({
+      ...current,
+      [index]:[x,y]
+    }));
+  };
+
+  const startTableDrag = (index,event) => {
+    if(event.button!==undefined && event.button!==0) return;
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setDraggingTable(index);
+    moveTableFromPointer(index,event);
+  };
+
+  const continueTableDrag = (index,event) => {
+    if(draggingTable!==index) return;
+    event.preventDefault();
+    moveTableFromPointer(index,event);
+  };
+
+  const finishTableDrag = (index,event) => {
+    if(draggingTable!==index) return;
+
+    moveTableFromPointer(index,event);
+
+    try{
+      if(event.currentTarget.hasPointerCapture?.(event.pointerId)){
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    }catch(_e){}
+
+    setDraggingTable(null);
+
+    trackEvent?.("salon_demo_table_moved",{
+      source:"landing_salon_demo",
+      table:index+1,
+      table_count:tableCount
+    });
+  };
+
+  const defaultCoords=getDefaultCoords();
+
+  const tableCoords=defaultCoords.map((coords,index)=>
+    customPositions[index] || coords
+  );
+
+  const hasCustomPositions=Object.keys(customPositions).length>0;
+
+  return <div className="landing-v12-salon-demo">
+    <div className="landing-v12-salon-controls">
+      <div>
+        <span className="landing-v12-salon-control-label">1 · Cantidad de mesas</span>
+        <div className="landing-v12-salon-segment">
+          {[6,8,10].map(value=>
+            <button
+              key={value}
+              type="button"
+              className={tableCount===value?"is-active":""}
+              onClick={()=>updateTables(value)}
+            >
+              {value} mesas
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <span className="landing-v12-salon-control-label">2 · ¿Dónde querés la pista?</span>
+        <div className="landing-v12-salon-segment">
+          {[
+            ["center","Centro"],
+            ["front","Frente"],
+            ["side","Lateral"]
+          ].map(([value,label])=>
+            <button
+              key={value}
+              type="button"
+              className={dancePosition===value?"is-active":""}
+              onClick={()=>updateDance(value)}
+            >
+              {label}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <span className="landing-v12-salon-control-label">3 · Agregá elementos</span>
+        <div className="landing-v12-salon-toggles">
+          <button
+            type="button"
+            className={extras.head?"is-active":""}
+            onClick={()=>toggleExtra("head")}
+          >
+            <span>{extras.head?"✓":"+"}</span>
+            Mesa principal
+          </button>
+
+          <button
+            type="button"
+            className={extras.dj?"is-active":""}
+            onClick={()=>toggleExtra("dj")}
+          >
+            <span>{extras.dj?"✓":"+"}</span>
+            DJ
+          </button>
+
+          <button
+            type="button"
+            className={extras.bar?"is-active":""}
+            onClick={()=>toggleExtra("bar")}
+          >
+            <span>{extras.bar?"✓":"+"}</span>
+            Bar
+          </button>
+        </div>
+      </div>
+
+      <p className="landing-v12-salon-demo-note">
+        Esta prueba es simplificada y no guarda información. Está pensada para que puedas probarla fácilmente desde el celular.
+      </p>
+    </div>
+
+    <div className="landing-v12-salon-preview">
+      <div className="landing-v12-salon-preview-head">
+        <div>
+          <span>Vista rápida</span>
+          <strong>Tu salón</strong>
+        </div>
+
+        <div className="landing-v12-salon-preview-actions">
+          {hasCustomPositions&&
+            <button
+              type="button"
+              className="landing-v12-salon-reset"
+              onClick={()=>{
+                resetPositions();
+                trackEvent?.("salon_demo_positions_reset",{
+                  source:"landing_salon_demo"
+                });
+              }}
+            >
+              ↺ Reordenar
+            </button>
+          }
+
+          <span>{tableCount} mesas</span>
+        </div>
+      </div>
+
+      <div className="landing-v12-salon-drag-hint">
+        ☝️ Tocá y arrastrá una mesa para moverla
+      </div>
+
+      <div
+        ref={canvasRef}
+        className={`landing-v12-salon-canvas is-${dancePosition}`}
+      >
+        <span className="landing-v12-salon-room-label">SALÓN</span>
+
+        {extras.head&&
+          <div className="landing-v12-salon-head-table">
+            Mesa principal
+          </div>
+        }
+
+        <div className="landing-v12-salon-dance-zone">
+          <span>Pista</span>
+        </div>
+
+        {tableCoords.map(([x,y],index)=>
+          <div
+            key={`${tableCount}-${index}`}
+            role="button"
+            tabIndex={0}
+            aria-label={`Mover mesa ${index+1}`}
+            className={`landing-v12-salon-table${draggingTable===index?" is-dragging":""}`}
+            style={{
+              left:`${x}%`,
+              top:`${y}%`
+            }}
+            onPointerDown={event=>startTableDrag(index,event)}
+            onPointerMove={event=>continueTableDrag(index,event)}
+            onPointerUp={event=>finishTableDrag(index,event)}
+            onPointerCancel={event=>finishTableDrag(index,event)}
+          >
+            <span>{index+1}</span>
+          </div>
+        )}
+
+        {extras.dj&&
+          <div className="landing-v12-salon-dj">DJ</div>
+        }
+
+        {extras.bar&&
+          <div className="landing-v12-salon-bar">Bar</div>
+        }
+      </div>
+
+      <div className="landing-v12-salon-unlock">
+        <span className="landing-v12-salon-unlock-title">
+          En la plataforma completa
+        </span>
+
+        <div className="landing-v12-salon-lock-grid">
+          <span>🔒 Guardar distintas versiones</span>
+          <span>🔒 Trabajar con dimensiones</span>
+          <span>🔒 Agregar mobiliario y decoración</span>
+          <span>🔒 Guardar tu diseño completo</span>
+        </div>
+
+        <button
+          type="button"
+          className="landing-v11-primary landing-v12-salon-buy"
+          onClick={onBuy}
+        >
+          Diseñar mi salón completo · {PURCHASE_PRICE_LABEL}
+        </button>
+
+        <small>Pago único · acceso a toda la plataforma</small>
+      </div>
+    </div>
+  </div>;
+}
 function LandingFaq({trackEvent}){
   const items = [
     ["¿Tengo que cargar toda mi boda para empezar?","No. Podés empezar por lo que ya tenés: tus invitados, algunos proveedores o tu presupuesto actual. La idea es ordenar lo que ya estás administrando, no pedirte que reconstruyas todo en una tarde."],
@@ -1628,28 +1939,41 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
           title="No te pedimos que imagines cómo sería. Podés verlo."
           copy="La plataforma reúne presupuesto, proveedores, invitados, mesas, salón, checklist, cronograma y música dentro de la misma planificación."
         />
-        <div className="landing-v11-product-overview">
-          <div className="landing-v11-overview-image-wrap landing-v11-overview-board" aria-label="Ejemplo visual de áreas conectadas dentro de la plataforma">
-            <div className="landing-v11-overview-board-head"><span/><span/><span/><b>Tu boda, en un solo sistema</b></div>
-            <div className="landing-v11-overview-board-grid">
-              <div><ProductIcon name="vendors" size={20}/><strong>Proveedor</strong><small>Estado + importe</small></div>
-              <i aria-hidden="true">→</i>
-              <div><ProductIcon name="budget" size={20}/><strong>Presupuesto</strong><small>Cotizado + pagado</small></div>
-              <div><ProductIcon name="guests" size={20}/><strong>Invitados</strong><small>Confirmaciones</small></div>
-              <i aria-hidden="true">→</i>
-              <div><ProductIcon name="salon" size={20}/><strong>Mesas y salón</strong><small>Distribución visible</small></div>
+        <div className="landing-v11-product-overview landing-v12-product-overview">
+          <div className="landing-v12-product-visual">
+            <div className="landing-v11-overview-image-wrap landing-v12-product-screen" aria-label="Pantallas reales de Tu Boda Organizada">
+              <img
+                src="/landing/tu-boda-organizada-screens.webp"
+                alt="Tu Boda Organizada mostrando distintas herramientas de planificación de la boda"
+                decoding="async"
+              />
+            </div>
+
+            <div className="landing-v12-product-connections" aria-label="Ejemplos de información conectada dentro de la plataforma">
+              <div>
+                <ProductIcon name="vendors" size={18}/>
+                <span><b>Proveedor → Presupuesto</b><small>Cotizado, pagado y pendiente</small></span>
+              </div>
+              <div>
+                <ProductIcon name="guests" size={18}/>
+                <span><b>Invitados → Mesas</b><small>Confirmaciones y distribución</small></span>
+              </div>
+              <div>
+                <ProductIcon name="plan" size={18}/>
+                <span><b>Tareas → Responsables</b><small>Quién hace qué y para cuándo</small></span>
+              </div>
+              <div>
+                <ProductIcon name="timeline" size={18}/>
+                <span><b>Cronograma → Proveedores</b><small>Todo ubicado en el momento correcto</small></span>
+              </div>
             </div>
           </div>
-          <div className="landing-v11-overview-copy">
+
+          <div className="landing-v11-overview-copy landing-v12-product-copy">
             <span className="landing-v11-product-chip">App responsive</span>
             <h3>La boda deja de ser una colección de archivos y empieza a verse como un sistema.</h3>
-            <ul>
-              <li><ProductIcon name="budget" size={18}/> Presupuesto conectado con proveedores.</li>
-              <li><ProductIcon name="guests" size={18}/> Invitados conectados con mesas y salón.</li>
-              <li><ProductIcon name="plan" size={18}/> Tareas con responsables y fechas.</li>
-              <li><ProductIcon name="timeline" size={18}/> Cronograma con responsables y proveedores.</li>
-            </ul>
-            <button type="button" className="landing-v11-secondary" onClick={()=>discover("landing_product_real")}>Explorar la plataforma real</button>
+            <p>Las decisiones dejan de estar aisladas: podés ver qué ya resolviste, qué depende de otra cosa y qué necesita tu atención.</p>
+            <button type="button" className="landing-v11-secondary" onClick={()=>discover("landing_product_real")}>Explorar la plataforma</button>
           </div>
         </div>
       </section>
@@ -1726,25 +2050,18 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
         </div>
       </section>
 
-      <section className="responsive-shell landing-v11-section landing-v11-salon-section">
-        <div className="landing-v11-salon-visual" aria-label="Representación del editor visual del salón">
-          <div className="landing-v11-salon-toolbar"><span>Vista 2D</span><span>Elementos</span><span>Mesas</span><b>Guardar</b></div>
-          <div className="landing-v11-salon-canvas">
-            <div className="landing-v11-stage">Mesa principal</div>
-            <div className="landing-v11-dance">Pista</div>
-            {[1,2,3,4,5,6].map((n,index)=><div key={n} className="landing-v11-table-dot" style={{left:`${18+(index%3)*31}%`,top:`${29+Math.floor(index/3)*38}%`}}><span>{n}</span></div>)}
-            <div className="landing-v11-dj">DJ</div>
-          </div>
-        </div>
-        <div className="landing-v11-feature-copy">
+      <section className="responsive-shell landing-v11-section landing-v12-salon-section">
+        <div className="landing-v12-salon-intro">
           <span className="landing-v11-eyebrow">Diseño del salón</span>
-          <h2>Una cosa es imaginarlo. Otra es verlo.</h2>
-          <p>El editor trabaja con dimensiones, mesas, sillas, pista, mesa principal, DJ/escenario, mobiliario, decoración y zonas de circulación.</p>
-          <p>No pretende ser software de arquitectura. Es una forma visual de entender si la boda que imaginás puede convivir dentro del mismo espacio.</p>
-          <button type="button" className="landing-v11-secondary" onClick={()=>discover("landing_salon")}>Probar el diseño del salón</button>
+          <h2>Probá cómo podría verse tu salón.</h2>
+          <p>Elegí una base y mové las mesas con el dedo. En la plataforma completa podés trabajar el espacio con mucho más detalle.</p>
         </div>
-      </section>
 
+        <LandingSalonMiniDemo
+          onBuy={()=>buy("landing_salon_demo")}
+          trackEvent={trackProductEvent}
+        />
+      </section>
       <section className="landing-v11-excel-section">
         <div className="responsive-shell landing-v11-section">
           <div className="landing-v11-excel-card">
