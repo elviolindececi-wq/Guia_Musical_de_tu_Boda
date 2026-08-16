@@ -1807,6 +1807,43 @@ function LandingFaq({trackEvent}){
 
 function Landing({onDiscover,onLogin,onBuy,onGuide}){
   const [showMobileBar,setShowMobileBar] = useState(false);
+
+  useEffect(()=>{
+    if(typeof window==="undefined" || typeof document==="undefined") return;
+
+    const PIXEL_ID = "2334801060661325";
+
+    if(!window.fbq){
+      const fbq = function(){
+        fbq.callMethod
+          ? fbq.callMethod.apply(fbq,arguments)
+          : fbq.queue.push(arguments);
+      };
+
+      window.fbq = fbq;
+      fbq.push = fbq;
+      fbq.loaded = true;
+      fbq.version = "2.0";
+      fbq.queue = [];
+
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = "https://connect.facebook.net/en_US/fbevents.js";
+      document.head.appendChild(script);
+    }
+
+    window.__tboMetaPixels = window.__tboMetaPixels || {};
+
+    if(!window.__tboMetaPixels[PIXEL_ID]){
+      window.fbq("init",PIXEL_ID);
+      window.__tboMetaPixels[PIXEL_ID] = true;
+    }
+
+    if(!window.__tboLandingPageViewSent){
+      window.fbq("track","PageView");
+      window.__tboLandingPageViewSent = true;
+    }
+  },[]);
   const buy = (source="landing") => {
     trackProductEvent("organize_wedding_clicked", {source});
     trackProductEvent("buy_cta_clicked", {source});
