@@ -1896,7 +1896,7 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
             </div>
             <div className="landing-v11-hero-float is-budget"><ProductIcon name="budget" size={17}/><span><b>Proveedor → Pago</b><small>Presupuesto actualizado</small></span></div>
             <div className="landing-v11-hero-float is-guests"><ProductIcon name="guests" size={17}/><span><b>Invitado → Mesa</b><small>Salón visible</small></span></div>
-            <button type="button" className="landing-v11-hero-explore" onClick={()=>discover("landing_hero_preview")}>Explorar la plataforma real →</button>
+            <button type="button" className="landing-v11-hero-explore" onClick={()=>discover("landing_hero_preview")}>Explorar la plataforma →</button>
           </div>
         </div>
       </section>
