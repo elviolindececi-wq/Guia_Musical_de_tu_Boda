@@ -1349,10 +1349,16 @@ function LandingConnectionDemo({trackEvent}){
   </div>;
 }
 
-function LandingBudgetCalculator({onBuy,trackEvent}){
+function LandingBudgetCalculator({onBuy,trackEvent,preset}){
   const [currency,setCurrency] = useState("");
   const [guests,setGuests] = useState(120);
   const [tier,setTier] = useState("classic");
+
+  useEffect(()=>{
+    const nextGuests = Number(preset?.guests);
+    if(!preset?.version || !Number.isFinite(nextGuests)) return;
+    setGuests(Math.max(20,Math.min(500,nextGuests)));
+  },[preset?.version]);
   const tracked = useRef(false);
   const completed = useRef(false);
   const viewed = useRef(false);
@@ -1783,6 +1789,547 @@ function LandingSalonMiniDemo({onBuy,trackEvent}){
     </div>
   </div>;
 }
+
+function LandingPlanningTastes({onJump,onBuy,trackEvent}){
+  const [guideOpen,setGuideOpen] = useState(false);
+  const [sampleChecked,setSampleChecked] = useState({});
+  const [ceremonyHour,setCeremonyHour] = useState(19);
+  const [musicSelected,setMusicSelected] = useState({});
+  const [entryMood,setEntryMood] = useState("story");
+
+  const guideSteps = [
+    "Familiares y padrinos, según el tipo de ceremonia",
+    "Novio o pareja que espera en ceremonia",
+    "Cortejo: damas, caballeros y niños",
+    "Entrada final de la novia o pareja"
+  ];
+
+  const sampleTasks = [
+    {stage:"12 meses antes",task:"Definir presupuesto y prioridades"},
+    {stage:"9–12 meses",task:"Reservar salón o venue"},
+    {stage:"6–9 meses",task:"Cerrar una primera lista de invitados"},
+    {stage:"3–6 meses",task:"Definir música y proveedores principales"},
+    {stage:"1 mes antes",task:"Confirmar invitados y pendientes finales"},
+    {stage:"Última semana",task:"Anillos, pagos, objetos y responsables"}
+  ];
+
+  const checkedCount = sampleTasks.filter((_,index)=>sampleChecked[index]).length;
+
+  const toggleTask = (index) => {
+    setSampleChecked(current=>({...current,[index]:!current[index]}));
+    trackEvent?.("landing_checklist_sample_toggled",{index});
+  };
+
+  const formatTime = (offset) => {
+    const total = ceremonyHour * 60 + offset;
+    const hours = Math.floor(total / 60);
+    const minutes = total % 60;
+    return String(hours).padStart(2,"0") + ":" + String(minutes).padStart(2,"0");
+  };
+
+  const timelineScenarios = {
+    18:[
+      {offset:-180,title:"Beauty y últimos retoques",meta:"Pareja · beauty"},
+      {offset:-120,title:"Fotos aprovechando la luz natural",meta:"Foto · pareja"},
+      {offset:-60,title:"Salón, flores y sonido chequeados",meta:"Planner · proveedores"},
+      {offset:-30,title:"Invitados comienzan a llegar",meta:"Recepción · acomodación"},
+      {offset:-15,title:"Cortejo listo + anillos controlados",meta:"Cortejo · anillos"},
+      {offset:0,title:"Comienza la ceremonia",meta:"Todos listos"}
+    ],
+
+    19:[
+      {offset:-180,title:"Últimos retoques + comer e hidratarse",meta:"Pareja · preparación"},
+      {offset:-120,title:"Fotos previas o first look",meta:"Foto · pareja"},
+      {offset:-60,title:"Chequeo final de música, flores y ceremonia",meta:"Planner · proveedores"},
+      {offset:-30,title:"Recepción y ubicación de invitados",meta:"Recepción · mesas"},
+      {offset:-15,title:"Cortejo listo + objetos personales guardados",meta:"Cortejo · coordinación"},
+      {offset:0,title:"Comienza la ceremonia",meta:"Todos listos"}
+    ],
+
+    20:[
+      {offset:-180,title:"Beauty final y preparación sin apuros",meta:"Pareja · beauty"},
+      {offset:-120,title:"Fotos antes de perder la última luz",meta:"Foto · iluminación"},
+      {offset:-60,title:"Iluminación, sonido y plan B confirmados",meta:"Planner · técnica"},
+      {offset:-30,title:"Invitados + bebida de bienvenida",meta:"Recepción · catering"},
+      {offset:-15,title:"Cortejo listo + anillos, ramo y objetos",meta:"Cortejo · últimos detalles"},
+      {offset:0,title:"Comienza la ceremonia",meta:"Todos listos"}
+    ]
+  };
+
+  const timelineScenarioLabels = {
+    18:"Ceremonia temprana · aprovechá la luz",
+    19:"Horario clásico · coordiná todos los equipos",
+    20:"Ceremonia nocturna · iluminación y tiempos importan más"
+  };
+
+  const timelineItems = timelineScenarios[ceremonyHour] || timelineScenarios[19];
+
+
+  const musicMoments = [
+    "Llegada de invitados",
+    "Entrada del novio",
+    "Entrada del cortejo",
+    "Entrada de la novia",
+    "Anillos o momento simbólico",
+    "Firmas",
+    "Salida de los novios",
+    "Cóctel",
+    "Cena",
+    "Primer baile",
+    "Apertura de pista"
+  ];
+
+  const musicSelectedCount = musicMoments.filter(
+    (_,index)=>musicSelected[index]
+  ).length;
+
+  const toggleMusicMoment = (index) => {
+    setMusicSelected(current=>({
+      ...current,
+      [index]:!current[index]
+    }));
+
+    trackEvent?.("landing_music_moment_toggled",{index});
+  };
+
+  const moodAdvice = {
+    story:"Pensá la entrada como una secuencia: una canción puede preparar emocionalmente la siguiente.",
+    emotion:"Una entrada emotiva necesita tiempo para respirar. No siempre conviene empezar directamente por el estribillo.",
+    surprise:"El impacto puede estar en un cambio inesperado de canción, ritmo o protagonista."
+  };
+
+  return <div className="responsive-shell landing-v13-tastes">
+
+    <div id="landing-guide-taste" className="landing-v13-taste landing-v13-anchor">
+      <div className="landing-v13-taste-copy">
+        <span className="landing-v11-eyebrow">Una pregunta rápida</span>
+        <h2>¿Sabés el orden de entrada del cortejo?</h2>
+        <p>
+          Hay decisiones que parecen pequeñas hasta que, a minutos de empezar,
+          alguien pregunta: “¿Quién entra ahora?”.
+        </p>
+
+        {!guideOpen
+          ? <button
+              type="button"
+              className="landing-v13-taste-action"
+              onClick={()=>{
+                setGuideOpen(true);
+                trackEvent?.("landing_guide_taste_revealed");
+              }}
+            >
+              Mostrame un orden posible →
+            </button>
+          : <div className="landing-v13-guide-answer">
+              <small>UN EJEMPLO POSIBLE</small>
+
+              <div className="landing-v13-guide-steps">
+                {guideSteps.map((step,index)=>
+                  <div key={step}>
+                    <b>{index+1}</b>
+                    <span>{step}</span>
+                  </div>
+                )}
+              </div>
+
+              <p>
+                No existe un único orden universal. Puede variar según ceremonia,
+                tradición familiar y preferencias de la pareja.
+              </p>
+
+              <button
+                type="button"
+                className="landing-v13-next-link"
+                onClick={()=>onJump("landing-checklist-taste","guide_to_checklist")}
+              >
+                ¿Y todo lo demás que hay que recordar? Probá el checklist →
+              </button>
+            </div>
+        }
+      </div>
+
+      <div className="landing-v13-taste-side">
+        <span>Dentro de la guía</span>
+        <strong>Hay cosas que quizá todavía no sabés que vas a necesitar.</strong>
+        <p>
+          Protocolo, ceremonia, decisiones prácticas y detalles del gran día
+          explicados con criterio, no solo como una lista.
+        </p>
+      </div>
+    </div>
+
+
+    <div id="landing-checklist-taste" className="landing-v13-taste landing-v13-taste-checklist landing-v13-anchor">
+      <div className="landing-v13-taste-copy">
+        <span className="landing-v11-eyebrow">Probalo vos misma</span>
+        <h2>¿Cuántas de estas cosas ya resolviste?</h2>
+        <p>
+          Tildá las que ya tenés listas. Fijate cómo cambian los pendientes
+          según el momento de la organización.
+        </p>
+
+        <div className="landing-v13-mini-checklist">
+          {sampleTasks.map((item,index)=>
+            <button
+              type="button"
+              key={item.task}
+              className={sampleChecked[index]?"is-done":""}
+              aria-pressed={!!sampleChecked[index]}
+              onClick={()=>toggleTask(index)}
+            >
+              <i>{sampleChecked[index]?"✓":""}</i>
+              <span>
+                <small>{item.stage}</small>
+                <b>{item.task}</b>
+              </span>
+            </button>
+          )}
+        </div>
+
+        <div className="landing-v13-check-progress">
+          <strong>{checkedCount} de 6</strong>
+          <span>resueltas en esta pequeña muestra</span>
+        </div>
+
+        <div className="landing-v13-more-tasks">
+          Esto es solo una degustación.
+          <b> Dentro de la plataforma podés tener más de 100 tareas posibles, organizadas por etapas desde 12 meses antes hasta el gran día.</b>
+        </div>
+
+        <button
+          type="button"
+          className="landing-v13-next-link"
+          onClick={()=>onJump("landing-timeline-taste","checklist_to_timeline")}
+        >
+          ¿Y cómo se ordena el día de la boda? Mirá el cronograma →
+        </button>
+      </div>
+    </div>
+
+
+    <div id="landing-timeline-taste" className="landing-v13-taste landing-v13-taste-timeline landing-v13-anchor">
+      <div className="landing-v13-taste-copy">
+        <span className="landing-v11-eyebrow">Cronograma del gran día</span>
+        <h2>La ceremonia empieza a las 19:00. ¿Y qué pasa antes?</h2>
+        <p>
+          Elegí la hora y mirá cómo cambian no solo los horarios, sino también los detalles que conviene tener controlados.
+        </p>
+
+        <div className="landing-v13-hour-picker">
+          <span>Hora de ceremonia</span>
+          <div>
+            {[18,19,20].map(hour=>
+              <button
+                type="button"
+                key={hour}
+                className={ceremonyHour===hour?"is-active":""}
+                onClick={()=>{
+                  setCeremonyHour(hour);
+                  trackEvent?.("landing_timeline_sample_hour",{hour});
+                }}
+              >
+                {String(hour).padStart(2,"0")}:00
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="landing-v13-scenario-label">
+          {timelineScenarioLabels[ceremonyHour]}
+        </div>
+
+        <div className="landing-v13-mini-timeline">
+          {timelineItems.map(item=>
+            <div key={item.offset}>
+              <time>{formatTime(item.offset)}</time>
+              <i></i>
+              <span>
+                <b>{item.title}</b>
+                <small>{item.meta}</small>
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="landing-v13-timeline-note">
+          En el cronograma completo podés ordenar horarios, duración,
+          responsables, proveedores y notas.
+        </div>
+
+
+        <div className="landing-v13-attention-grid">
+
+          <details>
+            <summary>
+              <span>
+                <small>ANTES DEL GRAN DÍA</small>
+                Últimos detalles que suelen olvidarse
+              </span>
+              <b>+</b>
+            </summary>
+
+            <p>
+              Anillos, ramo, zapatos, objetos personales, pagos finales,
+              plan B por clima y una persona responsable de guardar tus cosas.
+            </p>
+          </details>
+
+
+          <details>
+            <summary>
+              <span>
+                <small>EVITÁ ESTO</small>
+                No cometas estos errores
+              </span>
+              <b>+</b>
+            </summary>
+
+            <p>
+              Dejar para el mismo día el orden del cortejo, la música,
+              quién tiene los anillos, quién guarda tus objetos personales
+              o quién coordina a los proveedores.
+            </p>
+          </details>
+
+        </div>
+
+
+        <div id="landing-music-taste" className="landing-v13-music-taste">
+
+          <div className="landing-v13-music-intro">
+            <span className="landing-v11-eyebrow">Tu boda también se escucha</span>
+
+            <h3>¿Sabías que tu entrada puede contar una historia?</h3>
+
+            <p>
+              La música no tiene que empezar recién cuando entra la novia.
+              El novio puede tener su propia canción, el cortejo otra y tu
+              entrada puede cerrar toda la secuencia.
+            </p>
+          </div>
+
+
+          <div className="landing-v13-music-facts">
+
+            <div>
+              <b>01</b>
+              <span>
+                <strong>El novio puede tener su propia canción.</strong>
+                <small>También forma parte de la historia de entrada.</small>
+              </span>
+            </div>
+
+            <div>
+              <b>02</b>
+              <span>
+                <strong>El cortejo no tiene por qué usar la misma música.</strong>
+                <small>Podés crear una transición antes de tu entrada.</small>
+              </span>
+            </div>
+
+            <div>
+              <b>03</b>
+              <span>
+                <strong>Una canción linda no siempre es una buena canción de entrada.</strong>
+                <small>Importan el comienzo, la duración y el momento exacto.</small>
+              </span>
+            </div>
+
+          </div>
+
+
+          <div className="landing-v13-music-question">
+
+            <span>UNA PREGUNTA PARA VOS</span>
+
+            <h4>
+              ¿Cuántos momentos de tu boda querés que tengan su propia música?
+            </h4>
+
+            <p>
+              Tocá los que te gustaría pensar de manera especial.
+              Esta muestra incluye 11 momentos posibles.
+            </p>
+
+          </div>
+
+
+          <div className="landing-v13-music-moments">
+
+            {musicMoments.map((moment,index)=>
+              <button
+                type="button"
+                key={moment}
+                className={musicSelected[index]?"is-selected":""}
+                aria-pressed={!!musicSelected[index]}
+                onClick={()=>toggleMusicMoment(index)}
+              >
+                <i>{musicSelected[index]?"✓":"+"}</i>
+                <span>{moment}</span>
+              </button>
+            )}
+
+          </div>
+
+
+          <div className="landing-v13-music-count">
+
+            <strong>{musicSelectedCount}</strong>
+
+            <span>
+              {musicSelectedCount===1
+                ?"momento elegido"
+                :"momentos elegidos"}
+            </span>
+
+          </div>
+
+
+          {musicSelectedCount>=3&&
+            <div className="landing-v13-music-reveal">
+
+              <span>Y ahora viene la parte interesante.</span>
+
+              <p>
+                Elegir el momento es solo el comienzo. Después hay que pensar
+                qué canción funciona, cómo empieza, cuánto dura, en qué segundo
+                sucede la entrada y qué necesita saber el DJ o los músicos.
+              </p>
+
+            </div>
+          }
+
+
+          <div className="landing-v13-entry-mood">
+
+            <span>¿QUÉ QUERÉS QUE SE SIENTA EN TU ENTRADA?</span>
+
+            <div>
+
+              <button
+                type="button"
+                className={entryMood==="emotion"?"is-active":""}
+                onClick={()=>setEntryMood("emotion")}
+              >
+                Emocionar
+              </button>
+
+              <button
+                type="button"
+                className={entryMood==="surprise"?"is-active":""}
+                onClick={()=>setEntryMood("surprise")}
+              >
+                Sorprender
+              </button>
+
+              <button
+                type="button"
+                className={entryMood==="story"?"is-active":""}
+                onClick={()=>setEntryMood("story")}
+              >
+                Contar nuestra historia
+              </button>
+
+            </div>
+
+            <p>{moodAdvice[entryMood]}</p>
+
+          </div>
+
+
+          <div className="landing-v13-music-product-link">
+
+            <small>DENTRO DE TU BODA ORGANIZADA</small>
+
+            <strong>Tu Banda Sonora de Boda</strong>
+
+            <p>
+              La propuesta musical toma los momentos de tu boda,
+              tus gustos, canciones importantes, restricciones y estilo
+              para ayudarte a construir un guion musical coherente.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div className="landing-v13-authority">
+
+          <div className="landing-v13-authority-lead">
+
+            <span className="landing-v11-eyebrow">Por qué existe este sistema</span>
+
+            <h3>
+              Este sistema no nació frente a una planilla.
+              Nació después de conversar sobre la organización de más de 200 bodas.
+            </h3>
+
+            <p>
+              Una y otra vez aparecían las mismas preguntas:
+              cuánto podemos gastar, a quién falta confirmar,
+              qué proveedor falta pagar, quién entra primero,
+              qué tiene que pasar a cada hora y qué detalles no podemos olvidarnos.
+            </p>
+
+            <p>
+              Todo estaba conectado.
+              Pero demasiadas veces esas conexiones terminaban viviendo
+              solamente en la cabeza de la novia.
+            </p>
+
+          </div>
+
+
+          <div className="landing-v13-authority-bio">
+
+            <div className="landing-v13-authority-monogram">CL</div>
+
+            <div>
+              <small>CREADO POR</small>
+
+              <strong>Cecilia Lezcano</strong>
+
+              <span>El Violín de Ceci</span>
+
+              <p>
+                Cecilia Lezcano es la creadora de El Violín de Ceci
+                y de Tu Boda Organizada · El Sistema de Ceci.
+                Después de escuchar de cerca las dudas, decisiones,
+                olvidos y tensiones que se repiten en la organización
+                de más de 200 bodas, empezó a transformar esos patrones
+                en un sistema práctico para parejas reales.
+              </p>
+
+              <p>
+                No busca reemplazar a una wedding planner.
+                Busca ordenar todo eso que, tengas planner o no,
+                igual vas a querer decidir, entender y seguir personalmente.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          className="landing-v11-primary landing-v13-taste-buy"
+          onClick={()=>{
+            trackEvent?.("landing_tastes_buy_clicked");
+            onBuy();
+          }}
+        >
+          Quiero organizar mi boda · {PURCHASE_PRICE_LABEL}
+        </button>
+      </div>
+    </div>
+
+  </div>;
+}
+
 function LandingFaq({trackEvent}){
   const items = [
     ["¿Tengo que cargar toda mi boda para empezar?","No. Podés empezar por lo que ya tenés: tus invitados, algunos proveedores o tu presupuesto actual. La idea es ordenar lo que ya estás administrando, no pedirte que reconstruyas todo en una tarde."],
@@ -1793,7 +2340,7 @@ function LandingFaq({trackEvent}){
     ["¿Funciona desde el celular?","Sí. La aplicación y la landing son responsive. Algunas tareas visuales complejas, como diseñar el salón con mucho detalle, son naturalmente más cómodas en una pantalla grande."],
     ["¿Cómo funciona la inteligencia artificial?","La IA se usa en la construcción de la propuesta musical: toma datos reales de la pareja, tipo de ceremonia, gustos, restricciones, idioma, momentos y canciones personales para preparar un guion musical. La ayuda “Ceci te guía” dentro de las pantallas usa respuestas preparadas, no un chat abierto."],
     ["¿El pago de USD 37 es único?","Sí. El checkout actual es de USD 37 en un solo pago y no tiene una suscripción mensual asociada a esta compra."],
-    ["¿Puedo verla antes de comprar?","Sí. “Ver cómo funciona” te lleva directamente al tutorial en video. Si querés probar el recorrido interactivo, elegí “Explorar la plataforma”."],
+    ["¿Puedo verla antes de comprar?","Sí. “Ver cómo funciona” te lleva directamente al tutorial en video. Además, en esta página podés probar la calculadora de presupuesto y una versión simple del diseñador de salón sin registrarte."],
     ["¿Qué pasa con mis datos y los datos de mis invitados?","La planificación se guarda asociada a la cuenta del usuario en Supabase y el acceso a los datos de la app se controla por usuario. El producto no está planteado para vender los datos de clientes a terceros."],
     ["¿Qué ayuda tengo si no entiendo una pantalla?","Dentro de la app está “Ceci te guía”, una ayuda contextual con respuestas preparadas para cada módulo y acciones visibles de la plataforma."]
   ];
@@ -1807,6 +2354,22 @@ function LandingFaq({trackEvent}){
 
 function Landing({onDiscover,onLogin,onBuy,onGuide}){
   const [showMobileBar,setShowMobileBar] = useState(false);
+  const [budgetPreset,setBudgetPreset] = useState({guests:120,version:0});
+
+  const jumpToLanding = (id,source) => {
+    trackProductEvent("landing_microhook_clicked",{source,target:id});
+    window.setTimeout(()=>{
+      document.getElementById(id)?.scrollIntoView({
+        behavior:"smooth",
+        block:"start"
+      });
+    },40);
+  };
+
+  const openBudget50 = (source="landing_budget_50") => {
+    setBudgetPreset({guests:50,version:Date.now()});
+    jumpToLanding("landing-budget-calculator",source);
+  };
 
   useEffect(()=>{
     if(typeof window==="undefined" || typeof document==="undefined") return;
@@ -1933,7 +2496,10 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
             </div>
             <div className="landing-v11-hero-float is-budget"><ProductIcon name="budget" size={17}/><span><b>Proveedor → Pago</b><small>Presupuesto actualizado</small></span></div>
             <div className="landing-v11-hero-float is-guests"><ProductIcon name="guests" size={17}/><span><b>Invitado → Mesa</b><small>Salón visible</small></span></div>
-            <button type="button" className="landing-v11-hero-explore" onClick={()=>discover("landing_hero_preview")}>Explorar la plataforma →</button>
+            <button type="button" className="landing-v11-hero-explore landing-v13-hook-button" onClick={()=>openBudget50("landing_hero_budget50")}>
+    <span>¿Cuánto sale una boda para 50 personas?</span>
+    <b>Calculalo vos misma →</b>
+  </button>
           </div>
         </div>
       </section>
@@ -2010,7 +2576,9 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
             <span className="landing-v11-product-chip">App responsive</span>
             <h3>La boda deja de ser una colección de archivos y empieza a verse como un sistema.</h3>
             <p>Las decisiones dejan de estar aisladas: podés ver qué ya resolviste, qué depende de otra cosa y qué necesita tu atención.</p>
-            <button type="button" className="landing-v11-secondary" onClick={()=>discover("landing_product_real")}>Explorar la plataforma</button>
+            <button type="button" className="landing-v11-secondary landing-v13-inline-hook" onClick={()=>jumpToLanding("landing-salon-demo","landing_product_salon")}>
+    ¿Dónde pondrías la pista? <b>Probalo vos misma →</b>
+  </button>
           </div>
         </div>
       </section>
@@ -2052,8 +2620,22 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
         </div>
       </section>
 
-      <section className="responsive-shell landing-v11-section">
-        <LandingBudgetCalculator onBuy={()=>buy("landing_calculator")} trackEvent={trackProductEvent}/>
+      <section id="landing-budget-calculator" className="responsive-shell landing-v11-section">
+        <LandingBudgetCalculator
+          onBuy={()=>buy("landing_calculator")}
+          trackEvent={trackProductEvent}
+          preset={budgetPreset}
+        />
+
+        <div className="landing-v13-between-hook">
+          <span>Ya tenés una idea del presupuesto.</span>
+          <button
+            type="button"
+            onClick={()=>jumpToLanding("landing-salon-demo","calculator_to_salon")}
+          >
+            Ahora probá dónde pondrías las mesas y la pista →
+          </button>
+        </div>
       </section>
 
       <section className="landing-v11-deep-features">
@@ -2094,8 +2676,26 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
           <p>Elegí una base y mové las mesas con el dedo. En la plataforma completa podés trabajar el espacio con mucho más detalle.</p>
         </div>
 
-        <LandingSalonMiniDemo
-          onBuy={()=>buy("landing_salon_demo")}
+        <div id="landing-salon-demo" className="landing-v13-anchor">
+          <LandingSalonMiniDemo
+            onBuy={()=>buy("landing_salon_demo")}
+            trackEvent={trackProductEvent}
+          />
+
+          <div className="landing-v13-between-hook">
+            <span>Las mesas son solo una parte.</span>
+            <button
+              type="button"
+              onClick={()=>jumpToLanding("landing-guide-taste","salon_to_guide")}
+            >
+              ¿Sabés el orden de entrada del cortejo? →
+            </button>
+          </div>
+        </div>
+
+        <LandingPlanningTastes
+          onJump={jumpToLanding}
+          onBuy={()=>buy("landing_tastes")}
           trackEvent={trackProductEvent}
         />
       </section>
@@ -2121,7 +2721,7 @@ function Landing({onDiscover,onLogin,onBuy,onGuide}){
             <ProductIcon name="plan" size={25}/>
             <span className="landing-v11-eyebrow">Plan y checklist</span>
             <h3>No solamente saber qué falta. Saber qué toca ahora.</h3>
-            <p>Más de 60 tareas por etapas, con fechas, responsables, estados y progreso para que el plan sea accionable.</p>
+            <p>Más de 100 tareas posibles, organizadas por etapas desde 12 meses antes hasta el gran día, con fechas, responsables, estados y progreso.</p>
           </article>
           <article>
             <ProductIcon name="account" size={25}/>
